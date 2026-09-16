@@ -105,6 +105,67 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .pvpBtn{margin:6px 0 2px;background:#c084fc!important;color:#1f1233!important}.pvpGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pvpInput{width:100%;box-sizing:border-box;padding:10px;border:3px solid #475569;border-radius:10px;font-size:18px;font-weight:900;text-align:center}.pvpStatus{background:#eef2ff;border:3px solid #6366f1;border-radius:10px;padding:10px;font-weight:900;margin:8px 0}.pvpRoom{font-size:30px;font-weight:1000;letter-spacing:5px;color:#4338ca}.pvpReady{background:#22c55e!important;color:#052e16!important}.pvpCancel{background:#ddd!important}.pvpHint{font-size:12px;color:#475569;font-weight:800;line-height:1.5}
 
 .rankPanel{max-width:520px}.rankHeader{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#172554;color:#fff;padding:10px;border-radius:12px;font-weight:900}.rankBadge{font-size:18px;color:#fde68a}.rankGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.rankAI{background:#f1f5f9;border:2px solid #475569;border-radius:10px;padding:10px;text-align:left}.rankAI b{font-size:16px}.rankStat{font-size:12px;color:#334155}.rankNameInput{width:100%;padding:11px;border:2px solid #334155;border-radius:9px;font-weight:800;font-size:16px;margin:5px 0}.rankNotice{background:#fff7ed;border:2px solid #fb923c;border-radius:10px;padding:9px;font-size:12px;font-weight:800}.rankHistory{max-height:130px;overflow:auto;text-align:left;font-size:12px;background:#f8fafc;border-radius:10px;padding:8px}.rankHistory div{padding:4px 0;border-bottom:1px solid #cbd5e1}.rankModeTag{position:absolute;left:8px;top:8px;z-index:25;background:#7c3aed;color:#fff;padding:4px 7px;border-radius:7px;font-size:11px;font-weight:1000}.rankBoard{max-height:230px;overflow:auto;text-align:left;background:#f8fafc;border:2px solid #cbd5e1;border-radius:10px;padding:7px;margin:9px 0}.rankRow{display:grid;grid-template-columns:34px 1fr 70px 72px;gap:5px;align-items:center;padding:6px 4px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:800}.rankRow:last-child{border-bottom:0}.rankRow.me{background:#ede9fe;border-radius:7px}.rankStrategy{font-size:10px;color:#64748b}.aiManagePanel{max-width:760px!important}.aiManageTools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.aiSearch{width:100%;padding:9px;border:2px solid #334155;border-radius:9px;font-weight:800}.aiAccountList{max-height:420px;overflow:auto;border:2px solid #cbd5e1;border-radius:10px;background:#f8fafc;text-align:left}.aiAccountRow{display:grid;grid-template-columns:48px 1fr 72px 72px 72px;gap:5px;align-items:center;padding:8px 6px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:800;cursor:pointer}.aiAccountRow:hover{background:#eef2ff}.aiAccountRow:last-child{border-bottom:0}.aiAccountRow small{display:block;color:#64748b;font-size:9px;margin-top:2px}.aiDetail{max-height:72vh;overflow:auto;text-align:left}.aiDetailHeader{background:#172554;color:#fff;border-radius:10px;padding:10px}.aiDetailGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.aiStatBox{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:7px;font-weight:900;font-size:11px}.aiSection{font-weight:1000;margin:10px 0 5px}.aiFormation{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}.aiCharRow{background:#fff;border:1px solid #cbd5e1;border-radius:7px;padding:6px;font-size:10px}.aiRecent{background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:6px}.aiRecent div{padding:5px 2px;border-bottom:1px solid #e2e8f0}.aiRecent div:last-child{border-bottom:0}@media(max-width:600px){.aiAccountRow{grid-template-columns:40px 1fr 60px 60px}.aiAccountRow span:nth-child(5){display:none}.aiDetailGrid{grid-template-columns:repeat(2,1fr)}.aiFormation{grid-template-columns:1fr}}
+
+/* 縦画面対応 */
+@media (orientation: portrait) {
+  .top{
+    height:52px;
+    min-height:52px;
+    flex-basis:52px;
+    padding:0 8px;
+  }
+  .title{font-size:clamp(19px,6vw,28px)}
+  .money{font-size:clamp(13px,4vw,19px)}
+  .hud{left:7px;right:7px;font-size:clamp(11px,3.2vw,17px)}
+  .bottom{
+    height:188px;
+    min-height:188px;
+    flex-basis:188px;
+    gap:4px;
+    padding:4px;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    grid-template-rows:repeat(2,minmax(0,1fr));
+  }
+  .card{border-width:2px;border-radius:8px}
+  .card .face{font-size:clamp(23px,7.5vw,34px)}
+  .card b{font-size:clamp(8px,2.8vw,12px)}
+  .card .cardstat,.card .rechargeText{font-size:clamp(7px,2.2vw,10px)}
+  .base{width:64px;height:92px;font-size:34px;bottom:8px}
+  .enemybase{left:7px}.playerbase{right:7px}
+  .base small{top:-24px;font-size:10px}
+  .unit{width:52px;height:62px;font-size:34px;bottom:31px}
+  .unit .hp{width:46px}
+  .lane{bottom:27px}
+  .battlePauseBtn{left:5px;top:34px;padding:4px 7px;font-size:10px}
+  .battleDetailBtn{top:34px;padding:3px 6px;font-size:10px}
+  .battleEnemyBookBtn{left:calc(50% + 49px);top:34px;padding:3px 6px;font-size:10px}
+  .worker{bottom:176px;font-size:11px;padding:4px 6px}
+  .worker .workerbar{width:68px}
+  .level{bottom:176px;font-size:12px}
+  .levelbar{width:72px}
+  .overlay{padding:10px}
+  .panel{
+    width:min(96%,460px);
+    max-height:94%;
+    padding:12px;
+    border-width:4px;
+    border-radius:16px;
+  }
+  .panel h1{font-size:clamp(25px,8vw,38px)}
+  .panel button{font-size:18px;padding:8px 16px}
+  .stages{grid-template-columns:1fr 1fr;gap:6px}
+  .chapterTabs{grid-template-columns:1fr 1fr;gap:5px}
+  .kinoshitaBookGrid{grid-template-columns:1fr 1fr}
+  .gachaChars{grid-template-columns:repeat(2,1fr)}
+  .rankRow{grid-template-columns:28px 1fr 55px 55px;font-size:10px}
+}
+@media (orientation: portrait) and (max-width:390px){
+  .bottom{height:176px;min-height:176px;flex-basis:176px}
+  .worker,.level{bottom:164px}
+  .card .face{font-size:clamp(20px,7vw,31px)}
+  .card b{font-size:8px}
+}
+
 </style>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -1420,5 +1481,4 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-
 </body></html>
