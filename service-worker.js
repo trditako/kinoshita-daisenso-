@@ -1,4 +1,4 @@
-const CACHE_NAME = "kinoshita-daisen-v3";
+const CACHE_NAME = "kinoshita-daisen-v4";
 
 const APP_SHELL = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
 
@@ -42,6 +42,28 @@ if(!window.__chapterRewardsPatchInstalled){
   }
   chapterRewardSync();
   setInterval(chapterRewardSync,500);
+
+  /* ===== ガチャから特別報酬を除外 ===== */
+  const hiddenGachaRewards=new Set(['狂乱の木下','突撃ハーランド木下','異常木下','吉田']);
+  if(typeof renderGacha==='function'){
+    const originalRenderGacha=renderGacha;
+    renderGacha=function(){
+      const changed=[];
+      try{
+        if(typeof cards!=='undefined'&&typeof ownedFlags!=='undefined'){
+          cards.forEach((c,i)=>{
+            if(c&&hiddenGachaRewards.has(c.name)&&!ownedFlags[i]){
+              ownedFlags[i]=true;
+              changed.push(i);
+            }
+          });
+        }
+        originalRenderGacha();
+      }finally{
+        for(const i of changed)ownedFlags[i]=false;
+      }
+    };
+  }
 }
 `;
 
