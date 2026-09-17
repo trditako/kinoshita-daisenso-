@@ -1,4 +1,4 @@
-const CACHE_NAME="kinoshita-daisen-v13";
+const CACHE_NAME="kinoshita-daisen-v14";
 const APP_SHELL=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./ai-2000.js"];
 const INJECT='<script src="./ai-2000.js"></script>';
 function transformHtml(text){if(text.includes('ai-2000.js'))return text;const p=text.lastIndexOf('</body>');return p<0?text+INJECT:text.slice(0,p)+INJECT+'\n'+text.slice(p)}
