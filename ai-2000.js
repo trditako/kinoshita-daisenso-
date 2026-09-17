@@ -14,6 +14,46 @@
     a.tierLabel=t[0];a.personality=PERS[hash('p'+id)%PERS.length];a.aiStrength=Math.round(t[1]+(hash('s'+id)%10000)/10000*(t[2]-t[1]));return a;
   }
   async function getRows(offset){const u=SUPABASE+'/rest/v1/ai_accounts?select=*&order=account_id.asc&limit=1000&offset='+offset;const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('AI '+r.status);return await r.json()}
+
+  let page=0;
+  let renderWrapped=false;
+  function installPageTabs(){
+    if(renderWrapped||typeof renderAIAccountList!=='function')return;
+    const originalRender=renderAIAccountList;
+    window.renderAIAccountList=function(){
+      const all=window.aiProfiles;
+      if(!Array.isArray(all)){originalRender();return}
+      const start=page===0?0:1000;
+      const end=page===0?1000:2000;
+      const visible=all.slice(start,end);
+      const saved=window.aiProfiles;
+      window.aiProfiles=visible;
+      try{originalRender()}finally{window.aiProfiles=saved}
+      const count=document.getElementById('aiAccountCount');
+      if(count)count.textContent=(page===0?'表示：AI-0001 ～ AI-1000':'表示：AI-1001 ～ AI-2000')+'（全'+all.length+'体）';
+    };
+    renderWrapped=true;
+  }
+  function makeTabs(){
+    installPageTabs();
+    if(document.getElementById('aiRangeTabs'))return;
+    const count=document.getElementById('aiAccountCount');
+    const list=document.getElementById('aiAccountList');
+    const host=count?.parentElement||list?.parentElement;
+    if(!host)return;
+    const box=document.createElement('div');box.id='aiRangeTabs';
+    box.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;position:relative;z-index:100';
+    function btn(label,p){
+      const b=document.createElement('button');b.textContent=label;b.dataset.page=p;
+      b.style.cssText='padding:8px 14px;border:2px solid #64748b;border-radius:9px;background:#1e293b;color:#fff;font-weight:900;font-size:14px;cursor:pointer;touch-action:manipulation';
+      b.onclick=()=>{page=p;updateButtons();if(typeof renderAIAccountList==='function')renderAIAccountList()};
+      box.appendChild(b);return b;
+    }
+    const b1=btn('AI-0001 ～ AI-1000',0),b2=btn('AI-1001 ～ AI-2000',1);
+    function updateButtons(){[b1,b2].forEach(b=>{const on=Number(b.dataset.page)===page;b.style.background=on?'#2563eb':'#1e293b';b.style.borderColor=on?'#93c5fd':'#64748b'});}
+    updateButtons();
+    host.insertBefore(box,host.firstChild);
+  }
   async function sync2000(){
     if(typeof aiProfiles==='undefined')return;
     try{
@@ -24,15 +64,19 @@
       if(typeof normalizeAIAccount==='function')aiProfiles=aiProfiles.map((a,i)=>normalizeAIAccount(a,i,i<500?1:2));
       aiProfiles.forEach((a,i)=>{const id=Number(String(a.accountId).replace(/\D/g,''))||i+1;a.tierLabel=tier(id)[0];a.personality=PERS[hash('p'+id)%PERS.length]});
       try{localStorage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles))}catch(e){}
+      installPageTabs();
       if(typeof renderAIAccountList==='function')renderAIAccountList();
-      const c=document.getElementById('aiAccountCount');if(c)c.textContent='表示：'+aiProfiles.length+' / 2000アカウント';
+      makeTabs();
+      const c=document.getElementById('aiAccountCount');if(c)c.textContent=(page===0?'表示：AI-0001 ～ AI-1000':'表示：AI-1001 ～ AI-2000')+'（全'+aiProfiles.length+'体）';
       if(typeof saveRank==='function')saveRank();
     }catch(e){console.warn('AI2000同期失敗',e)}
   }
   function patchUI(){
     if(typeof cards!=='undefined')for(const c of REWARDS)if(!cards.some(x=>x&&x.name===c.name))cards.push(c);
     if(typeof allyTraits!=='undefined'){allyTraits['突撃ハーランド木下']='無';allyTraits['異常木下']='赤';allyTraits['吉田']='赤'}
-    const c=document.getElementById('aiAccountCount');if(c&&typeof aiProfiles!=='undefined')c.textContent='表示：'+aiProfiles.length+' / 2000アカウント';
+    installPageTabs();
+    makeTabs();
+    const c=document.getElementById('aiAccountCount');if(c&&typeof aiProfiles!=='undefined')c.textContent=(page===0?'表示：AI-0001 ～ AI-1000':'表示：AI-1001 ～ AI-2000')+'（全'+aiProfiles.length+'体）';
   }
   patchUI();setTimeout(sync2000,0);setInterval(()=>{try{patchUI()}catch(e){}},1000);
 })();
