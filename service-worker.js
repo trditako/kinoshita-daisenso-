@@ -1,4 +1,4 @@
-const CACHE_NAME = "kinoshita-daisen-v5";
+const CACHE_NAME = "kinoshita-daisen-v6";
 
 const APP_SHELL = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
 
@@ -69,7 +69,6 @@ aiActivityProgress=function(ai){
      if(win){cc[ch]=st;ai.chapterClears=cc;ai.stageClears=cc.reduce((a,b)=>a+b,0);ai.playerXP=(ai.playerXP||0)+70+st*2;ai.coins=(ai.coins||0)+120+st*3;const s=chapterStages[ch]?.[st-1],r=s?.reward;if(Number.isInteger(r)&&r>0&&!ai.ownedCharacters.includes(r-1))ai.ownedCharacters.push(r-1);log(`🇯🇵 第${ch+1}章 ${st}ステージクリア：XP・コイン獲得`)}else log(`🇯🇵 第${ch+1}章 ${st}ステージ挑戦：敗北`)
    }
  }
- /* 追加の購入・育成も資源がある場合だけ実行。無料育成は一切しない。 */
  if(risk>.55&&typeof aiTryGachaExchange==='function')aiTryGachaExchange(ai);
  if(typeof aiLevelUpFromXP==='function')aiLevelUpFromXP(ai);
  ai.coins=Math.max(0,(ai.coins||0)+10);
@@ -88,6 +87,16 @@ aiLearnFromMatch=function(ai,won){if(!ai)return;ai.skill=Math.min(.995,Number(ai
 if(typeof renderRankLeaderboard==='function'){
 renderRankLeaderboard=function(){const el=document.getElementById('rankBoard');if(!el)return;const rows=[{name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses}].concat(aiProfiles.map(a=>({name:a.name,rp:Number(a.rp)||0,strategy:typeof strategyOf==='function'?strategyOf(a).label:'AI',me:false,wins:Number(a.wins)||0,losses:Number(a.losses)||0}))).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);const me=rows.findIndex(x=>x.me);const shown=rows.slice(0,50);if(me>=50)shown.push(rows[me]);el.innerHTML=`<div style="font-weight:1000;text-align:center;padding:6px">🏆 ランクランキング　全${rows.length}人</div>`+shown.map((x,i)=>{const real=x.me?me+1:i+1;return `<div class="rankRow ${x.me?'me':''}"><b>${real}位</b><span>${x.me?'👤 ':'🤖 '}${x.name}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝 ${x.losses}敗</span></div>`}).join('')};
 }
+
+/* ===== AI表示データの正規化 ===== */
+function __normalizeAIView(){
+ if(typeof aiProfiles==='undefined'||!Array.isArray(aiProfiles))return;
+ for(const ai of aiProfiles){
+  if(Array.isArray(ai.activityHistory))ai.activityHistory=ai.activityHistory.map(x=>typeof x==='string'?x:(x&&typeof x==='object'?(x.text||x.message||x.activity||'活動記録'):String(x)));
+  if(ai.activity&&typeof ai.activity==='object')ai.activity=ai.activity.text||ai.activity.message||ai.activity.activity||'活動記録';
+ }
+}
+__normalizeAIView();setInterval(__normalizeAIView,500);
 }
 
 function transformHtml(text){if(text.includes("__chapterRewardsPatchInstalled"))return text;const pos=text.lastIndexOf("</script>");if(pos<0)return text;return text.slice(0,pos)+"\n"+PATCH+"\n"+text.slice(pos)}
