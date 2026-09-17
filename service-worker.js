@@ -1,5 +1,5 @@
-const CACHE_NAME="kinoshita-daisen-v9";
-const APP_SHELL=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE_NAME="kinoshita-daisen-v10";
+const APP_SHELL=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./ai-2000.js"];
 const INJECT='<script src="./ai-2000.js"></script>';
 function transformHtml(text){if(text.includes('ai-2000.js'))return text;const p=text.lastIndexOf('</body>');return p<0?text+INJECT:text.slice(0,p)+INJECT+'\n'+text.slice(p)}
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_SHELL)))});
