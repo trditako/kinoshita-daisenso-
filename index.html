@@ -757,11 +757,11 @@ function renderFriends(){
   for(const x of friendRows){
     const other=x.player_id===playerRankingId?x.friend_id:x.player_id;
     if(x.status==='pending'&&x.friend_id===playerRankingId){
-      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">フレンド申請が届いています</span></span><span class="friendActions"><button onclick="acceptFriend(\\''+escapeRankText(other)+'\\')">承認</button><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">拒否</button></span></div>';
+      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">フレンド申請が届いています</span></span><span class="friendActions"><button onclick="acceptFriend(\''+escapeRankText(other)+'\')">承認</button><button onclick="removeFriend(\''+escapeRankText(x.player_id)+'\',\''+escapeRankText(x.friend_id)+'\')">拒否</button></span></div>';
     }else if(x.status==='pending'){
-      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">申請中</span></span><span class="friendActions"><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">取消</button></span></div>';
+      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">申請中</span></span><span class="friendActions"><button onclick="removeFriend(\''+escapeRankText(x.player_id)+'\',\''+escapeRankText(x.friend_id)+'\')">取消</button></span></div>';
     }else if(x.status==='accepted'){
-      html+='<div class="friendRow"><span><b class="friendName">👤 '+escapeRankText(other)+'</b><br><span class="friendSub">ID: '+escapeRankText(other)+'</span></span><span class="friendActions"><button onclick="friendProfile(\\''+escapeRankText(other)+'\\')">プロフィール</button><button onclick="friendChallenge(\\''+escapeRankText(other)+'\\')">⚔️ 対戦</button><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">削除</button></span></div>';
+      html+='<div class="friendRow"><span><b class="friendName">👤 '+escapeRankText(other)+'</b><br><span class="friendSub">ID: '+escapeRankText(other)+'</span></span><span class="friendActions"><button onclick="friendProfile(\''+escapeRankText(other)+'\')">プロフィール</button><button onclick="friendChallenge(\''+escapeRankText(other)+'\')">⚔️ 対戦</button><button onclick="removeFriend(\''+escapeRankText(x.player_id)+'\',\''+escapeRankText(x.friend_id)+'\')">削除</button></span></div>';
     }
   }
   el.innerHTML=html||'<div class="friendEmpty">まだフレンドはいません。プレイヤーIDを入力して申請できます。</div>';
@@ -778,7 +778,7 @@ function friendChallenge(id){
     pvpSetStatus('フレンドID '+id+' との対戦ルームを作成しました。友達に表示されたルームIDとパスワードを伝えてください。');
   },0);
 }
-function loadPublicPlayerRankings(){
+async function loadPublicPlayerRankings(){
   try{
     const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses&order=rp.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
