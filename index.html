@@ -1338,7 +1338,7 @@ function normalizeAIAccount(ai,index,population){
  const progressOwned=aiOwnedFromProgress(base);
  // ガチャで交換したキャラも保存データから維持する。以前は進行報酬だけで再構築していたため、再読み込み時に交換キャラが消えていた。
  const savedOwned=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];
- base.ownedCharacters=[...new Set([...progressOwned,...savedOwned].filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length))];
+ const gatedOwned=savedOwned.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&((i===10&&base.eventClears['狂乱の木下降臨']===true)||(i===11&&base.chapterClears[0]>=48)||(i===12&&base.chapterClears[1]>=48)||(i===13&&base.chapterClears[2]>=48)||(i===34&&base.eventClears['波動木下降臨']===true)||![10,11,12,13,34].includes(i)));base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])];
  const ownedSet=new Set(base.ownedCharacters);
  base.charLevels=base.charLevels.map((lv,i)=>ownedSet.has(i)?lv:1);
  const validFormation=Array.isArray(base.formation)?base.formation.filter(i=>ownedSet.has(i)&&i>=0&&i<cards.length):[];
@@ -1467,7 +1467,7 @@ function evolveAIFromMatch(winner,loser,result){winner.wins++;loser.losses++;win
 let aiMatchCursor=0;function recordAILiveResult(ai,won){if(!ai)return;if(won){ai.wins++;ai.rp+=12;ai.generation++;ai.lastResult='プレイヤー戦勝利';pushAIMatchHistory(ai,`👤 vs ${playerName}：勝利`);}else{ai.losses++;ai.rp=Math.max(0,ai.rp-9);ai.lastResult='プレイヤー戦敗北';pushAIMatchHistory(ai,`👤 vs ${playerName}：敗北`);}aiLearnFromMatch(ai,won);aiTryGachaExchange(ai);aiLevelUpFromXP(ai);saveRank();}
 function aiCharacterCost(i){const c=cards[i];return c.rarity==='SSR'?900:c.rarity==='SR'?600:c.rarity==='R'?300:Infinity;}
 function aiTryGachaExchange(ai){
- const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&['R','SR','SSR'].includes(c.rarity)&&!ai.ownedCharacters.includes(i));
+ const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&![10,11,12,13,34].includes(i)&&['R','SR','SSR'].includes(c.rarity)&&!ai.ownedCharacters.includes(i));
  if(!candidates.length)return false;
  const affordable=candidates.filter(i=>ai.coins>=aiCharacterCost(i));
  if(!affordable.length)return false;
