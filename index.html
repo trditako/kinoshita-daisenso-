@@ -637,6 +637,35 @@ async function loadAIServerProfiles(){
  }
 }
 function aiServerStatusText(){return aiServerConnected?'☁️ AIサーバー接続中':'📱 端末AI（サーバー未接続）';}
+const PLAYER_RANKINGS_URL=SUPABASE_REST_URL+'/player_rankings';
+let playerRankingId=storage.getItem('kinoshitaPlayerRankingId')||'';
+if(!playerRankingId){
+  try{playerRankingId=crypto.randomUUID();}catch(e){playerRankingId='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,m=>{const r=Math.random()*16|0,v=m==='x'?r:(r&3|8);return v.toString(16)})}
+  storage.setItem('kinoshitaPlayerRankingId',playerRankingId);
+}
+let publicPlayerRankings=[];
+let playerRankingSyncBusy=false;
+function escapeRankText(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function syncPlayerRanking(){
+  if(playerRankingSyncBusy)return;
+  playerRankingSyncBusy=true;
+  try{
+    const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),updated_at:new Date().toISOString()};
+    const res=await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    await loadPublicPlayerRankings();
+  }catch(e){console.warn('プレイヤーランキング同期失敗:',e)}
+  finally{playerRankingSyncBusy=false;}
+}
+async function loadPublicPlayerRankings(){
+  try{
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses&order=rp.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const rows=await res.json();
+    publicPlayerRankings=Array.isArray(rows)?rows:[];
+  }catch(e){console.warn('公開プレイヤーランキング取得失敗:',e);publicPlayerRankings=[]}
+  renderRankLeaderboard();
+}
 let aiServerWorkerLastRun=null;
 async function loadAIServerWorkerState(){try{const res=await fetch(SUPABASE_REST_URL+'/ai_server_state?select=last_run_at,last_run_count,last_run_message&id=eq.1',{headers:supabaseHeaders(),cache:'no-store'});if(!res.ok)return null;const rows=await res.json();const row=rows&&rows[0];if(!row)return null;aiServerWorkerLastRun=row;return row;}catch(e){return null;}}
 function aiServerWorkerStatusText(){if(!aiServerConnected)return 'サーバーAI：未接続';if(!aiServerWorkerLastRun)return 'サーバーAI：稼働確認中';const t=aiServerWorkerLastRun.last_run_at?new Date(aiServerWorkerLastRun.last_run_at):null;const age=t?Math.max(0,Math.floor((Date.now()-t.getTime())/1000)):999999;return age<120?`🤖 サーバーAI稼働中（${aiServerWorkerLastRun.last_run_count||0}体）`:'⚠️ サーバーAIの最終実行が古い';}
@@ -1249,12 +1278,19 @@ function openAIManager(){document.getElementById('rankLobby').style.display='non
 function openAIDetail(index){const ai=aiProfiles[index];if(!ai)return;const f=aiFormationForView(ai);const formationHtml=f.map(i=>{const c=cards[i];return `<div class="aiCharRow"><b>${c.icon||'🌳'} ${c.name}</b><br>Lv.${ai.charLevels[i]||1}　HP ${Math.round(aiAccountStat(ai,i,'hp'))}　攻 ${Math.round(aiAccountStat(ai,i,'atk'))}</div>`}).join('')||'<div class="aiCharRow">編成はまだ決定されていません。</div>';const ownedSet=new Set(ai.ownedCharacters||[0]);const allChars=cards.map((c,i)=>`<div class="aiCharRow"><b>${ownedSet.has(i)?(c.icon||'🌳'):'🔒'} ${c.name}</b>　${ownedSet.has(i)?'Lv.'+(ai.charLevels[i]||1):'未入手'}</div>`).join('');const hist=(ai.matchHistory||[]).length?(ai.matchHistory||[]).map(x=>`<div>${x}</div>`).join(''):'最近の対戦記録はありません。';document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
 function closeAIDetail(){document.getElementById('aiDetailModal').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
 function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}
-function renderRankLeaderboard(){const el=document.getElementById('rankBoard');if(!el)return;const rows=[{name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins}].concat(aiProfiles.map(a=>({name:a.name,rp:a.rp,strategy:strategyOf(a).label,me:false,wins:a.wins}))).sort((a,b)=>b.rp-a.rp);el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.me?'👤 ':'🤖 '}${x.name}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins+'勝'}</span></div>`).join('');}
+function renderRankLeaderboard(){
+ const el=document.getElementById('rankBoard');if(!el)return;
+ const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true}));
+ if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true});
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false}));
+ const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
+ el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
+}
 function renderRankLobby(){const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-function openRank(){document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();}
+function openRank(){document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();syncPlayerRanking();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
-function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();}
+function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
 function pvpSetStatus(t){const el=document.getElementById('pvpStatus');if(el)el.textContent=t;}
 function pvpSend(msg){if(pvpConn&&pvpConn.open){try{pvpConn.send(msg);}catch(e){}}}
