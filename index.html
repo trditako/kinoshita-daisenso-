@@ -76,6 +76,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 @keyframes enemyAttackAnim{0%{transform:scaleX(-1) translateX(0) scale(1)}45%{transform:scaleX(-1) translateX(-5px) scale(1.08)}100%{transform:scaleX(-1) translateX(2px) scale(.98)}}
 @keyframes enemyHitAnim{0%{transform:scaleX(-1);filter:drop-shadow(2px 3px 1px #333)}50%{transform:scaleX(-1);filter:brightness(2) drop-shadow(2px 3px 1px #333)}100%{transform:scaleX(-1);filter:drop-shadow(2px 3px 1px #333)}}
 .effects{position:absolute;inset:0;pointer-events:none;z-index:15;overflow:hidden}
+.enemyWaveEffect{position:absolute;width:min(var(--wave-width),calc(100vw - 120px));height:150px;pointer-events:none;z-index:18;overflow:visible;animation:waveRush .5s ease-out forwards;}
+.enemyWaveEffect::before,.enemyWaveEffect::after{content:"";position:absolute;left:0;top:50%;width:100%;height:18px;border:7px solid rgba(145,220,255,.95);border-left:0;border-radius:0 50% 50% 0;filter:drop-shadow(0 0 7px rgba(110,210,255,.95));transform-origin:left center;}
+.enemyWaveEffect::before{transform:translateY(-50%) scaleY(2.8);clip-path:polygon(0 42%,6% 8%,12% 42%,18% 82%,24% 42%,30% 8%,36% 42%,42% 82%,48% 42%,54% 8%,60% 42%,66% 82%,72% 42%,78% 8%,84% 42%,90% 82%,100% 42%,100% 58%,90% 98%,84% 58%,78% 92%,72% 58%,66% 98%,60% 58%,54% 92%,48% 58%,42% 98%,36% 58%,30% 92%,24% 58%,18% 98%,12% 58%,6% 92%,0 58%);}
+.enemyWaveEffect::after{height:10px;border-width:4px;opacity:.7;transform:translateY(-50%) scaleY(1.7);filter:drop-shadow(0 0 4px rgba(210,245,255,.9));}
+.waveCrest{position:absolute;top:18%;width:28px;height:85px;border:6px solid rgba(190,240,255,.95);border-left:0;border-bottom:0;border-radius:0 90% 0 0;transform:skewX(-10deg) scaleY(.75);filter:drop-shadow(0 0 6px rgba(120,220,255,.9));animation:waveCrest .42s ease-out forwards;}
+@keyframes waveRush{0%{transform:scaleX(.05);opacity:0}35%{opacity:1}100%{transform:scaleX(1);opacity:.15}}
+@keyframes waveCrest{0%{transform:translateX(0) scaleY(.25);opacity:0}45%{opacity:1}100%{transform:translateX(45px) scaleY(1.15);opacity:0}}
 .attackFx{position:absolute;pointer-events:none;z-index:16;transform:translate(-50%,-50%);font-weight:1000;filter:drop-shadow(0 2px 2px #000);opacity:0}
 .attackFx.projectile{animation:fxFly .18s ease-out forwards}.attackFx.impact{animation:fxImpact .28s ease-out forwards}.attackFx.area{animation:fxArea .34s ease-out forwards}
 @keyframes fxFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}25%{opacity:1}100%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
@@ -1624,14 +1631,21 @@ function enemyWaveAttack(e){
    hit(u,e.atk,e,null);
    if(u.hp<=0)removeUnit(u);
  }
- const fx=document.createElement('div');
- fx.className='attackFx area fx-enemy';
- fx.textContent='〰️';
- fx.style.left=Math.min(worldWidth-120,e.x+waveRange*.55)+'px';
- fx.style.bottom='105px';
- fx.style.fontSize=Math.min(72,26+level*4)+'px';
- effects.appendChild(fx);
- setTimeout(()=>fx.remove(),340);
+ const wave=document.createElement('div');
+ wave.className='enemyWaveEffect';
+ wave.style.left=e.x+'px';
+ wave.style.bottom='105px';
+ wave.style.setProperty('--wave-width',Math.min(worldWidth-120,e.x+waveRange)-e.x+'px');
+ wave.style.setProperty('--wave-level',level);
+ effects.appendChild(wave);
+ for(let i=0;i<Math.min(10,level);i++){
+   const crest=document.createElement('span');
+   crest.className='waveCrest';
+   crest.style.left=(i/(Math.max(1,Math.min(10,level)-1))*Math.min(100,waveRange*.11))+'%';
+   crest.style.animationDelay=(i*18)+'ms';
+   wave.appendChild(crest);
+ }
+ setTimeout(()=>wave.remove(),520);
 }
  for(const e of [...enemies]){e.cd-=dt;
    let target=units.filter(u=>Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
