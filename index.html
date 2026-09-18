@@ -1068,7 +1068,6 @@ function aiPickUnit(ai,form,affordable){
  else if(st.key==='counter') list.sort((a,b)=>cards[b].range-cards[a].range);
  else list.sort((a,b)=>(cards[b].atk/cards[b].cost)-(cards[a].atk/cards[a].cost));
  const p=aiPersonality(ai);const scored=list.map(i=>{const c=cards[i],cost=Math.max(1,c.cost),hp=aiAccountStat(ai,i,'hp'),atk=aiAccountStat(ai,i,'atk');let v=(atk/cost)*(1+p.burstBias)+(hp/cost)*.08*(1+p.tankBias)+(c.range||0)/100*(.2+p.rangeBias)-cost/5000*p.cheapBias+Math.sin((i+1)*(p.counterBias*31+2))*p.randomness;return {i,v};}).sort((a,b)=>b.v-a.v);const poolN=Math.max(1,Math.min(scored.length,1+Math.floor(p.randomness*scored.length*Math.random())));return scored[Math.floor(Math.random()*poolN)].i;}
-}
 function aiAccountStat(ai,i,key){const c=cards[i],lv=ai.charLevels?.[i]||1;const growth=Math.pow(1.04,Math.max(0,lv-1));if(key==='cost'||key==='recharge')return c[key];if(key==='range'||key==='spd'||key==='interval')return c[key];return (c[key]||0)*growth;}
 function aiRankStat(ai,i,key){const base=aiAccountStat(ai,i,key),mul=aiPowerMultiplier(ai);if(key==='range'||key==='spd')return base*mul;if(key==='interval')return base/mul;if(key==='hp'||key==='atk')return base*mul;return base;}
 function aiBuildFormation(ai){if(Array.isArray(ai.formation)&&ai.formation.length>=5)return ai.formation.slice();return ai.formation=aiChooseFormation(ai);}
