@@ -185,7 +185,8 @@ const cards=[
 ,{name:"星読み木下",cost:400,hp:700,atk:150,range:90,spd:1.05,interval:.95,recharge:9.0,icon:"🔭",motion:"ninja",attackType:"single",kb:5,series:"星空の木下団",rarity:"R",ability:{name:"星読み",desc:"赤属性の敵への攻撃1.4倍",strong:{赤:1.4}}}
 ,{name:"流星木下",cost:850,hp:1500,atk:300,range:135,spd:.7,interval:1.35,recharge:17.0,icon:"☄️",motion:"awakened",attackType:"area",kb:3,series:"星空の木下団",rarity:"SR",ability:{name:"流星落とし",desc:"攻撃時40%で敵を後退させる強力な一撃",knockbackChance:.4}}
 ,{name:"星王木下",cost:1900,hp:3900,atk:620,range:175,spd:.48,interval:1.6,recharge:30.0,icon:"🌟",motion:"super",attackType:"area",kb:5,series:"星空の木下団",rarity:"SSR",ability:{name:"星王の輝き",desc:"赤属性に2倍の攻撃＋攻撃時35%で50%減速・3秒",strong:{赤:2},slow:{trait:"赤",chance:.35,factor:.5,duration:3}}},
-{name:"狂乱の木下",cost:2400,hp:4600,atk:760,range:128,spd:.72,interval:1.25,recharge:36.0,icon:"😡",motion:"super",attackType:"area",kb:5,series:"狂乱の木下",rarity:"SSR",specialReward:true,ability:{name:"狂乱の猛攻",desc:"攻撃力が高く、攻撃時30%で敵を後退させる",knockbackChance:.3}}
+{name:"狂乱の木下",cost:2400,hp:4600,atk:760,range:128,spd:.72,interval:1.25,recharge:36.0,icon:"😡",motion:"super",attackType:"area",kb:5,series:"狂乱の木下",rarity:"SSR",specialReward:true,ability:{name:"狂乱の猛攻",desc:"攻撃力が高く、攻撃時30%で敵を後退させる",knockbackChance:.3}},
+{name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}}
 
 ];
 // 日本編クリア報酬キャラクター（3体ともここで新規定義）
@@ -227,7 +228,7 @@ const allyTraits={
   '木下':'無','強化木下':'赤','マッチョ木下':'青','木下（野球）':'赤','木下（覚醒）':'浮',
   '木下（忍者）':'黒','木下（博士）':'青','木下（ロボ）':'鋼','木下（王）':'光','木下（超覚醒）':'赤',
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
-  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙'
+  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙'
 };
 cards.forEach(c=>{c.trait=allyTraits[c.name]||'無';});
 
@@ -561,7 +562,7 @@ const eventStages=[
   {t:18.0,enemy:'速木下',mult:7.5,fixedMultiplier:true},
   {t:24.0,enemy:'巨木下',mult:3.5,fixedMultiplier:true}
  ],repeatSpawns:[{start:32,interval:20,enemy:'木下戦車',mult:2.6,fixedMultiplier:true}]},
- {name:'波動木下降臨',width:2200,baseHp:150000,xp:2500,eventReward:'プレイヤーXP 2500',enemies:['宇宙獣木下','速木下','黒忍木下','波動木下','カエル木下'],schedule:[
+ {name:'波動木下降臨',width:2200,baseHp:150000,xp:2500,eventReward:'波動木下',rewardCharacter:'波動木下',enemies:['宇宙獣木下','速木下','黒忍木下','波動木下','カエル木下'],schedule:[
   {t:0,enemy:'宇宙獣木下',mult:3,fixedMultiplier:true},
   {t:0,enemy:'宇宙獣木下',mult:3,fixedMultiplier:true},
   {t:2,enemy:'速木下',mult:15,fixedMultiplier:true},
@@ -1139,7 +1140,28 @@ function updateWorkerUI(){const btn=document.getElementById('workerBtn');const c
 function update(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('moneyMax').textContent=workerMax;document.getElementById('enemyHp').textContent=Math.max(0,Math.floor(enemyHp));document.getElementById('enemyMaxHp').textContent=enemyMaxHp;document.getElementById('baseHp').textContent=Math.max(0,Math.floor(baseHp));document.getElementById('level').textContent=level;document.getElementById('levelbar').style.width=Math.min(100,level*10)+'%';updateWorkerUI();renderCards()}
 function popup(text,x,y){const p=document.createElement('div');p.className='pop';p.textContent=text;p.style.left=x+'px';p.style.top=y+'px';effects.appendChild(p);setTimeout(()=>p.remove(),600)}
 function attackEffect(source,target){if(!source||!target)return;const key=source.isEnemy?'enemy':source.motion||'basic';const glyph={basic:'✦',power:'◆',muscle:'💥',baseball:'⚾',awakened:'✧',ninja:'〆',scientist:'⚗',robot:'◉',king:'♛',super:'✦',enemy:'●'}[key]||'✦';const cls='fx-'+key;const fx=document.createElement('div');fx.className=`attackFx ${cls} ${source.attackType==='area'?'area':'projectile'}`;fx.textContent=glyph;fx.style.left=(source.x+(target.x-source.x)*.62)+'px';fx.style.bottom='105px';effects.appendChild(fx);setTimeout(()=>fx.remove(),360);const impact=document.createElement('div');impact.className=`attackFx impact ${cls}`;impact.textContent=source.attackType==='area'?'✦':glyph;impact.style.left=target.x+'px';impact.style.bottom='105px';effects.appendChild(impact);setTimeout(()=>impact.remove(),330);const pulse=document.createElement('div');pulse.className=`rangePulse ${source.attackType==='area'?'area':'single'}`;pulse.style.left=source.x+'px';pulse.style.bottom='105px';effects.appendChild(pulse);setTimeout(()=>pulse.remove(),320);}
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
+function allyWaveAttack(u){
+ const level=Math.max(1,Number(u.waveLevel||0));
+ if(!level)return;
+ const waveRange=90*level;
+ const targets=enemies.filter(e=>e.x>=u.x&&Math.abs(e.x-u.x)<=waveRange);
+ for(const e of targets){const dealt=Math.max(1,Math.round(u.atk));hit(e,dealt,u,null);if(e.hp<=0)removeEnemy(e);}
+ const wave=document.createElement('div');
+ wave.className='enemyWaveEffect';
+ wave.style.left=u.x+'px';
+ wave.style.bottom='105px';
+ wave.style.setProperty('--wave-width',Math.max(1,Math.min(worldWidth-120,u.x+waveRange)-u.x)+'px');
+ effects.appendChild(wave);
+ for(let i=0;i<Math.min(8,level);i++){
+   const crest=document.createElement('span');
+   crest.className='waveCrest';
+   crest.style.left=(i/Math.max(1,Math.min(8,level)-1)*Math.min(100,waveRange*.11))+'%';
+   crest.style.animationDelay=(i*18)+'ms';
+   wave.appendChild(crest);
+ }
+ setTimeout(()=>wave.remove(),520);
+}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:c.waveLevel||0,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;updateStatusMark(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};renderUnitElement(e);enemies.push(e);return e}
 function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
@@ -1222,7 +1244,7 @@ function aiOwnedFromProgress(ai){
  const cc=Array.isArray(ai.chapterClears)?ai.chapterClears:[Math.min(48,Number(ai.stageClears||0)),0,0,0];
  for(let ch=0;ch<4;ch++){const clear=Math.max(0,Math.min(48,Number(cc[ch]||0)));for(let si=0;si<clear;si++){const r=chapterStages[ch]?.[si]?.reward;if(Number.isInteger(r)&&r>0&&r-1<cards.length)owned.add(r-1);}if(clear>=48){const chapterReward=chapterRewardIndex(ch+1);if(chapterReward>=0&&chapterReward<cards.length)owned.add(chapterReward);}}
  // 狂乱の木下はイベント報酬。イベントクリア記録があるAIだけ所持できる。
- if(ai.eventClears&&ai.eventClears['狂乱の木下降臨']){const idx=cards.findIndex(c=>c.name==='狂乱の木下');if(idx>=0)owned.add(idx);}
+ if(ai.eventClears&&ai.eventClears['狂乱の木下降臨']){const idx=cards.findIndex(c=>c.name==='狂乱の木下');if(idx>=0)owned.add(idx);} if(ai.eventClears&&ai.eventClears['波動木下降臨']){const idx=cards.findIndex(c=>c.name==='波動木下');if(idx>=0)owned.add(idx);}
  return [...owned];
 }
 function normalizeAIAccount(ai,index,population){
@@ -1616,7 +1638,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
  const playerBaseStop=worldWidth-178;
  for(const u of [...units]){u.cd-=dt;
    let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
-   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}u.cd=u.interval}}
+   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}if(u.waveLevel)allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';u.x-=u.spd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
