@@ -874,20 +874,19 @@ let charLevel;try{charLevel=JSON.parse(storage.getItem('kinoshitaCharLevel')||'[
 for(let i=0;i<cards.length;i++){charLevel[i]=Math.max(1,Math.min(20,Number(charLevel[i]||1)));}
 let formation;try{formation=JSON.parse(storage.getItem('kinoshitaFormation')||'[]')}catch(e){formation=[]}
 if(!Array.isArray(formation))formation=[];
-if(storage.getItem('kinoshitaCharacterIndexMigrationV3')!=='done'){
+if(storage.getItem('kinoshitaCharacterIndexMigrationV4')!=='done'){
  try{
-  // 旧版の実際の配列: 0-39既存 / 40波動 / 41-43章報酬 / 44-63攻略特化 / 64波動
+  // 旧版の実配列IDを確認済み:
+  // 0-10=既存 / 11=波動木下 / 12-14=章報酬 / 15-34=攻略特化20体 / 35=波動木下(重複)
   const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():null;
   const oldFormation=Array.isArray(formation)?formation.slice():[];
   const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  const looksLikeBrokenSave=oldFlags&&oldFlags.length>=64;
-  if(looksLikeBrokenSave){
+  if(oldFlags&&oldFlags.length>=36){
    const remap=(i)=>{
     if(!Number.isInteger(i))return -1;
-    if(i>=0&&i<=39)return i;
-    if(i===40||i===64)return -1;
-    if(i>=41&&i<=43)return i-1;
-    if(i>=44&&i<=63)return i-1;
+    if(i>=0&&i<=10)return i;
+    if(i===11||i===35)return -1;
+    if(i>=12&&i<=34)return i-1;
     return -1;
    };
    const newFlags=Array(cards.length).fill(false);
@@ -905,12 +904,11 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV3')!=='done'){
     if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(oldLevels[oi]||1)));
    }
    charLevel=newLevels;
-   storage.setItem('kinoshitaCharacterIndexMigrationV3','done');
-  }else{
-   storage.setItem('kinoshitaCharacterIndexMigrationV3','done');
   }
- }catch(e){console.warn('character ID migration V3 failed',e);}
+  storage.setItem('kinoshitaCharacterIndexMigrationV4','done');
+ }catch(e){console.warn('character ID migration V4 failed',e);}
 }
+
 function normalizeFormation(){
  formation=Array.isArray(formation)?formation.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i)):[];
  formation=[...new Set(formation)].slice(0,10);
