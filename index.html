@@ -190,12 +190,37 @@ const CHAPTER_REWARD_CARDS=[
 const CHAPTER_REWARD_INDEX=[20,21,22];
 function chapterRewardIndex(chapter){return CHAPTER_REWARD_INDEX[chapter-1]??-1;}
 cards.push(...CHAPTER_REWARD_CARDS);
+// 日本・未来編攻略特化キャラクター20体（木下コイン交換専用）
+const 攻略特化キャラ=[
+{name:"対無木下",cost:500,hp:1000,atk:180,range:70,spd:.9,interval:1,recharge:8,icon:"🛡️",motion:"basic",attackType:"single",kb:3,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"無属性特効",desc:"無属性に攻撃1.8倍・被ダメージ0.6倍",strong:{無:1.8},resist:{無:.6}}},
+{name:"赤狩り木下",cost:550,hp:1200,atk:210,range:75,spd:.82,interval:1,recharge:9,icon:"🔥",motion:"power",attackType:"single",kb:3,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"赤属性特効",desc:"赤属性に攻撃2倍・被ダメージ0.5倍",strong:{赤:2},resist:{赤:.5}}},
+{name:"黒追撃木下",cost:600,hp:900,atk:260,range:80,spd:1.15,interval:.85,recharge:9,icon:"🌑",motion:"ninja",attackType:"single",kb:4,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"黒追撃",desc:"黒属性に攻撃2倍＋攻撃時40%で40%減速・2秒",strong:{黒:2},slow:{trait:"黒",chance:.4,factor:.6,duration:2}}},
+{name:"天使迎撃木下",cost:650,hp:1250,atk:240,range:85,spd:.9,interval:1,recharge:10,icon:"👼",motion:"awakened",attackType:"area",kb:5,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"天使迎撃",desc:"天使に攻撃2倍・被ダメージ0.55倍",strong:{天使:2},resist:{天使:.55}}},
+{name:"宇宙観測木下",cost:700,hp:1100,atk:250,range:130,spd:.75,interval:1.15,recharge:11,icon:"🔭",motion:"scientist",attackType:"single",kb:4,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"宇宙観測",desc:"宇宙属性に攻撃2倍",strong:{宇宙:2}}},
+{name:"宇宙突破木下",cost:850,hp:1500,atk:330,range:125,spd:.65,interval:1.15,recharge:13,icon:"🚀",motion:"power",attackType:"single",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"バリアブレイク",desc:"宇宙属性に強く、バリアを破壊できる",strong:{宇宙:2},barrierBreak:true}},
+{name:"赤壁木下",cost:900,hp:3000,atk:190,range:60,spd:.5,interval:1.2,recharge:14,icon:"🧱",motion:"muscle",attackType:"area",kb:2,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"赤の壁",desc:"赤属性からの被ダメージ0.4倍",resist:{赤:.4}}},
+{name:"無敵壁木下",cost:950,hp:3600,atk:170,range:55,spd:.45,interval:1.25,recharge:15,icon:"🛡️",motion:"robot",attackType:"area",kb:2,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"無の要塞",desc:"無属性からの被ダメージ0.35倍",resist:{無:.35}}},
+{name:"黒速攻木下",cost:800,hp:1300,atk:360,range:75,spd:1.3,interval:.8,recharge:11,icon:"⚡",motion:"ninja",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"黒速攻",desc:"黒属性に攻撃2.4倍",strong:{黒:2.4}}},
+{name:"天使封殺木下",cost:1000,hp:1700,atk:320,range:105,spd:.65,interval:1.05,recharge:14,icon:"✨",motion:"awakened",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"天使封殺",desc:"天使に攻撃2.2倍＋50%で50%減速・3秒",strong:{天使:2.2},slow:{trait:"天使",chance:.5,factor:.5,duration:3}}},
+{name:"宇宙砕き木下",cost:1100,hp:1900,atk:390,range:120,spd:.58,interval:1.1,recharge:15,icon:"💥",motion:"super",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"宇宙砕き",desc:"宇宙属性に攻撃2.5倍＋バリアブレイク",strong:{宇宙:2.5},barrierBreak:true}},
+{name:"未来探査木下",cost:1200,hp:1800,atk:360,range:180,spd:.5,interval:1.25,recharge:16,icon:"🛰️",motion:"scientist",attackType:"single",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"未来探査",desc:"宇宙属性に攻撃2倍・長射程",strong:{宇宙:2}}},
+{name:"攻略隊長木下",cost:1300,hp:2400,atk:430,range:115,spd:.55,interval:1.1,recharge:17,icon:"🎖️",motion:"king",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"四属性対策",desc:"赤・黒・天使・宇宙に攻撃1.7倍",strong:{赤:1.7,黒:1.7,天使:1.7,宇宙:1.7}}},
+{name:"日本防衛木下",cost:1400,hp:4000,atk:400,range:95,spd:.45,interval:1.25,recharge:18,icon:"🇯🇵",motion:"robot",attackType:"area",kb:3,series:"攻略特化隊",rarity:"SR",gachaCost:4000,ability:{name:"日本防衛",desc:"無・赤属性に攻撃1.8倍、被ダメージ0.5倍",strong:{無:1.8,赤:1.8},resist:{無:.5,赤:.5}}},
+{name:"日本制圧木下",cost:1800,hp:5000,atk:650,range:125,spd:.5,interval:1.1,recharge:24,icon:"🏯",motion:"king",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"日本制圧",desc:"無・赤・黒に攻撃2.2倍、被ダメージ0.55倍",strong:{無:2.2,赤:2.2,黒:2.2},resist:{無:.55,赤:.55,黒:.55}}},
+{name:"未来制圧木下",cost:2100,hp:5200,atk:720,range:145,spd:.5,interval:1.15,recharge:26,icon:"🌌",motion:"super",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"未来制圧",desc:"天使・宇宙に攻撃2.3倍＋バリアブレイク",strong:{天使:2.3,宇宙:2.3},barrierBreak:true}},
+{name:"四属性討伐木下",cost:2300,hp:4800,atk:700,range:135,spd:.55,interval:1,recharge:27,icon:"⚔️",motion:"awakened",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"四属性討伐",desc:"赤・黒・天使・宇宙に攻撃2.1倍＋50%で50%減速・3秒",strong:{赤:2.1,黒:2.1,天使:2.1,宇宙:2.1},slow:{trait:"*",chance:.5,factor:.5,duration:3}}},
+{name:"銀河攻略木下",cost:2500,hp:5500,atk:800,range:190,spd:.48,interval:1.2,recharge:30,icon:"🌠",motion:"scientist",attackType:"area",kb:4,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"銀河攻略",desc:"宇宙属性に攻撃3倍＋バリアブレイク",strong:{宇宙:3},barrierBreak:true}},
+{name:"最終攻略木下",cost:3000,hp:7000,atk:950,range:170,spd:.45,interval:1.05,recharge:35,icon:"👑",motion:"super",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"全属性攻略",desc:"5属性に攻撃2倍・被ダメージ0.5倍＋バリアブレイク",strong:{無:2,赤:2,黒:2,天使:2,宇宙:2},resist:{無:.5,赤:.5,黒:.5,天使:.5,宇宙:.5},barrierBreak:true}},
+{name:"宇宙決戦木下",cost:2800,hp:6200,atk:900,range:155,spd:.5,interval:1,recharge:32,icon:"🪐",motion:"super",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"宇宙決戦",desc:"宇宙属性に攻撃3倍＋バリアブレイク",strong:{宇宙:3},barrierBreak:true}}
+];
+cards.push(...攻略特化キャラ);
+
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
   '木下':'無','強化木下':'赤','マッチョ木下':'青','木下（野球）':'赤','木下（覚醒）':'浮',
   '木下（忍者）':'黒','木下（博士）':'青','木下（ロボ）':'鋼','木下（王）':'光','木下（超覚醒）':'赤',
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
-  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤'
+  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙'
 };
 cards.forEach(c=>{c.trait=allyTraits[c.name]||'無';});
 
@@ -1601,42 +1626,21 @@ function openGacha(){
 }
 function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':(r||'基本');}
 function renderGacha(){
- const coin=document.getElementById('gachaCoinText');
- const tabs=document.getElementById('gachaTabs');
- const banner=document.getElementById('gachaBanner');
- const result=document.getElementById('gachaResult');
+ const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins+'枚';
  if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>木下交換</button>';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下ガチャ</h2><p>木下コインを使って、表示された木下を確定で入手できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">※ランダム抽選ではなく、入手するキャラを選べる方式です。レア・激レア・超激レアから選んで確定入手できます。</p></div>';
- const available=[];
- // 通常キャラだけでなく、SR/SSRやイベント・特殊報酬キャラも交換対象にする。
- cards.forEach((c,i)=>{if(!ownedFlags[i] && i>0)available.push(i);});
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下ガチャ</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
  if(!result)return;
- if(!available.length){result.innerHTML='<div class="gachaResult">🎉 現在入手できる未所持の木下はありません。</div>';return;}
- const picks=available.slice(0,6);
- result.innerHTML='<div style="font-size:15px;margin-bottom:7px">入手したい木下を選んでください</div><div class="gachaChars">'+picks.map(i=>{
-   const c=cards[i];
-   const rarityCost={N:300,R:450,SR:600,SSR:900,UR:1500,LR:2500};const cost=rarityCost[c.rarity]||300;
-   const can=gachaCoins>=cost;
-   return `<div class="gachaChar"><div class="face">${c.icon}</div><b>${c.name}</b><div class="rarity-${c.rarity||'R'}">${rarityLabel(c.rarity)}</div><div style="font-weight:900;margin:4px 0">🪙 ${cost}枚</div><button type="button" class="gachaGetBtn" data-i="${i}" ${can?'':'disabled'}>${can?'確定入手':'コイン不足'}</button></div>`;
- }).join('')+'</div>';
+ const available=[]; cards.forEach((c,i)=>{if(i>0&&!ownedFlags[i]&&c.gachaCost)available.push(i);});
+ if(!available.length){result.innerHTML='<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';return;}
+ result.innerHTML='<div style="font-size:15px;margin-bottom:7px">交換する木下を選んでください</div><div class="gachaChars">'+available.map(i=>{const c=cards[i],cost=c.gachaCost,can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));
 }
 function buyGachaCharacter(i){
  if(!Number.isInteger(i)||!cards[i]||ownedFlags[i])return;
- const c=cards[i];
- if(c.specialReward||!['R','SR','SSR'].includes(c.rarity))return;
- const cost=c.rarity==='SSR'?900:c.rarity==='SR'?600:300;
- if(gachaCoins<cost)return;
- gachaCoins-=cost;
- ownedFlags[i]=true;
- syncOwnedCount();
- normalizeFormation();
- save();
- renderGacha();
- renderOwnedStart();
- renderFormation();
- renderCards();
+ const c=cards[i],cost=Number(c.gachaCost||0);
+ if(!cost||gachaCoins<cost)return;
+ gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
 }
 
 document.addEventListener('click',e=>{
