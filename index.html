@@ -1045,6 +1045,7 @@ function rankPowerMultiplier(){return 1+(chapterClears[0]||0)*0.01+(chapterClear
 function aiPowerMultiplier(ai){return 1+(ai.chapterClears?.[0]||0)*0.01+(ai.chapterClears?.[1]||0)*0.002+(ai.chapterClears?.[2]||0)*0.003;}
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
 function chooseRankAI(){const pi=rankIndex(rankPoints);const candidates=aiProfiles.map((a,i)=>({a,i,d:Math.abs(rankIndex(a.rp)-pi),gap:Math.abs(a.rp-rankPoints)})).sort((x,y)=>x.d-y.d||x.gap-y.gap||Math.random()-.5);return candidates[0]?.a||aiProfiles[0];}
+function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;return {patience:.55+h(1)*.9,aggression:.55+h(2)*1.15,cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:h(9),pressure:h(10)};}
 function aiChooseFormation(ai){
  const ownedSet=new Set(ai.ownedCharacters||[0]);
  const pool=cards.map((c,i)=>i).filter(i=>ownedSet.has(i));
@@ -1066,13 +1067,12 @@ function aiPickUnit(ai,form,affordable){
  else if(st.key==='economy') list.sort((a,b)=>cards[b].atk-cards[a].atk);
  else if(st.key==='counter') list.sort((a,b)=>cards[b].range-cards[a].range);
  else list.sort((a,b)=>(cards[b].atk/cards[b].cost)-(cards[a].atk/cards[a].cost));
- const jitter=Math.random()<.22?Math.floor(Math.random()*list.length):0;
- return list[Math.min(jitter,list.length-1)];
+ const p=aiPersonality(ai);const scored=list.map(i=>{const c=cards[i],cost=Math.max(1,c.cost),hp=aiAccountStat(ai,i,'hp'),atk=aiAccountStat(ai,i,'atk');let v=(atk/cost)*(1+p.burstBias)+(hp/cost)*.08*(1+p.tankBias)+(c.range||0)/100*(.2+p.rangeBias)-cost/5000*p.cheapBias+Math.sin((i+1)*(p.counterBias*31+2))*p.randomness;return {i,v};}).sort((a,b)=>b.v-a.v);const poolN=Math.max(1,Math.min(scored.length,1+Math.floor(p.randomness*scored.length*Math.random())));return scored[Math.floor(Math.random()*poolN)].i;}
 }
 function aiAccountStat(ai,i,key){const c=cards[i],lv=ai.charLevels?.[i]||1;const growth=Math.pow(1.04,Math.max(0,lv-1));if(key==='cost'||key==='recharge')return c[key];if(key==='range'||key==='spd'||key==='interval')return c[key];return (c[key]||0)*growth;}
 function aiRankStat(ai,i,key){const base=aiAccountStat(ai,i,key),mul=aiPowerMultiplier(ai);if(key==='range'||key==='spd')return base*mul;if(key==='interval')return base/mul;if(key==='hp'||key==='atk')return base*mul;return base;}
 function aiBuildFormation(ai){if(Array.isArray(ai.formation)&&ai.formation.length>=5)return ai.formation.slice();return ai.formation=aiChooseFormation(ai);}
-function aiSimPick(ai,form,money,time,opponentUnits,recharge){const st=strategyOf(ai);const affordable=form.filter(i=>money>=cards[i].cost&&(!recharge||recharge[i]<=0));if(!affordable.length)return -1;let list=affordable.slice();if(st.key==='rush'||st.key==='swarm')list.sort((a,b)=>cards[a].cost-cards[b].cost);else if(st.key==='tank')list.sort((a,b)=>aiAccountStat(ai,b,'hp')-aiAccountStat(ai,a,'hp'));else if(st.key==='boss')list.sort((a,b)=>aiAccountStat(ai,b,'atk')-aiAccountStat(ai,a,'atk'));else if(st.key==='counter')list.sort((a,b)=>cards[b].range-cards[a].range);else list.sort((a,b)=>(aiAccountStat(ai,b,'atk')/Math.max(1,cards[b].cost))-(aiAccountStat(ai,a,'atk')/Math.max(1,cards[a].cost)));if(st.key==='economy'&&time<12)return -1;if(st.key==='boss'&&time<9&&Math.random()<.8)return -1;let idx=Math.random()<(.08+(1-ai.skill)*.22)?Math.floor(Math.random()*list.length):0;return list[Math.min(idx,list.length-1)];}
+function aiSimPick(ai,form,money,time,opponentUnits,recharge){const st=strategyOf(ai);const affordable=form.filter(i=>money>=cards[i].cost&&(!recharge||recharge[i]<=0));if(!affordable.length)return -1;let list=affordable.slice();if(st.key==='rush'||st.key==='swarm')list.sort((a,b)=>cards[a].cost-cards[b].cost);else if(st.key==='tank')list.sort((a,b)=>aiAccountStat(ai,b,'hp')-aiAccountStat(ai,a,'hp'));else if(st.key==='boss')list.sort((a,b)=>aiAccountStat(ai,b,'atk')-aiAccountStat(ai,a,'atk'));else if(st.key==='counter')list.sort((a,b)=>cards[b].range-cards[a].range);else list.sort((a,b)=>(aiAccountStat(ai,b,'atk')/Math.max(1,cards[b].cost))-(aiAccountStat(ai,a,'atk')/Math.max(1,cards[a].cost)));const p=aiPersonality(ai);if(time<7+p.patience*8&&Math.random()<.2+p.save*.55)return -1;if(opponentUnits?.length&&Math.random()<p.pressure*.28)list.sort((a,b)=>(aiAccountStat(ai,b,'atk')+cards[b].range*.4)-(aiAccountStat(ai,a,'atk')+cards[a].range*.4));const scored=list.map(i=>{const c=cards[i];return {i,v:(aiAccountStat(ai,i,'atk')/Math.max(1,c.cost))*(.5+p.burstBias)+(aiAccountStat(ai,i,'hp')/Math.max(1,c.cost))*.06*(.5+p.tankBias)+(c.range||0)/100*(.15+p.rangeBias)+Math.sin((i+1)*(p.counterBias*17+3))*p.randomness};}).sort((a,b)=>b.v-a.v);const poolN=Math.max(1,Math.min(scored.length,1+Math.floor((.15+p.randomness)*scored.length)));return scored[Math.floor(Math.random()*poolN)].i;}
 function simulateAIBattle(a,b){
  const sides=[{ai:a,money:1500,base:5000,units:[],deployed:[],nextDeploy:.2,recharge:Array(cards.length).fill(0)},{ai:b,money:1500,base:5000,units:[],deployed:[],nextDeploy:.5,recharge:Array(cards.length).fill(0)}];
  const maxTime=150,dt=.1;let time=0;const forms=sides.map(x=>aiBuildFormation(x.ai));
@@ -1086,8 +1086,8 @@ function simulateAIBattle(a,b){
      me.money-=cards[pick].cost;const c=cards[pick];me.recharge[pick]=c.recharge;
      const hp=aiAccountStat(me.ai,pick,'hp');
      me.units.push({i:pick,hp,maxhp:hp,atk:aiAccountStat(me.ai,pick,'atk'),range:aiAccountStat(me.ai,pick,'range'),spd:aiAccountStat(me.ai,pick,'spd'),interval:aiAccountStat(me.ai,pick,'interval'),cd:.15,x:si===0?100:900,side:si,trait:c.trait||'無',ability:c.ability||{},area:c.attackType==='area'});me.deployed.push(pick);
-     me.nextDeploy=time+.18;
-    }else me.nextDeploy=time+.35;
+     const p=aiPersonality(me.ai);me.nextDeploy=time+.12+p.patience*.7+Math.random()*p.randomness*.7;
+    }else {const p=aiPersonality(me.ai);me.nextDeploy=time+.22+p.save*.45+Math.random()*p.randomness;}
    }
   }
   for(let si=0;si<2;si++){
