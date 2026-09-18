@@ -875,15 +875,28 @@ function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
 function damageAgainst(u,target){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(u.atk*mult));}
-function damageTakenBy(u,attacker){let mult=1;if(attacker.attackDownUntil&&performance.now()/1000<attacker.attackDownUntil)attacker.atkEffective=(attacker.atkBase||attacker.atk)*.01;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round((attacker.atkEffective??attacker.atk)*mult));}
+function damageTakenBy(u,attacker){let mult=1;const now=performance.now()/1000;const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round(effectiveAtk*mult));}
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;if(!target.statuses)target.statuses={};target.statuses[type]={icon,text,until:performance.now()/1000+duration};updateStatusMark(target)}
 function updateStatusMark(target){if(!target?.el)return;const now=performance.now()/1000;const statuses=target.statuses||{};for(const k of Object.keys(statuses))if(statuses[k].until<=now)delete statuses[k];let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}const active=Object.values(statuses);if(active.length){const s=active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove()}
 function applyFrogAbility(target){
- if(!target||Math.random()>=.25)return;
- const r=Math.random();
- if(r<1/3){target.stopUntil=performance.now()/1000+3;setStatusMark(target,'⏸️','停止',3,'stop');target.spdOriginal=target.spd;target.spd=0;}
- else if(r<2/3){target.slowUntil=performance.now()/1000+3;target.slowFactor=.7;setStatusMark(target,'🐌','速度30%低下',3,'slow');}
- else{target.attackDownUntil=performance.now()/1000+3;target.attackDownFactor=.01;setStatusMark(target,'⬇️','攻撃力99%低下',3,'attackDown');}
+ if(!target)return;
+ const now=performance.now()/1000;
+ // 3つの妨害判定はそれぞれ独立して25%。同時発動もあり得る。
+ if(Math.random()<.25){
+   target.stopUntil=now+3;
+   target.spdOriginal=target.spdOriginal??target.spd;
+   setStatusMark(target,'⏸️','停止',3,'stop');
+ }
+ if(Math.random()<.25){
+   target.slowUntil=now+3;
+   target.slowFactor=.7;
+   setStatusMark(target,'🐌','速度30%低下',3,'slow');
+ }
+ if(Math.random()<.25){
+   target.attackDownUntil=now+3;
+   target.attackDownFactor=.01;
+   setStatusMark(target,'⬇️','攻撃力99%低下',3,'attackDown');
+ }
 }
 function applySlow(target,slow){if(!target||!slow)return;if(slow.trait!=="*"&&target.trait!==slow.trait)return;target.slowUntil=performance.now()/1000+slow.duration;target.slowFactor=slow.factor;setStatusMark(target,'🐌','速度低下',slow.duration,'slow');}
 function applyAbility(u,target,damage){const a=u.ability||{};if(a.splash&&target){for(const e of [...enemies]){if(e!==target&&Math.abs(e.x-target.x)<70){hit(e,Math.round(damage*a.splash),null,null)}}}if(a.slow&&Math.random()<a.slow.chance)applySlow(target,a.slow);if(a.slow?.all&&Math.random()<a.slow.chance){for(const e of enemies)if(e!==target)applySlow(e,a.slow)}}
@@ -1596,7 +1609,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
  const playerBaseStop=worldWidth-178;
  for(const u of [...units]){u.cd-=dt;
    let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
-   if(target){u.state='attack';if(u.cd<=0){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}u.cd=u.interval}}
+   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';u.x-=u.spd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
