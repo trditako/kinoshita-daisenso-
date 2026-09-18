@@ -119,7 +119,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
@@ -140,8 +140,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div id="aiAccountCount" style="font-weight:1000;text-align:left;margin:5px 0"></div><div id="aiAccountList" class="aiAccountList"></div>
 <button id="aiManagerClose" class="backbtn">戻る</button></div></div>
 <div id="aiDetailModal" class="overlay" style="display:none"><div class="panel aiManagePanel"><div id="aiDetailBody" class="aiDetail"></div><button id="aiDetailClose" class="backbtn">一覧に戻る</button></div></div><div id="rankMetaModal" class="overlay" style="display:none"><div class="panel rankPanel"><h1>📊 ランク戦メタ情報</h1><div id="rankMetaBody"></div><button id="rankMetaClose" class="backbtn">戻る</button></div></div>
-<div id="friendLobby" class="overlay" style="display:none"><div class="panel friendPanel"><h1>👥 フレンド</h1><div class="friendIdBox">自分のプレイヤーID<br><b id="myPlayerId"></b><button id="copyPlayerId">📋 コピー</button></div><div class="friendAdd"><input id="friendIdInput" class="pvpInput" placeholder="友達のプレイヤーID"><button id="friendAddBtn">➕ フレンド申請</button></div><div id="friendStatus" class="pvpStatus"></div><h2>フレンド一覧</h2><div id="friendList"></div><button id="friendClose" class="backbtn">戻る</button></div></div>
-<button id="friendsOpen" class="mainBtn">👥 フレンド</button>
+<div id="friendLobby" class="overlay" style="display:none"><div class="panel friendPanel"><h1>👥 フレンド</h1><div class="friendIdBox">自分のプレイヤーID<br><b id="myPlayerId"></b><button id="copyPlayerId">📋 コピー</button></div><div class="friendIdBox" style="margin-top:6px"><b>プロフィール</b><div id="myFriendProfileText" class="friendSub">プロフィール文はありません。</div><button id="editFriendProfile">✏️ プロフィール編集</button></div><div class="friendAdd"><input id="friendIdInput" class="pvpInput" placeholder="友達のプレイヤーID"><button id="friendAddBtn">➕ フレンド申請</button></div><div id="friendStatus" class="pvpStatus"></div><h2>フレンド一覧</h2><div id="friendList"></div><button id="friendClose" class="backbtn">戻る</button></div></div>
 <div id="pvpLobby" class="overlay" style="display:none"><div class="panel">
 <h1>⚔️ 対人戦</h1>
 <p>3桁のルームIDとパスワードを使って友達と対戦できます。</p>
@@ -659,19 +658,126 @@ async function syncPlayerRanking(){
   }catch(e){console.warn('プレイヤーランキング同期失敗:',e)}
   finally{playerRankingSyncBusy=false;}
 }
-async const FRIENDS_URL=SUPABASE_REST_URL+'/player_friends';
+const FRIENDS_URL=SUPABASE_REST_URL+'/player_friends';
 let friendRows=[];
-async function friendApi(path,options){options=options||{};const res=await fetch(FRIENDS_URL+(path||''),Object.assign({},options,{headers:supabaseHeaders(options.headers||{}),cache:'no-store'}));if(!res.ok)throw new Error('HTTP '+res.status);return res.status===204?null:res.json();}
-async function ensureMyPlayerProfile(){try{const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),updated_at:new Date().toISOString()};await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});}catch(e){}}
-async function openFriends(){document.getElementById('start').style.display='none';document.getElementById('friendLobby').style.display='flex';document.getElementById('myPlayerId').textContent=playerRankingId;document.getElementById('friendStatus').textContent='読み込み中…';await ensureMyPlayerProfile();await loadFriends();}
-function closeFriends(){document.getElementById('friendLobby').style.display='none';document.getElementById('start').style.display='flex';}
-async function loadFriends(){try{const rows=await friendApi('?select=id,player_id,friend_id,status,created_at&or=(player_id.eq.'+playerRankingId+',friend_id.eq.'+playerRankingId+')&order=created_at.desc');friendRows=Array.isArray(rows)?rows:[];renderFriends();document.getElementById('friendStatus').textContent='';}catch(e){document.getElementById('friendStatus').textContent='フレンド情報を取得できませんでした。';}}
-async function friendProfile(id){try{const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,bio&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});const rows=await res.json();const p=rows[0];if(!p){alert('そのプレイヤーIDは見つかりません。');return;}const d=document.createElement('dialog');d.style.cssText='max-width:560px;width:92vw;background:#202b31;color:#fff;border:2px solid #777;border-radius:18px;padding:18px';d.innerHTML='<div class="profileBox"><h2>👤 '+escapeRankText(p.name||'プレイヤー')+'</h2><div class="friendSub">ID: '+escapeRankText(p.player_id)+'</div><p>'+escapeRankText(p.bio||'プロフィール文はありません。')+'</p><div class="profileStats"><div class="profileStat"><b>'+Number(p.rp||0)+'</b><br>RP</div><div class="profileStat"><b>'+Number(p.wins||0)+'</b><br>勝利</div><div class="profileStat"><b>'+Number(p.losses||0)+'</b><br>敗北</div></div><button id="profileChallenge">⚔️ このフレンドと対戦</button><button id="profileClose">閉じる</button></div>';d.querySelector('#profileChallenge').onclick=function(){d.close();d.remove();friendChallenge(p.player_id)};d.querySelector('#profileClose').onclick=function(){d.close();d.remove()};document.body.appendChild(d);d.showModal();}catch(e){alert('プロフィールを取得できませんでした。')}}
-async function addFriend(){const id=document.getElementById('friendIdInput').value.trim();if(!id){document.getElementById('friendStatus').textContent='プレイヤーIDを入力してください。';return;}if(id===playerRankingId){document.getElementById('friendStatus').textContent='自分自身は追加できません。';return;}try{const check=await fetch(PLAYER_RANKINGS_URL+'?select=player_id&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'}).then(function(r){return r.json()});if(!check.length){document.getElementById('friendStatus').textContent='そのプレイヤーIDはまだ登録されていません。';return;}await friendApi('',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({player_id:playerRankingId,friend_id:id,status:'pending'})});document.getElementById('friendStatus').textContent='フレンド申請を送りました。';document.getElementById('friendIdInput').value='';await loadFriends();}catch(e){document.getElementById('friendStatus').textContent='申請に失敗しました。既に申請済みの可能性があります。';}}
-async function acceptFriend(id){try{await friendApi('?player_id=eq.'+encodeURIComponent(id)+'&friend_id=eq.'+encodeURIComponent(playerRankingId),{method:'PATCH',body:JSON.stringify({status:'accepted'})});await loadFriends();}catch(e){alert('承認に失敗しました。')}}
-async function removeFriend(row){try{await friendApi('?id=eq.'+row,{method:'DELETE'});await loadFriends();}catch(e){alert('削除に失敗しました。')}}
-function renderFriends(){const el=document.getElementById('friendList');if(!el)return;let html='';for(const x of friendRows){const other=x.player_id===playerRankingId?x.friend_id:x.player_id;if(x.status==='pending'&&x.friend_id===playerRankingId)html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">フレンド申請が届いています</span></span><span class="friendActions"><button onclick="acceptFriend(\''+other+'\')">承認</button><button onclick="removeFriend('+x.id+')">拒否</button></span></div>';else if(x.status==='pending')html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">申請中</span></span><span class="friendActions"><button onclick="removeFriend('+x.id+')">取消</button></span></div>';else if(x.status==='accepted')html+='<div class="friendRow"><span class="friendName">👤 '+escapeRankText(other)+'</span><span class="friendActions"><button onclick="friendProfile(\''+other+'\')">プロフィール</button><button onclick="friendChallenge(\''+other+'\')">⚔️ 対戦</button><button onclick="removeFriend('+x.id+')">削除</button></span></div>';}el.innerHTML=html||'<div class="friendEmpty">まだフレンドはいません。</div>';}
-function friendChallenge(id){const room=String(Math.floor(100+Math.random()*900));const pass=String(Math.floor(1000+Math.random()*9000));openPvp();pvpBuildForm('host');setTimeout(function(){document.getElementById('pvpRoomInput').value=room;document.getElementById('pvpPassInput').value=pass;pvpHost();pvpSetStatus('フレンドID '+id+' にルームID '+room+' とパスワード '+pass+' を伝えてください。');},0);}
+async function friendApi(path='',options={}){
+  const res=await fetch(FRIENDS_URL+path,Object.assign({},options,{headers:supabaseHeaders(options.headers||{}),cache:'no-store'}));
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return res.status===204?null:res.json();
+}
+async function ensureMyPlayerProfile(){
+  try{
+    const body={
+      player_id:playerRankingId,
+      name:(playerName||'プレイヤー').slice(0,16),
+      rp:Math.max(0,Math.floor(rankPoints)),
+      wins:Math.max(0,Math.floor(playerRankWins)),
+      losses:Math.max(0,Math.floor(playerRankLosses)),
+      bio:(storage.getItem('kinoshitaPlayerBio')||'').slice(0,80),
+      updated_at:new Date().toISOString()
+    };
+    await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
+  }catch(e){}
+}
+async function openFriends(){
+  document.getElementById('start').style.display='none';
+  document.getElementById('friendLobby').style.display='flex';
+  document.getElementById('myPlayerId').textContent=playerRankingId;
+  document.getElementById('friendStatus').textContent='読み込み中…';
+  await ensureMyPlayerProfile();
+  await loadFriends();
+}
+function closeFriends(){
+  document.getElementById('friendLobby').style.display='none';
+  document.getElementById('start').style.display='flex';
+}
+async function loadFriends(){
+  try{
+    const q='?select=player_id,friend_id,status,created_at&or=(player_id.eq.'+encodeURIComponent(playerRankingId)+',friend_id.eq.'+encodeURIComponent(playerRankingId)+')&order=created_at.desc';
+    const rows=await friendApi(q);
+    friendRows=Array.isArray(rows)?rows:[];
+    renderFriends();
+    document.getElementById('friendStatus').textContent='';
+  }catch(e){
+    document.getElementById('friendStatus').textContent='フレンド情報を取得できませんでした。';
+  }
+}
+async function friendProfile(id){
+  try{
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,bio,updated_at&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const rows=await res.json(),p=rows[0];
+    if(!p){alert('そのプレイヤーIDは見つかりません。');return;}
+    const all=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,rp,wins&order=rp.desc,wins.desc',{headers:supabaseHeaders(),cache:'no-store'}).then(x=>x.json());
+    const rank=Math.max(1,(Array.isArray(all)?all.findIndex(x=>x.player_id===p.player_id):-1)+1);
+    const d=document.createElement('dialog');
+    d.style.cssText='max-width:560px;width:92vw;background:#202b31;color:#fff;border:2px solid #777;border-radius:18px;padding:18px';
+    d.innerHTML='<div class="profileBox"><h2>👤 '+escapeRankText(p.name||'プレイヤー')+'</h2><div class="friendSub">プレイヤーID: '+escapeRankText(p.player_id)+'</div><p>'+(p.bio?escapeRankText(p.bio):'プロフィール文はありません。')+'</p><div class="profileStats"><div class="profileStat"><b>'+Number(p.rp||0)+'</b><br>RP</div><div class="profileStat"><b>'+rank+'位</b><br>ランキング</div><div class="profileStat"><b>'+Number(p.wins||0)+'勝 '+Number(p.losses||0)+'敗</b><br>戦績</div></div><button id="profileChallenge">⚔️ このフレンドと対戦</button><button id="profileClose">閉じる</button></div>';
+    d.querySelector('#profileChallenge').onclick=()=>{d.close();d.remove();friendChallenge(p.player_id);};
+    d.querySelector('#profileClose').onclick=()=>{d.close();d.remove();};
+    document.body.appendChild(d);d.showModal();
+  }catch(e){alert('プロフィールを取得できませんでした。');}
+}
+async function addFriend(){
+  const id=document.getElementById('friendIdInput').value.trim();
+  if(!id){document.getElementById('friendStatus').textContent='プレイヤーIDを入力してください。';return;}
+  if(id===playerRankingId){document.getElementById('friendStatus').textContent='自分自身は追加できません。';return;}
+  try{
+    const check=await fetch(PLAYER_RANKINGS_URL+'?select=player_id&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());
+    if(!Array.isArray(check)||!check.length){document.getElementById('friendStatus').textContent='そのプレイヤーIDはまだ登録されていません。';return;}
+    const existing=await friendApi('?select=player_id,friend_id,status&or=(and(player_id.eq.'+encodeURIComponent(playerRankingId)+',friend_id.eq.'+encodeURIComponent(id)+'),and(player_id.eq.'+encodeURIComponent(id)+',friend_id.eq.'+encodeURIComponent(playerRankingId)+'))');
+    if(Array.isArray(existing)&&existing.length){
+      const row=existing[0];
+      document.getElementById('friendStatus').textContent=row.status==='accepted'?'すでにフレンドです。':row.player_id===playerRankingId?'すでに申請しています。':'相手からの申請があります。';
+      return;
+    }
+    await friendApi('',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({player_id:playerRankingId,friend_id:id,status:'pending'})});
+    document.getElementById('friendStatus').textContent='フレンド申請を送りました。';
+    document.getElementById('friendIdInput').value='';
+    await loadFriends();
+  }catch(e){document.getElementById('friendStatus').textContent='申請に失敗しました。';}
+}
+async function acceptFriend(fromId){
+  try{
+    const path='?player_id=eq.'+encodeURIComponent(fromId)+'&friend_id=eq.'+encodeURIComponent(playerRankingId)+'&status=eq.pending';
+    await friendApi(path,{method:'PATCH',body:JSON.stringify({status:'accepted'})});
+    await loadFriends();
+  }catch(e){alert('承認に失敗しました。');}
+}
+async function removeFriend(playerId,friendId){
+  try{
+    const path='?player_id=eq.'+encodeURIComponent(playerId)+'&friend_id=eq.'+encodeURIComponent(friendId);
+    await friendApi(path,{method:'DELETE'});
+    await loadFriends();
+  }catch(e){alert('削除に失敗しました。');}
+}
+function renderFriends(){
+  const el=document.getElementById('friendList');if(!el)return;
+  let html='';
+  for(const x of friendRows){
+    const other=x.player_id===playerRankingId?x.friend_id:x.player_id;
+    if(x.status==='pending'&&x.friend_id===playerRankingId){
+      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">フレンド申請が届いています</span></span><span class="friendActions"><button onclick="acceptFriend(\\''+escapeRankText(other)+'\\')">承認</button><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">拒否</button></span></div>';
+    }else if(x.status==='pending'){
+      html+='<div class="friendRow"><span><b>👤 '+escapeRankText(other)+'</b><br><span class="friendPending">申請中</span></span><span class="friendActions"><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">取消</button></span></div>';
+    }else if(x.status==='accepted'){
+      html+='<div class="friendRow"><span><b class="friendName">👤 '+escapeRankText(other)+'</b><br><span class="friendSub">ID: '+escapeRankText(other)+'</span></span><span class="friendActions"><button onclick="friendProfile(\\''+escapeRankText(other)+'\\')">プロフィール</button><button onclick="friendChallenge(\\''+escapeRankText(other)+'\\')">⚔️ 対戦</button><button onclick="removeFriend(\\''+escapeRankText(x.player_id)+'\\',\\''+escapeRankText(x.friend_id)+'\\')">削除</button></span></div>';
+    }
+  }
+  el.innerHTML=html||'<div class="friendEmpty">まだフレンドはいません。プレイヤーIDを入力して申請できます。</div>';
+}
+function friendChallenge(id){
+  const room=String(Math.floor(100+Math.random()*900));
+  const pass=String(Math.floor(1000+Math.random()*9000));
+  openPvp();
+  pvpBuildForm('host');
+  setTimeout(()=>{
+    const roomEl=document.getElementById('pvpRoomInput'),passEl=document.getElementById('pvpPassInput');
+    if(roomEl)roomEl.value=room;if(passEl)passEl.value=pass;
+    pvpHost();
+    pvpSetStatus('フレンドID '+id+' との対戦ルームを作成しました。友達に表示されたルームIDとパスワードを伝えてください。');
+  },0);
+}
 function loadPublicPlayerRankings(){
   try{
     const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses&order=rp.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
@@ -1537,7 +1643,8 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('button');
  if(b && b.id!=='audioToggle' && !b.disabled)playSE('click');
 },{capture:true});
-document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
+document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
+document.getElementById('editFriendProfile').onclick=async()=>{const old=storage.getItem('kinoshitaPlayerBio')||'';const v=prompt('プロフィール文（80文字以内）',old);if(v===null)return;storage.setItem('kinoshitaPlayerBio',v.slice(0,80));document.getElementById('myFriendProfileText').textContent=v.slice(0,80)||'プロフィール文はありません。';await ensureMyPlayerProfile();};document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 /* AI自動処理はUIイベント登録を止めないよう安全に開始 */
 (async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(40);runAIActivities(120);}catch(e){console.warn("AI初期処理をスキップ:",e)}},50);setInterval(async()=>{try{await loadAIServerWorkerState();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){}},15000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
 
@@ -1550,6 +1657,10 @@ function bindSafeClick(id,fn){
 }
 bindSafeClick('formationBtn',()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()});
 bindSafeClick('pvpBtn',openPvp);
+bindSafeClick('friendsOpen',openFriends);
+document.getElementById('friendClose').onclick=closeFriends;
+document.getElementById('friendAddBtn').onclick=addFriend;
+document.getElementById('copyPlayerId').onclick=async()=>{try{await navigator.clipboard.writeText(playerRankingId);document.getElementById('friendStatus').textContent='プレイヤーIDをコピーしました。';}catch(e){document.getElementById('friendStatus').textContent='コピーできませんでした。IDを長押ししてコピーしてください。';}};
 bindSafeClick('rankBtn',openRank);
 bindSafeClick('kinoshitaBookBtn',openKinoshitaBook);
 bindSafeClick('enemyBookBtn',showEnemyBook);
