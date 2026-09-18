@@ -1110,8 +1110,8 @@ function simulateAIBattle(a,b){
   }
   time+=dt;
  }
- const winner=sides[0].base>=sides[1].base?sides[0]:sides[1];
- return {winner:winner.ai,duration:time,deployed:[sides[0].deployed||[],sides[1].deployed||[]],formations:forms};
+ const winnerSide=sides[0].base>=sides[1].base?0:1;const winner=sides[winnerSide];
+ return {winner:winner.ai,winnerSide,duration:time,deployed:[sides[0].deployed||[],sides[1].deployed||[]],formations:forms};
 }
 function stRate(ai){const st=strategyOf(ai);const base=st.key==='swarm'?.95:st.key==='rush'?1.05:st.key==='economy'?2.0:st.key==='boss'?1.7:st.key==='tank'?1.45:1.25;return Math.max(.75,base*(1.12-ai.skill*.22));}
 function pushAIMatchHistory(ai,text){ai.matchHistory=Array.isArray(ai.matchHistory)?ai.matchHistory:[];ai.matchHistory.unshift(text);ai.matchHistory=ai.matchHistory.slice(0,10);}
@@ -1143,7 +1143,7 @@ function aiLearnFromMatch(ai,won){
 function evolveAIFromMatch(winner,loser,result){winner.wins++;loser.losses++;winner.matches++;loser.matches++;winner.rp+=12;loser.rp=Math.max(0,loser.rp-9);winner.generation++;winner.lastResult='勝利';loser.lastResult='敗北';
  // 対戦そのものでもコインとXPを獲得。対戦→購入→育成の循環を止めない。
  winner.coins=Math.min(999999,(winner.coins||0)+220);loser.coins=Math.min(999999,(loser.coins||0)+120);winner.playerXP+=90;loser.playerXP+=50;
- const winnerIsA=result.winner===winner;recordRankMetaSide(result.deployed?.[winnerIsA?0:1]||[],result.formations?.[winnerIsA?0:1]||[],true);recordRankMetaSide(result.deployed?.[winnerIsA?1:0]||[],result.formations?.[winnerIsA?1:0]||[],false);rankMetaStats.matches++;saveRankMeta();
+ const winnerSide=result.winnerSide===1?1:0;recordRankMetaSide(result.deployed?.[winnerSide]||[],result.formations?.[winnerSide]||[],true);recordRankMetaSide(result.deployed?.[winnerSide?0:1]||[],result.formations?.[winnerSide?0:1]||[],false);rankMetaStats.matches++;saveRankMeta();
  pushAIMatchHistory(winner,`🤖 vs ${loser.name}：勝利（${Math.round(result.duration)}秒）`);pushAIMatchHistory(loser,`🤖 vs ${winner.name}：敗北（${Math.round(result.duration)}秒）`);aiLearnFromMatch(winner,true);aiLearnFromMatch(loser,false);
  let wc=0,lc=0;while(wc<5&&aiTryGachaExchange(winner))wc++;while(lc<3&&aiTryGachaExchange(loser))lc++;aiLevelUpFromXP(winner);aiLevelUpFromXP(loser);saveRank();}
 let aiMatchCursor=0;function recordAILiveResult(ai,won){if(!ai)return;if(won){ai.wins++;ai.rp+=12;ai.generation++;ai.lastResult='プレイヤー戦勝利';pushAIMatchHistory(ai,`👤 vs ${playerName}：勝利`);}else{ai.losses++;ai.rp=Math.max(0,ai.rp-9);ai.lastResult='プレイヤー戦敗北';pushAIMatchHistory(ai,`👤 vs ${playerName}：敗北`);}aiLearnFromMatch(ai,won);aiTryGachaExchange(ai);aiLevelUpFromXP(ai);saveRank();}
