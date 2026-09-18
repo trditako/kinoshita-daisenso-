@@ -83,7 +83,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .waveCrest{position:absolute;top:18%;width:28px;height:85px;border:6px solid rgba(190,240,255,.95);border-left:0;border-bottom:0;border-radius:0 90% 0 0;transform:skewX(-10deg) scaleY(.75);filter:drop-shadow(0 0 6px rgba(120,220,255,.9));animation:waveCrest .42s ease-out forwards;}
 @keyframes waveRush{0%{transform:scaleX(.05);opacity:0}35%{opacity:1}100%{transform:scaleX(1);opacity:.15}}
 @keyframes waveCrest{0%{transform:translateX(0) scaleY(.25);opacity:0}45%{opacity:1}100%{transform:translateX(45px) scaleY(1.15);opacity:0}}
-.attackFx{position:absolute;pointer-events:none;z-index:16;transform:translate(-50%,-50%);font-weight:1000;filter:drop-shadow(0 2px 2px #000);opacity:0}
+.allyWaveEffect{transform-origin:right center;animation:waveRushLeft .5s ease-out forwards;transform:scaleX(.05)}.allyWaveEffect .waveCrest{animation-name:waveCrestLeft}@keyframes waveRushLeft{0%{transform:scaleX(.05);opacity:0}35%{opacity:1}100%{transform:scaleX(1);opacity:.15}}@keyframes waveCrestLeft{0%{transform:translateX(0) scaleY(.25);opacity:0}45%{opacity:1}100%{transform:translateX(-45px) scaleY(1.15);opacity:0}}.attackFx{position:absolute;pointer-events:none;z-index:16;transform:translate(-50%,-50%);font-weight:1000;filter:drop-shadow(0 2px 2px #000);opacity:0}
 .attackFx.projectile{animation:fxFly .18s ease-out forwards}.attackFx.impact{animation:fxImpact .28s ease-out forwards}.attackFx.area{animation:fxArea .34s ease-out forwards}
 @keyframes fxFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}25%{opacity:1}100%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
 @keyframes fxImpact{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)}}
@@ -222,6 +222,8 @@ const 攻略特化キャラ=[
 {name:"宇宙決戦木下",cost:2800,hp:6200,atk:900,range:155,spd:.5,interval:1,recharge:32,icon:"🪐",motion:"super",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"宇宙決戦",desc:"宇宙属性に攻撃3倍＋バリアブレイク",strong:{宇宙:3},barrierBreak:true}}
 ];
 cards.push(...攻略特化キャラ);
+// 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
+cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
@@ -1144,13 +1146,14 @@ function allyWaveAttack(u){
  const level=Math.max(1,Number(u.waveLevel||0));
  if(!level)return;
  const waveRange=90*level;
- const targets=enemies.filter(e=>e.x>=u.x&&Math.abs(e.x-u.x)<=waveRange);
+ // 味方は右側から左側の敵へ波動を飛ばす。
+ const targets=enemies.filter(e=>e.x<=u.x&&Math.abs(e.x-u.x)<=waveRange);
  for(const e of targets){const dealt=Math.max(1,Math.round(u.atk));hit(e,dealt,u,null);if(e.hp<=0)removeEnemy(e);}
  const wave=document.createElement('div');
- wave.className='enemyWaveEffect';
- wave.style.left=u.x+'px';
+ wave.className='enemyWaveEffect allyWaveEffect';
+ wave.style.left=Math.max(0,u.x-waveRange)+'px';
  wave.style.bottom='105px';
- wave.style.setProperty('--wave-width',Math.max(1,Math.min(worldWidth-120,u.x+waveRange)-u.x)+'px');
+ wave.style.setProperty('--wave-width',Math.max(1,Math.min(waveRange,u.x))+'px');
  effects.appendChild(wave);
  for(let i=0;i<Math.min(8,level);i++){
    const crest=document.createElement('span');
