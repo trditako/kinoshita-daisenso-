@@ -643,13 +643,13 @@ function aiServerWorkerStatusText(){if(!aiServerConnected)return 'サーバーAI
 
 
 let unlocked=Number(storage.getItem('kinoshitaUnlocked')||1);unlocked=Math.max(1,Math.min(stages.length,unlocked));
-let chapterClears;try{chapterClears=JSON.parse(storage.getItem('kinoshitaChapterClears')||'[0,0,0]')}catch(e){chapterClears=[0,0,0]}chapterClears=[0,1,2].map(i=>Math.max(0,Math.min(48,Number(chapterClears[i]||0))));
+let chapterClears;try{chapterClears=JSON.parse(storage.getItem('kinoshitaChapterClears')||'[0,0,0,0]')}catch(e){chapterClears=[0,0,0,0]}chapterClears=[0,1,2,3].map(i=>Math.max(0,Math.min(48,Number(chapterClears[i]||0))));
 let enemyEncountered;try{enemyEncountered=JSON.parse(storage.getItem('kinoshitaEnemyEncountered')||'{}')}catch(e){enemyEncountered={}}
 if(!enemyEncountered||typeof enemyEncountered!=='object')enemyEncountered={};
 function saveEnemyEncountered(){storage.setItem('kinoshitaEnemyEncountered',JSON.stringify(enemyEncountered))}
 // すでにクリア済みのステージに登場した敵は、過去に出会った敵として図鑑に登録。
 for(let si=0;si<Math.min(unlocked,stages.length);si++){if(si<unlocked-1){(stages[si].schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
-for(let ch=0;ch<3;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
+for(let ch=0;ch<4;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 saveEnemyEncountered();
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
@@ -687,7 +687,7 @@ function applyAbility(u,target,damage){const a=u.ability||{};if(a.splash&&target
 function triggerKnockback(target,attacker,previousHp){if(!target||target.hp<=0)return false;const maxKB=Math.max(1,target.kb||1);const threshold=target.maxhp/maxKB;const beforeLevel=Math.floor((target.maxhp-previousHp)/threshold);const afterLevel=Math.floor((target.maxhp-target.hp)/threshold);const count=Math.max(0,afterLevel-beforeLevel);if(count<=0)return false;target.kbRemaining=Math.max(0,(target.kbRemaining??maxKB)-count);const distance=42+Math.min(30,Math.max(0,count-1)*12);if(target.isEnemy){target.x=Math.max(120,target.x-distance);}else{target.x=Math.min(worldWidth-178,target.x+distance);}target.cd=Math.max(target.cd,0.22);target.hitbackUntil=performance.now()/1000+0.22;target.el?.classList.remove('hitback');void target.el?.offsetWidth;target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);return true;}
 function hit(target,damage,source,abilitySource){if(!target||target.hp<=0)return;playSE('impact');const before=target.hp;let dealt=damage;if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}target.hp=Math.max(0,target.hp-dealt);if(target.el){target.el.classList.remove('hit');void target.el.offsetWidth;target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}popup('-'+damage,target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,damage);else if(source&&source.ability)applyAbility(source,target,damage);return before-target.hp;}
 
-function stageCardHTML(s,n,mode,chapter=1){const ok=mode==='event'?chapterUnlocked(1):n<=(chapter===1?unlocked:chapterUnlocked(chapter)?48:0);const icons=s.enemies.map(k=>enemyTypes[k]?.icon||'❔').join('');const last=s.schedule[s.schedule.length-1]?.t||0;const mult=mode==='event'?'イベント専用倍率':s.enemies.slice(0,8).map(k=>enemyTypes[k].name+'×'+chapterScale(chapter,n,k).toFixed(2)).join(' / ');const bossCount=s.schedule.filter(x=>x.role==='boss').length,midCount=s.schedule.filter(x=>x.role==='midboss').length;const bossText=(midCount||bossCount)?`<br>👑 中ボス${midCount}体 / BOSS ${bossCount}体`:'';return `<div class="stage ${ok?'':'locked'}" data-stage="${n}" data-mode="${mode}" data-chapter="${chapter}"><b>${s.name}${ok?'':' 🔒'}</b><small>敵種類：${s.enemies.length}/10　${icons}<br>敵城HP：${s.baseHp}　全${s.schedule.length}体　最終出現 ${last.toFixed(2)}秒${bossText}<br>📏 ステージ幅：${s.width} px<br>📊 ${mult}</small><div class="reward">${mode==='event'?(s.eventReward?'クリア報酬：'+s.eventReward:'クリア報酬：XP '+s.xp):(n<=owned?'入手済み':s.reward?'クリア報酬：'+s.rewardName:'クリア報酬：XP '+s.xp)}</div><button class="mapDetailBtn" data-map="${n}" data-mode="${mode}" data-chapter="${chapter}">マップ詳細</button></div>`}
+function stageCardHTML(s,n,mode,chapter=1){const ok=mode==='event'?chapterUnlocked(1):n<=(chapter===1?unlocked:((chapter===4?chapterClears[3]:chapterClears[chapter-1])||0)+1);const icons=s.enemies.map(k=>enemyTypes[k]?.icon||'❔').join('');const last=s.schedule[s.schedule.length-1]?.t||0;const mult=mode==='event'?'イベント専用倍率':s.enemies.slice(0,8).map(k=>enemyTypes[k].name+'×'+chapterScale(chapter,n,k).toFixed(2)).join(' / ');const bossCount=s.schedule.filter(x=>x.role==='boss').length,midCount=s.schedule.filter(x=>x.role==='midboss').length;const bossText=(midCount||bossCount)?`<br>👑 中ボス${midCount}体 / BOSS ${bossCount}体`:'';return `<div class="stage ${ok?'':'locked'}" data-stage="${n}" data-mode="${mode}" data-chapter="${chapter}"><b>${s.name}${ok?'':' 🔒'}</b><small>敵種類：${s.enemies.length}/10　${icons}<br>敵城HP：${s.baseHp}　全${s.schedule.length}体　最終出現 ${last.toFixed(2)}秒${bossText}<br>📏 ステージ幅：${s.width} px<br>📊 ${mult}</small><div class="reward">${mode==='event'?(s.eventReward?'クリア報酬：'+s.eventReward:'クリア報酬：XP '+s.xp):(n<=owned?'入手済み':s.reward?'クリア報酬：'+s.rewardName:'クリア報酬：XP '+s.xp)}</div><button class="mapDetailBtn" data-map="${n}" data-mode="${mode}" data-chapter="${chapter}">マップ詳細</button></div>`}
 function renderStageSelect(){
  const start=document.getElementById('start');
  if(start)start.style.display='flex';
@@ -719,7 +719,7 @@ function renderStageSelect(){
    root.querySelectorAll('.stage').forEach(x=>x.onclick=e=>{
      if(e.target.closest('.mapDetailBtn'))return;
      const n=+x.dataset.stage,mode=x.dataset.mode,ch=+(x.dataset.chapter||1);
-     const ok=mode==='event'?chapterUnlocked(1):n<=(ch===1?unlocked:chapterUnlocked(ch)?48:0);
+     const ok=mode==='event'?chapterUnlocked(1):n<=(ch===1?unlocked:((ch===4?chapterClears[3]:chapterClears[ch-1])||0)+1);
      if(!ok){
        info.textContent=ch===4?'未来編 第1章はいつでも挑戦できます。全48ステージです。':`日本編 第${ch}章は未解放です。第${ch-1}章を全48ステージクリアすると挑戦できます。`;
        return;
@@ -982,12 +982,12 @@ try{aiProfiles=JSON.parse(storage.getItem('kinoshitaAIProfilesV2')||'null')}catc
 function aiFreshAccount(index,absoluteIndex){
  const st=aiStrategies[index%aiStrategies.length];
  const n=absoluteIndex+1;
- return {accountId:'AI-'+String(n).padStart(3,'0'),name:['新緑','若木','木霊','森影','葉音','木陰','大樹','芽吹き'][index%8]+' '+['見習い','新人','研究員','挑戦者','開拓者','修行者','戦士','参謀'][Math.floor(index/8)%8]+' #'+String(n).padStart(3,'0'),population:2,rp:0,skill:.25+(index%6)*.025,wins:0,losses:0,generation:1,strategy:st.key,aggression:st.aggression,save:st.save,formation:[0],stageClears:0,chapterClears:[0,0,0],ownedCharacters:[0],eventClears:{},charLevels:Array(cards.length).fill(1),trainingXP:0,matches:0,lastResult:'',matchHistory:[],coins:900,playerXP:0,workerLevel:1,activity:'開始準備',activityHistory:[]};
+ return {accountId:'AI-'+String(n).padStart(3,'0'),name:['新緑','若木','木霊','森影','葉音','木陰','大樹','芽吹き'][index%8]+' '+['見習い','新人','研究員','挑戦者','開拓者','修行者','戦士','参謀'][Math.floor(index/8)%8]+' #'+String(n).padStart(3,'0'),population:2,rp:0,skill:.25+(index%6)*.025,wins:0,losses:0,generation:1,strategy:st.key,aggression:st.aggression,save:st.save,formation:[0],stageClears:0,chapterClears:[0,0,0,0],ownedCharacters:[0],eventClears:{},charLevels:Array(cards.length).fill(1),trainingXP:0,matches:0,lastResult:'',matchHistory:[],coins:900,playerXP:0,workerLevel:1,activity:'開始準備',activityHistory:[]};
 }
 function aiOwnedFromProgress(ai){
  const owned=new Set([0]);
- const cc=Array.isArray(ai.chapterClears)?ai.chapterClears:[Math.min(48,Number(ai.stageClears||0)),0,0];
- for(let ch=0;ch<3;ch++){const clear=Math.max(0,Math.min(48,Number(cc[ch]||0)));for(let si=0;si<clear;si++){const r=chapterStages[ch]?.[si]?.reward;if(Number.isInteger(r)&&r>0&&r-1<cards.length)owned.add(r-1);}if(clear>=48){const chapterReward=chapterRewardIndex(ch+1);if(chapterReward>=0&&chapterReward<cards.length)owned.add(chapterReward);}}
+ const cc=Array.isArray(ai.chapterClears)?ai.chapterClears:[Math.min(48,Number(ai.stageClears||0)),0,0,0];
+ for(let ch=0;ch<4;ch++){const clear=Math.max(0,Math.min(48,Number(cc[ch]||0)));for(let si=0;si<clear;si++){const r=chapterStages[ch]?.[si]?.reward;if(Number.isInteger(r)&&r>0&&r-1<cards.length)owned.add(r-1);}if(clear>=48){const chapterReward=chapterRewardIndex(ch+1);if(chapterReward>=0&&chapterReward<cards.length)owned.add(chapterReward);}}
  // 狂乱の木下はイベント報酬。イベントクリア記録があるAIだけ所持できる。
  if(ai.eventClears&&ai.eventClears['狂乱の木下降臨']){const idx=cards.findIndex(c=>c.name==='狂乱の木下');if(idx>=0)owned.add(idx);}
  return [...owned];
@@ -1198,11 +1198,11 @@ function aiActivityProgress(ai){
      ai.chapterClears[ch]++;ai.stageClears=ai.chapterClears.reduce((a,b)=>a+b,0);
      const st=chapterStages[ch][stage-1];ai.coins+=120+Math.floor((st?.xp||60)/4);ai.playerXP+=Math.max(1,Math.round((st?.xp||60)*.55));
      const reward=st?.reward;if(Number.isInteger(reward)&&reward>0&&reward-1<cards.length){if(!ai.ownedCharacters.includes(reward-1))ai.ownedCharacters.push(reward-1);ai.charLevels[reward-1]=Math.max(1,ai.charLevels[reward-1]||1);}
-     ai.activity=`日本編 第${ch+1}章 ${stage}ステージをクリア`;pushAIActivity(ai,`🇯🇵 第${ch+1}章 ${stage}クリア`);
-   }else{ai.activity=`日本編 第${ch+1}章 ${stage}に挑戦中`;pushAIActivity(ai,`🇯🇵 第${ch+1}章 ${stage}挑戦`);}
+     ai.activity=ch===3?`未来編 第1章 ${stage}ステージをクリア`:`日本編 第${ch+1}章 ${stage}ステージをクリア`;pushAIActivity(ai,ch===3?`🚀 未来編 第1章 ${stage}クリア`:`🇯🇵 第${ch+1}章 ${stage}クリア`);
+   }else{ai.activity=ch===3?`未来編 第1章 ${stage}に挑戦中`:`日本編 第${ch+1}章 ${stage}に挑戦中`;pushAIActivity(ai,ch===3?`🚀 未来編 第1章 ${stage}挑戦`:`🇯🇵 第${ch+1}章 ${stage}挑戦`);}
  }else{
    // 日本編3章まで終えたAIは、周回でXP/コインを稼ぎ、キャラ育成を継続する。
-   const target=Math.max(0,Math.min(47,ai.stageClears%48));const st=chapterStages[2]?.[target]||stages[target];
+   const target=Math.max(0,Math.min(47,ai.stageClears%48));const st=chapterStages[3]?.[target]||chapterStages[2]?.[target]||stages[target];
    ai.playerXP+=Math.max(1,Math.round((st?.xp||100)*.65));ai.coins+=80+Math.floor((st?.xp||100)/6);
    const leveled=aiLevelUpFromXP(ai);
    ai.activity=`レベル上げ周回：${st?.name||'ステージ'}`;
@@ -1492,12 +1492,12 @@ bindSafeClick('kinoshitaBookBtn',openKinoshitaBook);
 bindSafeClick('enemyBookBtn',showEnemyBook);
 bindSafeClick('gachaBtn',openGacha);
 bindSafeClick('startBtn',()=>{
- const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:chapterUnlocked(selectedChapter)?48:0);
+ const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:((selectedChapter===4?chapterClears[3]:chapterClears[selectedChapter-1])||0)+1);
  if(ok)startStage(selectedStage);
 });
 document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 document.getElementById('startBtn').onclick=()=>{
- const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:chapterUnlocked(selectedChapter)?48:0);
+ const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:((selectedChapter===4?chapterClears[3]:chapterClears[selectedChapter-1])||0)+1);
  if(!ok)return;
  startStage(selectedStage);
 };
