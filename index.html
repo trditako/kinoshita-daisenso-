@@ -1157,7 +1157,7 @@ function aiOwnedFromProgress(ai){
 function normalizeAIAccount(ai,index,population){
  const base=ai||{};
  if(!Array.isArray(base.chapterClears))base.chapterClears=[Math.min(48,Number(base.stageClears||0)),0,0,0];
- base.chapterClears=[0,1,2,3].map(i=>Math.max(0,Math.min(48,Number(base.chapterClears[i]||0))));
+ base.chapterClears=[0,1,2,3].map(i=>Math.max(0,Math.min(48,Number(base.chapterClears[i]||0))));base.eventClears=base.eventClears&&typeof base.eventClears==='object'?base.eventClears:{};if(base.chapterClears[0]<48)base.chapterClears[1]=0;if(base.chapterClears[1]<48)base.chapterClears[2]=0;if(base.chapterClears[2]<48||base.eventClears['狂乱の木下降臨']!==true)base.chapterClears[3]=0;
  base.stageClears=base.chapterClears.reduce((a,b)=>a+b,0);
  base.population=population;
  base.accountId=base.accountId||'AI-'+String(index+1).padStart(3,'0');
