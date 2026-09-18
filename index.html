@@ -253,7 +253,8 @@ const enemyTypes={
 巨大木下将軍:{name:"巨大木下将軍",icon:"👑",trait:"無",hp:6200,atk:340,range:120,spd:.3,interval:1.65,attackType:"area",kb:3,boss:true,money:700},
 木下大将:{name:"木下大将",icon:"🎖️",trait:"無",hp:8200,atk:420,range:105,spd:.34,interval:1.5,attackType:"area",kb:4,boss:true,money:900},
 覇王木下:{name:"覇王木下",icon:"👑",trait:"赤",hp:12500,atk:620,range:145,spd:.28,interval:1.7,attackType:"area",kb:3,boss:true,money:1200},
-超巨大木下:{name:"超巨大木下",icon:"🗻",trait:"無",hp:18000,atk:820,range:125,spd:.2,interval:2.0,attackType:"area",kb:5,boss:true,money:1500}
+超巨大木下:{name:"超巨大木下",icon:"🗻",trait:"無",hp:18000,atk:820,range:125,spd:.2,interval:2.0,attackType:"area",kb:5,boss:true,money:1500},
+波動木下:{name:"波動木下",icon:"〰️",trait:"宇宙",hp:250000,atk:1000,range:80,spd:.7,interval:.6,attackType:"single",kb:20,money:3000,waveLevel:10}
 };
 // 敵図鑑用の説明。図鑑で初めて遭遇した敵だけ詳細を閲覧できます。
 
@@ -283,7 +284,8 @@ Object.assign(enemyTypes,{
 宇宙砲木下:{name:"宇宙砲木下",icon:"☄️",trait:"宇宙",hp:9000,atk:1350,range:230,spd:.32,interval:1.8,attackType:"single",kb:5,money:1100,barrier:2200},
 宇宙騎士木下:{name:"宇宙騎士木下",icon:"🚀",trait:"宇宙",hp:14500,atk:1750,range:125,spd:.9,interval:1.05,attackType:"area",kb:7,money:1500,barrier:2800},
 宇宙王木下:{name:"宇宙王木下",icon:"👽",trait:"宇宙",hp:24000,atk:2600,range:170,spd:.52,interval:1.35,attackType:"area",kb:8,money:2200,barrier:4000},
-銀河皇帝木下:{name:"銀河皇帝木下",icon:"🌠",trait:"宇宙",hp:50000,atk:5200,range:190,spd:.3,interval:1.8,attackType:"area",kb:9,money:5000,barrier:7000,boss:true}
+銀河皇帝木下:{name:"銀河皇帝木下",icon:"🌠",trait:"宇宙",hp:50000,atk:5200,range:190,spd:.3,interval:1.8,attackType:"area",kb:9,money:5000,barrier:7000,boss:true},
+カエル木下:{name:"カエル木下",icon:"🐸",trait:"無",hp:15000,atk:250,range:250,attackMin:150,attackMax:600,spd:.75,interval:2.8,attackType:"area",kb:3,money:350,ability:{name:"停止",desc:"攻撃時25%で敵を3秒間停止。25%で移動速度30%減速を3秒。25%で攻撃力99%ダウンを3秒。感知射程250、実攻撃範囲150〜600。"}}
 });
 const FUTURE_ENEMY_KEYS=["未来天使木下","天使突撃木下","天使砲木下","天使盾木下","天使巨木下","天使司令木下","天使流星木下","堕天使木下","黒速木下","黒突撃木下","黒戦車木下","黒忍木下","黒巨木下","黒砲木下","黒王木下","漆黒木下","宇宙木下","宇宙漂流木下","宇宙盾木下","宇宙獣木下","宇宙巨木下","宇宙砲木下","宇宙騎士木下","宇宙王木下","銀河皇帝木下"];
 const FUTURE_LORE={
@@ -551,7 +553,24 @@ const eventStages=[
   {t:12.0,enemy:'狂乱の木下',role:'boss',mult:1.0,fixedMultiplier:true},
   {t:18.0,enemy:'速木下',mult:7.5,fixedMultiplier:true},
   {t:24.0,enemy:'巨木下',mult:3.5,fixedMultiplier:true}
- ],repeatSpawns:[{start:32,interval:20,enemy:'木下戦車',mult:2.6,fixedMultiplier:true}]}
+ ],repeatSpawns:[{start:32,interval:20,enemy:'木下戦車',mult:2.6,fixedMultiplier:true}]},
+ {name:'波動木下降臨',width:2200,baseHp:150000,xp:2500,eventReward:'プレイヤーXP 2500',enemies:['宇宙獣木下','速木下','黒忍木下','波動木下','カエル木下'],schedule:[
+  {t:0,enemy:'宇宙獣木下',mult:3,fixedMultiplier:true},
+  {t:0,enemy:'宇宙獣木下',mult:3,fixedMultiplier:true},
+  {t:2,enemy:'速木下',mult:15,fixedMultiplier:true},
+  {t:3,enemy:'速木下',mult:15,fixedMultiplier:true},
+  {t:4,enemy:'速木下',mult:15,fixedMultiplier:true},
+  {t:5,enemy:'速木下',mult:15,fixedMultiplier:true},
+  {t:15,enemy:'波動木下',mult:1,fixedMultiplier:true},
+  {t:20,enemy:'カエル木下',mult:1,fixedMultiplier:true},
+  {t:34,enemy:'カエル木下',mult:1,fixedMultiplier:true},
+  {t:54,enemy:'カエル木下',mult:1,fixedMultiplier:true},
+  {t:95,enemy:'カエル木下',mult:1,fixedMultiplier:true},
+  {t:95.2,enemy:'カエル木下',mult:1,fixedMultiplier:true},
+  {t:95.4,enemy:'カエル木下',mult:1,fixedMultiplier:true}
+ ],repeatSpawns:[
+  {start:20,interval:20,enemy:'黒忍木下',mult:4,fixedMultiplier:true}
+ ]}
 ];
 
 // ===== 日本編 第2章・第3章 =====
@@ -856,9 +875,16 @@ function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
 function damageAgainst(u,target){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(u.atk*mult));}
-function damageTakenBy(u,attacker){let mult=1;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round(attacker.atk*mult));}
+function damageTakenBy(u,attacker){let mult=1;if(attacker.attackDownUntil&&performance.now()/1000<attacker.attackDownUntil)attacker.atkEffective=(attacker.atkBase||attacker.atk)*.01;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round((attacker.atkEffective??attacker.atk)*mult));}
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;if(!target.statuses)target.statuses={};target.statuses[type]={icon,text,until:performance.now()/1000+duration};updateStatusMark(target)}
-function updateStatusMark(target){if(!target?.el)return;const now=performance.now()/1000;const statuses=target.statuses||{};for(const k of Object.keys(statuses))if(statuses[k].until<=now)delete statuses[k];let mark=target.el.querySelector('.statusTag');const active=Object.values(statuses);if(active.length){const s=active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove()}
+function updateStatusMark(target){if(!target?.el)return;const now=performance.now()/1000;const statuses=target.statuses||{};for(const k of Object.keys(statuses))if(statuses[k].until<=now)delete statuses[k];let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}const active=Object.values(statuses);if(active.length){const s=active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove()}
+function applyFrogAbility(target){
+ if(!target||Math.random()>=.25)return;
+ const r=Math.random();
+ if(r<1/3){target.stopUntil=performance.now()/1000+3;setStatusMark(target,'⏸️','停止',3,'stop');target.spdOriginal=target.spd;target.spd=0;}
+ else if(r<2/3){target.slowUntil=performance.now()/1000+3;target.slowFactor=.7;setStatusMark(target,'🐌','速度30%低下',3,'slow');}
+ else{target.attackDownUntil=performance.now()/1000+3;target.attackDownFactor=.01;setStatusMark(target,'⬇️','攻撃力99%低下',3,'attackDown');}
+}
 function applySlow(target,slow){if(!target||!slow)return;if(slow.trait!=="*"&&target.trait!==slow.trait)return;target.slowUntil=performance.now()/1000+slow.duration;target.slowFactor=slow.factor;setStatusMark(target,'🐌','速度低下',slow.duration,'slow');}
 function applyAbility(u,target,damage){const a=u.ability||{};if(a.splash&&target){for(const e of [...enemies]){if(e!==target&&Math.abs(e.x-target.x)<70){hit(e,Math.round(damage*a.splash),null,null)}}}if(a.slow&&Math.random()<a.slow.chance)applySlow(target,a.slow);if(a.slow?.all&&Math.random()<a.slow.chance){for(const e of enemies)if(e!==target)applySlow(e,a.slow)}}
 function triggerKnockback(target,attacker,previousHp){if(!target||target.hp<=0)return false;const maxKB=Math.max(1,target.kb||1);const threshold=target.maxhp/maxKB;const beforeLevel=Math.floor((target.maxhp-previousHp)/threshold);const afterLevel=Math.floor((target.maxhp-target.hp)/threshold);const count=Math.max(0,afterLevel-beforeLevel);if(count<=0)return false;target.kbRemaining=Math.max(0,(target.kbRemaining??maxKB)-count);const distance=42+Math.min(30,Math.max(0,count-1)*12);if(target.isEnemy){target.x=Math.max(120,target.x-distance);}else{target.x=Math.min(worldWidth-178,target.x+distance);}target.cd=Math.max(target.cd,0.22);target.hitbackUntil=performance.now()/1000+0.22;target.el?.classList.remove('hitback');void target.el?.offsetWidth;target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);return true;}
@@ -1096,7 +1122,7 @@ function attackEffect(source,target){if(!source||!target)return;const key=source
 function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;updateStatusMark(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};renderUnitElement(e);enemies.push(e);return e}
-function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
+function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
 function removeUnit(u){u.el?.remove();units=units.filter(x=>x!==u);if(pvpMode&&u.owner==='local')pvpSend({type:'death',id:u.id})}
 function removeEnemy(e){e.el?.remove();enemies=enemies.filter(x=>x!==e);if(pvpMode){if(e.isRemote)pvpSend({type:'death',id:e.id});playSE('enemyDefeat');return;}const reward=Math.max(0,Math.floor(e.money??e.dropMoney??0));money=Math.min(workerMax,money+reward);if(reward>0){playSE('enemyDefeat');playSE('money');}if(reward>0)popup('+'+reward+'円',e.x,Math.max(25,field.clientHeight-145));}
 function hit(target,damage,source,abilitySource){if(!target||target.hp<=0)return;const before=target.hp;target.hp=Math.max(0,target.hp-damage);if(target.el){target.el.classList.remove('hit');void target.el.offsetWidth;target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}popup('-'+damage,target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,damage);else if(source&&source.ability)applyAbility(source,target,damage);return before-target.hp;}
@@ -1575,11 +1601,30 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
    else{u.state='move';u.x-=u.spd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
+function enemyWaveAttack(e){
+ const level=Math.max(1,Number(e.waveLevel||0));
+ if(!level)return;
+ const waveRange=90*level;
+ const targets=units.filter(u=>u.x>=e.x&&Math.abs(u.x-e.x)<=waveRange);
+ for(const u of targets){
+   const before=u.hp;
+   hit(u,e.atk,e,null);
+   if(u.hp<=0)removeUnit(u);
+ }
+ const fx=document.createElement('div');
+ fx.className='attackFx area fx-enemy';
+ fx.textContent='〰️';
+ fx.style.left=Math.min(worldWidth-120,e.x+waveRange*.55)+'px';
+ fx.style.bottom='105px';
+ fx.style.fontSize=Math.min(72,26+level*4)+'px';
+ effects.appendChild(fx);
+ setTimeout(()=>fx.remove(),340);
+}
  for(const e of [...enemies]){e.cd-=dt;
    let target=units.filter(u=>Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
-   if(target){e.state='attack';if(e.cd<=0){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0)removeUnit(t)}e.cd=e.interval}}
+   if(target){e.state='attack';if(e.cd<=0){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0)removeUnit(t)}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
+   else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
    updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((e.id*7)%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
  }
  updateCamera();if(enemyHp<=0){enemyHp=0;return rankMode?finishRank(true):showResult(true);}if(baseHp<=0){baseHp=0;return rankMode?finishRank(false):showResult(false);}update();requestAnimationFrame(loop)}
