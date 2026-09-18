@@ -287,8 +287,6 @@ const FUTURE_LORE={
 宇宙王木下:{ability:"宇宙属性・範囲攻撃・超強バリア",story:"宇宙属性後半の大型強敵。"},
 銀河皇帝木下:{ability:"BOSS・宇宙属性・巨大バリア",story:"未来編第1章の最終ボス。強力なバリアと広範囲攻撃で立ちはだかる。"}
 };
-Object.assign(enemyLore,FUTURE_LORE);
-
 const enemyLore={
 鬼木下:{ability:'なし',story:'木下軍の前に最初に姿を現す、元気いっぱいの鬼姿の木下。力はまだ控えめだが、数で押してくるのが得意。'},
 赤鬼木下:{ability:'赤属性',story:'赤いオーラをまとった鬼木下。鬼木下より頑丈で、前線をじわじわ押し上げることを得意としている。'},
@@ -319,6 +317,7 @@ const enemyLore={
 覇王木下:{ability:'BOSS・赤属性・高火力',story:'赤い力を極限まで高めた覇王。出現しただけで戦場の空気が変わるほどの存在感を持つ。'},
 超巨大木下:{ability:'BOSS・超高耐久・範囲攻撃',story:'木下の巨大化を極限まで進めた最終級の大型敵。その歩みは遅いが、到達を許すと戦線を大きく動かす。'}
 };
+Object.assign(enemyLore,FUTURE_LORE);
 const stages=[
 {name:"ステージ1",width:650,baseHp:1000,reward:2,rewardName:"強化木下",xp:60,enemies:["鬼木下"],schedule:[{t:2.00,enemy:"鬼木下"},{t:4.50,enemy:"鬼木下"},{t:7.00,enemy:"鬼木下"},{t:9.50,enemy:"鬼木下"},{t:12.00,enemy:"鬼木下"},{t:14.50,enemy:"鬼木下"},{t:17.00,enemy:"鬼木下"},{t:19.50,enemy:"鬼木下"}]},
 {name:"ステージ2",width:680,baseHp:1400,reward:3,rewardName:"マッチョ木下",xp:80,enemies:["鬼木下"],schedule:[{t:2.00,enemy:"鬼木下"},{t:4.30,enemy:"鬼木下"},{t:6.60,enemy:"鬼木下"},{t:8.90,enemy:"鬼木下"},{t:11.20,enemy:"鬼木下"},{t:13.50,enemy:"鬼木下"},{t:15.80,enemy:"鬼木下"},{t:18.10,enemy:"鬼木下"},{t:20.40,enemy:"鬼木下"},{t:22.70,enemy:"鬼木下"},{t:25.00,enemy:"鬼木下"},{t:27.30,enemy:"鬼木下"}]},
