@@ -126,7 +126,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
@@ -140,6 +140,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div class="rankHistory" id="rankHistory"></div>
 <button id="rankClose" class="backbtn">戻る</button>
 </div></div>
+<div id="giftBox" class="overlay" style="display:none"><div class="panel rankPanel"><h1>🎁 プレゼントBOX</h1><div id="giftBoxBody"></div><button id="giftClaimAll" class="formationBtn">🎁 すべて受け取る</button><button id="giftClose" class="backbtn">戻る</button></div></div>
 <div id="aiManager" class="overlay" style="display:none"><div class="panel aiManagePanel">
 <h1>🤖 AIアカウント管理</h1>
 <div style="font-size:12px;font-weight:800;color:#475569">1000個のAIアカウントを、現在の成長状態ごとに確認できます。AIは対戦・学習によって個別にRP、キャラLv、編成、戦績などが変化します。</div>
@@ -227,6 +228,8 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
+cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
+cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
@@ -1878,10 +1881,42 @@ const pauseButton=document.getElementById('battlePauseBtn');pauseButton.addEvent
 document.getElementById('battleDetailBtn').onclick=showBattleCharacterList;document.getElementById('battleEnemyBookBtn').onclick=showEnemyBook;document.getElementById('enemyBookBtn').onclick=showEnemyBook;
 document.getElementById('nextBtn').onclick=()=>{const r=document.getElementById('result');r.style.setProperty('display','none','important');if(document.getElementById('nextBtn').textContent==='ランク戦に戻る'){document.getElementById('start').style.display='none';openRank();return;}if(document.getElementById('nextBtn').textContent==='もう一度挑戦'){startStage(selectedStage);return;}if((selectedMode==='japan'||selectedMode==='future')&&selectedStage<48){selectedStage++;const pool=chapterPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('stageBack').onclick=()=>{document.getElementById('result').style.setProperty('display','none','important');document.getElementById('start').style.display='flex';renderStageSelect()};
-document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
+document.getElementById('giftBoxBtn').onclick=openGiftBox;document.getElementById('giftClose').onclick=closeGiftBox;document.getElementById('giftClaimAll').onclick=claimAllGifts;document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
 document.getElementById('formationClose').onclick=()=>{document.getElementById('formation').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('removeAll').onclick=()=>{formation=[];normalizeFormation();save();renderFormation();renderCards()};
-function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
+
+const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
+function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
+function rankTierReward(rp){const t=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];let x=t[0];for(const v of t)if(rp>=rankDefs.find(d=>d.name===v[0]).need)x=v;return x}
+function rankRewardSnapshotRank(){
+ const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];
+ const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});
+ for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,rp:Number(a.rp||0)});
+ hum.sort((a,b)=>b.rp-a.rp);
+ const i=hum.findIndex(x=>x.id===playerRankingId);
+ return i<0?hum.length+1:i+1;
+}
+function addRankRewardGift(){
+ const cycle=rankRewardCycle(),last=Number(storage.getItem('kinoshitaRankRewardCycle')||-1);
+ if(last>=cycle)return;
+ const rp=Math.max(0,Number(rankPoints||0)),pos=rankRewardSnapshotRank();
+ let coins=0,xp=0,badge='',char=false,label='';
+ if(pos===1){coins=150000;xp=150000;badge='1位の証';char=true;label='ランク1位報酬'}
+ else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
+ else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
+ else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
+ else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
+ pendingRankGifts.push({cycle,label,coins,xp,badge,char});
+ storage.setItem('kinoshitaRankRewardCycle',String(cycle));
+ rankPoints=0;saveRank();
+}
+let pendingRankGifts=[];try{pendingRankGifts=JSON.parse(storage.getItem('kinoshitaPendingRankGifts')||'[]')}catch(e){pendingRankGifts=[]}
+function saveRankGifts(){storage.setItem('kinoshitaPendingRankGifts',JSON.stringify(pendingRankGifts))}
+function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char?'<br>🎁 木下&吉田（ランク1位限定）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
+function openGiftBox(){addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
+function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
+function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
+function renderOwnedStart(){addRankRewardGift();document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 </script>
