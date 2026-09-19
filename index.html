@@ -724,6 +724,24 @@ async function syncPlayerRanking(){
     const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),updated_at:new Date().toISOString()};
     const res=await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
+    // サーバー側で確定したランク報酬をプレゼントBOXへ取り込む。
+    const rewardRes=await fetch(PLAYER_RANKINGS_URL+'?select=pending_coins,pending_xp,reward_rank,reward_cycle,limited_character_owned&player_id=eq.'+encodeURIComponent(playerRankingId),{headers:supabaseHeaders(),cache:'no-store'});
+    if(rewardRes.ok){
+      const rows=await rewardRes.json(),p=rows&&rows[0];
+      const coins=Number(p?.pending_coins||0),xp=Number(p?.pending_xp||0);
+      if(p&&(coins>0||xp>0)){
+        if(typeof pendingRankGifts==='undefined')pendingRankGifts=[];
+        const cycle=Number(p.reward_cycle??rankRewardCycle());
+        if(!pendingRankGifts.some(g=>g.server===true&&Number(g.cycle)===cycle)){
+          const pos=Number(p.reward_rank||0);
+          const label=pos>=1&&pos<=10?'ランク'+pos+'位報酬':'ランク報酬';
+          pendingRankGifts.push({cycle,label,coins,xp,badge:pos>=1&&pos<=10?pos+'位の証':'',char:!!p.limited_character_owned,server:true});
+          saveRankGifts();
+        }
+        // 同じ報酬を何度も取り込まないよう、取得後にサーバーの未受取分を0へ戻す。
+        await fetch(PLAYER_RANKINGS_URL+'?player_id=eq.'+encodeURIComponent(playerRankingId),{method:'PATCH',headers:supabaseHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({pending_coins:0,pending_xp:0}),cache:'no-store'});
+      }
+    }
     await loadPublicPlayerRankings();
   }catch(e){console.warn('プレイヤーランキング同期失敗:',e)}
   finally{playerRankingSyncBusy=false;}
@@ -1425,7 +1443,13 @@ function rankRewardRulesHTML(){
   ['1位',150000,150000,'1位の証','木下&吉田'],
   ['2位',100000,100000,'2位の証',''],
   ['3位',750000,75000,'3位の証',''],
-  ['4～10位',500000,50000,'4～10位の証',''],
+  ['4位',500000,50000,'4位の証',''],
+  ['5位',500000,50000,'5位の証',''],
+  ['6位',500000,50000,'6位の証',''],
+  ['7位',500000,50000,'7位の証',''],
+  ['8位',500000,50000,'8位の証',''],
+  ['9位',500000,50000,'9位の証',''],
+  ['10位',500000,50000,'10位の証',''],
  ];
  return '<h3>🏆 シーズン1～10位報酬</h3><div class="rankNotice" style="text-align:left">'+top10.map(x=>'<b>'+x[0]+'</b>：🪙 '+x[1].toLocaleString()+'コイン + ⭐ '+x[2].toLocaleString()+' XP + 🏅 '+x[3]+(x[4]?' + 🎁 '+x[4]:'')).join('<br>')+'<br><small>11位以下はシーズン終了時のRPランク帯報酬です。報酬はプレゼントBOXに送られます。</small></div><h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 現在の弱体化対象</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br><small>表示されているキャラはランク戦で弱体化中です。前シーズンTOP5は25%低下、今シーズンTOP5は60%低下。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間、弱体化されます。勝率のみで選定し、使用率は選定条件に含みません。</small></div>';
 }
@@ -1994,7 +2018,7 @@ function addRankRewardGift(){
 let pendingRankGifts=[];try{pendingRankGifts=JSON.parse(storage.getItem('kinoshitaPendingRankGifts')||'[]')}catch(e){pendingRankGifts=[]}
 function saveRankGifts(){storage.setItem('kinoshitaPendingRankGifts',JSON.stringify(pendingRankGifts))}
 function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char?'<br>🎁 木下&吉田（ランク1位限定）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
-async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
+async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}if(!pendingRankGifts.length)addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
 function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
 function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
