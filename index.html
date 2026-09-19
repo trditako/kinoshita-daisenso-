@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- KINOSHITA FUTURE CHAPTER 1 BUILD: 2026-09-18 -->
+<!-- KINOSHITA FUTURE CHAPTER 1 BUILD: 2026-09-19 EXCHANGE UPDATE -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#111111">
 <meta charset="utf-8">
@@ -126,9 +126,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
- <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
-<h1>🏆 ランク戦</h1>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="giftBoxBtn" class="formationBtn" style="background:#fbbf24!important;color:#211600!important">🎁 プレゼントBOX</button><button id="profileBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">👤 プロフィール</button><button id="rankRewardBtn" class="formationBtn" style="background:#ede9fe!important;color:#312e81!important">🏅 段位・報酬</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🪙 交換所</button><button id="limitedExchangeBtn" class="formationBtn" style="background:#c084fc!important;color:#241b00!important">⏳ 期間限定交換所</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="giftBox" class="overlay" style="display:none"><div class="panel rankPanel"><h1>🎁 プレゼントBOX</h1><div id="giftBoxBody"></div><button id="giftClaimAll" class="formationBtn">🎁 すべて受け取る</button><button id="giftClose" class="backbtn">戻る</button></div></div><div id="playerProfile" class="overlay" style="display:none"><div class="panel rankPanel"><h1>👤 プレイヤープロフィール</h1><div id="playerProfileBody"></div><button id="profileClose" class="backbtn">戻る</button></div></div><div id="rankRewardInfo" class="overlay" style="display:none"><div class="panel rankPanel"><h1>🏅 段位・ランク報酬</h1><div id="rankRewardBody"></div><button id="rankRewardClose" class="backbtn">戻る</button></div></div><div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
+<h1>🏆 ランク戦</h1><div id="rankResetCountdown" class="rankNotice" style="font-size:16px;font-weight:900"></div>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
 <div style="margin-top:8px;text-align:left;font-weight:900">プレイヤー名</div>
 <input id="playerNameInput" class="rankNameInput" maxlength="16" placeholder="プレイヤー名を入力">
@@ -143,7 +143,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div id="aiManager" class="overlay" style="display:none"><div class="panel aiManagePanel">
 <h1>🤖 AIアカウント管理</h1>
 <div style="font-size:12px;font-weight:800;color:#475569">1000個のAIアカウントを、現在の成長状態ごとに確認できます。AIは対戦・学習によって個別にRP、キャラLv、編成、戦績などが変化します。</div>
-<div class="aiManageTools"><input id="aiSearchInput" class="aiSearch" placeholder="名前・AI番号で検索"><select id="aiSortSelect" class="aiSearch"><option value="rp">RPが高い順</option><option value="matches">対戦数が多い順</option><option value="wins">勝利数が多い順</option><option value="clears">日本編進行度順</option><option value="futureClears">未来編進行度順</option><option value="ownedCharacters">キャラ所持数順</option><option value="generation">世代が高い順</option><option value="name">名前順</option></select></div>
+<div class="aiManageTools"><input id="aiSearchInput" class="aiSearch" placeholder="名前・AI番号で検索"><select id="aiSortSelect" class="aiSearch"><option value="rp">RPが高い順</option><option value="matches">対戦数が多い順</option><option value="wins">勝利数が多い順</option><option value="clears">日本編進行度順</option><option value="futureClears">未来編進行度順</option><option value="ownedCharacters">キャラ所持数順</option><option value="coins">木下コインが多い順</option><option value="generation">世代が高い順</option><option value="name">名前順</option></select></div>
 <div id="aiAccountCount" style="font-weight:1000;text-align:left;margin:5px 0"></div><div id="aiAccountList" class="aiAccountList"></div>
 <button id="aiManagerClose" class="backbtn">戻る</button></div></div>
 <div id="aiDetailModal" class="overlay" style="display:none"><div class="panel aiManagePanel"><div id="aiDetailBody" class="aiDetail"></div><button id="aiDetailClose" class="backbtn">一覧に戻る</button></div></div><div id="rankMetaModal" class="overlay" style="display:none"><div class="panel rankPanel"><h1>📊 ランク戦メタ情報</h1><div id="rankMetaBody"></div><button id="rankMetaClose" class="backbtn">戻る</button></div></div>
@@ -157,7 +157,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div id="pvpRoomDisplay" style="display:none"><div>ルームID</div><div id="pvpRoomText" class="pvpRoom"></div><div class="pvpHint">友達に3桁のIDとパスワードを伝えてください。</div></div>
 <button id="pvpClose" class="backbtn">戻る</button>
 </div></div>
-<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下ガチャ</h1><div class="gachaCoin" id="gachaCoinText"></div><p>ステージクリアなどで貯めた木下コインを使って、木下を確定で入手できます。ランダム抽選はありません。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
+<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🪙 交換所</h1><div class="gachaCoin" id="gachaCoinText"></div><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div><div id="limitedExchange" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>⏳ 期間限定交換所</h1><div class="gachaCoin" id="limitedExchangeCoinText"></div><div id="limitedExchangeBanner"></div><div id="limitedExchangeResult"></div><button id="limitedExchangeClose" class="backbtn">戻る</button></div></div>
 <div id="kinoshitaBook" class="overlay" style="display:none"><div class="panel kinoshitaBookPanel"><h1>📖 木下図鑑</h1><div class="bookHeader"><span>木下コレクション</span><span class="bookCount" id="kinoshitaBookCount"></span></div><div class="bookFilters" id="kinoshitaBookFilters"><button class="bookFilter active" data-book-filter="all">すべて</button><button class="bookFilter" data-book-filter="owned">所持済み</button><button class="bookFilter" data-book-filter="locked">未入手</button></div><div class="bookHint">入手した木下は詳しい性能を確認できます。未入手の木下は「？」で表示されます。</div><div id="kinoshitaBookGrid" class="kinoshitaBookGrid"></div><button id="kinoshitaBookClose" class="backbtn">戻る</button></div></div>
 <div id="formation" class="overlay" style="display:none"><div class="panel"><h1>編成</h1><p>持っているキャラから最大10体を自由に選べます。<br>追加・削除だけでなく、▲▼で出撃順も自由に変更できます。</p><div class="formationHint">出撃スロット</div><div class="formationSlots" id="formationSlots"></div><div><button id="removeAll" class="removeAll">全員はずす</button><button id="formationClose" class="backbtn">戻る</button></div><div class="formationHint">所持キャラクター（タップで追加）</div><div class="availableChars" id="availableChars"></div></div></div>
  <div id="detail" class="overlay" style="display:none"><div class="panel detailPanel"><h1 id="detailTitle">キャラクター詳細</h1><div id="detailBody"></div><button id="detailClose" class="backbtn">閉じる</button></div></div>
@@ -721,6 +721,9 @@ let aiServerConnected=false;
 let aiServerLastSync=0;
 let aiServerSyncBusy=false;
 function supabaseHeaders(extra={}){return Object.assign({apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},extra)}
+let rankSeasonTop10=[];
+async function loadRankSeasonTop10(){try{const rows=await fetch(SUPABASE_REST_URL+'/rank_season_top10?select=cycle,source,account_id,name,rank_position&order=cycle.desc,rank_position.asc',{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());rankSeasonTop10=Array.isArray(rows)?rows:[]}catch(e){rankSeasonTop10=[]}}
+function top10BadgeFor(source,id){const rows=rankSeasonTop10.filter(x=>String(x.source)===source&&String(x.account_id)===String(id));if(!rows.length)return '';const p=Number(rows[0].rank_position);return p===1?'🥇':p===2?'🥈':p===3?'🥉':'🏅'}
 async function loadAIServerProfiles(){
  try{
   const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=*&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
@@ -734,7 +737,7 @@ async function loadAIServerProfiles(){
     generation:Number(row.generation||1),strategy:row.strategy||'balanced',aggression:Number(row.aggression??.55),save:Number(row.save_rate??row.save??.35),
     coins:Number(row.coins??900),playerXP:Number(row.player_xp||0),workerLevel:Number(row.worker_level||1),stageClears:Number(row.stage_clears||0),
     chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters:Array.isArray(row.owned_characters)?row.owned_characters:[0],
-    formation:Array.isArray(row.formation)?row.formation:[0],charLevels:Array.isArray(row.char_levels)?row.char_levels:Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1),
+    formation:Array.isArray(row.formation)?row.formation:[0],rankBadge:String(row.rank_badge||''),rewardRank:Number.isFinite(Number(row.reward_rank))?Number(row.reward_rank):null,rankCycle:Number(row.rank_cycle??0),charLevels:Array.isArray(row.char_levels)?row.char_levels:Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1),
     eventClears:row.event_clears&&typeof row.event_clears==='object'?row.event_clears:{},trainingXP:Number(row.training_xp||0),matches:Number(row.matches||0),
     lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activity:typeof row.activity==='string'?row.activity:'待機中',
     activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],population:Number(row.population||1)
@@ -759,11 +762,53 @@ if(!playerRankingId){
 let publicPlayerRankings=[];
 let playerRankingSyncBusy=false;
 function escapeRankText(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function claimRankReward(){
+  try{
+    const res=await fetch(SUPABASE_REST_URL+'/rpc/claim_rank_reward',{method:'POST',headers:supabaseHeaders(),body:JSON.stringify({p_player_id:playerRankingId}),cache:'no-store'});
+    if(!res.ok)return null;
+    const rows=await res.json();
+    return Array.isArray(rows)&&rows[0]?rows[0]:null;
+  }catch(e){return null;}
+}
+async function syncRankSeasonState(){
+  try{
+    const q='?select=rp,wins,losses,rank_cycle,rank_badge,pending_coins,pending_xp,limited_character_owned,reward_rank,reward_cycle,best_rp,best_rank&player_id=eq.'+encodeURIComponent(playerRankingId);
+    const res=await fetch(PLAYER_RANKINGS_URL+q,{headers:supabaseHeaders(),cache:'no-store'});
+    if(!res.ok)return;
+    const rows=await res.json(),row=Array.isArray(rows)?rows[0]:null;
+    if(!row)return;
+    const serverCycle=Number(row.rank_cycle??-1);
+    const newCycle=serverCycle>rankCycle;const serverBest=Math.max(0,Number(row.best_rp||0));if(serverBest>bestRP){bestRP=serverBest;bestRank=String(row.best_rank||bestRank);storage.setItem('kinoshitaBestRP',String(bestRP));storage.setItem('kinoshitaBestRank',bestRank);}
+    if(newCycle){
+      rankCycle=serverCycle;
+      rankPoints=Math.max(0,Number(row.rp||0));
+      playerRankWins=Math.max(0,Number(row.wins||0));
+      playerRankLosses=Math.max(0,Number(row.losses||0));
+      rankBadge=String(row.rank_badge||'');
+      const ri=cards.findIndex(c=>c.name==='木下&吉田');
+      if(ri>=0)ownedFlags[ri]=row.limited_character_owned===true;
+      syncOwnedCount();normalizeFormation();save();
+    }
+    // ランク報酬はプレゼントBOXで受け取ります。
+    if(false&&claimed){
+      const pc=Math.max(0,Number(claimed.pending_coins||0));
+      const px=Math.max(0,Number(claimed.pending_xp||0));
+      gachaCoins+=pc;
+      playerXP+=px;
+      rankBadge=String(claimed.rank_badge||rankBadge||'');
+      const ri=cards.findIndex(c=>c.name==='木下&吉田');
+      if(ri>=0)ownedFlags[ri]=claimed.limited_character_owned===true;
+      syncOwnedCount();normalizeFormation();save();saveRank();
+    }
+  }catch(e){console.warn('ランク報酬同期失敗:',e)}
+}
 async function syncPlayerRanking(){
   if(playerRankingSyncBusy)return;
   playerRankingSyncBusy=true;
   try{
-    const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),updated_at:new Date().toISOString()};
+    await syncRankSeasonState();
+    storage.setItem('kinoshitaRankCycle',String(rankCycle));
+    bestRP=Math.max(bestRP,rankPoints);bestRank=rankName(bestRP);storage.setItem('kinoshitaBestRP',String(bestRP));storage.setItem('kinoshitaBestRank',bestRank);const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),best_rp:bestRP,best_rank:bestRank,updated_at:new Date().toISOString()};
     const res=await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     await loadPublicPlayerRankings();
@@ -816,7 +861,7 @@ async function loadFriends(){
 }
 async function friendProfile(id){
   try{
-    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,bio,updated_at&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,best_rp,best_rank,bio,updated_at&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const rows=await res.json(),p=rows[0];
     if(!p){alert('そのプレイヤーIDは見つかりません。');return;}
@@ -892,7 +937,7 @@ function friendChallenge(id){
 }
 async function loadPublicPlayerRankings(){
   try{
-    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses&order=rp.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,rank_badge,reward_rank,reward_cycle,best_rp,best_rank&order=rp.desc,wins.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const rows=await res.json();
     publicPlayerRankings=Array.isArray(rows)?rows:[];
@@ -913,6 +958,7 @@ function saveEnemyEncountered(){storage.setItem('kinoshitaEnemyEncountered',JSON
 for(let si=0;si<Math.min(unlocked,stages.length);si++){if(si<unlocked-1){(stages[si].schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 for(let ch=0;ch<4;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 saveEnemyEncountered();
+let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
 while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;
@@ -929,39 +975,19 @@ let charLevel;try{charLevel=JSON.parse(storage.getItem('kinoshitaCharLevel')||'[
 for(let i=0;i<cards.length;i++){charLevel[i]=Math.max(1,Math.min(20,Number(charLevel[i]||1)));}
 let formation;try{formation=JSON.parse(storage.getItem('kinoshitaFormation')||'[]')}catch(e){formation=[]}
 if(!Array.isArray(formation))formation=[];
-if(storage.getItem('kinoshitaCharacterIndexMigrationV4')!=='done'){
+/* ===== キャラクターID修復 V5 ===== */
+if(storage.getItem('kinoshitaCharacterIndexRepairV5')!=='done'){
  try{
-  // 旧版の実配列IDを確認済み:
-  // 0-10=既存 / 11=波動木下 / 12-14=章報酬 / 15-34=攻略特化20体 / 35=波動木下(重複)
-  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():null;
-  const oldFormation=Array.isArray(formation)?formation.slice():[];
-  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  if(oldFlags&&oldFlags.length>=36){
-   const remap=(i)=>{
-    if(!Number.isInteger(i))return -1;
-    if(i>=0&&i<=10)return i;
-    if(i===11||i===35)return -1;
-    if(i>=12&&i<=34)return i-1;
-    return -1;
-   };
-   const newFlags=Array(cards.length).fill(false);
-   for(let oi=0;oi<oldFlags.length;oi++){
-    const ni=remap(oi);
-    if(ni>=0&&ni<newFlags.length)newFlags[ni]=!!oldFlags[oi];
-   }
-   const waveIndex=cards.findIndex(c=>c.name==='波動木下');
-   if(waveIndex>=0)newFlags[waveIndex]=eventClears['波動木下降臨']===true;
-   ownedFlags=newFlags;
-   formation=oldFormation.map(remap).filter(i=>i>=0&&i<cards.length);
-   const newLevels=Array(cards.length).fill(1);
-   for(let oi=0;oi<oldLevels.length;oi++){
-    const ni=remap(oi);
-    if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(oldLevels[oi]||1)));
-   }
-   charLevel=newLevels;
-  }
-  storage.setItem('kinoshitaCharacterIndexMigrationV4','done');
- }catch(e){console.warn('character ID migration V4 failed',e);}
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[],oldFormation=Array.isArray(formation)?formation.slice():[],oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const legacyNames=['木下','強化木下','マッチョ木下','木下（野球）','木下（覚醒）','木下（忍者）','木下（博士）','木下（ロボ）','木下（王）','木下（超覚醒）','狂乱の木下','波動木下','突撃ハーランド木下','異常木下','吉田','対無木下','赤狩り木下','黒追撃木下','天使迎撃木下','宇宙観測木下','宇宙突破木下','赤壁木下','無敵壁木下','黒速攻木下','天使封殺木下','宇宙砕き木下','未来探査木下','攻略隊長木下','日本防衛木下','日本制圧木下','未来制圧木下','四属性討伐木下','銀河攻略木下','最終攻略木下','宇宙決戦木下','波動木下'];
+  const idx=name=>cards.findIndex(c=>c.name===name),flags=Array(cards.length).fill(false);
+  for(let ci=0;ci<Math.min(oldFlags.length,34);ci++){const oi=ci<=10?ci:ci+1,ni=idx(legacyNames[oi]);if(ni>=0&&oldFlags[ci])flags[ni]=true}
+  for(let ci=34;ci<oldFlags.length&&ci<flags.length;ci++)if(oldFlags[ci])flags[ci]=true;
+  const wi=idx('波動木下');if(wi>=0)flags[wi]=flags[wi]||eventClears['波動木下降臨']===true;flags[0]=true;ownedFlags=flags;
+  const f=[];for(const ci of oldFormation){const oi=ci<=10?ci:(ci<=33?ci+1:ci),ni=legacyNames[oi]?idx(legacyNames[oi]):ci;if(ni>=0&&ni<cards.length&&flags[ni]&&!f.includes(ni))f.push(ni)}formation=f.slice(0,10);
+  const lv=Array(cards.length).fill(1);for(let ci=0;ci<Math.min(oldLevels.length,34);ci++){const oi=ci<=10?ci:ci+1,ni=idx(legacyNames[oi]);if(ni>=0)lv[ni]=Math.max(1,Math.min(20,Number(oldLevels[ci]||1)))}for(let ci=34;ci<oldLevels.length&&ci<lv.length;ci++)lv[ci]=Math.max(1,Math.min(20,Number(oldLevels[ci]||1)));charLevel=lv;
+  storage.setItem('kinoshitaCharacterIndexRepairV5','done');
+ }catch(e){console.warn('character ID repair V5 failed',e)}
 }
 
 function normalizeFormation(){
@@ -969,34 +995,27 @@ function normalizeFormation(){
  formation=[...new Set(formation)].slice(0,10);
 }
 normalizeFormation();
-/* ===== キャラクターID修復 V12 =====
-   91体の正規カード配列へ復帰。旧138体/旧91体セーブでIDが混線しても、
-   名前の正規IDを基準に再構成し、ファイティング木下を復元する。 */
-if(storage.getItem('kinoshitaCharacterIndexRepairV12')!=='done'){
- try{
-  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
-  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  const oldFormation=Array.isArray(formation)?formation.slice():[];
-  const n=cards.length, flags=Array(n).fill(false), levels=Array(n).fill(1);
-  const idx=name=>cards.findIndex(c=>c.name===name);
-  const fightingId=idx('ファイティング木下'), waveId=idx('波動木下'), limitedId=idx('木下&吉田');
-  // 現在の配列をそのまま保持しつつ、旧138体の末尾重複領域(91..137)を91体へ折りたたむ。
-  const mapOld=i=>{if(!Number.isInteger(i))return -1;if(i<n)return i;if(i>=91&&i<=136)return i-46;if(i===137)return 90;return -1};
-  for(let i=0;i<oldFlags.length;i++){const ni=mapOld(i);if(ni>=0&&oldFlags[i]===true)flags[ni]=true;}
-  for(let i=0;i<oldLevels.length;i++){const ni=mapOld(i);if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)));}
-  // 過去の修復版で交換済みだったことを示す端末状態が残っている場合は復元。
-  const hadOldRepair=storage.getItem('kinoshitaCharacterIndexRepairV9')==='done'||storage.getItem('kinoshitaCharacterIndexRepairV10')==='done'||storage.getItem('kinoshitaCharacterIndexRepairV11')==='done'||oldFlags.length>=80;
-  if(fightingId>=0&&hadOldRepair)flags[fightingId]=true;
-  if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
-  if(limitedId>=0&&oldFlags[limitedId]===true)flags[limitedId]=true;
-  flags[0]=true;
-  const nf=[];for(const oi of oldFormation){const ni=mapOld(oi);if(ni>=0&&ni<n&&flags[ni]&&!nf.includes(ni))nf.push(ni);}
-  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();
-  storage.setItem('kinoshitaCharacterIndexRepairV12','done');
- }catch(e){console.warn('character ID repair V12 failed',e)}
-}
 let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0;
-let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
+/* ===== キャラクターID修復 V9：正規91体を基準に旧138体セーブを安全復元 =====
+   現在の正規キャラクターは名前重複なしの91体。旧138体版の重複領域も安全に折りたたむ。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV9')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[],oldFormation=Array.isArray(formation)?formation.slice():[],oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const n=cards.length;
+  const map=i=>{if(!Number.isInteger(i))return -1;if(i<n)return i;if(i>=91&&i<=136)return i-46;if(i===137)return 90;return -1};
+  const flags=Array(n).fill(false),levels=Array(n).fill(1);
+  for(let i=0;i<oldFlags.length;i++){const ni=map(i);if(ni>=0&&oldFlags[i])flags[ni]=true}
+  for(let i=0;i<oldLevels.length;i++){const ni=map(i);if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)))}
+  const wi=cards.findIndex(c=>c.name==='波動木下'),fi=cards.findIndex(c=>c.name==='ファイティング木下'),ri=cards.findIndex(c=>c.name==='木下&吉田');
+  if(wi>=0)flags[wi]=eventClears['波動木下降臨']===true;
+  if(fi>=0&&(oldFlags[90]===true||oldFlags[136]===true||oldFlags[137]===true))flags[fi]=true;
+  if(ri>=0&&oldFlags.some((v,i)=>v&&map(i)===ri))flags[ri]=true;
+  flags[0]=true;
+  const nf=[];for(const oi of oldFormation){const ni=map(oi);if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();storage.setItem('kinoshitaCharacterIndexRepairV9','done');
+ }catch(e){console.warn('character ID repair V9 failed',e)}
+}
+
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
    旧版では11=波動、12-14=章報酬、15-34=攻略特化、35=波動となり、
    所持・編成・レベルのインデックスがずれていました。 */
@@ -1032,13 +1051,119 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV2')!=='done'){
  }catch(e){console.warn('character index migration failed',e);}
 }
 
+/* ===== キャラクターID修復 V7：名前を正としてIDずれを完全修復 =====
+   追加順による数値ID参照を廃止。既存セーブは「旧ID→旧版の名前→現在のID」で復元する。
+   特殊報酬（波動木下・木下&吉田）も名前から解決する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV7')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const currentName=i=>cards[i]?.name||null;
+  const knownLegacy=[
+   '木下','強化木下','マッチョ木下','木下（野球）','木下（覚醒）','木下（忍者）','木下（博士）','木下（ロボ）','木下（王）','木下（超覚醒）',
+   '森の守護木下','森の杖木下','森王木下','木下（電脳）','木下（ドローン）','木下（AI）','星読み木下','流星木下','星王木下','狂乱の木下',
+   '突撃ハーランド木下','異常木下','吉田',
+   '対無木下','赤狩り木下','黒追撃木下','天使迎撃木下','宇宙観測木下','宇宙突破木下','赤壁木下','無敵壁木下','黒速攻木下','天使封殺木下','宇宙砕き木下','未来探査木下','攻略隊長木下','日本防衛木下','日本制圧木下','未来制圧木下','四属性討伐木下','銀河攻略木下','最終攻略木下','宇宙決戦木下',
+   '波動木下','木下&吉田'
+  ];
+  const byName=name=>cards.findIndex(x=>x.name===name);
+  const flags=Array(cards.length).fill(false),levels=Array(cards.length).fill(1);
+  // First restore all entries whose old slot can be identified by the previous canonical list.
+  for(let oi=0;oi<oldFlags.length;oi++){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0&&oldFlags[oi])flags[ni]=true;
+  }
+  for(let oi=0;oi<oldLevels.length;oi++){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[oi]||1)));
+  }
+  // Event/rank ownership is always resolved by the character name.
+  const waveId=byName('波動木下'),rankLimitedId=byName('木下&吉田');
+  if(waveId>=0&&eventClears['波動木下降臨']===true)flags[waveId]=true;
+  if(rankLimitedId>=0)flags[rankLimitedId]=flags[rankLimitedId]||!!ownedFlags[rankLimitedId];
+  flags[0]=true;
+  const nf=[];
+  for(const oi of oldFormation){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni);
+  }
+  ownedFlags=flags;
+  charLevel=levels;
+  formation=nf.slice(0,10);
+  normalizeFormation();
+  syncOwnedCount();
+  storage.setItem('kinoshitaCharacterIndexRepairV7','done');
+  save();
+ }catch(e){console.warn('character ID repair V7 failed',e)}
+}
+
+/* ===== キャラクターID修復 V10：現在の91体を唯一の正規IDとして再同期 =====
+   旧138体セーブ、過去の波動/ファイティング入れ替わり、重複IDをここで一度だけ整理する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const n=cards.length, mapLegacy=i=>{
+    if(!Number.isInteger(i)||i<0)return -1;
+    if(i<n)return i;
+    if(i>=91&&i<=136)return i-46;
+    if(i===137)return 90;
+    return -1;
+  };
+  const flags=Array(n).fill(false),levels=Array(n).fill(1);
+  for(let i=0;i<oldFlags.length;i++){const ni=mapLegacy(i);if(ni>=0&&oldFlags[i])flags[ni]=true}
+  for(let i=0;i<oldLevels.length;i++){const ni=mapLegacy(i);if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)))}
+  const waveId=cards.findIndex(c=>c.name==='波動木下');
+  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
+  const rankId=cards.findIndex(c=>c.name==='木下&吉田');
+  if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
+  /* 旧版でファイティング木下が波動木下(ID43)へ誤変換されたケースを復元 */
+  if(fightId>=0&&!flags[fightId]&&waveId>=0&&flags[waveId]&&!eventClears['波動木下降臨']){flags[fightId]=true;flags[waveId]=false}
+  /* ランク1位キャラはサーバー同期で最終確定するが、既存の所持状態は保持 */
+  if(rankId>=0&&oldFlags[rankId]===true)flags[rankId]=true;
+  flags[0]=true;
+  const nf=[];
+  for(const oi of oldFormation){const ni=mapLegacy(oi);if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV10','done');
+ }catch(e){console.error('character ID repair V10 failed',e)}
+}
+
+/* ===== キャラクターID修復 V11：今回のID混線を最終固定 =====
+   V10以前の数値ID移行でファイティング木下が別キャラへ移ったケースを救済。
+   現在のcards配列は名前を正とし、波動木下はイベントクリア時のみ所持。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV11')!=='done'){
+ try{
+  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
+  const waveId=cards.findIndex(c=>c.name==='波動木下');
+  if(fightId>=0)ownedFlags[fightId]=true;
+  if(waveId>=0)ownedFlags[waveId]=eventClears['波動木下降臨']===true;
+  ownedFlags=ownedFlags.slice(0,cards.length);
+  while(ownedFlags.length<cards.length)ownedFlags.push(false);
+  ownedFlags[0]=true;
+  const clean=[];
+  for(const i of (Array.isArray(formation)?formation:[])){
+   if(Number.isInteger(i)&&i>=0&&i<cards.length&&ownedFlags[i]&&!clean.includes(i))clean.push(i);
+  }
+  formation=clean.slice(0,10);
+  normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV11','done');
+ }catch(e){console.error('character ID repair V11 failed',e)}
+}
+
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}
-function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier();if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul;return Math.round(v*100)/100;}
+function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier();if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&c.rankBonus?.[key])v*=c.rankBonus[key];if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
-function damageAgainst(u,target){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(u.atk*mult));}
+function damageAgainstPower(u,target,power){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(power*mult));}
+function damageAgainst(u,target){return damageAgainstPower(u,target,u.atk);}
 function damageTakenBy(u,attacker){let mult=1;const now=performance.now()/1000;const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round(effectiveAtk*mult));}
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;if(!target.statuses)target.statuses={};target.statuses[type]={icon,text,until:performance.now()/1000+duration};updateStatusMark(target)}
 function updateStatusMark(target){if(!target?.el)return;const now=performance.now()/1000;const statuses=target.statuses||{};for(const k of Object.keys(statuses))if(statuses[k].until<=now)delete statuses[k];let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}const active=Object.values(statuses);if(active.length){const s=active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove()}
@@ -1067,7 +1192,7 @@ function applyAbility(u,target,damage){const a=u.ability||{};if(a.splash&&target
 function triggerKnockback(target,attacker,previousHp){if(!target||target.hp<=0)return false;const maxKB=Math.max(1,target.kb||1);const threshold=target.maxhp/maxKB;const beforeLevel=Math.floor((target.maxhp-previousHp)/threshold);const afterLevel=Math.floor((target.maxhp-target.hp)/threshold);const count=Math.max(0,afterLevel-beforeLevel);if(count<=0)return false;target.kbRemaining=Math.max(0,(target.kbRemaining??maxKB)-count);const distance=42+Math.min(30,Math.max(0,count-1)*12);if(target.isEnemy){target.x=Math.max(120,target.x-distance);}else{target.x=Math.min(worldWidth-178,target.x+distance);}target.cd=Math.max(target.cd,0.22);target.hitbackUntil=performance.now()/1000+0.22;target.el?.classList.remove('hitback');void target.el?.offsetWidth;target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);return true;}
 function hit(target,damage,source,abilitySource){if(!target||target.hp<=0)return;playSE('impact');const before=target.hp;let dealt=damage;if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}target.hp=Math.max(0,target.hp-dealt);if(target.el){target.el.classList.remove('hit');void target.el.offsetWidth;target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}popup('-'+damage,target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,damage);else if(source&&source.ability)applyAbility(source,target,damage);return before-target.hp;}
 
-function stageCardHTML(s,n,mode,chapter=1){const ok=mode==='event'?chapterUnlocked(1):n<=(chapter===1?unlocked:((chapter===4?chapterClears[3]:chapterClears[chapter-1])||0)+1);const icons=s.enemies.map(k=>enemyTypes[k]?.icon||'❔').join('');const last=s.schedule[s.schedule.length-1]?.t||0;const mult=mode==='event'?'イベント専用倍率':s.enemies.slice(0,8).map(k=>enemyTypes[k].name+'×'+chapterScale(chapter,n,k).toFixed(2)).join(' / ');const bossCount=s.schedule.filter(x=>x.role==='boss').length,midCount=s.schedule.filter(x=>x.role==='midboss').length;const bossText=(midCount||bossCount)?`<br>👑 中ボス${midCount}体 / BOSS ${bossCount}体`:'';return `<div class="stage ${ok?'':'locked'}" data-stage="${n}" data-mode="${mode}" data-chapter="${chapter}"><b>${s.name}${ok?'':' 🔒'}</b><small>敵種類：${s.enemies.length}/10　${icons}<br>敵城HP：${s.baseHp}　全${s.schedule.length}体　最終出現 ${last.toFixed(2)}秒${bossText}<br>📏 ステージ幅：${s.width} px<br>📊 ${mult}</small><div class="reward">${mode==='event'?(s.eventReward?'クリア報酬：'+s.eventReward:'クリア報酬：XP '+s.xp):(n<=owned?'入手済み':s.reward?'クリア報酬：'+s.rewardName:'クリア報酬：XP '+s.xp)}</div><button class="mapDetailBtn" data-map="${n}" data-mode="${mode}" data-chapter="${chapter}">マップ詳細</button></div>`}
+function stageCardHTML(s,n,mode,chapter=1){const ok=mode==='event'?chapterUnlocked(1):n<=(chapter===1?unlocked:((chapter===4?chapterClears[3]:chapterClears[chapter-1])||0)+1);const icons=s.enemies.map(k=>enemyTypes[k]?.icon||'❔').join('');const last=s.schedule[s.schedule.length-1]?.t||0;const mult=mode==='event'?'イベント専用倍率':s.enemies.slice(0,8).map(k=>(enemyTypes[k]?.name||k)+'×'+chapterScale(chapter,n,k).toFixed(2)).join(' / ');const bossCount=s.schedule.filter(x=>x.role==='boss').length,midCount=s.schedule.filter(x=>x.role==='midboss').length;const bossText=(midCount||bossCount)?`<br>👑 中ボス${midCount}体 / BOSS ${bossCount}体`:'';return `<div class="stage ${ok?'':'locked'}" data-stage="${n}" data-mode="${mode}" data-chapter="${chapter}"><b>${s.name}${ok?'':' 🔒'}</b><small>敵種類：${s.enemies.length}/10　${icons}<br>敵城HP：${s.baseHp}　全${s.schedule.length}体　最終出現 ${last.toFixed(2)}秒${bossText}<br>📏 ステージ幅：${s.width} px<br>📊 ${mult}</small><div class="reward">${mode==='event'?(s.eventReward?'クリア報酬：'+s.eventReward:'クリア報酬：XP '+s.xp):(n<=owned?'入手済み':s.reward?'クリア報酬：'+s.rewardName:'クリア報酬：XP '+s.xp)}</div><button class="mapDetailBtn" data-map="${n}" data-mode="${mode}" data-chapter="${chapter}">マップ詳細</button></div>`}
 function renderStageSelect(){
  const start=document.getElementById('start');
  if(start)start.style.display='flex';
@@ -1194,7 +1319,7 @@ function renderFormation(){
 function clampCamera(x){return Math.max(0,Math.min(Math.max(0,worldWidth-field.clientWidth),x));}
 function applyCamera(){cameraX=clampCamera(cameraX);world.style.transform=`translate3d(${-cameraX}px,0,0)`;}
 function currentStage(){if(selectedMode==='pvp')return {name:'プレイヤー対戦',width:1900,baseHp:5000,xp:0,schedule:[],repeatSpawns:[],enemies:[]};return (selectedMode==='event'?eventStages:chapterPool())[selectedStage-1]}
-function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyCamera();}
+function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=Math.max(0,worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
 field.addEventListener('pointerdown',e=>{if(!running)return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
@@ -1304,13 +1429,13 @@ function updateWorkerUI(){const btn=document.getElementById('workerBtn');const c
 function update(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('moneyMax').textContent=workerMax;document.getElementById('enemyHp').textContent=Math.max(0,Math.floor(enemyHp));document.getElementById('enemyMaxHp').textContent=enemyMaxHp;document.getElementById('baseHp').textContent=Math.max(0,Math.floor(baseHp));document.getElementById('level').textContent=level;document.getElementById('levelbar').style.width=Math.min(100,level*10)+'%';updateWorkerUI();renderCards()}
 function popup(text,x,y){const p=document.createElement('div');p.className='pop';p.textContent=text;p.style.left=x+'px';p.style.top=y+'px';effects.appendChild(p);setTimeout(()=>p.remove(),600)}
 function attackEffect(source,target){if(!source||!target)return;const key=source.isEnemy?'enemy':source.motion||'basic';const glyph={basic:'✦',power:'◆',muscle:'💥',baseball:'⚾',awakened:'✧',ninja:'〆',scientist:'⚗',robot:'◉',king:'♛',super:'✦',enemy:'●'}[key]||'✦';const cls='fx-'+key;const fx=document.createElement('div');fx.className=`attackFx ${cls} ${source.attackType==='area'?'area':'projectile'}`;fx.textContent=glyph;fx.style.left=(source.x+(target.x-source.x)*.62)+'px';fx.style.bottom='105px';effects.appendChild(fx);setTimeout(()=>fx.remove(),360);const impact=document.createElement('div');impact.className=`attackFx impact ${cls}`;impact.textContent=source.attackType==='area'?'✦':glyph;impact.style.left=target.x+'px';impact.style.bottom='105px';effects.appendChild(impact);setTimeout(()=>impact.remove(),330);const pulse=document.createElement('div');pulse.className=`rangePulse ${source.attackType==='area'?'area':'single'}`;pulse.style.left=source.x+'px';pulse.style.bottom='105px';effects.appendChild(pulse);setTimeout(()=>pulse.remove(),320);}
-function allyWaveAttack(u){
+function allyWaveAttack(u,power=u.atk){
  const level=Math.max(1,Number(u.waveLevel||0));
  if(!level)return;
  const waveRange=90*level;
  // 味方は右側から左側の敵へ波動を飛ばす。
  const targets=enemies.filter(e=>e.x<=u.x&&Math.abs(e.x-u.x)<=waveRange);
- for(const e of targets){const dealt=Math.max(1,Math.round(u.atk));hit(e,dealt,u,null);if(e.hp<=0)removeEnemy(e);}
+ for(const e of targets){const dealt=Math.max(1,Math.round(power));hit(e,dealt,u,null);if(e.hp>0&&u.waveStopChance&&Math.random()<u.waveStopChance){e.stopUntil=performance.now()/1000+(u.waveStopDuration||.5);setStatusMark(e,'⏸️','停止',u.waveStopDuration||.5,'stop');}if(e.hp<=0)removeEnemy(e);}
  const wave=document.createElement('div');
  wave.className='enemyWaveEffect allyWaveEffect';
  wave.style.left=Math.max(0,u.x-waveRange)+'px';
@@ -1326,13 +1451,13 @@ function allyWaveAttack(u){
  }
  setTimeout(()=>wave.remove(),520);
 }
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:c.waveLevel||0,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
-function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;updateStatusMark(u);return d}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;if(!Number.isFinite(worldWidth)||worldWidth<field.clientWidth)setupWorld();money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:rankEffectiveStat(i,'hp'),maxhp:rankEffectiveStat(i,'hp'),atk:rankEffectiveStat(i,'atk'),range:rankEffectiveStat(i,'range'),spd:rankEffectiveStat(i,'spd'),interval:rankEffectiveStat(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:Math.max(120,worldWidth-260),cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,kbRemaining:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,waveLevel:rankPenaltyActive(i)?Math.max(1,Math.floor((c.waveLevel||0)*.75)):c.waveLevel||0,secondAtk:rankPenaltyActive(i)?(c.secondAtk||0)*.75:(c.secondAtk||0),thirdAtk:rankPenaltyActive(i)?(c.thirdAtk||0)*.75:(c.thirdAtk||0),multiAttack:Array.isArray(c.multiAttack)?c.multiAttack.map(v=>rankPenaltyActive(i)?v*.75:v):null,waveChance:c.waveChance,waveStopChance:c.waveStopChance??c.stopChance,waveStopDuration:c.waveStopDuration??c.stopDuration,stopChance:c.stopChance,stopDuration:c.stopDuration,firstStopChance:rankPenaltyActive(i)?(c.firstStopChance||0)*.75:(c.firstStopChance||0),firstStopDuration:rankPenaltyActive(i)?(c.firstStopDuration||0)*.75:(c.firstStopDuration||0),isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=rankEffectiveStat(i,'recharge');units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
+function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;d.style.left=(u.x??0)+'px';d.style.bottom='40px';updateStatusMark(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};renderUnitElement(e);enemies.push(e);return e}
 function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
 function removeUnit(u){u.el?.remove();units=units.filter(x=>x!==u);if(pvpMode&&u.owner==='local')pvpSend({type:'death',id:u.id})}
 function removeEnemy(e){e.el?.remove();enemies=enemies.filter(x=>x!==e);if(pvpMode){if(e.isRemote)pvpSend({type:'death',id:e.id});playSE('enemyDefeat');return;}const reward=Math.max(0,Math.floor(e.money??e.dropMoney??0));money=Math.min(workerMax,money+reward);if(reward>0){playSE('enemyDefeat');playSE('money');}if(reward>0)popup('+'+reward+'円',e.x,Math.max(25,field.clientHeight-145));}
-function hit(target,damage,source,abilitySource){if(!target||target.hp<=0)return;const before=target.hp;target.hp=Math.max(0,target.hp-damage);if(target.el){target.el.classList.remove('hit');void target.el.offsetWidth;target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}popup('-'+damage,target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,damage);else if(source&&source.ability)applyAbility(source,target,damage);return before-target.hp;}
+
 let paused=false;
 function pauseBattle(){
  if(pvpMode)return;
@@ -1361,7 +1486,7 @@ function quitBattle(){
  renderStageSelect();
  renderCards();
 }
-function showResult(win){if(rankMode){finishRank(win);return;}if(pvpMode){pvpSend({type:'result',win});}running=false;paused=false;stopBGM();playSE(win?'win':'lose');pvpMode=false;document.getElementById('battlePauseBtn').style.display='';document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('start').style.display='none';const r=document.getElementById('result'),title=document.getElementById('resultTitle'),text=document.getElementById('resultText'),next=document.getElementById('nextBtn');r.style.setProperty('display','flex','important');r.style.setProperty('position','fixed','important');r.style.setProperty('inset','0','important');r.style.setProperty('z-index','99999','important');r.style.setProperty('pointer-events','auto','important');document.getElementById('rankLobby').style.display='none';document.getElementById('pvpLobby').style.display='none';if(win){const s=currentStage();title.textContent='🎉 '+(selectedMode==='event'?'イベントステージクリア！':selectedChapter===4?'未来編 第1章 クリア！':`日本編 第${selectedChapter}章 クリア！`);if(selectedMode==='japan'){if(selectedChapter===1&&selectedStage===unlocked&&unlocked<48)unlocked++;const beforeClear=chapterClears[selectedChapter-1]||0;chapterClears[selectedChapter-1]=Math.max(beforeClear,selectedStage);}let rewardText='';const gained=addStageXP();if(selectedMode==='japan'&&selectedChapter===1&&s.reward){const rewardIndex=s.reward-1;const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];if(!wasOwned){rewardText='クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}else{rewardText='クリア報酬：'+s.rewardName+'（入手済み）';}}else if(selectedMode==='japan'&&selectedStage===48){const rewardIndex=chapterRewardIndex(selectedChapter);if(Number.isInteger(rewardIndex)&&rewardIndex<cards.length){const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText=wasOwned?'クリア報酬：'+cards[rewardIndex].name+'（入手済み）':'クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}}else if(selectedMode==='event'&&s.eventReward){eventClears[s.name]=true;const rewardIndex=s.rewardCharacter?cards.findIndex(c=>c.name===s.rewardCharacter):-1;const wasOwned=rewardIndex>=0&&hasCharacter(rewardIndex);if(rewardIndex>=0&&!wasOwned){ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText='クリア報酬：'+s.eventReward+' を入手しました！';}else{rewardText='クリア報酬：'+s.eventReward+'（入手済み）';}}else{rewardText=selectedMode==='event'?'イベント報酬：プレイヤーXPを獲得！':'クリア報酬：プレイヤーXPを獲得！';}const gachaGain=120+Math.floor(s.xp/4);gachaCoins+=gachaGain;rewardText+='\nプレイヤーXPを '+gained+' 獲得しました。現在のXP：'+playerXP+'。\n🪙 木下コインを '+gachaGain+' 枚獲得しました。';save();text.textContent=rewardText;const hasNext=(selectedMode==='japan'||selectedMode==='future')&&selectedStage<48;next.style.display=hasNext?'inline-block':'none';next.textContent=hasNext?'次のステージへ':'ステージ選択へ';}else{title.textContent='💥 敗北…';text.textContent='もう一度挑戦してみよう。';next.style.display='inline-block';next.textContent='もう一度挑戦';}}
+function showResult(win){if(rankMode){finishRank(win);return;}if(pvpMode){pvpSend({type:'result',win});}running=false;paused=false;stopBGM();playSE(win?'win':'lose');pvpMode=false;document.getElementById('battlePauseBtn').style.display='';document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('start').style.display='none';const r=document.getElementById('result'),title=document.getElementById('resultTitle'),text=document.getElementById('resultText'),next=document.getElementById('nextBtn');r.style.setProperty('display','flex','important');r.style.setProperty('position','fixed','important');r.style.setProperty('inset','0','important');r.style.setProperty('z-index','99999','important');r.style.setProperty('pointer-events','auto','important');document.getElementById('rankLobby').style.display='none';document.getElementById('pvpLobby').style.display='none';if(win){const s=currentStage();title.textContent='🎉 '+(selectedMode==='event'?'イベントステージクリア！':selectedChapter===4?'未来編 第1章 クリア！':`日本編 第${selectedChapter}章 クリア！`);if(selectedMode==='japan'){if(selectedChapter===1&&selectedStage===unlocked&&unlocked<48)unlocked++;const beforeClear=chapterClears[selectedChapter-1]||0;chapterClears[selectedChapter-1]=Math.max(beforeClear,selectedStage);}let rewardText='';const gained=addStageXP();if(selectedMode==='japan'&&selectedChapter===1&&s.reward){const rewardIndex=s.rewardName?cards.findIndex(c=>c.name===s.rewardName):s.reward-1;const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];if(!wasOwned){rewardText='クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}else{rewardText='クリア報酬：'+s.rewardName+'（入手済み）';}}else if(selectedMode==='japan'&&selectedStage===48){const rewardIndex=chapterRewardIndex(selectedChapter);if(Number.isInteger(rewardIndex)&&rewardIndex<cards.length){const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText=wasOwned?'クリア報酬：'+cards[rewardIndex].name+'（入手済み）':'クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}}else if(selectedMode==='event'&&s.eventReward){eventClears[s.name]=true;const rewardIndex=s.rewardCharacter?cards.findIndex(c=>c.name===s.rewardCharacter):-1;const wasOwned=rewardIndex>=0&&hasCharacter(rewardIndex);if(rewardIndex>=0&&!wasOwned){ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText='クリア報酬：'+s.eventReward+' を入手しました！';}else{rewardText='クリア報酬：'+s.eventReward+'（入手済み）';}}else{rewardText=selectedMode==='event'?'イベント報酬：プレイヤーXPを獲得！':'クリア報酬：プレイヤーXPを獲得！';}const gachaGain=120+Math.floor(s.xp/4);gachaCoins+=gachaGain;rewardText+='\nプレイヤーXPを '+gained+' 獲得しました。現在のXP：'+playerXP+'。\n🪙 木下コインを '+gachaGain+' 枚獲得しました。';save();text.textContent=rewardText;const hasNext=(selectedMode==='japan'||selectedMode==='future')&&selectedStage<48;next.style.display=hasNext?'inline-block':'none';next.textContent=hasNext?'次のステージへ':'ステージ選択へ';}else{title.textContent='💥 敗北…';text.textContent='もう一度挑戦してみよう。';next.style.display='inline-block';next.textContent='もう一度挑戦';}}
 // ===== プレイヤー対戦 =====
 let pvpMode=false,pvpRole='',pvpPeer=null,pvpConn=null,pvpRoom='',pvpPassword='',pvpNonce=1,pvpAuthenticated=false,pvpReadyLocal=false,pvpReadyRemote=false,pvpStarted=false;
 // ===== ランク戦 =====
@@ -1383,18 +1508,21 @@ const aiStrategies=[
 ];
 let playerName=storage.getItem('kinoshitaPlayerName')||'プレイヤー';
 let rankPoints=Math.max(0,Number(storage.getItem('kinoshitaRankPoints')||0));
+let rankBadge=storage.getItem('kinoshitaRankBadge')||'';
+let rankCycle=Number(storage.getItem('kinoshitaRankCycle')||-1);let bestRP=Math.max(0,Number(storage.getItem('kinoshitaBestRP')||0));let bestRank=storage.getItem('kinoshitaBestRank')||rankName(rankPoints);let pendingLoginGift;try{pendingLoginGift=JSON.parse(storage.getItem('kinoshitaPendingLoginGift')||'null')}catch(e){pendingLoginGift=null}function ensureLoginGift(){const d=new Date(),k=d.toISOString().slice(0,10);if(storage.getItem('kinoshitaLastLoginDate')!==k){pendingLoginGift={coins:1000,xp:1000,label:'毎日ログインボーナス'};storage.setItem('kinoshitaPendingLoginGift',JSON.stringify(pendingLoginGift));storage.setItem('kinoshitaLastLoginDate',k)}}ensureLoginGift();
 let rankHistory;try{rankHistory=JSON.parse(storage.getItem('kinoshitaRankHistory')||'[]')}catch(e){rankHistory=[]}
-let rankMode=false,rankAI=null,rankAIUnits=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
+let rankMode=false,rankAI=null,rankAIUnits=[],rankSeasonPenaltyIds=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
 let rankPlayerUsed=[],rankAIUsed=[];
 const RANK_META_KEY='kinoshitaRankMetaV1';
+const currentRankSeasonCycle=()=>Math.floor((Date.now()-Date.parse('2026-09-19T04:30:00Z'))/172800000);
 let rankMetaStats;try{rankMetaStats=JSON.parse(storage.getItem(RANK_META_KEY)||'null')}catch(e){rankMetaStats=null}
-if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
+if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={cycle:currentRankSeasonCycle(),matches:0,totalDeploys:0,chars:{},formations:{}};
+if(Number(rankMetaStats.cycle)!==currentRankSeasonCycle())rankMetaStats={cycle:currentRankSeasonCycle(),matches:0,totalDeploys:0,chars:{},formations:{}};
 rankMetaStats.matches=Number(rankMetaStats.matches||0);rankMetaStats.totalDeploys=Number(rankMetaStats.totalDeploys||0);rankMetaStats.chars=rankMetaStats.chars&&typeof rankMetaStats.chars==='object'?rankMetaStats.chars:{};rankMetaStats.formations=rankMetaStats.formations&&typeof rankMetaStats.formations==='object'?rankMetaStats.formations:{};
 function saveRankMeta(){storage.setItem(RANK_META_KEY,JSON.stringify(rankMetaStats))}
 function recordRankMetaSide(used,formation,won){for(const i of (used||[])){const k=String(i),x=rankMetaStats.chars[k]||{used:0,wins:0,losses:0};x.used++;won?x.wins++:x.losses++;rankMetaStats.chars[k]=x}const key=[...new Set((formation||[]).filter(i=>Number.isInteger(i)&&cards[i]))].join('-')||'empty',f=rankMetaStats.formations[key]||{used:0,wins:0,losses:0};f.used++;won?f.wins++:f.losses++;rankMetaStats.formations[key]=f;rankMetaStats.totalDeploys+=(used||[]).length}
 function recordRankMetaMatch(p,a,pw,pf,af){rankMetaStats.matches++;recordRankMetaSide(p,pf,pw);recordRankMetaSide(a,af,!pw);saveRankMeta()}
-function renderRankMeta(){const m=document.getElementById('rankMetaBody');if(!m)return;const chars=Object.entries(rankMetaStats.chars).map(([i,v])=>({i:+i,...v})).filter(x=>cards[x.i]).sort((a,b)=>b.used-a.used).slice(0,12);const forms=Object.entries(rankMetaStats.formations).sort((a,b)=>b[1].used-a[1].used).slice(0,10);const total=Math.max(1,rankMetaStats.totalDeploys);m.innerHTML='<div class="rankMetaSummary">📊 集計試合：'+rankMetaStats.matches+'戦　｜　総出撃：'+rankMetaStats.totalDeploys+'体</div><h3>🔥 キャラ使用率・勝率</h3><div class="rankMetaHead"><b>#</b><b>キャラ</b><b>使用率</b><b>勝率</b><b>出撃</b></div>'+chars.map((x,n)=>{const g=x.wins+x.losses;return '<div class="rankMetaRow"><b>'+(n+1)+'</b><span>'+cards[x.i].icon+' '+cards[x.i].name+'</span><span>'+(x.used/total*100).toFixed(1)+'%</span><span>'+(g?x.wins/g*100:0).toFixed(1)+'%</span><span>'+x.used+'回</span></div>'}).join('')+'<h3>🧩 流行りの編成</h3><div class="rankMetaHead"><b>#</b><b>編成</b><b>採用率</b><b>勝率</b><b>試合</b></div>'+forms.map((x,n)=>{const ids=x[0]==='empty'?[]:x[0].split('-').map(Number),v=x[1],g=v.wins+v.losses;return '<div class="rankMetaRow"><b>'+(n+1)+'</b><span>'+ids.map(i=>cards[i]?.icon||'❔').join(' ')+'<small>'+ids.map(i=>cards[i]?.name||'').join(' / ')+'</small></span><span>'+(v.used/Math.max(1,rankMetaStats.matches*2)*100).toFixed(1)+'%</span><span>'+(g?v.wins/g*100:0).toFixed(1)+'%</span><span>'+v.used+'戦</span></div>'}).join('')+'<p class="rankMetaNote">使用率・勝率はAI自己対戦と、この端末で行ったランク戦から実際の出撃結果を集計します。</p>'}
-function openRankMeta(){renderRankMeta();document.getElementById('rankMetaModal').style.display='flex'}function closeRankMeta(){document.getElementById('rankMetaModal').style.display='none'}
+function renderRankMeta(){const m=document.getElementById('rankMetaBody');if(!m)return;const chars=Object.entries(rankMetaStats.chars).map(([i,v])=>({i:+i,...v})).filter(x=>cards[x.i]).sort((a,b)=>b.used-a.used).slice(0,12);const forms=Object.entries(rankMetaStats.formations).sort((a,b)=>b[1].used-a[1].used).slice(0,10);const total=Math.max(1,rankMetaStats.totalDeploys);const penalty=(rankSeasonPenaltyIds||[]).map(i=>Number(i)).filter(i=>cards[i]);const weak=penalty.length?penalty.map(i=>cards[i].icon+' '+escapeRankText(cards[i].name)+'（能力25%低下）').join('<br>'):'現在なし';m.innerHTML='<div class="rankMetaSummary">📊 このシーズンの集計：'+rankMetaStats.matches+'戦　｜　総出撃：'+rankMetaStats.totalDeploys+'体</div><h3>⚠️ 今シーズンの弱体化キャラ</h3><div class="rankNotice">'+weak+'</div><h3>🔥 キャラ使用率・勝率</h3><div class="rankMetaHead"><b>#</b><b>キャラ</b><b>使用率</b><b>勝率</b><b>出撃</b></div>'+chars.map((x,n)=>{const g=x.wins+x.losses;return '<div class="rankMetaRow"><b>'+(n+1)+'</b><span>'+cards[x.i].icon+' '+cards[x.i].name+'</span><span>'+(x.used/total*100).toFixed(1)+'%</span><span>'+(g?x.wins/g*100:0).toFixed(1)+'%</span><span>'+x.used+'回</span></div>'}).join('')+'<h3>🧩 流行りの編成</h3><div class="rankMetaHead"><b>#</b><b>編成</b><b>採用率</b><b>勝率</b><b>試合</b></div>'+forms.map((x,n)=>{const ids=x[0]==='empty'?[]:x[0].split('-').map(Number),v=x[1],g=v.wins+v.losses;return '<div class="rankMetaRow"><b>'+(n+1)+'</b><span>'+ids.map(i=>cards[i]?.icon||'❔').join(' ')+'<small>'+ids.map(i=>cards[i]?.name||'').join(' / ')+'</small></span><span>'+(v.used/Math.max(1,rankMetaStats.matches*2)*100).toFixed(1)+'%</span><span>'+(g?v.wins/g*100:0).toFixed(1)+'%</span><span>'+v.used+'戦</span></div>'}).join('')+'<p class="rankMetaNote">使用率・勝率・流行編成はランクシーズンごとにリセットされます。</p>'}function openRankMeta(){renderRankMeta();document.getElementById('rankMetaModal').style.display='flex'}function closeRankMeta(){document.getElementById('rankMetaModal').style.display='none'}
 let playerRankWins=Math.max(0,Number(storage.getItem('kinoshitaRankWins')||0));
 let playerRankLosses=Math.max(0,Number(storage.getItem('kinoshitaRankLosses')||0));
 let aiProfiles;
@@ -1427,7 +1555,7 @@ function normalizeAIAccount(ai,index,population){
  const progressOwned=aiOwnedFromProgress(base);
  // ガチャで交換したキャラも保存データから維持する。以前は進行報酬だけで再構築していたため、再読み込み時に交換キャラが消えていた。
  const savedOwned=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];
- const gatedOwned=savedOwned.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&((i===10&&base.eventClears['狂乱の木下降臨']===true)||(i===11&&base.chapterClears[0]>=48)||(i===12&&base.chapterClears[1]>=48)||(i===13&&base.chapterClears[2]>=48)||(i===34&&base.eventClears['波動木下降臨']===true)||![10,11,12,13,34].includes(i)));base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])];
+ const rewardIds=[cards.findIndex(c=>c.name==='狂乱の木下'),chapterRewardIndex(1),chapterRewardIndex(2),chapterRewardIndex(3),cards.findIndex(c=>c.name==='波動木下')];const gatedOwned=savedOwned.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&((i===rewardIds[0]&&base.eventClears['狂乱の木下降臨']===true)||(i===rewardIds[1]&&base.chapterClears[0]>=48)||(i===rewardIds[2]&&base.chapterClears[1]>=48)||(i===rewardIds[3]&&base.chapterClears[2]>=48)||(i===rewardIds[4]&&base.eventClears['波動木下降臨']===true)||!rewardIds.includes(i)));base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])];
  const ownedSet=new Set(base.ownedCharacters);
  base.charLevels=base.charLevels.map((lv,i)=>ownedSet.has(i)?lv:1);
  const validFormation=Array.isArray(base.formation)?base.formation.filter(i=>ownedSet.has(i)&&i>=0&&i<cards.length):[];
@@ -1444,12 +1572,17 @@ else{
  for(let i=aiProfiles.length;i<1000;i++)aiProfiles.push(aiFreshAccount(i-500,i));
 }
 aiProfiles=aiProfiles.slice(0,1000);
-function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
+function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));storage.setItem('kinoshitaRankBadge',rankBadge);storage.setItem('kinoshitaRankCycle',rankCycle);}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
 function totalJapanClears(){return (chapterClears[0]||0)+(chapterClears[1]||0)+(chapterClears[2]||0);}
 // 日本編のクリア進行によるランク戦補正：第1章は1.0%/ステージ、第2章は0.2%/ステージ、第3章は0.3%/ステージ。
 function rankPowerMultiplier(){return 1+(chapterClears[0]||0)*0.01+(chapterClears[1]||0)*0.002+(chapterClears[2]||0)*0.003;}
+function rankPenaltyActive(i){return rankMode&&rankSeasonPenaltyIds.includes(i)}
+function rankEffectiveStat(i,key){const v=statAt(i,key);if(!rankPenaltyActive(i))return v;if(key==='interval'||key==='recharge')return v/0.75;return v*0.75}
+async function loadRankSeasonPenalty(){try{const cycle=Math.floor((Date.now()-Date.parse('2026-09-19T04:30:00Z'))/172800000);const rows=await fetch(SUPABASE_REST_URL+'/rank_season_state?select=penalty_character_ids&cycle=eq.'+cycle,{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());rankSeasonPenaltyIds=Array.isArray(rows[0]?.penalty_character_ids)?rows[0].penalty_character_ids.map(Number):[]}catch(e){rankSeasonPenaltyIds=[]}}
+function rankResetAt(){const base=Date.parse('2026-09-19T04:30:00Z');const cycle=Math.floor((Date.now()-base)/172800000);return base+(cycle+1)*172800000}
+function renderRankResetCountdown(){const el=document.getElementById('rankResetCountdown');if(!el)return;const ms=Math.max(0,rankResetAt()-Date.now()),d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);el.textContent='⏳ 次のランクリセットまで '+d+'日 '+h+'時間 '+m+'分 '+sec+'秒'}
 function aiPowerMultiplier(ai){return 1+(ai.chapterClears?.[0]||0)*0.01+(ai.chapterClears?.[1]||0)*0.002+(ai.chapterClears?.[2]||0)*0.003;}
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
 function chooseRankAI(){const pi=rankIndex(rankPoints);const candidates=aiProfiles.map((a,i)=>({a,i,d:Math.abs(rankIndex(a.rp)-pi),gap:Math.abs(a.rp-rankPoints)})).sort((x,y)=>x.d-y.d||x.gap-y.gap||Math.random()-.5);return candidates[0]?.a||aiProfiles[0];}
@@ -1554,13 +1687,13 @@ function evolveAIFromMatch(winner,loser,result){winner.wins++;loser.losses++;win
  pushAIMatchHistory(winner,`🤖 vs ${loser.name}：勝利（${Math.round(result.duration)}秒）`);pushAIMatchHistory(loser,`🤖 vs ${winner.name}：敗北（${Math.round(result.duration)}秒）`);aiLearnFromMatch(winner,true);aiLearnFromMatch(loser,false);
  let wc=0,lc=0;while(wc<5&&aiTryGachaExchange(winner))wc++;while(lc<3&&aiTryGachaExchange(loser))lc++;aiLevelUpFromXP(winner);aiLevelUpFromXP(loser);saveRank();}
 let aiMatchCursor=0;function recordAILiveResult(ai,won){if(!ai)return;if(won){ai.wins++;ai.rp+=12;ai.generation++;ai.lastResult='プレイヤー戦勝利';pushAIMatchHistory(ai,`👤 vs ${playerName}：勝利`);}else{ai.losses++;ai.rp=Math.max(0,ai.rp-9);ai.lastResult='プレイヤー戦敗北';pushAIMatchHistory(ai,`👤 vs ${playerName}：敗北`);}aiLearnFromMatch(ai,won);aiTryGachaExchange(ai);aiLevelUpFromXP(ai);saveRank();}
-function aiCharacterCost(i){const c=cards[i];return c.rarity==='SSR'?900:c.rarity==='SR'?600:c.rarity==='R'?300:Infinity;}
+function aiCharacterCost(i){const c=cards[i];return c.rarity==='LR'?100000:c.rarity==='SSR'?10000:c.rarity==='SR'?6000:c.rarity==='R'?1000:Infinity;}
 function aiTryGachaExchange(ai){
- const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&![10,11,12,13,34].includes(i)&&['R','SR','SSR'].includes(c.rarity)&&!ai.ownedCharacters.includes(i));
+ const activeSeries=activeLimitedExchange();const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&['R','SR','SSR','LR'].includes(c.rarity)&&((!c.limitedExchange&&!!c.gachaCost)||(c.limitedExchange&&activeSeries.cards.includes(c.name)))&&!ai.ownedCharacters.includes(i));
  if(!candidates.length)return false;
  const affordable=candidates.filter(i=>ai.coins>=aiCharacterCost(i));
  if(!affordable.length)return false;
- // プレイヤーと同じ「木下ガチャ」から確定交換する。ランダム抽選ではなく、AI自身が価値判断して交換先を選ぶ。
+ // プレイヤーと同じ「交換所」から確定交換する。ランダム抽選ではなく、AI自身が価値判断して交換先を選ぶ。
  affordable.sort((a,b)=>{
    const ca=cards[a],cb=cards[b],pa=ca.rarity==='SSR'?3:ca.rarity==='SR'?2:1,pb=cb.rarity==='SSR'?3:cb.rarity==='SR'?2:1;
    const va=(pa*100)+(aiStrategyValue(ai,a));const vb=(pb*100)+(aiStrategyValue(ai,b));
@@ -1568,7 +1701,7 @@ function aiTryGachaExchange(ai){
  });
  const i=affordable[0],cost=aiCharacterCost(i);
  ai.coins-=cost;ai.ownedCharacters.push(i);ai.charLevels[i]=Math.max(1,ai.charLevels[i]||1);
- ai.activity=`🎟️ 木下ガチャで${cards[i].name}を確定交換（${cost}枚）`;
+ ai.activity=`🪙 交換所で${cards[i].name}を確定交換（${cost}枚）`;
  pushAIActivity(ai,`🎟️ ガチャ交換：${cards[i].name}を入手`);
  ai.formation=[];
  return true;
@@ -1652,22 +1785,28 @@ function runAISelfPlay(n=20){for(let i=0;i<n;i++)aiSelfPlayOnce();}
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{runAISelfPlay(50);runAIActivities(300);aiAutoCycle++;if(aiAutoCycle%3===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},900);}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
-function renderAIAccountList(){const list=document.getElementById('aiAccountList');if(!list)return;const q=(document.getElementById('aiSearchInput').value||'').trim().toLowerCase();const sort=document.getElementById('aiSortSelect').value;let arr=aiProfiles.map((a,i)=>({a,i}));if(q)arr=arr.filter(x=>x.a.name.toLowerCase().includes(q)||x.a.accountId.toLowerCase().includes(q)||String(x.i+1).includes(q));arr.sort((x,y)=>{const a=x.a,b=y.a;if(sort==='matches')return b.matches-a.matches;if(sort==='wins')return b.wins-a.wins;if(sort==='clears'){const ac=(Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0]);const bc=(Array.isArray(b.chapterClears)?b.chapterClears:[0,0,0,0]);const av=(Number(ac[0])||0)+(Number(ac[1])||0)+(Number(ac[2])||0);const bv=(Number(bc[0])||0)+(Number(bc[1])||0)+(Number(bc[2])||0);return bv-av;}if(sort==='futureClears')return (Number(b.chapterClears?.[3])||0)-(Number(a.chapterClears?.[3])||0);if(sort==='ownedCharacters')return (Array.isArray(b.ownedCharacters)?b.ownedCharacters.length:0)-(Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0);if(sort==='generation')return b.generation-a.generation;if(sort==='name')return a.name.localeCompare(b.name,'ja');return b.rp-a.rp});document.getElementById('aiAccountCount').textContent=`表示：${arr.length} / 1000アカウント`;list.innerHTML=arr.map(({a,i})=>{const cc=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0];const japanClears=(Number(cc[0])||0)+(Number(cc[1])||0)+(Number(cc[2])||0);const futureClears=Number(cc[3])||0;const ownedCount=Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0;return `<div class="aiAccountRow" data-ai-index="${i}"><b>#${i+1}</b><span>🤖 ${a.name}<small>${a.population===2?'🆕 0から開始':'🌱 継続AI'}　${rankName(a.rp)} / ${strategyOf(a).label}</small></span><span>${a.rp} RP</span><span>${a.wins}勝 ${a.losses}敗</span><span>🇯🇵 日本編 ${japanClears}/144　🚀 未来編 ${futureClears}/48　👤 キャラ ${ownedCount}/${cards.length}</span></div>`}).join('');list.querySelectorAll('.aiAccountRow').forEach(row=>row.onclick=()=>openAIDetail(Number(row.dataset.aiIndex)));saveRank();}
+function renderAIAccountList(){const list=document.getElementById('aiAccountList');if(!list)return;const q=(document.getElementById('aiSearchInput').value||'').trim().toLowerCase();const sort=document.getElementById('aiSortSelect').value;let arr=aiProfiles.map((a,i)=>({a,i}));if(q)arr=arr.filter(x=>x.a.name.toLowerCase().includes(q)||x.a.accountId.toLowerCase().includes(q)||String(x.i+1).includes(q));arr.sort((x,y)=>{const a=x.a,b=y.a;if(sort==='matches')return b.matches-a.matches;if(sort==='wins')return b.wins-a.wins;if(sort==='clears'){const ac=(Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0]);const bc=(Array.isArray(b.chapterClears)?b.chapterClears:[0,0,0,0]);const av=(Number(ac[0])||0)+(Number(ac[1])||0)+(Number(ac[2])||0);const bv=(Number(bc[0])||0)+(Number(bc[1])||0)+(Number(bc[2])||0);return bv-av;}if(sort==='futureClears')return (Number(b.chapterClears?.[3])||0)-(Number(a.chapterClears?.[3])||0);if(sort==='ownedCharacters')return (Array.isArray(b.ownedCharacters)?b.ownedCharacters.length:0)-(Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0);if(sort==='coins')return (Number(b.coins)||0)-(Number(a.coins)||0);if(sort==='generation')return b.generation-a.generation;if(sort==='name')return a.name.localeCompare(b.name,'ja');return b.rp-a.rp});document.getElementById('aiAccountCount').textContent=`表示：${arr.length} / 1000アカウント`;list.innerHTML=arr.map(({a,i})=>{const cc=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0];const japanClears=(Number(cc[0])||0)+(Number(cc[1])||0)+(Number(cc[2])||0);const futureClears=Number(cc[3])||0;const ownedCount=Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0;return `<div class="aiAccountRow" data-ai-index="${i}"><b>#${i+1}</b><span>🤖 ${a.name}<small>${a.population===2?'🆕 0から開始':'🌱 継続AI'}　${rankName(a.rp)} / ${strategyOf(a).label}<br>最高 ${a.bestRP||0}RP・${escapeRankText(a.bestRank||rankName(a.bestRP||0))}</small></span><span>${a.rp} RP</span><span>🪙 ${Number(a.coins||0).toLocaleString()}枚</span><span>${a.wins}勝 ${a.losses}敗</span><span>🇯🇵 日本編 ${japanClears}/144　🚀 未来編 ${futureClears}/48　👤 キャラ ${ownedCount}/${cards.length}</span></div>`}).join('');list.querySelectorAll('.aiAccountRow').forEach(row=>row.onclick=()=>openAIDetail(Number(row.dataset.aiIndex)));saveRank();}
 function openAIManager(){document.getElementById('rankLobby').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
-function openAIDetail(index){const ai=aiProfiles[index];if(!ai)return;const f=aiFormationForView(ai);const formationHtml=f.map(i=>{const c=cards[i];return `<div class="aiCharRow"><b>${c.icon||'🌳'} ${c.name}</b><br>Lv.${ai.charLevels[i]||1}　HP ${Math.round(aiAccountStat(ai,i,'hp'))}　攻 ${Math.round(aiAccountStat(ai,i,'atk'))}</div>`}).join('')||'<div class="aiCharRow">編成はまだ決定されていません。</div>';const ownedSet=new Set(ai.ownedCharacters||[0]);const allChars=cards.map((c,i)=>`<div class="aiCharRow"><b>${ownedSet.has(i)?(c.icon||'🌳'):'🔒'} ${c.name}</b>　${ownedSet.has(i)?'Lv.'+(ai.charLevels[i]||1):'未入手'}</div>`).join('');const hist=(ai.matchHistory||[]).length?(ai.matchHistory||[]).map(x=>`<div>${x}</div>`).join(''):'最近の対戦記録はありません。';document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
+function openAIDetail(index){const ai=aiProfiles[index];if(!ai)return;const f=aiFormationForView(ai);const formationHtml=f.map(i=>{const c=cards[i];return `<div class="aiCharRow"><b>${c.icon||'🌳'} ${c.name}</b><br>Lv.${ai.charLevels[i]||1}　HP ${Math.round(aiAccountStat(ai,i,'hp'))}　攻 ${Math.round(aiAccountStat(ai,i,'atk'))}</div>`}).join('')||'<div class="aiCharRow">編成はまだ決定されていません。</div>';const ownedSet=new Set(ai.ownedCharacters||[0]);const allChars=cards.map((c,i)=>`<div class="aiCharRow"><b>${ownedSet.has(i)?(c.icon||'🌳'):'🔒'} ${c.name}</b>　${ownedSet.has(i)?'Lv.'+(ai.charLevels[i]||1):'未入手'}</div>`).join('');const hist=(ai.matchHistory||[]).length?(ai.matchHistory||[]).map(x=>`<div>${x}</div>`).join(''):'最近の対戦記録はありません。';document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">過去最高RP<br>${ai.bestRP||0}</div><div class="aiStatBox">過去最高ランク<br>${escapeRankText(ai.bestRank||rankName(ai.bestRP||0))}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">🪙 木下コイン<br>${Number(ai.coins||0).toLocaleString()}枚</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
 function closeAIDetail(){document.getElementById('aiDetailModal').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
-function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}
+function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;const pc=Number(window.__rankPendingCoins||0),px=Number(window.__rankPendingXP||0);let h='';if(pendingLoginGift)h+='<div class="rankNotice">🎉 '+pendingLoginGift.label+'<br>🪙 '+pendingLoginGift.coins.toLocaleString()+' 木下コイン + ⭐ '+pendingLoginGift.xp.toLocaleString()+' プレイヤーXP</div>';if(pc||px)h+='<div class="rankNotice" style="margin-top:8px">🏆 ランク戦報酬<br>🪙 '+pc.toLocaleString()+' 木下コイン + ⭐ '+px.toLocaleString()+' プレイヤーXP</div>';el.innerHTML=h||'<div class="rankNotice">現在受け取れるプレゼントはありません。</div>'}
+async function openGiftBox(){document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';try{const q='?select=pending_coins,pending_xp&player_id=eq.'+encodeURIComponent(playerRankingId);const rows=await fetch(PLAYER_RANKINGS_URL+q,{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());const row=rows[0]||{};window.__rankPendingCoins=Number(row.pending_coins||0);window.__rankPendingXP=Number(row.pending_xp||0)}catch(e){}renderGiftBox()}
+async function claimAllGifts(){let got=false;if(pendingLoginGift){gachaCoins+=Number(pendingLoginGift.coins||0);playerXP+=Number(pendingLoginGift.xp||0);pendingLoginGift=null;storage.removeItem('kinoshitaPendingLoginGift');got=true}try{const res=await fetch(SUPABASE_REST_URL+'/rpc/claim_rank_reward',{method:'POST',headers:supabaseHeaders(),body:JSON.stringify({p_player_id:playerRankingId}),cache:'no-store'});if(res.ok){const rows=await res.json(),x=rows[0];if(x){gachaCoins+=Number(x.pending_coins||0);playerXP+=Number(x.pending_xp||0);const ri=cards.findIndex(c=>c.name==='木下&吉田');if(ri>=0)ownedFlags[ri]=x.limited_character_owned===true;rankBadge=String(x.rank_badge||rankBadge);got=true}}}catch(e){}syncOwnedCount();normalizeFormation();save();saveRank();window.__rankPendingCoins=0;window.__rankPendingXP=0;renderGiftBox();if(got)alert('プレゼントを受け取りました！')}
+function renderPlayerProfile(){document.getElementById('playerProfileBody').innerHTML='<div class="rankHeader"><span class="rankBadge">'+(rankBadge?rankBadge+' ':'')+rankName(rankPoints)+'</span><span>'+rankPoints+' RP</span></div><div class="rankGrid"><div class="aiStatBox">過去最高RP<br>'+bestRP+'</div><div class="aiStatBox">過去最高ランク<br>'+escapeRankText(bestRank)+'</div><div class="aiStatBox">戦績<br>'+playerRankWins+'勝 '+playerRankLosses+'敗</div></div>'}
+function openPlayerProfile(){document.getElementById('start').style.display='none';document.getElementById('playerProfile').style.display='flex';renderPlayerProfile()}
+const tierRewards=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];function openRankRewardInfo(){document.getElementById('start').style.display='none';document.getElementById('rankRewardInfo').style.display='flex';document.getElementById('rankRewardBody').innerHTML='<div class="rankNotice">TOP10に入らなかった場合は、リセット時の段位に応じてプレゼントBOXへ送ります。</div>'+tierRewards.map(x=>'<div class="rankMetaRow"><b>'+x[0]+'</b><br>🪙 '+x[1].toLocaleString()+' 木下コイン　⭐ '+x[2].toLocaleString()+' プレイヤーXP</div>').join('')}
+
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
- const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true}));
- if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true});
- const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false}));
+ const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),bestRP:Number(x.best_rp||0),bestRank:String(x.best_rank||rankName(Number(x.best_rp||0))),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),rankBadge:String(x.rank_badge||''),rewardRank:Number.isFinite(Number(x.reward_rank))?Number(x.reward_rank):null,historicalBadge:top10BadgeFor('human',x.player_id),human:true}));
+ if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,bestRP:bestRP,bestRank:bestRank,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,rankBadge:rankBadge,rewardRank:null,historicalBadge:top10BadgeFor('human',playerRankingId),human:true});
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),rankBadge:String(a.rankBadge||''),historicalBadge:top10BadgeFor('ai',String(a.accountId||'').replace(/^AI-/,'')||a.accountId),human:false}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
- el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
+ el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}${(x.historicalBadge||x.rankBadge)?' '+escapeRankText(x.historicalBadge||x.rankBadge):''}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
 }
-function renderRankLobby(){const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
+function renderRankLobby(){const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=(rankBadge?rankBadge+' ':'')+rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-function openRank(){document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();syncPlayerRanking();}
+async function openRank(){await loadRankSeasonTop10();await loadRankSeasonPenalty();renderRankResetCountdown();clearInterval(window.rankCountdownTimer);window.rankCountdownTimer=setInterval(renderRankResetCountdown,1000);document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);await syncPlayerRanking();renderRankLobby();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
@@ -1692,6 +1831,7 @@ function attackAnim(el){if(!el)return;el.classList.remove('attacking');void el.o
 function rankAIThink(dt){
  if(!rankMode||!running||!rankAI)return;
  const st=strategyOf(rankAI);
+ if(!Array.isArray(rankAI.formation)||rankAI.formation.some(i=>!Number.isInteger(i)||i<0||i>=cards.length))rankAI.formation=aiChooseFormation(rankAI);
  rankAIMoney=Math.min(6000,rankAIMoney+(112+rankAI.skill*28)*dt);
  rankAITimer+=dt;rankAICooldown=Math.max(0,rankAICooldown-dt);
  const form=aiBuildFormation(rankAI);
@@ -1706,7 +1846,7 @@ function rankAIThink(dt){
  renderUnitElement(e);enemies.push(e);rankAITimer=0;
  const jitter=.72+((Number(String(rankAI.accountId||'0').replace(/\D/g,''))%13)/20);rankAICooldown=Math.max(.72,stRate(rankAI)*jitter);
 }
-function startRankBattle(){savePlayerName();rankAI=chooseRankAI();rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);playSE('boss');requestAnimationFrame(loop);}
+function startRankBattle(){savePlayerName();loadRankSeasonPenalty();rankAI=chooseRankAI();rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);playSE('boss');requestAnimationFrame(loop);}
 function finishRank(win){
  if(!rankMode && document.getElementById('rankResultOverlay')) return;
  // ランク戦の終了処理は「結果画面を先に確実に表示」してから、保存などを行う。
@@ -1793,20 +1933,24 @@ function finishRank(win){
    rankHistory.unshift(`${win?'🏆 勝利':'💥 敗北'}　${playerName} vs ${rankAI?.name||'AI'}　${delta>0?'+':''}${delta} RP　${old} → ${rankPoints}　【${rankName(rankPoints)}】`);
  }catch(err){console.error('rank history error',err);}
  try{if(rankAI)recordAILiveResult(rankAI,!win);}catch(err){console.error('AI rank result error',err);}
- try{recordRankMetaMatch(rankPlayerUsed,rankAIUsed,win,formation,rankAI?.formation||[]);}catch(err){console.error('rank meta error',err);}
+ try{recordRankMetaMatch(rankPlayerUsed,rankAIUsed,win,formation,rankAI?.formation||[]);}catch(err){console.error('rank meta error',err);} try{const stats=rankPlayerUsed.reduce((m,id)=>{if(!m[id])m[id]={character_id:id,wins:0,losses:0,used:0};m[id].used++;return m},{});Object.values(stats).forEach(x=>win?x.wins++:x.losses++);const cycle=Math.floor((Date.now()-Date.parse('2026-09-19T04:30:00Z'))/172800000);fetch(SUPABASE_REST_URL+'/rpc/record_rank_character_stats',{method:'POST',headers:supabaseHeaders(),body:JSON.stringify({p_cycle:cycle,p_stats:Object.values(stats)})}).catch(()=>{});}catch(e){}
  try{saveRank();}catch(err){console.error('rank save error',err);}
 }
 
-function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule.slice().sort((a,b)=>a.t-b.t);while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
+function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){try{rankAIThink(dt)}catch(err){console.error('rank AI tick error',err)}}else{const schedule=stage.schedule.slice().sort((a,b)=>a.t-b.t);while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
- for(const u of [...units]){u.cd-=dt;
-   let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
-   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}if(u.waveLevel)allyWaveAttack(u);u.cd=u.interval}}
+ for(const u of [...units]){if(!Number.isFinite(Number(u.x)))u.x=Math.max(120,worldWidth-260);u.cd=Number.isFinite(Number(u.cd))?u.cd:0.15;u.cd-=dt;
+   let target=enemies.filter(e=>e.x<u.x&&Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
+   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');
+     const doHit=(t,power)=>{if(!t||t.hp<=0)return;attackEffect(u,t);const dealt=damageAgainstPower(u,t,power);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(u.firstStopChance&&t.hp>0&&Math.random()<u.firstStopChance){t.stopUntil=performance.now()/1000+(u.firstStopDuration||1);setStatusMark(t,'⏸️','停止',u.firstStopDuration||1,'stop');}if(u.stopChance&&t.hp>0&&Math.random()<u.stopChance){t.stopUntil=performance.now()/1000+(u.stopDuration||.5);setStatusMark(t,'⏸️','停止',u.stopDuration||.5,'stop');}if(t.hp<=0)removeEnemy(t);};
+     const waveAfter=(power)=>{if(!u.waveLevel)return;const proc=u.waveChance==null||Math.random()<u.waveChance;if(proc)allyWaveAttack(u,power);};
+     if(Array.isArray(u.multiAttack)&&u.multiAttack.length){const sequence=u.multiAttack.slice();sequence.forEach((power,idx)=>setTimeout(()=>{if(!running||u.hp<=0)return;const t=target;if(!t||t.hp<=0)return;doHit(t,power);waveAfter(power);},idx*100));u.cd=u.interval;}
+     else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const rawSpd=Number(u.spd);const fallbackSpd=Number(cards[u.cardIndex]?.spd);const moveSpd=Number.isFinite(rawSpd)&&rawSpd>0?rawSpd:(Number.isFinite(fallbackSpd)&&fallbackSpd>0?fallbackSpd:.5);const beforeX=u.x;u.x-=moveSpd*60*dt;if(!Number.isFinite(u.x))u.x=beforeX;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x)}
-   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
+   else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
+   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
  requestAnimationFrame(loop);
 }
@@ -1837,11 +1981,11 @@ function enemyWaveAttack(e){
  setTimeout(()=>wave.remove(),520);
 }
  for(const e of [...enemies]){e.cd-=dt;
-   let target=units.filter(u=>Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
+   let target=units.filter(u=>u.x>e.x&&Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
    if(target){e.state='attack';if(e.cd<=0){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0)removeUnit(t)}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
-   updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((e.id*7)%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
+   updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((Number.isFinite(Number(e.id))?Number(e.id):0)*7%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
  }
  updateCamera();if(enemyHp<=0){enemyHp=0;return rankMode?finishRank(true):showResult(true);}if(baseHp<=0){baseHp=0;return rankMode?finishRank(false):showResult(false);}update();requestAnimationFrame(loop)}
 function renderCards(){
@@ -1875,35 +2019,25 @@ function showBattleCharacterList(){
  const list=formation.slice();
  body.innerHTML=list.map(i=>{
    const c=cards[i];
-   return `<div class="enemyDetail"><span>${c.icon}</span><div><b>${c.name}</b><br><small>Lv.${charLevel[i]||1}　HP ${statAt(i,'hp')}　攻撃 ${statAt(i,'atk')}　属性 ${c.trait||'無'}<br>射程 ${statAt(i,'range')} / 移動速度 ${statAt(i,'spd')} / 攻撃間隔 ${statAt(i,'interval').toFixed(2)}秒</small></div></div>`;
+   return `<div class="enemyDetail"><span>${c.icon}</span><div><b>${c.name}</b><br><small>Lv.${charLevel[i]||1}　HP ${statAt(i,'hp')}　攻撃 ${statAt(i,'atk')}${c.secondAtk?` + ${c.secondAtk}`:''}${c.thirdAtk?` + ${c.thirdAtk}`:''}　属性 ${c.trait||'無'}<br>射程 ${statAt(i,'range')} / 移動速度 ${statAt(i,'spd')} / 攻撃間隔 ${statAt(i,'interval').toFixed(2)}秒</small></div></div>`;
  }).join('');
  detail.style.display='flex';
 }
-function openGacha(){
- const g=document.getElementById('gacha');
- if(!g)return;
- g.style.display='flex';
- renderGacha();
-}
-function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':(r||'基本');}
-function renderGacha(){
- const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins+'枚';
- if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>木下交換</button>';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下ガチャ</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
- if(!result)return;
- const available=[]; cards.forEach((c,i)=>{if(i>0&&!ownedFlags[i]&&c.gachaCost)available.push(i);});
- if(!available.length){result.innerHTML='<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';return;}
- result.innerHTML='<div style="font-size:15px;margin-bottom:7px">交換する木下を選んでください</div><div class="gachaChars">'+available.map(i=>{const c=cards[i],cost=c.gachaCost,can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div>';
- result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));
-}
-function buyGachaCharacter(i){
- if(!Number.isInteger(i)||!cards[i]||ownedFlags[i])return;
- const c=cards[i],cost=Number(c.gachaCost||0);
- if(!cost||gachaCoins<cost)return;
- gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
-}
-
+const LIMITED_EXCHANGE_SERIES=[{name:'エレメンタル木下s',cards:['炎のエレメンタル木下','氷のエレメンタル木下','雷のエレメンタル木下','大地のエレメンタル木下','光のエレメンタル木下','ファイティング木下']}];
+const LIMITED_EXCHANGE_PERIOD_MS=172800000;
+function activeLimitedExchange(){return LIMITED_EXCHANGE_SERIES[Math.floor(Date.now()/LIMITED_EXCHANGE_PERIOD_MS)%LIMITED_EXCHANGE_SERIES.length];}
+function limitedExchangeRemaining(){return Math.max(0,(Math.floor(Date.now()/LIMITED_EXCHANGE_PERIOD_MS)+1)*LIMITED_EXCHANGE_PERIOD_MS-Date.now());}
+function exchangeCostFor(c){return c?.rarity==='R'?1000:c?.rarity==='SR'?6000:c?.rarity==='SSR'?10000:c?.rarity==='LR'?100000:0;}
+function regularExchangeableNow(i){const c=cards[i];return !!c&&i!==0&&!ownedFlags[i]&&!c.limitedExchange&&!c.specialReward&&c.series!=='エレメンタル木下s'&&!!c.gachaCost;}
+function limitedExchangeableNow(i){const c=cards[i];return !!c&&i!==0&&!ownedFlags[i]&&!!c.limitedExchange&&activeLimitedExchange().cards.includes(c.name);}
+function openGacha(){const g=document.getElementById('gacha');if(!g)return;g.style.display='flex';renderGacha();clearInterval(window.exchangeTimer);window.exchangeTimer=setInterval(()=>{if(g.style.display!=='none')renderGacha()},1000);}
+function openLimitedExchange(){const g=document.getElementById('limitedExchange');if(!g)return;g.style.display='flex';renderLimitedExchange();clearInterval(window.limitedExchangeTimer);window.limitedExchangeTimer=setInterval(()=>{if(g.style.display!=='none')renderLimitedExchange()},1000);}
+function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
+function exchangeCardHTML(i){const c=cards[i],cost=exchangeCostFor(c),can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-size:11px;color:#2563eb">'+(c.series||'通常')+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}
+function renderGacha(){const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>通常交換所</button>';if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🪙 通常交換所</h2><p>通常キャラクターを木下コインで確定交換できます。</p><p style="font-size:12px">レア：1,000　激レア：6,000　超激レア：10,000　伝説レア：100,000 木下コイン</p><p style="font-size:12px">期間限定シリーズのキャラクターは、ここでは交換できません。</p></div>';if(!result)return;const ids=cards.map((c,i)=>i).filter(regularExchangeableNow);result.innerHTML=ids.length?'<div style="font-size:15px;margin-bottom:7px">通常交換キャラクター</div><div class="gachaChars">'+ids.map(exchangeCardHTML).join('')+'</div>':'<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));}
+function renderLimitedExchange(){const coin=document.getElementById('limitedExchangeCoinText'),banner=document.getElementById('limitedExchangeBanner'),result=document.getElementById('limitedExchangeResult');const series=activeLimitedExchange(),ms=limitedExchangeRemaining(),d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ '+series.name+'</h2><p>期間限定交換所</p><p style="font-weight:1000;color:#ffd21f">次のシリーズ更新まで '+d+'日 '+h+'時間 '+m+'分 '+sec+'秒</p><p style="font-size:12px">レア：1,000　激レア：6,000　超激レア：10,000　伝説レア：100,000 木下コイン</p></div>';if(!result)return;const ids=cards.map((c,i)=>i).filter(limitedExchangeableNow);result.innerHTML=ids.length?'<div style="font-size:15px;margin-bottom:7px">今回のシリーズ限定キャラクター</div><div class="gachaChars">'+ids.map(exchangeCardHTML).join('')+'</div>':'<div class="gachaResult">この期間の限定キャラクターはすべて交換済みです。</div>';result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.i)));}
+function buyGachaCharacter(i){if(!regularExchangeableNow(i))return;const c=cards[i],cost=exchangeCostFor(c);if(!cost||gachaCoins<cost)return;gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();}
+function buyLimitedExchangeCharacter(i){if(!limitedExchangeableNow(i))return;const c=cards[i],cost=exchangeCostFor(c);if(!cost||gachaCoins<cost)return;gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderLimitedExchange();renderOwnedStart();renderFormation();renderCards();}
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');
  if(b && b.id!=='audioToggle' && !b.disabled)playSE('click');
@@ -1926,15 +2060,15 @@ bindSafeClick('friendsOpen',openFriends);
 document.getElementById('friendClose').onclick=closeFriends;
 document.getElementById('friendAddBtn').onclick=addFriend;
 document.getElementById('copyPlayerId').onclick=async()=>{try{await navigator.clipboard.writeText(playerRankingId);document.getElementById('friendStatus').textContent='プレイヤーIDをコピーしました。';}catch(e){document.getElementById('friendStatus').textContent='コピーできませんでした。IDを長押ししてコピーしてください。';}};
-bindSafeClick('rankBtn',openRank);
+bindSafeClick('rankBtn',openRank);bindSafeClick('giftBoxBtn',openGiftBox);bindSafeClick('profileBtn',openPlayerProfile);bindSafeClick('rankRewardBtn',openRankRewardInfo);bindSafeClick('giftClose',()=>{document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex'});bindSafeClick('giftClaimAll',claimAllGifts);bindSafeClick('profileClose',()=>{document.getElementById('playerProfile').style.display='none';document.getElementById('start').style.display='flex'});bindSafeClick('rankRewardClose',()=>{document.getElementById('rankRewardInfo').style.display='none';document.getElementById('start').style.display='flex'});
 bindSafeClick('kinoshitaBookBtn',openKinoshitaBook);
 bindSafeClick('enemyBookBtn',showEnemyBook);
-bindSafeClick('gachaBtn',openGacha);
+bindSafeClick('gachaBtn',openGacha);bindSafeClick('limitedExchangeBtn',openLimitedExchange);
 bindSafeClick('startBtn',()=>{
  const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:((selectedChapter===4?chapterClears[3]:chapterClears[selectedChapter-1])||0)+1);
  if(ok)startStage(selectedStage);
 });
-document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
+document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('limitedExchangeBtn').onclick=openLimitedExchange;document.getElementById('limitedExchangeClose').onclick=()=>{document.getElementById('limitedExchange').style.display='none';clearInterval(window.limitedExchangeTimer);document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';clearInterval(window.exchangeTimer);document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 document.getElementById('startBtn').onclick=()=>{
  const ok=selectedMode==='event'?chapterUnlocked(1):selectedStage<=(selectedChapter===1?unlocked:((selectedChapter===4?chapterClears[3]:chapterClears[selectedChapter-1])||0)+1);
  if(!ok)return;
@@ -1964,7 +2098,7 @@ document.getElementById('stageBack').onclick=()=>{document.getElementById('resul
 document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
 document.getElementById('formationClose').onclick=()=>{document.getElementById('formation').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('removeAll').onclick=()=>{formation=[];normalizeFormation();save();renderFormation();renderCards()};
-function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
+function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();try{renderStageSelect();}catch(e){console.error('stage render failed',e);document.getElementById('chapterInfo').textContent='ステージ表示を復旧中です。';}try{renderCards();}catch(e){console.error('card render failed',e)}try{setupWorld();}catch(e){console.error('world setup failed',e)}
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 </script>
