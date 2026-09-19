@@ -1919,7 +1919,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
- for(const u of [...units]){try{if(!Number.isFinite(Number(u.x)))u.x=Math.max(120,worldWidth-260);u.cd=Number.isFinite(Number(u.cd))?u.cd:0.15;u.cd-=dt;
+ for(const u of [...units]){if(!Number.isFinite(Number(u.x)))u.x=Math.max(120,worldWidth-260);u.cd=Number.isFinite(Number(u.cd))?u.cd:0.15;u.cd-=dt;
    let target=enemies.filter(e=>e.x<u.x&&Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
    if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');
      const doHit=(t,power)=>{if(!t||t.hp<=0)return;attackEffect(u,t);const dealt=damageAgainstPower(u,t,power);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(u.firstStopChance&&t.hp>0&&Math.random()<u.firstStopChance){t.stopUntil=performance.now()/1000+(u.firstStopDuration||1);setStatusMark(t,'⏸️','停止',u.firstStopDuration||1,'stop');}if(u.stopChance&&t.hp>0&&Math.random()<u.stopChance){t.stopUntil=performance.now()/1000+(u.stopDuration||.5);setStatusMark(t,'⏸️','停止',u.stopDuration||.5,'stop');}if(t.hp<=0)removeEnemy(t);};
