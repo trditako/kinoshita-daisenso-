@@ -1714,7 +1714,7 @@ function runAIActivities(n=300){
  aiActivityCursor=(aiActivityCursor+extra)%aiProfiles.length;saveRank();
 }
 let aiActivityCursor=0;
-function aiRankChaserOpponent(ai){const pool=aiProfiles.filter(x=>x!==ai&&Number(x.rp||0)>=Math.max(0,Number(ai.rp||0)-80));if(!pool.length)return null;const top=pool.slice().sort((a,b)=>Number(b.rp||0)-Number(a.rp||0);return top[Math.floor(Math.random()*Math.min(12,top.length))]||top[0];}
+function aiRankChaserOpponent(ai){const pool=aiProfiles.filter(x=>x!==ai&&Number(x.rp||0)>=Math.max(0,Number(ai.rp||0)-80));if(!pool.length)return null;const top=pool.slice().sort((a,b)=>Number(b.rp||0)-Number(a.rp||0));return top[Math.floor(Math.random()*Math.min(12,top.length))]||top[0];}
 function aiSelfPlayOnce(){if(aiProfiles.length<2)return;const a=aiProfiles[aiMatchCursor%aiProfiles.length];let b=null;if(isRankChaser(a))b=aiRankChaserOpponent(a);if(!b)b=aiProfiles[(aiMatchCursor+1+Math.floor(Math.random()*Math.min(aiProfiles.length-1,400)))%aiProfiles.length];aiMatchCursor=(aiMatchCursor+2)%aiProfiles.length;const result=simulateAIBattle(a,b);evolveAIFromMatch(result.winner,result.winner===a?b:a,result);}
 function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();
  // 全体の約0.5%だけを「ランカー型」にし、通常AIより少し多くランク戦を行う。
