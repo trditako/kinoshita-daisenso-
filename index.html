@@ -790,7 +790,7 @@ async function syncRankSeasonState(){
       syncOwnedCount();normalizeFormation();save();
     }
     // ランク報酬はプレゼントBOXで受け取ります。
-    if(claimed){
+    if(false&&claimed){
       const pc=Math.max(0,Number(claimed.pending_coins||0));
       const px=Math.max(0,Number(claimed.pending_xp||0));
       gachaCoins+=pc;
@@ -1099,6 +1099,39 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV7')!=='done'){
   storage.setItem('kinoshitaCharacterIndexRepairV7','done');
   save();
  }catch(e){console.warn('character ID repair V7 failed',e)}
+}
+
+/* ===== キャラクターID修復 V10：現在の91体を唯一の正規IDとして再同期 =====
+   旧138体セーブ、過去の波動/ファイティング入れ替わり、重複IDをここで一度だけ整理する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const n=cards.length, mapLegacy=i=>{
+    if(!Number.isInteger(i)||i<0)return -1;
+    if(i<n)return i;
+    if(i>=91&&i<=136)return i-46;
+    if(i===137)return 90;
+    return -1;
+  };
+  const flags=Array(n).fill(false),levels=Array(n).fill(1);
+  for(let i=0;i<oldFlags.length;i++){const ni=mapLegacy(i);if(ni>=0&&oldFlags[i])flags[ni]=true}
+  for(let i=0;i<oldLevels.length;i++){const ni=mapLegacy(i);if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)))}
+  const waveId=cards.findIndex(c=>c.name==='波動木下');
+  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
+  const rankId=cards.findIndex(c=>c.name==='木下&吉田');
+  if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
+  /* 旧版でファイティング木下が波動木下(ID43)へ誤変換されたケースを復元 */
+  if(fightId>=0&&!flags[fightId]&&waveId>=0&&flags[waveId]&&!eventClears['波動木下降臨']){flags[fightId]=true;flags[waveId]=false}
+  /* ランク1位キャラはサーバー同期で最終確定するが、既存の所持状態は保持 */
+  if(rankId>=0&&oldFlags[rankId]===true)flags[rankId]=true;
+  flags[0]=true;
+  const nf=[];
+  for(const oi of oldFormation){const ni=mapLegacy(oi);if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV10','done');
+ }catch(e){console.error('character ID repair V10 failed',e)}
 }
 
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
@@ -1776,6 +1809,7 @@ function attackAnim(el){if(!el)return;el.classList.remove('attacking');void el.o
 function rankAIThink(dt){
  if(!rankMode||!running||!rankAI)return;
  const st=strategyOf(rankAI);
+ if(!Array.isArray(rankAI.formation)||rankAI.formation.some(i=>!Number.isInteger(i)||i<0||i>=cards.length))rankAI.formation=aiChooseFormation(rankAI);
  rankAIMoney=Math.min(6000,rankAIMoney+(112+rankAI.skill*28)*dt);
  rankAITimer+=dt;rankAICooldown=Math.max(0,rankAICooldown-dt);
  const form=aiBuildFormation(rankAI);
@@ -1881,11 +1915,11 @@ function finishRank(win){
  try{saveRank();}catch(err){console.error('rank save error',err);}
 }
 
-function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule.slice().sort((a,b)=>a.t-b.t);while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
+function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){try{rankAIThink(dt)}catch(err){console.error('rank AI tick error',err)}}else{const schedule=stage.schedule.slice().sort((a,b)=>a.t-b.t);while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
- for(const u of [...units]){u.cd-=dt;
+ for(const u of [...units]){try{if(!Number.isFinite(Number(u.x)))u.x=Math.max(120,worldWidth-260);u.cd=Number.isFinite(Number(u.cd))?u.cd:0.15;u.cd-=dt;
    let target=enemies.filter(e=>e.x<u.x&&Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
    if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');
      const doHit=(t,power)=>{if(!t||t.hp<=0)return;attackEffect(u,t);const dealt=damageAgainstPower(u,t,power);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(u.firstStopChance&&t.hp>0&&Math.random()<u.firstStopChance){t.stopUntil=performance.now()/1000+(u.firstStopDuration||1);setStatusMark(t,'⏸️','停止',u.firstStopDuration||1,'stop');}if(u.stopChance&&t.hp>0&&Math.random()<u.stopChance){t.stopUntil=performance.now()/1000+(u.stopDuration||.5);setStatusMark(t,'⏸️','停止',u.stopDuration||.5,'stop');}if(t.hp<=0)removeEnemy(t);};
@@ -1894,7 +1928,8 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
      else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
-   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
+   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
+ }catch(err){console.error('unit update error',err)}
  }
 }
 function enemyWaveAttack(e){
