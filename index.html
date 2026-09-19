@@ -1759,15 +1759,11 @@ function finishRank(win){
  playSE(win?'win':'lose');
 
  const old=rankPoints;
- let delta=win?100:-60;
- let oppRank=rankIndex(old), myRank=rankIndex(old);
+ // プレイヤーもAIと同じ小刻みなRP変動にする。1勝で段位が一気に上がらないようにする。
+ let delta=win?12:-9;
  try{
    win?playerRankWins++:playerRankLosses++;
-   oppRank=rankAI?rankIndex(rankAI.rp):rankIndex(old);
-   myRank=rankIndex(old);
-   const rankGap=oppRank-myRank;
-   delta=win?100+Math.max(-16,Math.min(24,rankGap*8)):-60+Math.max(-18,Math.min(18,rankGap*6));
-   rankPoints=Math.max(0,rankPoints+delta);
+   rankPoints=Math.max(0,old+delta);
  }catch(err){
    console.error('rank result calculation error',err);
    rankPoints=Math.max(0,old+delta);
