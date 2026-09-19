@@ -136,7 +136,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div class="rankAI" id="rankOpponentPreview" style="margin-top:9px"></div>
 <div class="rankGrid"><button id="rankMatchBtn">⚔️ ランク戦を開始</button><button id="rankSelfPlayBtn">🤖 AI自己対戦</button></div><button id="rankMetaBtn" style="width:100%;background:#f59e0b!important;color:#111!important;margin-bottom:7px">📊 使用率・勝率・流行編成</button><button id="rankRewardInfoBtn" style="width:100%;background:#16a34a!important;color:#fff!important;margin-bottom:7px">🎁 ランク報酬・RPの仕組み</button>
 <button id="aiManageBtn" style="width:100%;background:#0f766e!important;color:#fff!important;margin-bottom:7px">🤖 500AIアカウントを確認</button>
-<div id="playerRankStats" class="rankNotice" style="margin-top:8px"></div><div id="rankSeasonInfo" class="rankNotice" style="margin-top:8px"></div><div style="font-weight:1000;text-align:left;margin-top:8px">🏅 ランキング</div><div class="rankBoard" id="rankBoard"></div>
+<div id="playerRankStats" class="rankNotice" style="margin-top:8px"></div><div id="rankSeasonInfo" class="rankNotice" style="margin-top:8px"></div><div id="rankResetCountdown" class="rankNotice" style="margin-top:8px;background:#172554;color:#fff;border:2px solid #3b82f6"></div><div style="font-weight:1000;text-align:left;margin-top:8px">🏅 ランキング</div><div class="rankBoard" id="rankBoard"></div>
 <div class="rankHistory" id="rankHistory"></div>
 <button id="rankClose" class="backbtn">戻る</button>
 </div></div>
@@ -1401,6 +1401,32 @@ aiProfiles=aiProfiles.slice(0,1000);
 const RANK_SEASON_BASE=Date.parse('2026-09-19T04:30:00Z');
 function currentRankSeason(){return Math.max(0,Math.floor((Date.now()-RANK_SEASON_BASE)/172800000))}
 function rankSeasonLabel(){return 'シーズン '+(currentRankSeason()+1)}
+function rankSeasonResetAt(){
+ const cycle=Math.floor((Date.now()-RANK_SEASON_BASE)/172800000)+1;
+ return RANK_SEASON_BASE+cycle*172800000;
+}
+function formatRankCountdown(ms){
+ const total=Math.max(0,Math.floor(ms/1000));
+ const d=Math.floor(total/86400),h=Math.floor(total%86400/3600),m=Math.floor(total%3600/60),sec=total%60;
+ return (d>0?d+'日 ':'')+String(h).padStart(2,'0')+'時間 '+String(m).padStart(2,'0')+'分 '+String(sec).padStart(2,'0')+'秒';
+}
+function renderRankResetCountdown(){
+ const el=document.getElementById('rankResetCountdown');
+ if(!el)return;
+ const left=Math.max(0,rankSeasonResetAt()-Date.now());
+ el.innerHTML='<b>⏳ ランクシーズンリセットまで</b><br><span style="font-size:18px;color:#ffd21f">'+formatRankCountdown(left)+'</span><br><small>2日ごと・13:30（日本時間）にリセット</small>';
+}
+function startRankResetCountdown(){
+ renderRankResetCountdown();
+ if(window.__rankResetCountdownTimer)clearInterval(window.__rankResetCountdownTimer);
+ window.__rankResetCountdownTimer=setInterval(()=>{
+   renderRankResetCountdown();
+   if(rankSeasonResetAt()<=Date.now()){
+     ensureRankSeason();
+     renderRankLobby();
+   }
+ },1000);
+}
 function ensureRankSeason(){
  const season=currentRankSeason();
  // 今回のランク報酬受け取り確認用に、一度だけ全ランク戦をリセットする。
@@ -1708,7 +1734,7 @@ async function loadPreviousSeasonTop10(){
   try{previousSeasonTop10=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop10')||'[]')}catch(_){previousSeasonTop10=[]}
  }finally{renderRankLeaderboard();}
 }
-function renderRankLobby(){ensureRankSeason();const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
+function renderRankLobby(){ensureRankSeason();startRankResetCountdown();const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const seasonInfo=document.getElementById('rankSeasonInfo');if(seasonInfo)seasonInfo.innerHTML='<b>📅 '+rankSeasonLabel()+'</b><br>📉 現在の弱体化対象：'+seasonWeakText()+'<br>前シーズンTOP5はランク戦で性能25%低下、今シーズンTOP5は性能60%低下。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間弱体化。<br>📊 使用率・勝率・流行編成はシーズン開始時にすべてリセット。弱体化TOP5の選定は勝率のみです。';const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
 function openRank(){ensureRankSeason();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();loadPreviousSeasonTop10();syncPlayerRanking();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
