@@ -227,13 +227,14 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
+cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
   '木下':'無','強化木下':'赤','マッチョ木下':'青','木下（野球）':'赤','木下（覚醒）':'浮',
   '木下（忍者）':'黒','木下（博士）':'青','木下（ロボ）':'鋼','木下（王）':'光','木下（超覚醒）':'赤',
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
-  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙'
+  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙','木下&吉田':'宇宙'
 };
 cards.forEach(c=>{c.trait=allyTraits[c.name]||'無';});
 
@@ -704,10 +705,52 @@ if(!playerRankingId){
 let publicPlayerRankings=[];
 let playerRankingSyncBusy=false;
 function escapeRankText(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async async function claimRankReward(){
+  try{
+    const res=await fetch(SUPABASE_REST_URL+'/rpc/claim_rank_reward',{method:'POST',headers:supabaseHeaders(),body:JSON.stringify({p_player_id:playerRankingId}),cache:'no-store'});
+    if(!res.ok)return null;
+    const rows=await res.json();
+    return Array.isArray(rows)&&rows[0]?rows[0]:null;
+  }catch(e){return null;}
+}
+async function syncRankSeasonState(){
+  try{
+    const q='?select=rp,wins,losses,rank_cycle,rank_badge,pending_coins,pending_xp,limited_character_owned,reward_rank,reward_cycle&player_id=eq.'+encodeURIComponent(playerRankingId);
+    const res=await fetch(PLAYER_RANKINGS_URL+q,{headers:supabaseHeaders(),cache:'no-store'});
+    if(!res.ok)return;
+    const rows=await res.json(),row=Array.isArray(rows)?rows[0]:null;
+    if(!row)return;
+    const serverCycle=Number(row.rank_cycle??-1);
+    const newCycle=serverCycle>rankCycle;
+    if(newCycle){
+      rankCycle=serverCycle;
+      rankPoints=Math.max(0,Number(row.rp||0));
+      playerRankWins=Math.max(0,Number(row.wins||0));
+      playerRankLosses=Math.max(0,Number(row.losses||0));
+      rankBadge=String(row.rank_badge||'');
+      const ri=cards.findIndex(c=>c.name==='木下&吉田');
+      if(ri>=0)ownedFlags[ri]=row.limited_character_owned===true;
+      syncOwnedCount();normalizeFormation();save();
+    }
+    const claimed=await claimRankReward();
+    if(claimed){
+      const pc=Math.max(0,Number(claimed.pending_coins||0));
+      const px=Math.max(0,Number(claimed.pending_xp||0));
+      gachaCoins+=pc;
+      playerXP+=px;
+      rankBadge=String(claimed.rank_badge||rankBadge||'');
+      const ri=cards.findIndex(c=>c.name==='木下&吉田');
+      if(ri>=0)ownedFlags[ri]=claimed.limited_character_owned===true;
+      syncOwnedCount();normalizeFormation();save();saveRank();
+    }
+  }catch(e){console.warn('ランク報酬同期失敗:',e)}
+}
 async function syncPlayerRanking(){
   if(playerRankingSyncBusy)return;
   playerRankingSyncBusy=true;
   try{
+    await syncRankSeasonState();
+    storage.setItem('kinoshitaRankCycle',String(rankCycle));
     const body={player_id:playerRankingId,name:(playerName||'プレイヤー').slice(0,16),rp:Math.max(0,Math.floor(rankPoints)),wins:Math.max(0,Math.floor(playerRankWins)),losses:Math.max(0,Math.floor(playerRankLosses)),updated_at:new Date().toISOString()};
     const res=await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
@@ -837,7 +880,7 @@ function friendChallenge(id){
 }
 async function loadPublicPlayerRankings(){
   try{
-    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses&order=rp.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,rank_badge&order=rp.desc,wins.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const rows=await res.json();
     publicPlayerRankings=Array.isArray(rows)?rows:[];
@@ -957,7 +1000,8 @@ function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('k
 function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier();if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
-function damageAgainst(u,target){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(u.atk*mult));}
+function damageAgainstPower(u,target,power){let mult=1;const tr=target.trait||"無";const a=u.ability||{};if(a.strong?.[tr])mult*=a.strong[tr];return Math.max(1,Math.round(power*mult));}
+function damageAgainst(u,target){return damageAgainstPower(u,target,u.atk);}
 function damageTakenBy(u,attacker){let mult=1;const now=performance.now()/1000;const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;const tr=attacker.trait||"無";const a=u.ability||{};if(a.resist?.[tr])mult*=a.resist[tr];else if(a.resist?.["*"])mult*=a.resist["*"];return Math.max(1,Math.round(effectiveAtk*mult));}
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;if(!target.statuses)target.statuses={};target.statuses[type]={icon,text,until:performance.now()/1000+duration};updateStatusMark(target)}
 function updateStatusMark(target){if(!target?.el)return;const now=performance.now()/1000;const statuses=target.statuses||{};for(const k of Object.keys(statuses))if(statuses[k].until<=now)delete statuses[k];let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}const active=Object.values(statuses);if(active.length){const s=active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove()}
@@ -1223,13 +1267,13 @@ function updateWorkerUI(){const btn=document.getElementById('workerBtn');const c
 function update(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('moneyMax').textContent=workerMax;document.getElementById('enemyHp').textContent=Math.max(0,Math.floor(enemyHp));document.getElementById('enemyMaxHp').textContent=enemyMaxHp;document.getElementById('baseHp').textContent=Math.max(0,Math.floor(baseHp));document.getElementById('level').textContent=level;document.getElementById('levelbar').style.width=Math.min(100,level*10)+'%';updateWorkerUI();renderCards()}
 function popup(text,x,y){const p=document.createElement('div');p.className='pop';p.textContent=text;p.style.left=x+'px';p.style.top=y+'px';effects.appendChild(p);setTimeout(()=>p.remove(),600)}
 function attackEffect(source,target){if(!source||!target)return;const key=source.isEnemy?'enemy':source.motion||'basic';const glyph={basic:'✦',power:'◆',muscle:'💥',baseball:'⚾',awakened:'✧',ninja:'〆',scientist:'⚗',robot:'◉',king:'♛',super:'✦',enemy:'●'}[key]||'✦';const cls='fx-'+key;const fx=document.createElement('div');fx.className=`attackFx ${cls} ${source.attackType==='area'?'area':'projectile'}`;fx.textContent=glyph;fx.style.left=(source.x+(target.x-source.x)*.62)+'px';fx.style.bottom='105px';effects.appendChild(fx);setTimeout(()=>fx.remove(),360);const impact=document.createElement('div');impact.className=`attackFx impact ${cls}`;impact.textContent=source.attackType==='area'?'✦':glyph;impact.style.left=target.x+'px';impact.style.bottom='105px';effects.appendChild(impact);setTimeout(()=>impact.remove(),330);const pulse=document.createElement('div');pulse.className=`rangePulse ${source.attackType==='area'?'area':'single'}`;pulse.style.left=source.x+'px';pulse.style.bottom='105px';effects.appendChild(pulse);setTimeout(()=>pulse.remove(),320);}
-function allyWaveAttack(u){
+function allyWaveAttack(u,power=u.atk){
  const level=Math.max(1,Number(u.waveLevel||0));
  if(!level)return;
  const waveRange=90*level;
  // 味方は右側から左側の敵へ波動を飛ばす。
  const targets=enemies.filter(e=>e.x<=u.x&&Math.abs(e.x-u.x)<=waveRange);
- for(const e of targets){const dealt=Math.max(1,Math.round(u.atk));hit(e,dealt,u,null);if(e.hp<=0)removeEnemy(e);}
+ for(const e of targets){const dealt=Math.max(1,Math.round(power));hit(e,dealt,u,null);if(e.hp<=0)removeEnemy(e);}
  const wave=document.createElement('div');
  wave.className='enemyWaveEffect allyWaveEffect';
  wave.style.left=Math.max(0,u.x-waveRange)+'px';
@@ -1245,7 +1289,7 @@ function allyWaveAttack(u){
  }
  setTimeout(()=>wave.remove(),520);
 }
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:c.waveLevel||0,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:c.waveLevel||0,secondAtk:c.secondAtk||0,firstStopChance:c.firstStopChance||0,firstStopDuration:c.firstStopDuration||0,isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=c.recharge;units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;updateStatusMark(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};renderUnitElement(e);enemies.push(e);return e}
 function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
@@ -1302,6 +1346,8 @@ const aiStrategies=[
 ];
 let playerName=storage.getItem('kinoshitaPlayerName')||'プレイヤー';
 let rankPoints=Math.max(0,Number(storage.getItem('kinoshitaRankPoints')||0));
+let rankBadge=storage.getItem('kinoshitaRankBadge')||'';
+let rankCycle=Number(storage.getItem('kinoshitaRankCycle')||-1);
 let rankHistory;try{rankHistory=JSON.parse(storage.getItem('kinoshitaRankHistory')||'[]')}catch(e){rankHistory=[]}
 let rankMode=false,rankAI=null,rankAIUnits=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
 let rankPlayerUsed=[],rankAIUsed=[];
@@ -1363,7 +1409,7 @@ else{
  for(let i=aiProfiles.length;i<1000;i++)aiProfiles.push(aiFreshAccount(i-500,i));
 }
 aiProfiles=aiProfiles.slice(0,1000);
-function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
+function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));storage.setItem('kinoshitaRankBadge',rankBadge);storage.setItem('kinoshitaRankCycle',rankCycle);}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
 function totalJapanClears(){return (chapterClears[0]||0)+(chapterClears[1]||0)+(chapterClears[2]||0);}
@@ -1578,15 +1624,15 @@ function closeAIDetail(){document.getElementById('aiDetailModal').style.display=
 function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
- const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true}));
- if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true});
+ const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),rankBadge:String(x.rank_badge||''),human:true}));
+ if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,rankBadge:rankBadge,human:true});
  const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
- el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
+ el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}${x.human&&x.rankBadge?' '+escapeRankText(x.rankBadge):''}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
 }
 function renderRankLobby(){const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-function openRank(){document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();syncPlayerRanking();}
+async function openRank(){document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);await syncPlayerRanking();renderRankLobby();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
@@ -1722,7 +1768,12 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
  const playerBaseStop=worldWidth-178;
  for(const u of [...units]){u.cd-=dt;
    let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
-   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}if(u.waveLevel)allyWaveAttack(u);u.cd=u.interval}}
+   if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){
+     attackEffect(u,t);const dealt=damageAgainstPower(u,t,u.atk);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});
+     if(u.firstStopChance&&t.hp>0&&Math.random()<u.firstStopChance){t.stopUntil=performance.now()/1000+(u.firstStopDuration||1);setStatusMark(t,'⏸️','停止',u.firstStopDuration||1,'stop');}
+     if(u.secondAtk&&t.hp>0){attackEffect(u,t);const dealt2=damageAgainstPower(u,t,u.secondAtk);hit(t,dealt2,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt2,attackerIndex:u.cardIndex});}
+     if(t.hp<=0)removeEnemy(t)
+   }if(u.waveLevel)allyWaveAttack(u,u.secondAtk||u.atk);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';u.x-=u.spd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
