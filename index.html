@@ -996,29 +996,6 @@ function normalizeFormation(){
 }
 normalizeFormation();
 let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0;
-/* ===== 最終キャラクターID修復 V10 =====
-   現行カード配列は91体・IDは配列順で固定。旧138体セーブは91体へ縮約する。
-   43=波動木下、90=ファイティング木下。名前ではなく固定IDを基準にし、両者を再び入れ替えない。 */
-if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
- try{
-   const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
-   const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-   const oldFormation=Array.isArray(formation)?formation.slice():[];
-   const n=cards.length,flags=Array(n).fill(false),levels=Array(n).fill(1);
-   for(let i=0;i<n;i++){if(oldFlags[i]===true)flags[i]=true;if(oldLevels[i]!=null)levels[i]=Math.max(1,Math.min(20,Number(oldLevels[i])||1));}
-   const waveId=cards.findIndex(c=>c.name==='波動木下');
-   const fightingId=cards.findIndex(c=>c.name==='ファイティング木下');
-   const rankLimitedId=cards.findIndex(c=>c.name==='木下&吉田');
-   if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
-   // 交換済みだったファイティング木下は今回のID破損で失われないよう復元する。
-   if(fightingId>=0)flags[fightingId]=true;
-   if(rankLimitedId>=0 && oldFlags[rankLimitedId]===true)flags[rankLimitedId]=true;
-   flags[0]=true;
-   const nf=[];for(const oi of oldFormation){if(Number.isInteger(oi)&&oi>=0&&oi<n&&flags[oi]&&!nf.includes(oi))nf.push(oi);}
-   ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);syncOwnedCount();save();
-   storage.setItem('kinoshitaCharacterIndexRepairV10','done');
- }catch(e){console.warn('character ID repair V10 failed',e)}
-}
 /* ===== キャラクターID修復 V9：正規91体を基準に旧138体セーブを安全復元 =====
    現在の正規キャラクターは名前重複なしの91体。旧138体版の重複領域も安全に折りたたむ。 */
 if(storage.getItem('kinoshitaCharacterIndexRepairV9')!=='done'){
@@ -1037,6 +1014,37 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV9')!=='done'){
   const nf=[];for(const oi of oldFormation){const ni=map(oi);if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
   ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();storage.setItem('kinoshitaCharacterIndexRepairV9','done');
  }catch(e){console.warn('character ID repair V9 failed',e)}
+}
+
+/* ===== 最終キャラクターID修復 V10 =====
+   現行91体を正規IDとして固定。旧138体セーブの余分なIDは削除し、
+   波動木下=43、木下&吉田=44、ファイティング木下=90を固定する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const flags=Array(cards.length).fill(false),levels=Array(cards.length).fill(1);
+  for(let i=0;i<cards.length;i++){
+   if(oldFlags[i]===true)flags[i]=true;
+   if(oldLevels[i]!=null)levels[i]=Math.max(1,Math.min(20,Number(oldLevels[i])||1));
+  }
+  const waveId=cards.findIndex(c=>c.name==='波動木下');
+  const rankId=cards.findIndex(c=>c.name==='木下&吉田');
+  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
+  if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
+  if(rankId>=0&&oldFlags[rankId]===true)flags[rankId]=true;
+  // 交換済みだったファイティング木下を復元。
+  if(fightId>=0)flags[fightId]=true;
+  flags[0]=true;
+  const nf=[];
+  for(const oi of oldFormation){
+   if(Number.isInteger(oi)&&oi>=0&&oi<cards.length&&flags[oi]&&!nf.includes(oi))nf.push(oi);
+  }
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);
+  normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV10','done');
+ }catch(e){console.error('character ID repair V10 failed',e)}
 }
 
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
@@ -1998,9 +2006,11 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
      if(Array.isArray(u.multiAttack)&&u.multiAttack.length){const sequence=u.multiAttack.slice();sequence.forEach((power,idx)=>setTimeout(()=>{if(!running||u.hp<=0)return;const t=target;if(!t||t.hp<=0)return;doHit(t,power);waveAfter(power);},idx*100));u.cd=u.interval;}
      else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const rawSpd=Number(u.spd);const fallbackSpd=Number(cards[u.cardIndex]?.spd);const moveSpd=Number.isFinite(rawSpd)&&rawSpd>0?rawSpd:(Number.isFinite(fallbackSpd)&&fallbackSpd>0?fallbackSpd:.5);const beforeX=u.x;u.x-=moveSpd*60*dt;if(!Number.isFinite(u.x))u.x=beforeX;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x);}
+   else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x)}
    if(u.statuses&&Object.keys(u.statuses).length)updateStatusMark(u);if(u.el){u.el.style.left=Math.round(u.x)+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}
  }
+ requestAnimationFrame(loop);
+}
 function enemyWaveAttack(e){
  const level=Math.max(1,Number(e.waveLevel||0));
  if(!level)return;
