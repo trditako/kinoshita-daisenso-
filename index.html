@@ -1762,7 +1762,12 @@ function finishRank(win){
 
  const old=rankPoints;
  // プレイヤーもAIと同じ小刻みなRP変動にする。1勝で段位が一気に上がらないようにする。
- let delta=win?12:-9;
+ let baseDelta=win?20:-15;
+ let bonus=0;
+ const opponentRp=Number(rankAI?.rp||0);
+ const opponentTier=rankIndex(opponentRp),playerTier=rankIndex(old);
+ if(win&&opponentTier>playerTier) bonus=Math.min(20,(opponentTier-playerTier)*5);
+ let delta=win?baseDelta+bonus:baseDelta;
  try{
    win?playerRankWins++:playerRankLosses++;
    rankPoints=Math.max(0,old+delta);
@@ -1801,7 +1806,7 @@ function finishRank(win){
  title.style.cssText='margin:0 0 16px;font-size:clamp(28px,7vw,42px);';
  const text=document.createElement('div');
  text.style.cssText='white-space:pre-line;font-size:clamp(16px,4vw,21px);line-height:1.8;margin-bottom:22px;';
- text.textContent=`${playerName}　VS　${rankAI?.name||'AI'}\n${delta>=0?'+'+delta:delta} RP\n現在：${rankPoints} RP　【${rankName(rankPoints)}】\n日本編クリア補正：×${rankPowerMultiplier().toFixed(2)}`;
+ text.textContent=`${playerName}　VS　${rankAI?.name||'AI'}\n${delta>=0?'+'+delta:delta} RP${bonus>0?'（格上撃破ボーナス +'+bonus+'）':''}\n現在：${rankPoints} RP　【${rankName(rankPoints)}】\n日本編クリア補正：×${rankPowerMultiplier().toFixed(2)}`;
  const back=document.createElement('button');
  back.type='button';
  back.textContent='🏆 ランク戦に戻る';
