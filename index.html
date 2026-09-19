@@ -1160,6 +1160,28 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV12')!=='done'){
  }catch(e){console.error('character ID repair V12 failed',e)}
 }
 
+/* ===== キャラクターID修復 V13：現在の正規名を最優先 =====
+   IDを再計算して所持状態を別キャラへ移さない。重複名は最初の1体だけを正規採用する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV13')!=='done'){
+ try{
+  const canonical=new Map();
+  cards.forEach((c,i)=>{if(c?.name&&!canonical.has(c.name))canonical.set(c.name,i)});
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const oldByIndex=new Map();
+  oldFlags.forEach((v,i)=>{if(v&&i<cards.length)oldByIndex.set(cards[i]?.name,i)});
+  const flags=Array(cards.length).fill(false),levels=Array(cards.length).fill(1);
+  oldByIndex.forEach((_,name)=>{const ni=canonical.get(name);if(ni!=null)flags[ni]=true});
+  oldLevels.forEach((lv,i)=>{const name=cards[i]?.name,ni=canonical.get(name);if(ni!=null)levels[ni]=Math.max(levels[ni],Math.min(20,Math.max(1,Number(lv)||1)))});
+  flags[0]=true;
+  const waveId=canonical.get('波動木下');if(waveId!=null)flags[waveId]=eventClears['波動木下降臨']===true;
+  const fightId=canonical.get('ファイティング木下');if(fightId!=null)flags[fightId]=true;
+  const rankId=canonical.get('木下&吉田');if(rankId!=null&&flags[rankId]!==true)flags[rankId]=false;
+  const nf=[];for(const oi of formation||[]){if(!Number.isInteger(oi)||oi<0||oi>=cards.length)continue;const name=cards[oi]?.name,ni=canonical.get(name);if(ni!=null&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();storage.setItem('kinoshitaCharacterIndexRepairV13','done');
+ }catch(e){console.error('character ID repair V13 failed',e)}
+}
+
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}
@@ -1953,8 +1975,8 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
      if(Array.isArray(u.multiAttack)&&u.multiAttack.length){const sequence=u.multiAttack.slice();sequence.forEach((power,idx)=>setTimeout(()=>{if(!running||u.hp<=0)return;const t=target;if(!t||t.hp<=0)return;doHit(t,power);waveAfter(power);},idx*100));u.cd=u.interval;}
      else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
-   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
+   else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x)}
+   if(u.statuses&&Object.keys(u.statuses).length)updateStatusMark(u);if(u.el){u.el.style.left=Math.round(u.x)+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}
  }
  requestAnimationFrame(loop);
 }
@@ -1988,8 +2010,8 @@ function enemyWaveAttack(e){
    let target=units.filter(u=>u.x>e.x&&Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
    if(target){e.state='attack';if(e.cd<=0){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0)removeUnit(t)}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
-   updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((Number.isFinite(Number(e.id))?Number(e.id):0)*7%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
+   else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);const moveSpd=Number.isFinite(Number(e.spd))?Math.max(.05,Number(e.spd)):0.05;if(!stopNow)e.x+=moveSpd*sf*60*dt;if(e.x>playerBaseStop)e.x=Math.min(playerBaseStop,e.x);if(!slowNow)e.slowFactor=1}
+   if(e.statuses&&Object.keys(e.statuses).length)updateStatusMark(e);if(e.el){e.el.style.left=Math.round(e.x)+'px';const hpBar=e.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}
  }
  updateCamera();if(enemyHp<=0){enemyHp=0;return rankMode?finishRank(true):showResult(true);}if(baseHp<=0){baseHp=0;return rankMode?finishRank(false):showResult(false);}update();requestAnimationFrame(loop)}
 function renderCards(){
