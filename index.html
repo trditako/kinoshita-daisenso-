@@ -804,7 +804,7 @@ async function loadFriends(){
 }
 async function friendProfile(id){
   try{
-    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,bio,updated_at&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,best_rp,best_rank,bio,updated_at&player_id=eq.'+encodeURIComponent(id),{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const rows=await res.json(),p=rows[0];
     if(!p){alert('そのプレイヤーIDは見つかりません。');return;}
