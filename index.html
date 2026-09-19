@@ -1134,26 +1134,30 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
  }catch(e){console.error('character ID repair V10 failed',e)}
 }
 
-/* ===== キャラクターID修復 V11：今回のID混線を最終固定 =====
-   V10以前の数値ID移行でファイティング木下が別キャラへ移ったケースを救済。
-   現在のcards配列は名前を正とし、波動木下はイベントクリア時のみ所持。 */
-if(storage.getItem('kinoshitaCharacterIndexRepairV11')!=='done'){
+/* ===== キャラクターID修復 V12：名前ベースで重複・旧IDを整理 ===== */
+if(storage.getItem('kinoshitaCharacterIndexRepairV12')!=='done'){
  try{
-  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
-  const waveId=cards.findIndex(c=>c.name==='波動木下');
-  if(fightId>=0)ownedFlags[fightId]=true;
-  if(waveId>=0)ownedFlags[waveId]=eventClears['波動木下降臨']===true;
-  ownedFlags=ownedFlags.slice(0,cards.length);
-  while(ownedFlags.length<cards.length)ownedFlags.push(false);
-  ownedFlags[0]=true;
-  const clean=[];
-  for(const i of (Array.isArray(formation)?formation:[])){
-   if(Number.isInteger(i)&&i>=0&&i<cards.length&&ownedFlags[i]&&!clean.includes(i))clean.push(i);
-  }
-  formation=clean.slice(0,10);
-  normalizeFormation();syncOwnedCount();save();
-  storage.setItem('kinoshitaCharacterIndexRepairV11','done');
- }catch(e){console.error('character ID repair V11 failed',e)}
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const byName=name=>cards.findIndex(c=>c.name===name);
+  const flags=Array(cards.length).fill(false),levels=Array(cards.length).fill(1);
+  const legacy=[
+   '木下','強化木下','マッチョ木下','木下（野球）','木下（覚醒）','木下（忍者）','木下（博士）','木下（ロボ）','木下（王）','木下（超覚醒）',
+   '森の守護木下','森の杖木下','森王木下','木下（電脳）','木下（ドローン）','木下（AI）','星読み木下','流星木下','星王木下','狂乱の木下',
+   '突撃ハーランド木下','異常木下','吉田','対無木下','赤狩り木下','黒追撃木下','天使迎撃木下','宇宙観測木下','宇宙突破木下','赤壁木下','無敵壁木下','黒速攻木下','天使封殺木下','宇宙砕き木下','未来探査木下','攻略隊長木下','日本防衛木下','日本制圧木下','未来制圧木下','四属性討伐木下','銀河攻略木下','最終攻略木下','宇宙決戦木下','波動木下','木下&吉田','ファイティング木下'
+  ];
+  for(let i=0;i<Math.min(oldFlags.length,legacy.length);i++){if(oldFlags[i]){const ni=byName(legacy[i]);if(ni>=0)flags[ni]=true}}
+  for(let i=0;i<Math.min(oldLevels.length,legacy.length);i++){const ni=byName(legacy[i]);if(ni>=0)levels[ni]=Math.max(levels[ni],Math.max(1,Math.min(20,Number(oldLevels[i]||1))))}
+  /* 旧138体版でファイティング木下が存在した代表スロットを名前で復元。 */
+  const fightId=byName('ファイティング木下');
+  if(fightId>=0 && (oldFlags[90]===true||oldFlags[136]===true||oldFlags[137]===true)) flags[fightId]=true;
+  const waveId=byName('波動木下');if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
+  flags[0]=true;
+  const nf=[];for(const oi of oldFormation){if(!Number.isInteger(oi))continue;const ni=oi<legacy.length?byName(legacy[oi]):(oi<cards.length?oi:-1);if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni)}
+  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV12','done');
+ }catch(e){console.error('character ID repair V12 failed',e)}
 }
 
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
@@ -1426,7 +1430,7 @@ window.addEventListener('keydown',()=>{if(audioEnabled&&!audioStarted&&!audioSta
 function workerUpgradeCost(){return 250*level;}
 function workerUpgrade(){if(!running||level>=10)return;const cost=workerUpgradeCost();if(money<cost){popup('💰 '+cost+'円必要',18,field.clientHeight-185);return;}money-=cost;level++;playSE('upgrade');workerMax=6000+(level-1)*1000;workerIncome=120+(level-1)*15;update();popup('🌳 働き木下 LEVEL '+level,18,field.clientHeight-185);}
 function updateWorkerUI(){const btn=document.getElementById('workerBtn');const cost=workerUpgradeCost();document.getElementById('workerText').textContent=level>=10?'MAX　自動収入 '+workerIncome+'円/秒':`タップで強化：${cost}円　自動収入 ${workerIncome}円/秒`;document.getElementById('levelbar').style.width=(level*10)+'%';btn.classList.toggle('ready',running&&level<10&&money>=cost);}
-function update(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('moneyMax').textContent=workerMax;document.getElementById('enemyHp').textContent=Math.max(0,Math.floor(enemyHp));document.getElementById('enemyMaxHp').textContent=enemyMaxHp;document.getElementById('baseHp').textContent=Math.max(0,Math.floor(baseHp));document.getElementById('level').textContent=level;document.getElementById('levelbar').style.width=Math.min(100,level*10)+'%';updateWorkerUI();renderCards()}
+function update(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('moneyMax').textContent=workerMax;document.getElementById('enemyHp').textContent=Math.max(0,Math.floor(enemyHp));document.getElementById('enemyMaxHp').textContent=enemyMaxHp;document.getElementById('baseHp').textContent=Math.max(0,Math.floor(baseHp));document.getElementById('level').textContent=level;document.getElementById('levelbar').style.width=Math.min(100,level*10)+'%';updateWorkerUI()}
 function popup(text,x,y){const p=document.createElement('div');p.className='pop';p.textContent=text;p.style.left=x+'px';p.style.top=y+'px';effects.appendChild(p);setTimeout(()=>p.remove(),600)}
 function attackEffect(source,target){if(!source||!target)return;const key=source.isEnemy?'enemy':source.motion||'basic';const glyph={basic:'✦',power:'◆',muscle:'💥',baseball:'⚾',awakened:'✧',ninja:'〆',scientist:'⚗',robot:'◉',king:'♛',super:'✦',enemy:'●'}[key]||'✦';const cls='fx-'+key;const fx=document.createElement('div');fx.className=`attackFx ${cls} ${source.attackType==='area'?'area':'projectile'}`;fx.textContent=glyph;fx.style.left=(source.x+(target.x-source.x)*.62)+'px';fx.style.bottom='105px';effects.appendChild(fx);setTimeout(()=>fx.remove(),360);const impact=document.createElement('div');impact.className=`attackFx impact ${cls}`;impact.textContent=source.attackType==='area'?'✦':glyph;impact.style.left=target.x+'px';impact.style.bottom='105px';effects.appendChild(impact);setTimeout(()=>impact.remove(),330);const pulse=document.createElement('div');pulse.className=`rangePulse ${source.attackType==='area'?'area':'single'}`;pulse.style.left=source.x+'px';pulse.style.bottom='105px';effects.appendChild(pulse);setTimeout(()=>pulse.remove(),320);}
 function allyWaveAttack(u,power=u.atk){
