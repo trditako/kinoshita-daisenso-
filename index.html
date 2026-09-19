@@ -1383,6 +1383,18 @@ function currentRankSeason(){return Math.max(0,Math.floor((Date.now()-RANK_SEASO
 function rankSeasonLabel(){return 'シーズン '+(currentRankSeason()+1)}
 function ensureRankSeason(){
  const season=currentRankSeason();
+ // 今回のランク報酬受け取り確認用に、一度だけ全ランク戦をリセットする。
+ const forceResetKey='kinoshitaRankForceResetTestV1';
+ if(storage.getItem(forceResetKey)!=='done'){
+   if(typeof addRankRewardGift==='function')addRankRewardGift();
+   rankPoints=0;playerRankWins=0;playerRankLosses=0;rankHistory=[];
+   rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
+   for(const ai of aiProfiles){ai.rp=0;ai.wins=0;ai.losses=0;ai.rank_cycle=season;ai.reward_rank=null;ai.reward_cycle=null;}
+   storage.setItem(RANK_META_KEY,JSON.stringify(rankMetaStats));
+   storage.setItem('kinoshitaRankSeason',String(season));
+   storage.setItem(forceResetKey,'done');
+   saveRank();
+ }
  let stored=Number(storage.getItem('kinoshitaRankSeason')||-1);
  if(stored===-1){storage.setItem('kinoshitaRankSeason',String(season));stored=season;}
  if(stored!==season){
