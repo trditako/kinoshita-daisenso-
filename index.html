@@ -225,7 +225,8 @@ const 攻略特化キャラ=[
 {name:"宇宙決戦木下",cost:2800,hp:6200,atk:900,range:155,spd:.5,interval:1,recharge:32,icon:"🪐",motion:"super",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"宇宙決戦",desc:"宇宙属性に攻撃3倍＋バリアブレイク",strong:{宇宙:3},barrierBreak:true}}
 ];
 cards.push(...攻略特化キャラ);
-cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,multiAttack:[400,800,200],range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",series:"エレメンタル木下s",rarity:"LR",limitedExchange:true,gachaCost:100000,ability:{name:"三連攻撃",desc:"0.1秒間隔で400→800→200の3連撃。各攻撃33%で波動Lv3、各攻撃33%で0.5秒停止。波動にも停止判定あり。",waveChance:.33,waveLevel:3,stopChance:.33,stopDuration:.5}});
+cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
+cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 const COMMON_EXCHANGE_R=[
 {name:"突撃木下R",cost:250,hp:620,atk:230,range:55,spd:1.2,interval:.72,recharge:7,icon:"🏃",motion:"power",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"高攻撃力・高速型。"}},
 {name:"破壊木下R",cost:300,hp:520,atk:320,range:62,spd:1,interval:.9,recharge:8,icon:"💥",motion:"muscle",attackType:"single",kb:3,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"攻撃力重視。"}},
@@ -279,8 +280,6 @@ const ELEMENTAL_LIMITED_SSR=[
 ];
 cards.push(...COMMON_EXCHANGE_R,...COMMON_EXCHANGE_SR,...ELEMENTAL_LIMITED_SSR);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
-cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
@@ -289,6 +288,8 @@ const allyTraits={
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
   '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙','木下&吉田':'宇宙','ファイティング木下':'赤'
 };
+cards.push(...COMMON_EXCHANGE_R,...COMMON_EXCHANGE_SR,...ELEMENTAL_LIMITED_SSR);
+cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,multiAttack:[400,800,200],range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",series:"エレメンタル木下s",rarity:"LR",limitedExchange:true,gachaCost:100000,ability:{name:"三連攻撃",desc:"0.1秒間隔で400→800→200の3連撃。各攻撃33%で波動Lv3、各攻撃33%で0.5秒停止。波動にも停止判定あり。",waveChance:.33,waveLevel:3,stopChance:.33,stopDuration:.5}});
 cards.forEach(c=>{c.trait=allyTraits[c.name]||c.trait||'無';});
 
 const enemyTypes={
@@ -1030,6 +1031,36 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV2')!=='done'){
  }catch(e){console.warn('character index migration failed',e);}
 }
 
+if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
+ try{
+  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
+  const oldFormation=Array.isArray(formation)?formation.slice():[];
+  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
+  const remap=(i)=>{
+   if(!Number.isInteger(i)||i<0)return -1;
+   if(i<=33)return i;
+   if(i===34)return 36;
+   if(i>=35&&i<=59)return i+2;
+   if(i>=60&&i<=74)return i+2;
+   if(i>=75&&i<=79)return i+2;
+   if(i===80)return 34;
+   if(i===81)return 35;
+   return -1;
+  };
+  const nf=Array(cards.length).fill(false),nl=Array(cards.length).fill(1);
+  for(let i=0;i<oldFlags.length;i++){const ni=remap(i);if(ni>=0&&ni<nf.length)nf[ni]=!!oldFlags[i];}
+  for(let i=0;i<oldLevels.length;i++){const ni=remap(i);if(ni>=0&&ni<nl.length)nl[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)));}
+  nf[0]=true;
+  const waveIndex=cards.findIndex(c=>c.name==='波動木下');
+  if(waveIndex>=0&&eventClears['波動木下降臨']===true)nf[waveIndex]=true;
+  ownedFlags=nf;
+  charLevel=nl;
+  formation=[...new Set(oldFormation.map(remap).filter(i=>i>=0&&i<nf.length&&nf[i]))].slice(0,10);
+  if(!formation.length)formation=[0];
+  syncOwnedCount();
+  storage.setItem('kinoshitaCharacterIndexMigrationV6','done');
+ }catch(e){console.warn('character index migration V6 failed',e);}
+}
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}
@@ -1193,7 +1224,7 @@ function renderFormation(){
 function clampCamera(x){return Math.max(0,Math.min(Math.max(0,worldWidth-field.clientWidth),x));}
 function applyCamera(){cameraX=clampCamera(cameraX);world.style.transform=`translate3d(${-cameraX}px,0,0)`;}
 function currentStage(){if(selectedMode==='pvp')return {name:'プレイヤー対戦',width:1900,baseHp:5000,xp:0,schedule:[],repeatSpawns:[],enemies:[]};return (selectedMode==='event'?eventStages:chapterPool())[selectedStage-1]}
-function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyCamera();}
+function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=Math.max(0,worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
 field.addEventListener('pointerdown',e=>{if(!running)return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
@@ -1325,8 +1356,8 @@ function allyWaveAttack(u,power=u.atk){
  }
  setTimeout(()=>wave.remove(),520);
 }
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:rankEffectiveStat(i,'hp'),maxhp:rankEffectiveStat(i,'hp'),atk:rankEffectiveStat(i,'atk'),range:rankEffectiveStat(i,'range'),spd:rankEffectiveStat(i,'spd'),interval:rankEffectiveStat(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,kbRemaining:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,waveLevel:rankPenaltyActive(i)?Math.max(1,Math.floor((c.waveLevel||0)*.75)):c.waveLevel||0,secondAtk:rankPenaltyActive(i)?(c.secondAtk||0)*.75:(c.secondAtk||0),thirdAtk:rankPenaltyActive(i)?(c.thirdAtk||0)*.75:(c.thirdAtk||0),multiAttack:Array.isArray(c.multiAttack)?c.multiAttack.map(v=>rankPenaltyActive(i)?v*.75:v):null,waveChance:c.waveChance,waveStopChance:c.waveStopChance??c.stopChance,waveStopDuration:c.waveStopDuration??c.stopDuration,stopChance:c.stopChance,stopDuration:c.stopDuration,firstStopChance:rankPenaltyActive(i)?(c.firstStopChance||0)*.75:(c.firstStopChance||0),firstStopDuration:rankPenaltyActive(i)?(c.firstStopDuration||0)*.75:(c.firstStopDuration||0),isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=rankEffectiveStat(i,'recharge');units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
-function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;updateStatusMark(u);return d}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<cards[i].cost||(rechargeLeft[i]||0)>0)return;money-=cards[i].cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=cards[i],u={...c,hp:rankEffectiveStat(i,'hp'),maxhp:rankEffectiveStat(i,'hp'),atk:rankEffectiveStat(i,'atk'),range:rankEffectiveStat(i,'range'),spd:rankEffectiveStat(i,'spd'),interval:rankEffectiveStat(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:Math.max(120,worldWidth-175),cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,kbRemaining:rankPenaltyActive(i)?Math.max(1,Math.floor(c.kb*.75)):c.kb,waveLevel:rankPenaltyActive(i)?Math.max(1,Math.floor((c.waveLevel||0)*.75)):c.waveLevel||0,secondAtk:rankPenaltyActive(i)?(c.secondAtk||0)*.75:(c.secondAtk||0),thirdAtk:rankPenaltyActive(i)?(c.thirdAtk||0)*.75:(c.thirdAtk||0),multiAttack:Array.isArray(c.multiAttack)?c.multiAttack.map(v=>rankPenaltyActive(i)?v*.75:v):null,waveChance:c.waveChance,waveStopChance:c.waveStopChance??c.stopChance,waveStopDuration:c.waveStopDuration??c.stopDuration,stopChance:c.stopChance,stopDuration:c.stopDuration,firstStopChance:rankPenaltyActive(i)?(c.firstStopChance||0)*.75:(c.firstStopChance||0),firstStopDuration:rankPenaltyActive(i)?(c.firstStopDuration||0)*.75:(c.firstStopDuration||0),isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=rankEffectiveStat(i,'recharge');units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update()}
+function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion;d.innerHTML=`<div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);u.el=d;d.style.left=(u.x??0)+'px';d.style.bottom='40px';updateStatusMark(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};renderUnitElement(e);enemies.push(e);return e}
 function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false){const t=enemyTypes[key];if(!t)return;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:(selectedMode==='event'?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role};const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`<div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e)}
 function removeUnit(u){u.el?.remove();units=units.filter(x=>x!==u);if(pvpMode&&u.owner==='local')pvpSend({type:'death',id:u.id})}
