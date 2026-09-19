@@ -667,6 +667,9 @@ let aiServerConnected=false;
 let aiServerLastSync=0;
 let aiServerSyncBusy=false;
 function supabaseHeaders(extra={}){return Object.assign({apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},extra)}
+let rankSeasonTop10=[];
+async function loadRankSeasonTop10(){try{const rows=await fetch(SUPABASE_REST_URL+'/rank_season_top10?select=cycle,source,account_id,name,rank_position&order=cycle.desc,rank_position.asc',{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());rankSeasonTop10=Array.isArray(rows)?rows:[]}catch(e){rankSeasonTop10=[]}}
+function top10BadgeFor(source,id){const rows=rankSeasonTop10.filter(x=>String(x.source)===source&&String(x.account_id)===String(id));if(!rows.length)return '';const p=Number(rows[0].rank_position);return p===1?'🥇':p===2?'🥈':p===3?'🥉':'🏅'}
 async function loadAIServerProfiles(){
  try{
   const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=*&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
@@ -680,7 +683,7 @@ async function loadAIServerProfiles(){
     generation:Number(row.generation||1),strategy:row.strategy||'balanced',aggression:Number(row.aggression??.55),save:Number(row.save_rate??row.save??.35),
     coins:Number(row.coins??900),playerXP:Number(row.player_xp||0),workerLevel:Number(row.worker_level||1),stageClears:Number(row.stage_clears||0),
     chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters:Array.isArray(row.owned_characters)?row.owned_characters:[0],
-    formation:Array.isArray(row.formation)?row.formation:[0],charLevels:Array.isArray(row.char_levels)?row.char_levels:Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1),
+    formation:Array.isArray(row.formation)?row.formation:[0],rankBadge:String(row.rank_badge||''),rewardRank:Number.isFinite(Number(row.reward_rank))?Number(row.reward_rank):null,rankCycle:Number(row.rank_cycle??0),charLevels:Array.isArray(row.char_levels)?row.char_levels:Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1),
     eventClears:row.event_clears&&typeof row.event_clears==='object'?row.event_clears:{},trainingXP:Number(row.training_xp||0),matches:Number(row.matches||0),
     lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activity:typeof row.activity==='string'?row.activity:'待機中',
     activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],population:Number(row.population||1)
@@ -880,7 +883,7 @@ function friendChallenge(id){
 }
 async function loadPublicPlayerRankings(){
   try{
-    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,rank_badge,best_rp,best_rank&order=rp.desc,wins.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
+    const res=await fetch(PLAYER_RANKINGS_URL+'?select=player_id,name,rp,wins,losses,rank_badge,reward_rank,reward_cycle,best_rp,best_rank&order=rp.desc,wins.desc,updated_at.asc',{headers:supabaseHeaders(),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const rows=await res.json();
     publicPlayerRankings=Array.isArray(rows)?rows:[];
@@ -1352,8 +1355,10 @@ let rankHistory;try{rankHistory=JSON.parse(storage.getItem('kinoshitaRankHistory
 let rankMode=false,rankAI=null,rankAIUnits=[],rankSeasonPenaltyIds=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
 let rankPlayerUsed=[],rankAIUsed=[];
 const RANK_META_KEY='kinoshitaRankMetaV1';
+const currentRankSeasonCycle=()=>Math.floor((Date.now()-Date.parse('2026-09-19T04:30:00Z'))/172800000);
 let rankMetaStats;try{rankMetaStats=JSON.parse(storage.getItem(RANK_META_KEY)||'null')}catch(e){rankMetaStats=null}
-if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
+if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={cycle:currentRankSeasonCycle(),matches:0,totalDeploys:0,chars:{},formations:{}};
+if(Number(rankMetaStats.cycle)!==currentRankSeasonCycle())rankMetaStats={cycle:currentRankSeasonCycle(),matches:0,totalDeploys:0,chars:{},formations:{}};
 rankMetaStats.matches=Number(rankMetaStats.matches||0);rankMetaStats.totalDeploys=Number(rankMetaStats.totalDeploys||0);rankMetaStats.chars=rankMetaStats.chars&&typeof rankMetaStats.chars==='object'?rankMetaStats.chars:{};rankMetaStats.formations=rankMetaStats.formations&&typeof rankMetaStats.formations==='object'?rankMetaStats.formations:{};
 function saveRankMeta(){storage.setItem(RANK_META_KEY,JSON.stringify(rankMetaStats))}
 function recordRankMetaSide(used,formation,won){for(const i of (used||[])){const k=String(i),x=rankMetaStats.chars[k]||{used:0,wins:0,losses:0};x.used++;won?x.wins++:x.losses++;rankMetaStats.chars[k]=x}const key=[...new Set((formation||[]).filter(i=>Number.isInteger(i)&&cards[i]))].join('-')||'empty',f=rankMetaStats.formations[key]||{used:0,wins:0,losses:0};f.used++;won?f.wins++:f.losses++;rankMetaStats.formations[key]=f;rankMetaStats.totalDeploys+=(used||[]).length}
@@ -1634,15 +1639,15 @@ const tierRewards=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉
 
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
- const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),bestRP:Number(x.best_rp||0),bestRank:String(x.best_rank||rankName(Number(x.best_rp||0))),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),rankBadge:String(x.rank_badge||''),human:true}));
- if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,bestRP:bestRP,bestRank:bestRank,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,rankBadge:rankBadge,human:true});
- const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false}));
+ const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),bestRP:Number(x.best_rp||0),bestRank:String(x.best_rank||rankName(Number(x.best_rp||0))),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),rankBadge:String(x.rank_badge||''),rewardRank:Number.isFinite(Number(x.reward_rank))?Number(x.reward_rank):null,historicalBadge:top10BadgeFor('human',x.player_id),human:true}));
+ if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,bestRP:bestRP,bestRank:bestRank,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,rankBadge:rankBadge,rewardRank:null,historicalBadge:top10BadgeFor('human',playerRankingId),human:true});
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),rankBadge:String(a.rankBadge||''),historicalBadge:top10BadgeFor('ai',String(a.accountId||'').replace(/^AI-/,'')||a.accountId),human:false}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
- el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}${x.human&&x.rankBadge?' '+escapeRankText(x.rankBadge):''}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
+ el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}${(x.historicalBadge||x.rankBadge)?' '+escapeRankText(x.historicalBadge||x.rankBadge):''}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
 }
 function renderRankLobby(){const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=(rankBadge?rankBadge+' ':'')+rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-async function openRank(){loadRankSeasonPenalty();renderRankResetCountdown();clearInterval(window.rankCountdownTimer);window.rankCountdownTimer=setInterval(renderRankResetCountdown,1000);document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);await syncPlayerRanking();renderRankLobby();}
+async function openRank(){await loadRankSeasonTop10();await loadRankSeasonPenalty();renderRankResetCountdown();clearInterval(window.rankCountdownTimer);window.rankCountdownTimer=setInterval(renderRankResetCountdown,1000);document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);await syncPlayerRanking();renderRankLobby();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
