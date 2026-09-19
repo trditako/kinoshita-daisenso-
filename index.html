@@ -225,72 +225,17 @@ const 攻略特化キャラ=[
 {name:"宇宙決戦木下",cost:2800,hp:6200,atk:900,range:155,spd:.5,interval:1,recharge:32,icon:"🪐",motion:"super",attackType:"area",kb:5,series:"攻略特化隊",rarity:"SSR",gachaCost:10000,ability:{name:"宇宙決戦",desc:"宇宙属性に攻撃3倍＋バリアブレイク",strong:{宇宙:3},barrierBreak:true}}
 ];
 cards.push(...攻略特化キャラ);
-cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,trait:"宇宙",waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
-const COMMON_EXCHANGE_R=[
-{name:"突撃木下R",cost:250,hp:620,atk:230,range:55,spd:1.2,interval:.72,recharge:7,icon:"🏃",motion:"power",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"高攻撃力・高速型。"}},
-{name:"破壊木下R",cost:300,hp:520,atk:320,range:62,spd:1,interval:.9,recharge:8,icon:"💥",motion:"muscle",attackType:"single",kb:3,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"攻撃力重視。"}},
-{name:"連撃木下R",cost:350,hp:600,atk:180,secondAtk:150,range:70,spd:.9,interval:.8,recharge:9,icon:"⚔️",motion:"ninja",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"二連撃",desc:"2段攻撃。"}},
-{name:"狙撃木下R",cost:420,hp:560,atk:290,range:145,spd:.65,interval:1.15,recharge:10,icon:"🎯",motion:"scientist",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"長射程",desc:"長射程アタッカー。"}},
-{name:"猛攻木下R",cost:500,hp:700,atk:360,range:75,spd:.8,interval:1.1,recharge:11,icon:"🔥",motion:"awakened",attackType:"area",kb:3,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"範囲火力特化。"}},
-{name:"鉄壁木下R",cost:250,hp:1800,atk:45,range:45,spd:.45,interval:1.5,recharge:6,icon:"🧱",motion:"robot",attackType:"single",kb:1,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防御特化",desc:"高HP・被ダメ軽減。",resist:{"*":.55}}},
-{name:"盾兵木下R",cost:300,hp:2300,atk:55,range:48,spd:.42,interval:1.6,recharge:7,icon:"🛡️",motion:"basic",attackType:"single",kb:2,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防御特化",desc:"被ダメージ軽減。",resist:{"*":.5}}},
-{name:"守護木下R",cost:400,hp:2600,atk:70,range:50,spd:.38,interval:1.7,recharge:9,icon:"🏰",motion:"muscle",attackType:"area",kb:2,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防御特化",desc:"高耐久範囲型。",resist:{"*":.48}}},
-{name:"重装木下R",cost:550,hp:3400,atk:90,range:55,spd:.3,interval:1.9,recharge:12,icon:"⚙️",motion:"robot",attackType:"area",kb:2,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防御特化",desc:"非常に高いHP。",resist:{"*":.5}}},
-{name:"要塞木下R",cost:650,hp:3900,atk:100,range:60,spd:.25,interval:2,recharge:14,icon:"🏯",motion:"king",attackType:"area",kb:2,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防御特化",desc:"前線維持特化。",resist:{"*":.45}}},
-{name:"妨害木下R",cost:350,hp:850,atk:95,range:100,spd:.65,interval:1.2,recharge:9,icon:"🌀",motion:"scientist",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"停止妨害",desc:"攻撃時30%で停止。",slow:{trait:"*",chance:.3,factor:.01,duration:1}}},
-{name:"減速木下R",cost:300,hp:760,atk:80,range:115,spd:.7,interval:1.15,recharge:8,icon:"🐌",motion:"basic",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"減速妨害",desc:"攻撃時40%で35%減速。",slow:{trait:"*",chance:.4,factor:.65,duration:2}}},
-{name:"攻撃低下木下R",cost:420,hp:900,atk:110,range:105,spd:.6,interval:1.3,recharge:10,icon:"⬇️",motion:"scientist",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃低下",desc:"攻撃時35%で攻撃力低下。",attackDownChance:.35}},
-{name:"押し戻し木下R",cost:450,hp:820,atk:130,range:90,spd:.75,interval:1.25,recharge:10,icon:"↩️",motion:"power",attackType:"single",kb:5,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"ノックバック",desc:"攻撃時35%で後退。",knockbackChance:.35}},
-{name:"封印木下R",cost:500,hp:780,atk:105,range:125,spd:.58,interval:1.35,recharge:11,icon:"🔒",motion:"super",attackType:"area",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"妨害特化",desc:"範囲減速。",slow:{trait:"*",chance:.3,factor:.6,duration:2}}},
-{name:"ランク疾走木下R",cost:280,hp:950,atk:145,range:65,spd:1.15,interval:.8,recharge:7,icon:"🏆",motion:"ninja",attackType:"single",kb:5,rarity:"R",series:"共通",gachaCost:1000,rankBonus:{hp:1.12,atk:1.35,interval:.9},ability:{name:"ランク特化",desc:"ランク戦のみ性能強化。"}},
-{name:"ランク要塞木下R",cost:400,hp:1200,atk:100,range:60,spd:.65,interval:1.2,recharge:9,icon:"🥇",motion:"robot",attackType:"area",kb:3,rarity:"R",series:"共通",gachaCost:1000,rankBonus:{hp:1.4,atk:1.12,interval:.95},ability:{name:"ランク特化",desc:"ランク戦のみ高耐久。"}},
-{name:"ランク妨害木下R",cost:450,hp:1000,atk:115,range:105,spd:.7,interval:1.2,recharge:10,icon:"📣",motion:"scientist",attackType:"area",kb:4,rarity:"R",series:"共通",gachaCost:1000,rankBonus:{atk:1.2,interval:.85},ability:{name:"ランク妨害",desc:"ランク戦のみ妨害強化。",slow:{trait:"*",chance:.45,factor:.55,duration:2.5}}},
-{name:"ランク速攻木下R",cost:500,hp:900,atk:220,range:75,spd:.95,interval:1,recharge:10,icon:"⚡",motion:"power",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,rankBonus:{atk:1.45,spd:1.15,interval:.88},ability:{name:"ランク特化",desc:"ランク戦のみ攻撃強化。"}},
-{name:"ランク壁木下R",cost:600,hp:2100,atk:70,range:50,spd:.4,interval:1.5,recharge:12,icon:"🛡️",motion:"muscle",attackType:"area",kb:2,rarity:"R",series:"共通",gachaCost:1000,rankBonus:{hp:1.45},ability:{name:"ランク壁",desc:"ランク戦のみ耐久強化。",resist:{"*":.58}}},
-{name:"幸運木下R",cost:320,hp:700,atk:150,range:80,spd:.9,interval:1,recharge:8,icon:"🍀",motion:"basic",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"バランス型",desc:"バランス型。"}},
-{name:"切替木下R",cost:360,hp:820,atk:170,range:95,spd:.85,interval:1.05,recharge:8,icon:"🔄",motion:"awakened",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"万能型",desc:"万能型。"}},
-{name:"軽量木下R",cost:180,hp:650,atk:120,range:60,spd:1.3,interval:.75,recharge:5,icon:"💨",motion:"ninja",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"高速量産",desc:"低コスト高速再出撃。"}},
-{name:"支援木下R",cost:380,hp:900,atk:105,range:125,spd:.72,interval:1.1,recharge:8,icon:"📡",motion:"scientist",attackType:"area",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"支援",desc:"長射程範囲攻撃。"}},
-{name:"耐久支援木下R",cost:430,hp:1500,atk:130,range:110,spd:.58,interval:1.2,recharge:10,icon:"🧰",motion:"robot",attackType:"area",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"防衛支援",desc:"中距離から前線を支える。",resist:{"*":.75}}}
-];
-const COMMON_EXCHANGE_SR=[
-{name:"豪腕木下SR",cost:900,hp:1400,atk:520,range:70,spd:.75,interval:1,recharge:13,icon:"💪",motion:"muscle",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"攻撃特化",desc:"高火力範囲型。"}},
-{name:"超火力木下SR",cost:1100,hp:1250,atk:760,range:90,spd:.6,interval:1.3,recharge:17,icon:"🔥",motion:"super",attackType:"single",kb:3,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"攻撃特化",desc:"一撃火力特化。"}},
-{name:"剛壁木下SR",cost:800,hp:4200,atk:120,range:55,spd:.4,interval:1.6,recharge:14,icon:"🧱",motion:"robot",attackType:"area",kb:2,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"防御特化",desc:"高HP・被ダメ軽減。",resist:{"*":.45}}},
-{name:"鉄城木下SR",cost:1000,hp:5200,atk:150,range:60,spd:.3,interval:1.9,recharge:18,icon:"🏰",motion:"king",attackType:"area",kb:2,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"防御特化",desc:"前線維持。",resist:{"*":.4}}},
-{name:"守護王木下SR",cost:1300,hp:6000,atk:180,range:70,spd:.28,interval:2,recharge:22,icon:"👑",motion:"super",attackType:"area",kb:3,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"防御特化",desc:"高耐久大型壁。",resist:{"*":.42}}},
-{name:"停止王木下SR",cost:950,hp:1500,atk:260,range:105,spd:.55,interval:1.3,recharge:15,icon:"⏸️",motion:"scientist",attackType:"single",kb:4,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"停止特化",desc:"攻撃時45%で停止。",slow:{trait:"*",chance:.45,factor:.01,duration:1.5}}},
-{name:"鈍足王木下SR",cost:900,hp:1450,atk:240,range:125,spd:.6,interval:1.2,recharge:14,icon:"🐌",motion:"basic",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"減速特化",desc:"攻撃時55%で50%減速。",slow:{trait:"*",chance:.55,factor:.5,duration:3}}},
-{name:"封殺王木下SR",cost:1200,hp:1700,atk:310,range:135,spd:.5,interval:1.35,recharge:17,icon:"🔒",motion:"awakened",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"妨害特化",desc:"攻撃時40%で減速。",slow:{trait:"*",chance:.4,factor:.4,duration:2.5}}},
-{name:"押返王木下SR",cost:1250,hp:1900,atk:340,range:105,spd:.58,interval:1.15,recharge:17,icon:"↩️",motion:"power",attackType:"single",kb:5,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"妨害特化",desc:"攻撃時50%で後退。",knockbackChance:.5}},
-{name:"ランク王木下SR",cost:1200,hp:2200,atk:360,range:115,spd:.6,interval:1.1,recharge:18,icon:"🏆",motion:"king",attackType:"area",kb:5,rarity:"SR",series:"共通",gachaCost:6000,rankBonus:{hp:1.3,atk:1.3,interval:.85},ability:{name:"ランク特化",desc:"ランク戦のみ総合強化。"}},
-{name:"ランク覇木下SR",cost:1500,hp:2400,atk:420,range:130,spd:.55,interval:1.15,recharge:20,icon:"🥈",motion:"super",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,rankBonus:{hp:1.2,atk:1.5,interval:.9},ability:{name:"ランク攻撃特化",desc:"ランク戦のみ攻撃強化。"}},
-{name:"ランク守護王木下SR",cost:1400,hp:3000,atk:250,range:85,spd:.45,interval:1.4,recharge:20,icon:"🥇",motion:"robot",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,rankBonus:{hp:1.55,atk:1.15,interval:.95},ability:{name:"ランク防御特化",desc:"ランク戦のみ耐久強化。"}},
-{name:"ランク妨害王木下SR",cost:1300,hp:2100,atk:300,range:140,spd:.5,interval:1.3,recharge:18,icon:"📣",motion:"scientist",attackType:"area",kb:4,rarity:"SR",series:"共通",gachaCost:6000,rankBonus:{atk:1.25,interval:.8},ability:{name:"ランク妨害",desc:"ランク戦のみ妨害強化。",slow:{trait:"*",chance:.55,factor:.45,duration:3}}},
-{name:"万能王木下SR",cost:1350,hp:2600,atk:390,range:120,spd:.62,interval:1.1,recharge:18,icon:"⭐",motion:"awakened",attackType:"area",kb:5,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"万能型",desc:"バランス型。"}},
-{name:"戦術王木下SR",cost:1450,hp:2300,atk:440,range:150,spd:.55,interval:1.25,recharge:19,icon:"♟️",motion:"scientist",attackType:"single",kb:4,rarity:"SR",series:"共通",gachaCost:6000,ability:{name:"戦術支援",desc:"長射程支援型。"}}
-];
-const ELEMENTAL_LIMITED_SSR=[
-{name:"炎のエレメンタル木下",cost:1500,hp:3200,atk:780,range:120,spd:.65,interval:1.2,recharge:23,icon:"🔥",motion:"super",attackType:"area",kb:4,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"炎の制圧",desc:"無・赤属性に強い。",strong:{無:2.2,赤:2.2},resist:{無:.65,赤:.65}}},
-{name:"氷のエレメンタル木下",cost:1350,hp:3600,atk:540,range:155,spd:.58,interval:1.25,recharge:22,icon:"❄️",motion:"scientist",attackType:"area",kb:5,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"氷結領域",desc:"無・赤に強く、45%で減速。",strong:{無:2,赤:2},slow:{trait:"*",chance:.45,factor:.5,duration:3}}},
-{name:"雷のエレメンタル木下",cost:1700,hp:2900,atk:900,range:135,spd:.8,interval:1.35,recharge:25,icon:"⚡",motion:"power",attackType:"single",kb:4,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"雷撃",desc:"無・赤属性に超ダメージ。",strong:{無:2.5,赤:2.5}}},
-{name:"大地のエレメンタル木下",cost:1250,hp:6500,atk:420,range:85,spd:.38,interval:1.5,recharge:25,icon:"🪨",motion:"robot",attackType:"area",kb:3,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"大地の守り",desc:"無・赤に強く、被ダメージ軽減。",strong:{無:1.8,赤:1.8},resist:{無:.5,赤:.5}}},
-{name:"光のエレメンタル木下",cost:1800,hp:3900,atk:720,range:190,spd:.62,interval:1.15,recharge:27,icon:"✨",motion:"awakened",attackType:"area",kb:5,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"元素光輪",desc:"無・赤に強く、35%で停止。",strong:{無:2.1,赤:2.1},slow:{trait:"*",chance:.35,factor:.01,duration:1}}},
-{name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}}
-];
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
+cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
   '木下':'無','強化木下':'赤','マッチョ木下':'青','木下（野球）':'赤','木下（覚醒）':'浮',
   '木下（忍者）':'黒','木下（博士）':'青','木下（ロボ）':'鋼','木下（王）':'光','木下（超覚醒）':'赤',
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
-  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙','木下&吉田':'宇宙','ファイティング木下':'赤'
+  '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙'
 };
-cards.push(...COMMON_EXCHANGE_R,...COMMON_EXCHANGE_SR,...ELEMENTAL_LIMITED_SSR);
-const uniqueCards=[];const uniqueCardNames=new Set();for(const c of cards){if(!uniqueCardNames.has(c.name)){uniqueCardNames.add(c.name);uniqueCards.push(c)}}cards.splice(0,cards.length,...uniqueCards);
-cards.forEach(c=>{c.trait=allyTraits[c.name]||c.trait||'無';});
+cards.forEach(c=>{c.trait=allyTraits[c.name]||'無';});
 
 const enemyTypes={
 鬼木下:{name:"鬼木下",icon:"👹",trait:"無",hp:180,atk:25,range:50,spd:.6,interval:.9,attackType:"single",kb:3,money:40},
@@ -913,7 +858,6 @@ function saveEnemyEncountered(){storage.setItem('kinoshitaEnemyEncountered',JSON
 for(let si=0;si<Math.min(unlocked,stages.length);si++){if(si<unlocked-1){(stages[si].schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 for(let ch=0;ch<4;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 saveEnemyEncountered();
-let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}};
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
 while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;
@@ -970,33 +914,8 @@ function normalizeFormation(){
  formation=[...new Set(formation)].slice(0,10);
 }
 normalizeFormation();
-/* ===== キャラクターID修復 V12 =====
-   91体の正規カード配列へ復帰。旧138体/旧91体セーブでIDが混線しても、
-   名前の正規IDを基準に再構成し、ファイティング木下を復元する。 */
-if(storage.getItem('kinoshitaCharacterIndexRepairV12')!=='done'){
- try{
-  const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
-  const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  const oldFormation=Array.isArray(formation)?formation.slice():[];
-  const n=cards.length, flags=Array(n).fill(false), levels=Array(n).fill(1);
-  const idx=name=>cards.findIndex(c=>c.name===name);
-  const fightingId=idx('ファイティング木下'), waveId=idx('波動木下'), limitedId=idx('木下&吉田');
-  // 現在の配列をそのまま保持しつつ、旧138体の末尾重複領域(91..137)を91体へ折りたたむ。
-  const mapOld=i=>{if(!Number.isInteger(i))return -1;if(i<n)return i;if(i>=91&&i<=136)return i-46;if(i===137)return 90;return -1};
-  for(let i=0;i<oldFlags.length;i++){const ni=mapOld(i);if(ni>=0&&oldFlags[i]===true)flags[ni]=true;}
-  for(let i=0;i<oldLevels.length;i++){const ni=mapOld(i);if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)));}
-  // 過去の修復版で交換済みだったことを示す端末状態が残っている場合は復元。
-  const hadOldRepair=storage.getItem('kinoshitaCharacterIndexRepairV9')==='done'||storage.getItem('kinoshitaCharacterIndexRepairV10')==='done'||storage.getItem('kinoshitaCharacterIndexRepairV11')==='done'||oldFlags.length>=80;
-  if(fightingId>=0&&hadOldRepair)flags[fightingId]=true;
-  if(waveId>=0)flags[waveId]=eventClears['波動木下降臨']===true;
-  if(limitedId>=0&&oldFlags[limitedId]===true)flags[limitedId]=true;
-  flags[0]=true;
-  const nf=[];for(const oi of oldFormation){const ni=mapOld(oi);if(ni>=0&&ni<n&&flags[ni]&&!nf.includes(ni))nf.push(ni);}
-  ownedFlags=flags;charLevel=levels;formation=nf.slice(0,10);normalizeFormation();syncOwnedCount();save();
-  storage.setItem('kinoshitaCharacterIndexRepairV12','done');
- }catch(e){console.warn('character ID repair V12 failed',e)}
-}
-let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0
+let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0;
+let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
    旧版では11=波動、12-14=章報酬、15-34=攻略特化、35=波動となり、
    所持・編成・レベルのインデックスがずれていました。 */
@@ -1805,11 +1724,9 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
    let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
    if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}if(u.waveLevel)allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const rawSpd=Number(u.spd);const fallbackSpd=Number(cards[u.cardIndex]?.spd);const moveSpd=Number.isFinite(rawSpd)&&rawSpd>0?rawSpd:(Number.isFinite(fallbackSpd)&&fallbackSpd>0?fallbackSpd:.5);const beforeX=u.x;u.x-=moveSpd*60*dt;if(!Number.isFinite(u.x))u.x=beforeX;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x)}
+   else{u.state='move';u.x-=u.spd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
- requestAnimationFrame(loop);
-}
 function enemyWaveAttack(e){
  const level=Math.max(1,Number(e.waveLevel||0));
  if(!level)return;
