@@ -1446,8 +1446,9 @@ function previousSeasonTop5(){
   return [];
  }catch(e){return []}
 }
-function currentSeasonTop5(){const a=Object.entries(rankMetaStats.chars||{}).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0),used:Number(v.used||0)})).filter(x=>cards[x.i]&&x.wins+x.losses>0).sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
-function seasonWeakMultiplier(i){if(currentSeasonTop5().includes(i))return .4;if(previousSeasonTop5().includes(i))return .75;return 1}
+function weakTop5FromStats(stats){const a=Object.entries(stats?.chars||{}).map(([i,v])=>{const used=Number(v.used||0),wins=Number(v.wins||0),losses=Number(v.losses||0),games=wins+losses;return {i:Number(i),used,wins,losses,games,usage:used/Math.max(1,Number(stats.totalDeploys||0)),winRate:games?wins/games:0}}).filter(x=>cards[x.i]&&x.used>0).sort((a,b)=>b.usage-a.usage||b.winRate-a.winRate||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
+function currentSeasonTop5(){return weakTop5FromStats(rankMetaStats)}
+function seasonWeakMultiplier(i){const current=currentSeasonTop5().includes(i),previous=previousSeasonTop5().includes(i);if(current&&previous)return .3;if(current)return .4;if(previous)return .75;return 1}
 function seasonWeakText(){const a=previousSeasonTop5(),b=currentSeasonTop5();return '前シーズンTOP5：'+(a.length?a.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'なし')+'<br>今シーズンTOP5：'+(b.length?b.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'まだ集計なし')}
 function rankRewardRulesHTML(){
  const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];
@@ -1464,7 +1465,7 @@ function rankRewardRulesHTML(){
   ['9位',500000,50000,'9位の証',''],
   ['10位',500000,50000,'10位の証',''],
  ];
- return '<h3>🏆 シーズン1～10位報酬</h3><div class="rankNotice" style="text-align:left">'+top10.map(x=>'<b>'+x[0]+'</b>：🪙 '+x[1].toLocaleString()+'コイン + ⭐ '+x[2].toLocaleString()+' XP + 🏅 '+x[3]+(x[4]?' + 🎁 '+x[4]:'')).join('<br>')+'<br><small>11位以下はシーズン終了時のRPランク帯報酬です。報酬はプレゼントBOXに送られます。</small></div><h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 現在の弱体化対象</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br><small>表示されているキャラはランク戦で弱体化中です。前シーズンTOP5は25%低下、今シーズンTOP5は60%低下。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間、弱体化されます。勝率のみで選定し、使用率は選定条件に含みません。</small></div>';
+ return '<h3>🏆 シーズン1～10位報酬</h3><div class="rankNotice" style="text-align:left">'+top10.map(x=>'<b>'+x[0]+'</b>：🪙 '+x[1].toLocaleString()+'コイン + ⭐ '+x[2].toLocaleString()+' XP + 🏅 '+x[3]+(x[4]?' + 🎁 '+x[4]:'')).join('<br>')+'<br><small>11位以下はシーズン終了時のRPランク帯報酬です。報酬はプレゼントBOXに送られます。</small></div><h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 現在の弱体化対象</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br><small>表示されているキャラはランク戦で弱体化中です。前シーズンTOP5は25%低下、今シーズンTOP5は60%低下。両方に入ったキャラはデバフを乗算し、0.75×0.4＝0.30倍（合計70%低下）になります。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間、弱体化されます。使用率を最優先で選定し、使用率が高いキャラの中で勝率が高い順にTOP5を決定します。</small></div>';
 }
 function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
