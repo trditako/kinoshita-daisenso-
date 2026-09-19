@@ -1929,7 +1929,6 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
- }catch(err){console.error('unit update error',err)}
  }
 }
 function enemyWaveAttack(e){
