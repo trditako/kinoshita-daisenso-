@@ -2036,7 +2036,7 @@ function addRankRewardGift(){
  if(pos===1){coins=150000;xp=150000;badge='1位の証';char=true;label='ランク1位報酬'}
  else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
  else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
- else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
+ else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';char=true;label='ランク'+pos+'位報酬'}
  else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
  pendingRankGifts.push({cycle,label,coins,xp,badge,char});
  storage.setItem('kinoshitaRankRewardCycle',String(cycle));
