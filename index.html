@@ -226,7 +226,7 @@ const 攻略特化キャラ=[
 ];
 cards.push(...攻略特化キャラ);
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
+cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,series:"ランク1位限定",rarity:"LR",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,trait:"宇宙",waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 const COMMON_EXCHANGE_R=[
 {name:"突撃木下R",cost:250,hp:620,atk:230,range:55,spd:1.2,interval:.72,recharge:7,icon:"🏃",motion:"power",attackType:"single",kb:4,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"高攻撃力・高速型。"}},
 {name:"破壊木下R",cost:300,hp:520,atk:320,range:62,spd:1,interval:.9,recharge:8,icon:"💥",motion:"muscle",attackType:"single",kb:3,rarity:"R",series:"共通",gachaCost:1000,ability:{name:"攻撃特化",desc:"攻撃力重視。"}},
@@ -1867,7 +1867,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
  for(const u of [...units]){u.cd-=dt;
-   let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
+   let target=enemies.filter(e=>e.x<u.x&&Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
    if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');
      const doHit=(t,power)=>{if(!t||t.hp<=0)return;attackEffect(u,t);const dealt=damageAgainstPower(u,t,power);hit(t,dealt,u);if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(u.firstStopChance&&t.hp>0&&Math.random()<u.firstStopChance){t.stopUntil=performance.now()/1000+(u.firstStopDuration||1);setStatusMark(t,'⏸️','停止',u.firstStopDuration||1,'stop');}if(u.stopChance&&t.hp>0&&Math.random()<u.stopChance){t.stopUntil=performance.now()/1000+(u.stopDuration||.5);setStatusMark(t,'⏸️','停止',u.stopDuration||.5,'stop');}if(t.hp<=0)removeEnemy(t);};
      const waveAfter=(power)=>{if(!u.waveLevel)return;const proc=u.waveChance==null||Math.random()<u.waveChance;if(proc)allyWaveAttack(u,power);};
@@ -1875,7 +1875,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
      else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
-   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
+   updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
 }
 function enemyWaveAttack(e){
@@ -1905,11 +1905,11 @@ function enemyWaveAttack(e){
  setTimeout(()=>wave.remove(),520);
 }
  for(const e of [...enemies]){e.cd-=dt;
-   let target=units.filter(u=>Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
+   let target=units.filter(u=>u.x>e.x&&Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
    if(target){e.state='attack';if(e.cd<=0){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0)removeUnit(t)}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
-   updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((e.id*7)%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
+   updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((Number.isFinite(Number(e.id))?Number(e.id):0)*7%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
  }
  updateCamera();if(enemyHp<=0){enemyHp=0;return rankMode?finishRank(true):showResult(true);}if(baseHp<=0){baseHp=0;return rankMode?finishRank(false):showResult(false);}update();requestAnimationFrame(loop)}
 function renderCards(){
