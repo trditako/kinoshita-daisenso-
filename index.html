@@ -1965,6 +1965,14 @@ document.getElementById('formationBtn').onclick=()=>{document.getElementById('st
 document.getElementById('formationClose').onclick=()=>{document.getElementById('formation').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('removeAll').onclick=()=>{formation=[];normalizeFormation();save();renderFormation();renderCards()};
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
+try{
+  setTimeout(()=>{
+    try{ if(typeof renderStageSelect==='function') renderStageSelect(); }catch(e){ console.error('stage recovery',e); }
+    try{ if(typeof renderCards==='function') renderCards(); }catch(e){ console.error('cards recovery',e); }
+    try{ if(typeof setupWorld==='function') setupWorld(); }catch(e){ console.error('world recovery',e); }
+  },0);
+}catch(e){console.error('boot recovery',e);}
+
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 </script>
