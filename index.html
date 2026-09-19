@@ -913,6 +913,7 @@ function saveEnemyEncountered(){storage.setItem('kinoshitaEnemyEncountered',JSON
 for(let si=0;si<Math.min(unlocked,stages.length);si++){if(si<unlocked-1){(stages[si].schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 for(let ch=0;ch<4;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 saveEnemyEncountered();
+let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}};
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
 while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;
@@ -995,8 +996,7 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV12')!=='done'){
   storage.setItem('kinoshitaCharacterIndexRepairV12','done');
  }catch(e){console.warn('character ID repair V12 failed',e)}
 }
-let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0;
-let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
+let selectedStage=1,selectedMode='japan',selectedChapter=1,worldWidth=0,cameraX=0
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
    旧版では11=波動、12-14=章報酬、15-34=攻略特化、35=波動となり、
    所持・編成・レベルのインデックスがずれていました。 */
