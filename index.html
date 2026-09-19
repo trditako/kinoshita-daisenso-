@@ -276,7 +276,8 @@ const ELEMENTAL_LIMITED_SSR=[
 {name:"氷のエレメンタル木下",cost:1350,hp:3600,atk:540,range:155,spd:.58,interval:1.25,recharge:22,icon:"❄️",motion:"scientist",attackType:"area",kb:5,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"氷結領域",desc:"無・赤に強く、45%で減速。",strong:{無:2,赤:2},slow:{trait:"*",chance:.45,factor:.5,duration:3}}},
 {name:"雷のエレメンタル木下",cost:1700,hp:2900,atk:900,range:135,spd:.8,interval:1.35,recharge:25,icon:"⚡",motion:"power",attackType:"single",kb:4,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"雷撃",desc:"無・赤属性に超ダメージ。",strong:{無:2.5,赤:2.5}}},
 {name:"大地のエレメンタル木下",cost:1250,hp:6500,atk:420,range:85,spd:.38,interval:1.5,recharge:25,icon:"🪨",motion:"robot",attackType:"area",kb:3,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"大地の守り",desc:"無・赤に強く、被ダメージ軽減。",strong:{無:1.8,赤:1.8},resist:{無:.5,赤:.5}}},
-{name:"光のエレメンタル木下",cost:1800,hp:3900,atk:720,range:190,spd:.62,interval:1.15,recharge:27,icon:"✨",motion:"awakened",attackType:"area",kb:5,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"元素光輪",desc:"無・赤に強く、35%で停止。",strong:{無:2.1,赤:2.1},slow:{trait:"*",chance:.35,factor:.01,duration:1}}}
+{name:"光のエレメンタル木下",cost:1800,hp:3900,atk:720,range:190,spd:.62,interval:1.15,recharge:27,icon:"✨",motion:"awakened",attackType:"area",kb:5,rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"元素光輪",desc:"無・赤に強く、35%で停止。",strong:{無:2.1,赤:2.1},slow:{trait:"*",chance:.35,factor:.01,duration:1}}},
+{name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}}
 ];
 cards.push(...COMMON_EXCHANGE_R,...COMMON_EXCHANGE_SR,...ELEMENTAL_LIMITED_SSR);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
@@ -1031,36 +1032,56 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV2')!=='done'){
  }catch(e){console.warn('character index migration failed',e);}
 }
 
-if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
+/* ===== キャラクターID修復 V7：名前を正としてIDずれを完全修復 =====
+   追加順による数値ID参照を廃止。既存セーブは「旧ID→旧版の名前→現在のID」で復元する。
+   特殊報酬（波動木下・木下&吉田）も名前から解決する。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV7')!=='done'){
  try{
   const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():[];
   const oldFormation=Array.isArray(formation)?formation.slice():[];
   const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  const remap=(i)=>{
-   if(!Number.isInteger(i)||i<0)return -1;
-   if(i<=33)return i;
-   if(i===34)return 36;
-   if(i>=35&&i<=59)return i+2;
-   if(i>=60&&i<=74)return i+2;
-   if(i>=75&&i<=79)return i+2;
-   if(i===80)return 34;
-   if(i===81)return 35;
-   return -1;
-  };
-  const nf=Array(cards.length).fill(false),nl=Array(cards.length).fill(1);
-  for(let i=0;i<oldFlags.length;i++){const ni=remap(i);if(ni>=0&&ni<nf.length)nf[ni]=!!oldFlags[i];}
-  for(let i=0;i<oldLevels.length;i++){const ni=remap(i);if(ni>=0&&ni<nl.length)nl[ni]=Math.max(1,Math.min(20,Number(oldLevels[i]||1)));}
-  nf[0]=true;
-  const waveIndex=cards.findIndex(c=>c.name==='波動木下');
-  if(waveIndex>=0&&eventClears['波動木下降臨']===true)nf[waveIndex]=true;
-  ownedFlags=nf;
-  charLevel=nl;
-  formation=[...new Set(oldFormation.map(remap).filter(i=>i>=0&&i<nf.length&&nf[i]))].slice(0,10);
-  if(!formation.length)formation=[0];
+  const currentName=i=>cards[i]?.name||null;
+  const knownLegacy=[
+   '木下','強化木下','マッチョ木下','木下（野球）','木下（覚醒）','木下（忍者）','木下（博士）','木下（ロボ）','木下（王）','木下（超覚醒）',
+   '森の守護木下','森の杖木下','森王木下','木下（電脳）','木下（ドローン）','木下（AI）','星読み木下','流星木下','星王木下','狂乱の木下',
+   '突撃ハーランド木下','異常木下','吉田',
+   '対無木下','赤狩り木下','黒追撃木下','天使迎撃木下','宇宙観測木下','宇宙突破木下','赤壁木下','無敵壁木下','黒速攻木下','天使封殺木下','宇宙砕き木下','未来探査木下','攻略隊長木下','日本防衛木下','日本制圧木下','未来制圧木下','四属性討伐木下','銀河攻略木下','最終攻略木下','宇宙決戦木下',
+   '波動木下','木下&吉田'
+  ];
+  const byName=name=>cards.findIndex(x=>x.name===name);
+  const flags=Array(cards.length).fill(false),levels=Array(cards.length).fill(1);
+  // First restore all entries whose old slot can be identified by the previous canonical list.
+  for(let oi=0;oi<oldFlags.length;oi++){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0&&oldFlags[oi])flags[ni]=true;
+  }
+  for(let oi=0;oi<oldLevels.length;oi++){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0)levels[ni]=Math.max(1,Math.min(20,Number(oldLevels[oi]||1)));
+  }
+  // Event/rank ownership is always resolved by the character name.
+  const waveId=byName('波動木下'),rankLimitedId=byName('木下&吉田');
+  if(waveId>=0&&eventClears['波動木下降臨']===true)flags[waveId]=true;
+  if(rankLimitedId>=0)flags[rankLimitedId]=flags[rankLimitedId]||!!ownedFlags[rankLimitedId];
+  flags[0]=true;
+  const nf=[];
+  for(const oi of oldFormation){
+   const name=knownLegacy[oi]||currentName(oi);
+   const ni=name?byName(name):-1;
+   if(ni>=0&&flags[ni]&&!nf.includes(ni))nf.push(ni);
+  }
+  ownedFlags=flags;
+  charLevel=levels;
+  formation=nf.slice(0,10);
+  normalizeFormation();
   syncOwnedCount();
-  storage.setItem('kinoshitaCharacterIndexMigrationV6','done');
- }catch(e){console.warn('character index migration V6 failed',e);}
+  storage.setItem('kinoshitaCharacterIndexRepairV7','done');
+  save();
+ }catch(e){console.warn('character ID repair V7 failed',e)}
 }
+
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}
@@ -1391,7 +1412,7 @@ function quitBattle(){
  renderStageSelect();
  renderCards();
 }
-function showResult(win){if(rankMode){finishRank(win);return;}if(pvpMode){pvpSend({type:'result',win});}running=false;paused=false;stopBGM();playSE(win?'win':'lose');pvpMode=false;document.getElementById('battlePauseBtn').style.display='';document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('start').style.display='none';const r=document.getElementById('result'),title=document.getElementById('resultTitle'),text=document.getElementById('resultText'),next=document.getElementById('nextBtn');r.style.setProperty('display','flex','important');r.style.setProperty('position','fixed','important');r.style.setProperty('inset','0','important');r.style.setProperty('z-index','99999','important');r.style.setProperty('pointer-events','auto','important');document.getElementById('rankLobby').style.display='none';document.getElementById('pvpLobby').style.display='none';if(win){const s=currentStage();title.textContent='🎉 '+(selectedMode==='event'?'イベントステージクリア！':selectedChapter===4?'未来編 第1章 クリア！':`日本編 第${selectedChapter}章 クリア！`);if(selectedMode==='japan'){if(selectedChapter===1&&selectedStage===unlocked&&unlocked<48)unlocked++;const beforeClear=chapterClears[selectedChapter-1]||0;chapterClears[selectedChapter-1]=Math.max(beforeClear,selectedStage);}let rewardText='';const gained=addStageXP();if(selectedMode==='japan'&&selectedChapter===1&&s.reward){const rewardIndex=s.reward-1;const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];if(!wasOwned){rewardText='クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}else{rewardText='クリア報酬：'+s.rewardName+'（入手済み）';}}else if(selectedMode==='japan'&&selectedStage===48){const rewardIndex=chapterRewardIndex(selectedChapter);if(Number.isInteger(rewardIndex)&&rewardIndex<cards.length){const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText=wasOwned?'クリア報酬：'+cards[rewardIndex].name+'（入手済み）':'クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}}else if(selectedMode==='event'&&s.eventReward){eventClears[s.name]=true;const rewardIndex=s.rewardCharacter?cards.findIndex(c=>c.name===s.rewardCharacter):-1;const wasOwned=rewardIndex>=0&&hasCharacter(rewardIndex);if(rewardIndex>=0&&!wasOwned){ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText='クリア報酬：'+s.eventReward+' を入手しました！';}else{rewardText='クリア報酬：'+s.eventReward+'（入手済み）';}}else{rewardText=selectedMode==='event'?'イベント報酬：プレイヤーXPを獲得！':'クリア報酬：プレイヤーXPを獲得！';}const gachaGain=120+Math.floor(s.xp/4);gachaCoins+=gachaGain;rewardText+='\nプレイヤーXPを '+gained+' 獲得しました。現在のXP：'+playerXP+'。\n🪙 木下コインを '+gachaGain+' 枚獲得しました。';save();text.textContent=rewardText;const hasNext=(selectedMode==='japan'||selectedMode==='future')&&selectedStage<48;next.style.display=hasNext?'inline-block':'none';next.textContent=hasNext?'次のステージへ':'ステージ選択へ';}else{title.textContent='💥 敗北…';text.textContent='もう一度挑戦してみよう。';next.style.display='inline-block';next.textContent='もう一度挑戦';}}
+function showResult(win){if(rankMode){finishRank(win);return;}if(pvpMode){pvpSend({type:'result',win});}running=false;paused=false;stopBGM();playSE(win?'win':'lose');pvpMode=false;document.getElementById('battlePauseBtn').style.display='';document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('start').style.display='none';const r=document.getElementById('result'),title=document.getElementById('resultTitle'),text=document.getElementById('resultText'),next=document.getElementById('nextBtn');r.style.setProperty('display','flex','important');r.style.setProperty('position','fixed','important');r.style.setProperty('inset','0','important');r.style.setProperty('z-index','99999','important');r.style.setProperty('pointer-events','auto','important');document.getElementById('rankLobby').style.display='none';document.getElementById('pvpLobby').style.display='none';if(win){const s=currentStage();title.textContent='🎉 '+(selectedMode==='event'?'イベントステージクリア！':selectedChapter===4?'未来編 第1章 クリア！':`日本編 第${selectedChapter}章 クリア！`);if(selectedMode==='japan'){if(selectedChapter===1&&selectedStage===unlocked&&unlocked<48)unlocked++;const beforeClear=chapterClears[selectedChapter-1]||0;chapterClears[selectedChapter-1]=Math.max(beforeClear,selectedStage);}let rewardText='';const gained=addStageXP();if(selectedMode==='japan'&&selectedChapter===1&&s.reward){const rewardIndex=s.rewardName?cards.findIndex(c=>c.name===s.rewardName):s.reward-1;const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];if(!wasOwned){rewardText='クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}else{rewardText='クリア報酬：'+s.rewardName+'（入手済み）';}}else if(selectedMode==='japan'&&selectedStage===48){const rewardIndex=chapterRewardIndex(selectedChapter);if(Number.isInteger(rewardIndex)&&rewardIndex<cards.length){const wasOwned=hasCharacter(rewardIndex);ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText=wasOwned?'クリア報酬：'+cards[rewardIndex].name+'（入手済み）':'クリア報酬：'+cards[rewardIndex].name+' を入手しました！';}}else if(selectedMode==='event'&&s.eventReward){eventClears[s.name]=true;const rewardIndex=s.rewardCharacter?cards.findIndex(c=>c.name===s.rewardCharacter):-1;const wasOwned=rewardIndex>=0&&hasCharacter(rewardIndex);if(rewardIndex>=0&&!wasOwned){ownedFlags[rewardIndex]=true;syncOwnedCount();if(!formation.length)formation=[0];rewardText='クリア報酬：'+s.eventReward+' を入手しました！';}else{rewardText='クリア報酬：'+s.eventReward+'（入手済み）';}}else{rewardText=selectedMode==='event'?'イベント報酬：プレイヤーXPを獲得！':'クリア報酬：プレイヤーXPを獲得！';}const gachaGain=120+Math.floor(s.xp/4);gachaCoins+=gachaGain;rewardText+='\nプレイヤーXPを '+gained+' 獲得しました。現在のXP：'+playerXP+'。\n🪙 木下コインを '+gachaGain+' 枚獲得しました。';save();text.textContent=rewardText;const hasNext=(selectedMode==='japan'||selectedMode==='future')&&selectedStage<48;next.style.display=hasNext?'inline-block':'none';next.textContent=hasNext?'次のステージへ':'ステージ選択へ';}else{title.textContent='💥 敗北…';text.textContent='もう一度挑戦してみよう。';next.style.display='inline-block';next.textContent='もう一度挑戦';}}
 // ===== プレイヤー対戦 =====
 let pvpMode=false,pvpRole='',pvpPeer=null,pvpConn=null,pvpRoom='',pvpPassword='',pvpNonce=1,pvpAuthenticated=false,pvpReadyLocal=false,pvpReadyRemote=false,pvpStarted=false;
 // ===== ランク戦 =====
@@ -1460,7 +1481,7 @@ function normalizeAIAccount(ai,index,population){
  const progressOwned=aiOwnedFromProgress(base);
  // ガチャで交換したキャラも保存データから維持する。以前は進行報酬だけで再構築していたため、再読み込み時に交換キャラが消えていた。
  const savedOwned=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];
- const gatedOwned=savedOwned.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&((i===10&&base.eventClears['狂乱の木下降臨']===true)||(i===11&&base.chapterClears[0]>=48)||(i===12&&base.chapterClears[1]>=48)||(i===13&&base.chapterClears[2]>=48)||(i===34&&base.eventClears['波動木下降臨']===true)||![10,11,12,13,34].includes(i)));base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])];
+ const rewardIds=[cards.findIndex(c=>c.name==='狂乱の木下'),chapterRewardIndex(1),chapterRewardIndex(2),chapterRewardIndex(3),cards.findIndex(c=>c.name==='波動木下')];const gatedOwned=savedOwned.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&((i===rewardIds[0]&&base.eventClears['狂乱の木下降臨']===true)||(i===rewardIds[1]&&base.chapterClears[0]>=48)||(i===rewardIds[2]&&base.chapterClears[1]>=48)||(i===rewardIds[3]&&base.chapterClears[2]>=48)||(i===rewardIds[4]&&base.eventClears['波動木下降臨']===true)||!rewardIds.includes(i)));base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])];
  const ownedSet=new Set(base.ownedCharacters);
  base.charLevels=base.charLevels.map((lv,i)=>ownedSet.has(i)?lv:1);
  const validFormation=Array.isArray(base.formation)?base.formation.filter(i=>ownedSet.has(i)&&i>=0&&i<cards.length):[];
@@ -1594,7 +1615,7 @@ function evolveAIFromMatch(winner,loser,result){winner.wins++;loser.losses++;win
 let aiMatchCursor=0;function recordAILiveResult(ai,won){if(!ai)return;if(won){ai.wins++;ai.rp+=12;ai.generation++;ai.lastResult='プレイヤー戦勝利';pushAIMatchHistory(ai,`👤 vs ${playerName}：勝利`);}else{ai.losses++;ai.rp=Math.max(0,ai.rp-9);ai.lastResult='プレイヤー戦敗北';pushAIMatchHistory(ai,`👤 vs ${playerName}：敗北`);}aiLearnFromMatch(ai,won);aiTryGachaExchange(ai);aiLevelUpFromXP(ai);saveRank();}
 function aiCharacterCost(i){const c=cards[i];return c.rarity==='LR'?100000:c.rarity==='SSR'?10000:c.rarity==='SR'?6000:c.rarity==='R'?1000:Infinity;}
 function aiTryGachaExchange(ai){
- const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&![10,11,12,13,34].includes(i)&&['R','SR','SSR','LR'].includes(c.rarity)&&(c.gachaCost||c.limitedExchange)&&!ai.ownedCharacters.includes(i));
+ const activeSeries=activeLimitedExchange();const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&['R','SR','SSR','LR'].includes(c.rarity)&&((!c.limitedExchange&&!!c.gachaCost)||(c.limitedExchange&&activeSeries.cards.includes(c.name)))&&!ai.ownedCharacters.includes(i));
  if(!candidates.length)return false;
  const affordable=candidates.filter(i=>ai.coins>=aiCharacterCost(i));
  if(!affordable.length)return false;
@@ -1853,7 +1874,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
      if(Array.isArray(u.multiAttack)&&u.multiAttack.length){const sequence=u.multiAttack.slice();sequence.forEach((power,idx)=>setTimeout(()=>{if(!running||u.hp<=0)return;const t=target;if(!t||t.hp<=0)return;doHit(t,power);waveAfter(power);},idx*100));u.cd=u.interval;}
      else {const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){doHit(t,u.atk);if(u.secondAtk&&t.hp>0)doHit(t,u.secondAtk);}if(u.waveLevel)waveAfter(u.secondAtk||u.atk);u.cd=u.interval;}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';u.x-=u.spd*60*dt}
+   else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';u.el.querySelector('i').style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
 }
@@ -1937,7 +1958,7 @@ function openGacha(){const g=document.getElementById('gacha');if(!g)return;g.sty
 function openLimitedExchange(){const g=document.getElementById('limitedExchange');if(!g)return;g.style.display='flex';renderLimitedExchange();clearInterval(window.limitedExchangeTimer);window.limitedExchangeTimer=setInterval(()=>{if(g.style.display!=='none')renderLimitedExchange()},1000);}
 function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
 function exchangeCardHTML(i){const c=cards[i],cost=exchangeCostFor(c),can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-size:11px;color:#2563eb">'+(c.series||'通常')+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}
-function renderGacha(){const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>通常交換</button>';if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🪙 交換所</h2><p>通常キャラクターを木下コインで確定交換できます。</p><p style="font-size:12px">レア：1,000　激レア：6,000　超激レア：10,000　伝説レア：100,000 木下コイン</p><p style="font-size:12px">期間限定シリーズのキャラクターは、ここでは交換できません。</p></div>';if(!result)return;const ids=cards.map((c,i)=>i).filter(regularExchangeableNow);result.innerHTML=ids.length?'<div style="font-size:15px;margin-bottom:7px">通常交換キャラクター</div><div class="gachaChars">'+ids.map(exchangeCardHTML).join('')+'</div>':'<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));}
+function renderGacha(){const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>通常交換所</button>';if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🪙 通常交換所</h2><p>通常キャラクターを木下コインで確定交換できます。</p><p style="font-size:12px">レア：1,000　激レア：6,000　超激レア：10,000　伝説レア：100,000 木下コイン</p><p style="font-size:12px">期間限定シリーズのキャラクターは、ここでは交換できません。</p></div>';if(!result)return;const ids=cards.map((c,i)=>i).filter(regularExchangeableNow);result.innerHTML=ids.length?'<div style="font-size:15px;margin-bottom:7px">通常交換キャラクター</div><div class="gachaChars">'+ids.map(exchangeCardHTML).join('')+'</div>':'<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));}
 function renderLimitedExchange(){const coin=document.getElementById('limitedExchangeCoinText'),banner=document.getElementById('limitedExchangeBanner'),result=document.getElementById('limitedExchangeResult');const series=activeLimitedExchange(),ms=limitedExchangeRemaining(),d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ '+series.name+'</h2><p>期間限定交換所</p><p style="font-weight:1000;color:#ffd21f">次のシリーズ更新まで '+d+'日 '+h+'時間 '+m+'分 '+sec+'秒</p><p style="font-size:12px">レア：1,000　激レア：6,000　超激レア：10,000　伝説レア：100,000 木下コイン</p></div>';if(!result)return;const ids=cards.map((c,i)=>i).filter(limitedExchangeableNow);result.innerHTML=ids.length?'<div style="font-size:15px;margin-bottom:7px">今回のシリーズ限定キャラクター</div><div class="gachaChars">'+ids.map(exchangeCardHTML).join('')+'</div>':'<div class="gachaResult">この期間の限定キャラクターはすべて交換済みです。</div>';result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.i)));}
 function buyGachaCharacter(i){if(!regularExchangeableNow(i))return;const c=cards[i],cost=exchangeCostFor(c);if(!cost||gachaCoins<cost)return;gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();}
 function buyLimitedExchangeCharacter(i){if(!limitedExchangeableNow(i))return;const c=cards[i],cost=exchangeCostFor(c);if(!cost||gachaCoins<cost)return;gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderLimitedExchange();renderOwnedStart();renderFormation();renderCards();}
