@@ -1134,6 +1134,28 @@ if(storage.getItem('kinoshitaCharacterIndexRepairV10')!=='done'){
  }catch(e){console.error('character ID repair V10 failed',e)}
 }
 
+/* ===== キャラクターID修復 V11：今回のID混線を最終固定 =====
+   V10以前の数値ID移行でファイティング木下が別キャラへ移ったケースを救済。
+   現在のcards配列は名前を正とし、波動木下はイベントクリア時のみ所持。 */
+if(storage.getItem('kinoshitaCharacterIndexRepairV11')!=='done'){
+ try{
+  const fightId=cards.findIndex(c=>c.name==='ファイティング木下');
+  const waveId=cards.findIndex(c=>c.name==='波動木下');
+  if(fightId>=0)ownedFlags[fightId]=true;
+  if(waveId>=0)ownedFlags[waveId]=eventClears['波動木下降臨']===true;
+  ownedFlags=ownedFlags.slice(0,cards.length);
+  while(ownedFlags.length<cards.length)ownedFlags.push(false);
+  ownedFlags[0]=true;
+  const clean=[];
+  for(const i of (Array.isArray(formation)?formation:[])){
+   if(Number.isInteger(i)&&i>=0&&i<cards.length&&ownedFlags[i]&&!clean.includes(i))clean.push(i);
+  }
+  formation=clean.slice(0,10);
+  normalizeFormation();syncOwnedCount();save();
+  storage.setItem('kinoshitaCharacterIndexRepairV11','done');
+ }catch(e){console.error('character ID repair V11 failed',e)}
+}
+
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 function save(){storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}
@@ -1930,6 +1952,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
    else{u.state='move';const moveSpd=Number.isFinite(Number(u.spd))?Math.max(0.05,Number(u.spd)):0.05;u.x-=moveSpd*60*dt}
    updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((Number.isFinite(Number(u.id))?Number(u.id):0)*7%5))+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';
  }
+ requestAnimationFrame(loop);
 }
 function enemyWaveAttack(e){
  const level=Math.max(1,Number(e.waveLevel||0));
