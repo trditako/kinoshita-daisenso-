@@ -1318,7 +1318,7 @@ let rankPoints=Math.max(0,Number(storage.getItem('kinoshitaRankPoints')||0));
 let rankHistory;try{rankHistory=JSON.parse(storage.getItem('kinoshitaRankHistory')||'[]')}catch(e){rankHistory=[]}
 let rankMode=false,rankAI=null,rankAIUnits=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
 let rankPlayerUsed=[],rankAIUsed=[];
-const RANK_META_KEY='kinoshitaRankMetaV1';
+const RANK_META_KEY='kinoshitaRankMetaV2';
 let rankMetaStats;try{rankMetaStats=JSON.parse(storage.getItem(RANK_META_KEY)||'null')}catch(e){rankMetaStats=null}
 if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
 rankMetaStats.matches=Number(rankMetaStats.matches||0);rankMetaStats.totalDeploys=Number(rankMetaStats.totalDeploys||0);rankMetaStats.chars=rankMetaStats.chars&&typeof rankMetaStats.chars==='object'?rankMetaStats.chars:{};rankMetaStats.formations=rankMetaStats.formations&&typeof rankMetaStats.formations==='object'?rankMetaStats.formations:{};
@@ -1464,8 +1464,8 @@ function simulateAIBattle(a,b){
     const pick=aiSimPick(me.ai,forms[si],me.money,time,opp.units,me.recharge);
     if(pick>=0){
      me.money-=cards[pick].cost;const c=cards[pick];me.recharge[pick]=c.recharge;
-     const hp=aiAccountStat(me.ai,pick,'hp');
-     me.units.push({i:pick,hp,maxhp:hp,atk:aiAccountStat(me.ai,pick,'atk'),range:aiAccountStat(me.ai,pick,'range'),spd:aiAccountStat(me.ai,pick,'spd'),interval:aiAccountStat(me.ai,pick,'interval'),cd:.15,x:si===0?100:900,side:si,trait:c.trait||'無',ability:c.ability||{},area:c.attackType==='area'});me.deployed.push(pick);
+     const hp=aiRankStat(me.ai,pick,'hp');
+     me.units.push({i:pick,hp,maxhp:hp,atk:aiRankStat(me.ai,pick,'atk'),range:aiRankStat(me.ai,pick,'range'),spd:aiRankStat(me.ai,pick,'spd'),interval:aiRankStat(me.ai,pick,'interval'),cd:.15,x:si===0?100:900,side:si,trait:c.trait||'無',ability:c.ability||{},area:c.attackType==='area'});me.deployed.push(pick);
      const p=aiPersonality(me.ai);me.nextDeploy=time+.12+p.patience*.7+Math.random()*p.randomness*.7;
     }else {const p=aiPersonality(me.ai);me.nextDeploy=time+.22+p.save*.45+Math.random()*p.randomness;}
    }
