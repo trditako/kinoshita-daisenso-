@@ -1531,7 +1531,7 @@ function evolveAIFromMatch(winner,loser,result){winner.wins++;loser.losses++;win
 let aiMatchCursor=0;function recordAILiveResult(ai,won){if(!ai)return;if(won){ai.wins++;ai.rp+=12;ai.generation++;ai.lastResult='プレイヤー戦勝利';pushAIMatchHistory(ai,`👤 vs ${playerName}：勝利`);}else{ai.losses++;ai.rp=Math.max(0,ai.rp-9);ai.lastResult='プレイヤー戦敗北';pushAIMatchHistory(ai,`👤 vs ${playerName}：敗北`);}aiLearnFromMatch(ai,won);aiTryGachaExchange(ai);aiLevelUpFromXP(ai);saveRank();}
 function aiCharacterCost(i){const c=cards[i];return c.rarity==='LR'?100000:c.rarity==='SSR'?10000:c.rarity==='SR'?6000:c.rarity==='R'?1000:Infinity;}
 function aiTryGachaExchange(ai){
- const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&![10,11,12,13,34].includes(i)&&['R','SR','SSR'].includes(c.rarity)&&!ai.ownedCharacters.includes(i));
+ const candidates=cards.map((c,i)=>i).filter(i=>i>0&&!c.specialReward&&![10,11,12,13,34].includes(i)&&['R','SR','SSR','LR'].includes(c.rarity)&&(c.gachaCost||c.limitedExchange)&&!ai.ownedCharacters.includes(i));
  if(!candidates.length)return false;
  const affordable=candidates.filter(i=>ai.coins>=aiCharacterCost(i));
  if(!affordable.length)return false;
