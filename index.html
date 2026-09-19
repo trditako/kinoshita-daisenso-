@@ -705,7 +705,7 @@ if(!playerRankingId){
 let publicPlayerRankings=[];
 let playerRankingSyncBusy=false;
 function escapeRankText(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-async async function claimRankReward(){
+async function claimRankReward(){
   try{
     const res=await fetch(SUPABASE_REST_URL+'/rpc/claim_rank_reward',{method:'POST',headers:supabaseHeaders(),body:JSON.stringify({p_player_id:playerRankingId}),cache:'no-store'});
     if(!res.ok)return null;
