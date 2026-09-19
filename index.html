@@ -1431,7 +1431,20 @@ function ensureRankSeason(){
  }
 }
 function previousSeasonTop5(){
- try{const a=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop5')||'[]');return Array.isArray(a)?a.filter(i=>Number.isInteger(i)&&cards[i]):[]}catch(e){return []}
+ try{
+  const a=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop5')||'[]');
+  if(Array.isArray(a)&&a.length)return a.filter(i=>Number.isInteger(i)&&cards[i]);
+  const legacy=JSON.parse(storage.getItem('kinoshitaRankMetaV1')||'null');
+  if(legacy?.chars){
+   const top=Object.entries(legacy.chars).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0)}))
+    .filter(x=>cards[x.i]&&x.wins+x.losses>0)
+    .sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||a.i-b.i)
+    .slice(0,5).map(x=>x.i);
+   if(top.length)storage.setItem('kinoshitaPreviousSeasonTop5',JSON.stringify(top));
+   return top;
+  }
+  return [];
+ }catch(e){return []}
 }
 function currentSeasonTop5(){const a=Object.entries(rankMetaStats.chars||{}).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0),used:Number(v.used||0)})).filter(x=>cards[x.i]&&x.wins+x.losses>0).sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
 function seasonWeakMultiplier(i){if(currentSeasonTop5().includes(i))return .4;if(previousSeasonTop5().includes(i))return .75;return 1}
@@ -1669,15 +1682,32 @@ function closeAIDetail(){document.getElementById('aiDetailModal').style.display=
 function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
- const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true}));
- if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true});
- const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false}));
+ const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true,id:String(x.player_id||'')}));
+ if(!humans.some(x=>x.me))humans.push({name:playerName,rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true,id:String(playerRankingId)});
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||'')}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
- el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
+ el.innerHTML=rows.map((x,i)=>{
+   const prev=previousSeasonTop10.find(p=>p.source===(x.human?'human':'ai')&&String(p.account_id)===x.id);
+   const mark=prev?' 🏆'+Number(prev.rank_position):'';
+   return '<div class="rankRow '+(x.me?'me':'')+'"><b>'+(i+1)+'位</b><span>'+(x.human?'👤 ':'🤖 ')+escapeRankText(x.name)+mark+'<small class="rankStrategy">'+x.strategy+'</small></span><span>'+x.rp+' RP</span><span>'+x.wins+'勝</span></div>';
+ }).join('');
+}
+let previousSeasonTop10=[];
+async function loadPreviousSeasonTop10(){
+ try{
+  const cycle=currentRankSeason()-1;
+  const res=await fetch(SUPABASE_REST_URL+'/rank_season_top10?select=source,account_id,name,rank_position&cycle=eq.'+encodeURIComponent(cycle)+'&order=rank_position.asc',{headers:supabaseHeaders(),cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const rows=await res.json();
+  previousSeasonTop10=Array.isArray(rows)?rows:[];
+  storage.setItem('kinoshitaPreviousSeasonTop10',JSON.stringify(previousSeasonTop10));
+ }catch(e){
+  try{previousSeasonTop10=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop10')||'[]')}catch(_){previousSeasonTop10=[]}
+ }finally{renderRankLeaderboard();}
 }
 function renderRankLobby(){ensureRankSeason();const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const seasonInfo=document.getElementById('rankSeasonInfo');if(seasonInfo)seasonInfo.innerHTML='<b>📅 '+rankSeasonLabel()+'</b><br>📉 現在の弱体化対象：'+seasonWeakText()+'<br>前シーズンTOP5はランク戦で性能25%低下、今シーズンTOP5は性能60%低下。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間弱体化。<br>📊 使用率・勝率・流行編成はシーズン開始時にすべてリセット。弱体化TOP5の選定は勝率のみです。';const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-function openRank(){ensureRankSeason();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();syncPlayerRanking();}
+function openRank(){ensureRankSeason();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();loadPreviousSeasonTop10();syncPlayerRanking();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
