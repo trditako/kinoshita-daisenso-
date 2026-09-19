@@ -1515,9 +1515,10 @@ function totalJapanClears(){return (chapterClears[0]||0)+(chapterClears[1]||0)+(
 // 日本編のクリア進行によるランク戦補正：第1章は1.0%/ステージ、第2章は0.2%/ステージ、第3章は0.3%/ステージ。
 function rankPowerMultiplier(){return 1+(chapterClears[0]||0)*0.01+(chapterClears[1]||0)*0.002+(chapterClears[2]||0)*0.003;}
 function aiPowerMultiplier(ai){return 1+(ai.chapterClears?.[0]||0)*0.01+(ai.chapterClears?.[1]||0)*0.002+(ai.chapterClears?.[2]||0)*0.003;}
+function isRankChaser(ai){const n=Number(String(ai?.accountId||'0').replace(/\D/g,''))||0;return n>0&&n%200===7;}
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
 function chooseRankAI(){const pi=rankIndex(rankPoints);const candidates=aiProfiles.map((a,i)=>({a,i,d:Math.abs(rankIndex(a.rp)-pi),gap:Math.abs(a.rp-rankPoints)})).sort((x,y)=>x.d-y.d||x.gap-y.gap||Math.random()-.5);return candidates[0]?.a||aiProfiles[0];}
-function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;return {patience:.55+h(1)*.9,aggression:.55+h(2)*1.15,cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:h(9),pressure:h(10)};}
+function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;const chaser=isRankChaser(ai);return {patience:Math.max(.45,.55+h(1)*.9-(chaser?.08:0)),aggression:Math.min(1,.55+h(2)*1.15+(chaser?.12:0)),cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:Math.max(.05,h(9)-(chaser?.10:0)),pressure:Math.min(1,h(10)+(chaser?.12:0))};}
 function aiChooseFormation(ai){
  const ownedSet=new Set(ai.ownedCharacters||[0]);
  const pool=cards.map((c,i)=>i).filter(i=>ownedSet.has(i));
@@ -1706,14 +1707,20 @@ function runAIActivities(n=300){
  ensureRankSeason();
  // 上位AIは毎サイクル必ず活動。残りは全1000アカウントを高速巡回する。
  const hot=aiProfiles.map((a,i)=>({a,i})).sort((x,y)=>y.a.rp-x.a.rp).slice(0,100);
+ for(const a of aiProfiles.filter(isRankChaser))aiActivityProgress(a);
  for(const x of hot)aiActivityProgress(x.a);
  const extra=Math.max(0,n-hot.length);
  for(let k=0;k<extra;k++){const ai=aiProfiles[(aiActivityCursor+k)%aiProfiles.length];if(!hot.some(x=>x.i===(aiActivityCursor+k)%aiProfiles.length))aiActivityProgress(ai);}
  aiActivityCursor=(aiActivityCursor+extra)%aiProfiles.length;saveRank();
 }
 let aiActivityCursor=0;
-function aiSelfPlayOnce(){if(aiProfiles.length<2)return;const a=aiProfiles[aiMatchCursor%aiProfiles.length];const b=aiProfiles[(aiMatchCursor+1+Math.floor(Math.random()*Math.min(aiProfiles.length-1,400)))%aiProfiles.length];aiMatchCursor=(aiMatchCursor+2)%aiProfiles.length;const result=simulateAIBattle(a,b);evolveAIFromMatch(result.winner,result.winner===a?b:a,result);}
-function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();}
+function aiRankChaserOpponent(ai){const pool=aiProfiles.filter(x=>x!==ai&&Number(x.rp||0)>=Math.max(0,Number(ai.rp||0)-80));if(!pool.length)return null;const top=pool.slice().sort((a,b)=>Number(b.rp||0)-Number(a.rp||0);return top[Math.floor(Math.random()*Math.min(12,top.length))]||top[0];}
+function aiSelfPlayOnce(){if(aiProfiles.length<2)return;const a=aiProfiles[aiMatchCursor%aiProfiles.length];let b=null;if(isRankChaser(a))b=aiRankChaserOpponent(a);if(!b)b=aiProfiles[(aiMatchCursor+1+Math.floor(Math.random()*Math.min(aiProfiles.length-1,400)))%aiProfiles.length];aiMatchCursor=(aiMatchCursor+2)%aiProfiles.length;const result=simulateAIBattle(a,b);evolveAIFromMatch(result.winner,result.winner===a?b:a,result);}
+function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();
+ // 全体の約0.5%だけを「ランカー型」にし、通常AIより少し多くランク戦を行う。
+ const chasers=aiProfiles.filter(isRankChaser);
+ for(const ai of chasers){for(let k=0;k<2;k++){const b=aiRankChaserOpponent(ai);if(!b)continue;const result=simulateAIBattle(ai,b);evolveAIFromMatch(result.winner,result.winner===ai?b:ai,result);}}
+}
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{runAISelfPlay(50);runAIActivities(300);aiAutoCycle++;if(aiAutoCycle%3===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},900);}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
