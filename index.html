@@ -1393,14 +1393,10 @@ function ensureRankSeason(){
 function previousSeasonTop5(){
  try{const a=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop5')||'[]');return Array.isArray(a)?a.filter(i=>Number.isInteger(i)&&cards[i]):[]}catch(e){return []}
 }
-function seasonWeakMultiplier(i){return previousSeasonTop5().includes(i)?.75:1}
-function seasonWeakText(){
- const a=previousSeasonTop5();
- return a.length?a.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'まだ前シーズンのTOP5はありません。'
-}
-function rankRewardRulesHTML(){
- return '<h3>🏅 1～10位報酬</h3><div class="rankNotice" style="text-align:left">🥇 1位：150,000コイン + 150,000 XP + 1位の証 + 木下&吉田<br>🥈 2位：100,000コイン + 100,000 XP + 2位の証<br>🥉 3位：750,000コイン + 75,000 XP + 3位の証<br>4～10位：500,000コイン + 50,000 XP + 各順位の証</div><h3>🏆 ランク帯報酬</h3><div class="rankNotice" style="text-align:left">'+rankDefs.map((d,i)=>d.name+'：<b>'+[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000][i].toLocaleString()+'コイン</b> + <b>'+[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000][i].toLocaleString()+' XP</b>').join('<br>')+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice" style="text-align:left">RPがそのランク帯の必要RP以上になると昇格します。<br>勝利：基本 +100 RP、相手とのランク差で増減します。<br>敗北：基本 -60 RP、相手とのランク差で増減します。<br>RPはシーズン開始時に0へリセットされます。</div><h3>⚠️ 前シーズン勝率TOP5</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br>この5体は現在シーズンのランク戦でHP・攻撃・射程・速度などの戦闘性能が25%低下します。使用率ではなく勝率だけで決定します。</div>';
-}
+function currentSeasonTop5(){const a=Object.entries(rankMetaStats.chars||{}).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0),used:Number(v.used||0)})).filter(x=>cards[x.i]&&x.wins+x.losses>0).sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||b.used-a.used).slice(0,5);return a.map(x=>x.i)}
+function seasonWeakMultiplier(i){return(previousSeasonTop5().includes(i)||currentSeasonTop5().includes(i))?.75:1}
+function seasonWeakText(){const a=previousSeasonTop5(),b=currentSeasonTop5();return '前シーズンTOP5：'+(a.length?a.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'なし')+'<br>今シーズンTOP5：'+(b.length?b.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'まだ集計なし')}
+function rankRewardRulesHTML(){const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];const bands=rankDefs.map((d,i)=>{const n=rankDefs[i+1]?.need;return '<b>'+d.name+'</b>：'+(n===undefined?d.need+' RP以上':d.need+'～'+(n-1)+' RP')+' ／ '+rewards[i].toLocaleString()+'コイン + '+rewards[i].toLocaleString()+' XP'}).join('<br>');return '<h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 勝率TOP5</h3><div class="rankNotice">前シーズンTOP5と今シーズン途中の勝率TOP5は、ランク戦で25%弱体化。使用率は選定条件に含みません。</div>';}
 function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
