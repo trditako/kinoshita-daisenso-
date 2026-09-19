@@ -1458,6 +1458,9 @@ function ensureRankSeason(){
  let stored=Number(storage.getItem('kinoshitaRankSeason')||-1);
  if(stored===-1){storage.setItem('kinoshitaRankSeason',String(season));stored=season;}
  if(stored!==season){
+   // シーズン終了時点の最終順位だけを「最高順位」として保存する。
+   // 現在順位が変動するたびには更新しない。
+   finalizeAISeasonRecords();
    const oldStats=rankMetaStats;
    const top5=Object.entries(oldStats.chars||{}).map(([i,v])=>({i:Number(i),used:Number(v.used||0),wins:Number(v.wins||0),losses:Number(v.losses||0)}))
     .filter(x=>cards[x.i]&&x.wins+x.losses>0)
@@ -1511,7 +1514,9 @@ function rankRewardRulesHTML(){
 }
 function loadAIHighMap(){try{return JSON.parse(storage.getItem('kinoshitaAIHighRecords')||'{}')}catch(e){return {}}}
 function loadAIHighRecord(id){const m=loadAIHighMap(),v=m[String(id)]||{};return {maxRP:Number(v.maxRP||0),bestRank:Number(v.bestRank||0)}}
-function updateAIHighRecord(ai){if(!ai)return;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)return;const old=m[id]||{};const previousMax=Number(old.maxRP||0);const maxRP=Math.max(previousMax,Number(ai.maxRP||0),Number(ai.rp||0));let bestRank=Math.max(0,Number(old.bestRank||0),Number(ai.bestRank||0));const ranking=[...aiProfiles,{__player:true,rp:Number(rankPoints||0)}].sort((a,b)=>Number(b.rp||0)-Number(a.rp||0));const pos=ranking.findIndex(x=>x===ai)+1;if(pos>0&&(maxRP>previousMax||!bestRank))bestRank=bestRank?Math.min(bestRank,pos):pos;ai.maxRP=maxRP;ai.bestRank=bestRank;m[id]={maxRP,bestRank};storage.setItem('kinoshitaAIHighRecords',JSON.stringify(m));}
+function updateAIHighRecord(ai){if(!ai)return;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)return;const old=m[id]||{};const previousMax=Number(old.maxRP||0);const maxRP=Math.max(previousMax,Number(ai.maxRP||0),Number(ai.rp||0));const bestRank=Math.max(0,Number(old.bestRank||0),Number(ai.bestRank||0));ai.maxRP=maxRP;ai.bestRank=bestRank;m[id]={maxRP,bestRank};storage.setItem('kinoshitaAIHighRecords',JSON.stringify(m));}
+function rankSeasonFinalEntries(){const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,ai:a,rp:Number(a.rp||0)});return hum.sort((a,b)=>b.rp-a.rp||String(a.id).localeCompare(String(b.id)));}
+function finalizeAISeasonRecords(){const ranking=rankSeasonFinalEntries();for(const ai of aiProfiles){const row=ranking.find(x=>x.ai===ai);if(!row)continue;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)continue;const old=m[id]||{};const bestRank=Math.min(Number(old.bestRank||0)||Infinity,ranking.indexOf(row)+1);ai.bestRank=Number.isFinite(bestRank)?bestRank:0;m[id]={maxRP:Number(old.maxRP||ai.maxRP||ai.rp||0),bestRank:ai.bestRank};}storage.setItem('kinoshitaAIHighRecords',JSON.stringify(loadAIHighMap()));}
 function saveRank(){for(const ai of aiProfiles)updateAIHighRecord(ai);storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
