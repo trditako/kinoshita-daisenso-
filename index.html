@@ -1913,10 +1913,10 @@ function addRankRewardGift(){
 let pendingRankGifts=[];try{pendingRankGifts=JSON.parse(storage.getItem('kinoshitaPendingRankGifts')||'[]')}catch(e){pendingRankGifts=[]}
 function saveRankGifts(){storage.setItem('kinoshitaPendingRankGifts',JSON.stringify(pendingRankGifts))}
 function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char?'<br>🎁 木下&吉田（ランク1位限定）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
-function openGiftBox(){addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
+async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
 function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
 function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
-function renderOwnedStart(){addRankRewardGift();document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
+function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 </script>
