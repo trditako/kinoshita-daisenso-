@@ -1379,7 +1379,7 @@ function ensureRankSeason(){
    const oldStats=rankMetaStats;
    const top5=Object.entries(oldStats.chars||{}).map(([i,v])=>({i:Number(i),used:Number(v.used||0),wins:Number(v.wins||0),losses:Number(v.losses||0)}))
     .filter(x=>cards[x.i]&&x.wins+x.losses>0)
-    .sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.used-a.used).slice(0,5);
+    .sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||a.i-b.i).slice(0,5);
    storage.setItem('kinoshitaPreviousSeasonTop5',JSON.stringify(top5.map(x=>x.i)));
    storage.setItem('kinoshitaPreviousSeasonTop5Season',String(stored));
    rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
@@ -1393,10 +1393,20 @@ function ensureRankSeason(){
 function previousSeasonTop5(){
  try{const a=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop5')||'[]');return Array.isArray(a)?a.filter(i=>Number.isInteger(i)&&cards[i]):[]}catch(e){return []}
 }
-function currentSeasonTop5(){const a=Object.entries(rankMetaStats.chars||{}).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0),used:Number(v.used||0)})).filter(x=>cards[x.i]&&x.wins+x.losses>0).sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||b.used-a.used).slice(0,5);return a.map(x=>x.i)}
+function currentSeasonTop5(){const a=Object.entries(rankMetaStats.chars||{}).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0),used:Number(v.used||0)})).filter(x=>cards[x.i]&&x.wins+x.losses>0).sort((a,b)=>(b.wins/Math.max(1,b.wins+b.losses))-(a.wins/Math.max(1,a.wins+a.losses))||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
 function seasonWeakMultiplier(i){return(previousSeasonTop5().includes(i)||currentSeasonTop5().includes(i))?.75:1}
 function seasonWeakText(){const a=previousSeasonTop5(),b=currentSeasonTop5();return '前シーズンTOP5：'+(a.length?a.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'なし')+'<br>今シーズンTOP5：'+(b.length?b.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'まだ集計なし')}
-function rankRewardRulesHTML(){const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];const bands=rankDefs.map((d,i)=>{const n=rankDefs[i+1]?.need;return '<b>'+d.name+'</b>：'+(n===undefined?d.need+' RP以上':d.need+'～'+(n-1)+' RP')+' ／ '+rewards[i].toLocaleString()+'コイン + '+rewards[i].toLocaleString()+' XP'}).join('<br>');return '<h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 勝率TOP5</h3><div class="rankNotice">前シーズンTOP5と今シーズン途中の勝率TOP5は、ランク戦で25%弱体化。使用率は選定条件に含みません。</div>';}
+function rankRewardRulesHTML(){
+ const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];
+ const bands=rankDefs.map((d,i)=>{const n=rankDefs[i+1]?.need;return '<b>'+d.name+'</b>：'+(n===undefined?d.need+' RP以上':d.need+'～'+(n-1)+' RP')+' ／ '+rewards[i].toLocaleString()+'コイン + '+rewards[i].toLocaleString()+' XP'}).join('<br>');
+ const top10=[
+  ['1位',150000,150000,'1位の証','木下&吉田'],
+  ['2位',100000,100000,'2位の証',''],
+  ['3位',750000,75000,'3位の証',''],
+  ['4～10位',500000,50000,'4～10位の証',''],
+ ];
+ return '<h3>🏆 シーズン1～10位報酬</h3><div class="rankNotice" style="text-align:left">'+top10.map(x=>'<b>'+x[0]+'</b>：🪙 '+x[1].toLocaleString()+'コイン + ⭐ '+x[2].toLocaleString()+' XP + 🏅 '+x[3]+(x[4]?' + 🎁 '+x[4]:'')).join('<br>')+'<br><small>11位以下はシーズン終了時のRPランク帯報酬です。報酬はプレゼントBOXに送られます。</small></div><h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 現在の弱体化対象</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br><small>表示されているキャラはランク戦で性能25%低下中です。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間、弱体化されます。勝率のみで選定し、使用率は選定条件に含みません。</small></div>';
+}
 function saveRank(){storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
@@ -1592,6 +1602,7 @@ function aiActivityProgress(ai){
 function aiPowerScore(ai){return (ai.ownedCharacters||[0]).reduce((sum,i)=>sum+aiAccountStat(ai,i,'hp')+aiAccountStat(ai,i,'atk')*5+(ai.charLevels?.[i]||1)*50,0);}
 function pushAIActivity(ai,text){ai.activityHistory=Array.isArray(ai.activityHistory)?ai.activityHistory:[];ai.activityHistory.unshift(text);ai.activityHistory=ai.activityHistory.slice(0,10);}
 function runAIActivities(n=300){
+ ensureRankSeason();
  // 上位AIは毎サイクル必ず活動。残りは全1000アカウントを高速巡回する。
  const hot=aiProfiles.map((a,i)=>({a,i})).sort((x,y)=>y.a.rp-x.a.rp).slice(0,100);
  for(const x of hot)aiActivityProgress(x.a);
@@ -1601,7 +1612,7 @@ function runAIActivities(n=300){
 }
 let aiActivityCursor=0;
 function aiSelfPlayOnce(){if(aiProfiles.length<2)return;const a=aiProfiles[aiMatchCursor%aiProfiles.length];const b=aiProfiles[(aiMatchCursor+1+Math.floor(Math.random()*Math.min(aiProfiles.length-1,400)))%aiProfiles.length];aiMatchCursor=(aiMatchCursor+2)%aiProfiles.length;const result=simulateAIBattle(a,b);evolveAIFromMatch(result.winner,result.winner===a?b:a,result);}
-function runAISelfPlay(n=20){for(let i=0;i<n;i++)aiSelfPlayOnce();}
+function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();}
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{runAISelfPlay(50);runAIActivities(300);aiAutoCycle++;if(aiAutoCycle%3===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},900);}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
@@ -1619,7 +1630,7 @@ function renderRankLeaderboard(){
  el.innerHTML=rows.map((x,i)=>`<div class="rankRow ${x.me?'me':''}"><b>${i+1}位</b><span>${x.human?'👤 ':'🤖 '}${escapeRankText(x.name)}<small class="rankStrategy">${x.strategy}</small></span><span>${x.rp} RP</span><span>${x.wins}勝</span></div>`).join('');
 }
 function renderRankLobby(){ensureRankSeason();const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
-日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const seasonInfo=document.getElementById('rankSeasonInfo');if(seasonInfo)seasonInfo.innerHTML='<b>📅 '+rankSeasonLabel()+'</b><br>前シーズン勝率TOP5：'+seasonWeakText()+'<br>TOP5は今シーズン、ランク戦で性能25%低下。使用率は選定条件に含みません。';const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
+日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const seasonInfo=document.getElementById('rankSeasonInfo');if(seasonInfo)seasonInfo.innerHTML='<b>📅 '+rankSeasonLabel()+'</b><br>📉 現在の弱体化対象：'+seasonWeakText()+'<br>対象キャラはランク戦で性能25%低下。前シーズンTOP5は今シーズン中ずっと弱体化、今シーズンTOP5はTOP5である間弱体化。<br>📊 使用率・勝率・流行編成はシーズン開始時にすべてリセット。弱体化TOP5の選定は勝率のみです。';const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
 function openRank(){ensureRankSeason();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();syncPlayerRanking();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
