@@ -2001,8 +2001,6 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.0
    else{u.state='move';const rawSpd=Number(u.spd);const fallbackSpd=Number(cards[u.cardIndex]?.spd);const moveSpd=Number.isFinite(rawSpd)&&rawSpd>0?rawSpd:(Number.isFinite(fallbackSpd)&&fallbackSpd>0?fallbackSpd:.5);const beforeX=u.x;u.x-=moveSpd*60*dt;if(!Number.isFinite(u.x))u.x=beforeX;if(u.x<enemyBaseStop)u.x=Math.max(enemyBaseStop,u.x);}
    if(u.statuses&&Object.keys(u.statuses).length)updateStatusMark(u);if(u.el){u.el.style.left=Math.round(u.x)+'px';const hpBar=u.el.querySelector('i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}
  }
- requestAnimationFrame(loop);
-}
 function enemyWaveAttack(e){
  const level=Math.max(1,Number(e.waveLevel||0));
  if(!level)return;
