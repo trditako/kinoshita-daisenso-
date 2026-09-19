@@ -1858,7 +1858,7 @@ function showBattleCharacterList(){
  const list=formation.slice();
  body.innerHTML=list.map(i=>{
    const c=cards[i];
-   return `<div class="enemyDetail"><span>${c.icon}</span><div><b>${c.name}</b><br><small>Lv.${charLevel[i]||1}　HP ${statAt(i,'hp')}　攻撃 ${statAt(i,'atk')}${c.secondAtk?` + ${c.secondAtk}`:''}　属性 ${c.trait||'無'}<br>射程 ${statAt(i,'range')} / 移動速度 ${statAt(i,'spd')} / 攻撃間隔 ${statAt(i,'interval').toFixed(2)}秒</small></div></div>`;
+   return `<div class="enemyDetail"><span>${c.icon}</span><div><b>${c.name}</b><br><small>Lv.${charLevel[i]||1}　HP ${statAt(i,'hp')}　攻撃 ${statAt(i,'atk')}${c.secondAtk?` + ${c.secondAtk}`:''}${c.thirdAtk?` + ${c.thirdAtk}`:''}　属性 ${c.trait||'無'}<br>射程 ${statAt(i,'range')} / 移動速度 ${statAt(i,'spd')} / 攻撃間隔 ${statAt(i,'interval').toFixed(2)}秒</small></div></div>`;
  }).join('');
  detail.style.display='flex';
 }
