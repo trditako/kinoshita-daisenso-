@@ -1635,7 +1635,6 @@ function rankName(rp){return rankDefs[rankIndex(rp)].name;}
 function totalJapanClears(){return (chapterClears[0]||0)+(chapterClears[1]||0)+(chapterClears[2]||0);}
 // 日本編のクリア進行によるランク戦補正：第1章は1.0%/ステージ、第2章は0.2%/ステージ、第3章は0.3%/ステージ。
 function rankPowerMultiplier(){return 1+(chapterClears[0]||0)*0.01+(chapterClears[1]||0)*0.002+(chapterClears[2]||0)*0.003;}
-let rankSeasonPenaltyIds=[];
 function rankPenaltyActive(i){return rankMode&&rankSeasonPenaltyIds.includes(i)}
 function rankEffectiveStat(i,key){const v=statAt(i,key);if(!rankPenaltyActive(i))return v;if(key==='interval'||key==='recharge')return v/0.75;return v*0.75}
 async function loadRankSeasonPenalty(){try{const cycle=Math.floor((Date.now()-Date.parse('2026-09-19T04:30:00Z'))/172800000);const rows=await fetch(SUPABASE_REST_URL+'/rank_season_state?select=penalty_character_ids&cycle=eq.'+cycle,{headers:supabaseHeaders(),cache:'no-store'}).then(r=>r.json());rankSeasonPenaltyIds=Array.isArray(rows[0]?.penalty_character_ids)?rows[0].penalty_character_ids.map(Number):[]}catch(e){rankSeasonPenaltyIds=[]}}
