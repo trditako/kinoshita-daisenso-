@@ -229,6 +229,8 @@ cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
 cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
+// 期間限定交換所の対象：超激レア5体＋ファイティング木下（伝説レア）
+['日本制圧木下','未来制圧木下','四属性討伐木下','銀河攻略木下','最終攻略木下','ファイティング木下'].forEach(n=>{const x=cards.find(c=>c.name===n);if(x)x.limitedExchange=true;});
 cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
@@ -1847,17 +1849,34 @@ function openGacha(){
  g.style.display='flex';
  renderGacha();
 }
-function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':(r||'基本');}
+function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
+let gachaShopMode='normal';
 function renderGacha(){
  const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins+'枚';
- if(tabs)tabs.innerHTML='<button class="gachaTab active" disabled>木下交換</button>';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下ガチャ</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
+ if(tabs)tabs.innerHTML='<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">期間限定交換所</button>';
+ tabs?.querySelectorAll('[data-gacha-mode]').forEach(b=>b.onclick=()=>{gachaShopMode=b.dataset.gachaMode;renderGacha();});
+ if(gachaShopMode==='limited'){renderLimitedExchangeShop();return;}
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下交換</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
  if(!result)return;
  const available=[]; cards.forEach((c,i)=>{if(i>0&&!ownedFlags[i]&&c.gachaCost)available.push(i);});
  if(!available.length){result.innerHTML='<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';return;}
  result.innerHTML='<div style="font-size:15px;margin-bottom:7px">交換する木下を選んでください</div><div class="gachaChars">'+available.map(i=>{const c=cards[i],cost=c.gachaCost,can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));
+}
+function renderLimitedExchangeShop(){
+ const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>今回の期間限定交換所では、超激レア5体とファイティング木下だけを交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／ファイティング木下：50,000コイン</p></div>';
+ const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange);
+ if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
+ result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.name==='ファイティング木下'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+ result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
+}
+function buyLimitedExchangeCharacter(i){
+ if(!Number.isInteger(i)||!cards[i]||!cards[i].limitedExchange||ownedFlags[i])return;
+ const cost=cards[i].name==='ファイティング木下'?50000:10000;
+ if(gachaCoins<cost)return;
+ gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
 }
 function buyGachaCharacter(i){
  if(!Number.isInteger(i)||!cards[i]||ownedFlags[i])return;
