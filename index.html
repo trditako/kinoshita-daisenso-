@@ -1979,7 +1979,16 @@ function finishRank(win){
  },0);
 }
 
-function spawnYabayabaClone(deadUnit,level){if(!deadUnit)return;const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));const e={name:deadUnit.name+"（ヤバヤバ複製）",icon:deadUnit.icon,trait:deadUnit.trait||"無",hp,maxhp:hp,atk,range:deadUnit.range,spd:deadUnit.spd,interval:deadUnit.interval,attackType:deadUnit.attackType,kb:Math.max(1,deadUnit.kb||1),money:0,key:"ヤバヤバ複製",x:Math.max(145,Math.min(worldWidth-190,deadUnit.x)),cd:.15,state:"move",slowUntil:0,slowFactor:1,barrier:0,stageMultiplier:ratio,kbRemaining:Math.max(1,deadUnit.kb||1),isEnemy:true,role:"clone"};const d=document.createElement("div");d.className="unit enemy motion-enemy";d.innerHTML='<div class="hp"><i></i></div><div>👿'+e.icon+'</div><div class="typeTag">'+(e.attackType==="area"?"範囲":"単体")+'</div>';unitsEl.appendChild(d);e.el=d;enemies.push(e);popup("ヤバヤバ複製！",e.x,Math.max(25,field.clientHeight-145));}
+function spawnYabayabaClone(deadUnit,level){
+ if(!deadUnit)return;
+ const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));
+ const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));
+ // ヤバヤバ複製は元のキャラの能力を引き継ぐ。ネストした能力設定も複製して共有を防ぐ。
+ let inheritedAbility;
+ try{inheritedAbility=deadUnit.ability?JSON.parse(JSON.stringify(deadUnit.ability)):undefined;}catch(e){inheritedAbility=deadUnit.ability||undefined;}
+ const e={name:deadUnit.name+"（ヤバヤバ複製）",icon:deadUnit.icon,trait:deadUnit.trait||"無",hp,maxhp:hp,atk,range:deadUnit.range,spd:deadUnit.spd,interval:deadUnit.interval,attackType:deadUnit.attackType,kb:Math.max(1,deadUnit.kb||1),money:0,key:"ヤバヤバ複製",x:Math.max(145,Math.min(worldWidth-190,deadUnit.x)),cd:.15,state:"move",slowUntil:0,slowFactor:1,barrier:deadUnit.barrier||0,stageMultiplier:ratio,kbRemaining:Math.max(1,deadUnit.kb||1),isEnemy:true,role:"clone",ability:inheritedAbility};
+ const d=document.createElement("div");d.className="unit enemy motion-enemy";d.innerHTML='<div class="hp"><i></i></div><div>👿'+e.icon+'</div><div class="typeTag">'+(e.attackType==="area"?"範囲":"単体")+'</div>';unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e);popup("ヤバヤバ複製！",e.x,Math.max(25,field.clientHeight-145));
+}
 function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule;while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
