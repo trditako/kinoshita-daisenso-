@@ -1745,13 +1745,17 @@ function aiPowerScore(ai){return (ai.ownedCharacters||[0]).reduce((sum,i)=>sum+a
 function pushAIActivity(ai,text){ai.activityHistory=Array.isArray(ai.activityHistory)?ai.activityHistory:[];ai.activityHistory.unshift(text);ai.activityHistory=ai.activityHistory.slice(0,10);}
 function runAIActivities(n=300){
  ensureRankSeason();
- // 上位AIは毎サイクル必ず活動。残りは全1000アカウントを高速巡回する。
  const hot=aiProfiles.map((a,i)=>({a,i})).sort((x,y)=>y.a.rp-x.a.rp).slice(0,100);
- for(const a of aiProfiles.filter(isRankChaser))aiActivityProgress(a);
- for(const x of hot)aiActivityProgress(x.a);
+ const hotSet=new Set(hot.map(x=>x.i));
+ for(const a of aiProfiles)if(isRankChaser(a))aiActivityProgress(a);
+ for(const x of hot)if(!isRankChaser(x.a))aiActivityProgress(x.a);
  const extra=Math.max(0,n-hot.length);
- for(let k=0;k<extra;k++){const ai=aiProfiles[(aiActivityCursor+k)%aiProfiles.length];if(!hot.some(x=>x.i===(aiActivityCursor+k)%aiProfiles.length))aiActivityProgress(ai);}
- aiActivityCursor=(aiActivityCursor+extra)%aiProfiles.length;saveRank();
+ for(let k=0;k<extra;k++){
+  const idx=(aiActivityCursor+k)%aiProfiles.length;
+  if(hotSet.has(idx)||isRankChaser(aiProfiles[idx]))continue;
+  aiActivityProgress(aiProfiles[idx]);
+ }
+ aiActivityCursor=(aiActivityCursor+extra)%aiProfiles.length;
 }
 let aiActivityCursor=0;
 function aiRankChaserOpponent(ai){const pool=aiProfiles.filter(x=>x!==ai&&Number(x.rp||0)>=Math.max(0,Number(ai.rp||0)-80));if(!pool.length)return null;const top=pool.slice().sort((a,b)=>Number(b.rp||0)-Number(a.rp||0));return top[Math.floor(Math.random()*Math.min(12,top.length))]||top[0];}
@@ -1761,7 +1765,18 @@ function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOn
  const chasers=aiProfiles.filter(isRankChaser);
  for(const ai of chasers){for(let k=0;k<2;k++){const b=aiRankChaserOpponent(ai);if(!b)continue;const result=simulateAIBattle(ai,b);evolveAIFromMatch(result.winner,result.winner===ai?b:ai,result);}}
 }
-let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{const battleRunning=!!running;runAISelfPlay(battleRunning?8:18);runAIActivities(battleRunning?40:100);aiAutoCycle++;if(aiAutoCycle%4===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none'&&!battleRunning)renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},1500);}
+let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){
+ if(aiEvolutionTimer)return;
+ aiEvolutionTimer=setInterval(()=>{
+  try{
+   // プレイヤーが戦闘中はバックグラウンドAIを停止し、ゲーム側のフレーム処理を優先する。
+   if(running)return;
+   runAISelfPlay(18);runAIActivities(100);aiAutoCycle++;
+   if(aiAutoCycle%4===0)saveRank();
+   if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();
+  }catch(e){console.warn('AI自動活動エラー:',e)}
+ },1500);
+}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
 function renderAIAccountList(){
@@ -1957,9 +1972,11 @@ function finishRank(win){
  try{
    rankHistory.unshift(`${win?'🏆 勝利':'💥 敗北'}　${playerName} vs ${rankAI?.name||'AI'}　${delta>0?'+':''}${delta} RP　${old} → ${rankPoints}　【${rankName(rankPoints)}】`);
  }catch(err){console.error('rank history error',err);}
- try{if(rankAI)recordAILiveResult(rankAI,!win);}catch(err){console.error('AI rank result error',err);}
- try{recordRankMetaMatch(rankPlayerUsed,rankAIUsed,win,formation,rankAI?.formation||[]);}catch(err){console.error('rank meta error',err);}
- try{saveRank();}catch(err){console.error('rank save error',err);}
+ setTimeout(()=>{
+  try{if(rankAI)recordAILiveResult(rankAI,!win);}catch(err){console.error('AI rank result error',err);}
+  try{recordRankMetaMatch(rankPlayerUsed,rankAIUsed,win,formation,rankAI?.formation||[]);}catch(err){console.error('rank meta error',err);}
+  try{saveRank();}catch(err){console.error('rank save error',err);}
+ },0);
 }
 
 function spawnYabayabaClone(deadUnit,level){if(!deadUnit)return;const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));const e={name:deadUnit.name+"（ヤバヤバ複製）",icon:deadUnit.icon,trait:deadUnit.trait||"無",hp,maxhp:hp,atk,range:deadUnit.range,spd:deadUnit.spd,interval:deadUnit.interval,attackType:deadUnit.attackType,kb:Math.max(1,deadUnit.kb||1),money:0,key:"ヤバヤバ複製",x:Math.max(145,Math.min(worldWidth-190,deadUnit.x)),cd:.15,state:"move",slowUntil:0,slowFactor:1,barrier:0,stageMultiplier:ratio,kbRemaining:Math.max(1,deadUnit.kb||1),isEnemy:true,role:"clone"};const d=document.createElement("div");d.className="unit enemy motion-enemy";d.innerHTML='<div class="hp"><i></i></div><div>👿'+e.icon+'</div><div class="typeTag">'+(e.attackType==="area"?"範囲":"単体")+'</div>';unitsEl.appendChild(d);e.el=d;enemies.push(e);popup("ヤバヤバ複製！",e.x,Math.max(25,field.clientHeight-145));}
