@@ -1504,7 +1504,7 @@ function isRankCharacterBanned(i){return rankSeasonBannedIndices().includes(Numb
 function previousSeasonTop5(){
  try{
   const a=JSON.parse(storage.getItem('kinoshitaPreviousSeasonTop5')||'[]');
-  if(Array.isArray(a)&&a.length)return a.filter(i=>Number.isInteger(i)&&cards[i]);
+  if(Array.isArray(a)&&a.length)return a.filter(i=>Number.isInteger(i)&&cards[i]&&!isRankCharacterBanned(i));
   const legacy=JSON.parse(storage.getItem('kinoshitaRankMetaV1')||'null');
   if(legacy?.chars){
    const top=Object.entries(legacy.chars).map(([i,v])=>({i:Number(i),wins:Number(v.wins||0),losses:Number(v.losses||0)}))
@@ -1517,9 +1517,9 @@ function previousSeasonTop5(){
   return [];
  }catch(e){return []}
 }
-function weakTop5FromStats(stats){const a=Object.entries(stats?.chars||{}).map(([i,v])=>{const used=Number(v.used||0),wins=Number(v.wins||0),losses=Number(v.losses||0),games=wins+losses;const usage=used/Math.max(1,Number(stats.totalDeploys||0)),winRate=games?wins/games:0;return {i:Number(i),used,wins,losses,games,usage,winRate,bothScore:usage*winRate}}).filter(x=>cards[x.i]&&x.used>0&&x.games>0).sort((a,b)=>b.bothScore-a.bothScore||b.usage-a.usage||b.winRate-a.winRate||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
+function weakTop5FromStats(stats){const a=Object.entries(stats?.chars||{}).map(([i,v])=>{const used=Number(v.used||0),wins=Number(v.wins||0),losses=Number(v.losses||0),games=wins+losses;const usage=used/Math.max(1,Number(stats.totalDeploys||0)),winRate=games?wins/games:0;return {i:Number(i),used,wins,losses,games,usage,winRate,bothScore:usage*winRate}}).filter(x=>cards[x.i]&&x.used>0&&x.games>0&&!isRankCharacterBanned(x.i)).sort((a,b)=>b.bothScore-a.bothScore||b.usage-a.usage||b.winRate-a.winRate||b.wins-a.wins||a.i-b.i).slice(0,5);return a.map(x=>x.i)}
 function currentSeasonTop5(){return weakTop5FromStats(rankMetaStats)}
-function seasonWeakMultiplier(i){const current=currentSeasonTop5().includes(i),previous=previousSeasonTop5().includes(i);if(current&&previous)return .3;if(current)return .4;if(previous)return .75;return 1}
+function seasonWeakMultiplier(i){if(isRankCharacterBanned(i))return 1;const current=currentSeasonTop5().includes(i),previous=previousSeasonTop5().includes(i);if(current&&previous)return .3;if(current)return .4;if(previous)return .75;return 1}
 function seasonWeakText(){const a=previousSeasonTop5(),b=currentSeasonTop5();return '前シーズンTOP5：'+(a.length?a.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'なし')+'<br>今シーズンTOP5：'+(b.length?b.map(i=>cards[i].icon+' '+cards[i].name).join(' / '):'まだ集計なし')}
 function rankRewardRulesHTML(){
  const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];
