@@ -1010,9 +1010,7 @@ function applyFrogAbility(target){
  const now=performance.now()/1000;
  // 3つの妨害判定はそれぞれ独立して25%。同時発動もあり得る。
  if(Math.random()<.25){
-   target.stopUntil=now+3;
-   target.spdOriginal=target.spdOriginal??target.spd;
-   setStatusMark(target,'⏸️','停止',3,'stop');
+   if(!target.stopImmune){target.stopUntil=now+3;target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',3,'stop');}
  }
  if(Math.random()<.25){
    target.slowUntil=now+3;
@@ -1029,7 +1027,7 @@ function applySlow(target,slow){if(!target||!slow)return;if(slow.trait!=="*"&&ta
 function applyAbility(u,target,damage){if(!target||u?.abilitySealed)return;const a=u.ability||{};
  if(a.splash){for(const e of [...enemies])if(e!==target&&Math.abs(e.x-target.x)<70)hit(e,Math.round(damage*a.splash),null,null);}
  // エレメンタル木下sの超激レア能力
- if(a.stopChance&&Math.random()<Number(a.stopChance)){target.stopUntil=performance.now()/1000+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
+ if(a.stopChance&&!target.stopImmune&&Math.random()<Number(a.stopChance)){target.stopUntil=performance.now()/1000+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
  if(a.slowChance&&Math.random()<Number(a.slowChance))applySlow(target,{trait:'*',factor:Number(a.slowFactor||.6),duration:Number(a.slowDuration||2)});
  if(a.guaranteeKnockback&&target.hp>0){const distance=48;target.x=Math.max(120,target.x-distance);target.cd=Math.max(target.cd,.22);}
  if(a.waveChance&&Math.random()<Number(a.waveChance))allyWaveAttack(u);
@@ -2092,7 +2090,7 @@ function enemyWaveAttack(e){
  for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;e.cd-=dt;
    let target=null,bestDist=Infinity;
    for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);if(d<e.range+30&&d<bestDist){target=u;bestDist=d;}}
-   if(target){e.state='attack';const stopped=(performance.now()/1000)<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);const ea=e.ability||{};const now2=performance.now()/1000;if(ea.stopChance&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
+   if(target){e.state='attack';const stopped=(performance.now()/1000)<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);const ea=e.ability||{};const now2=performance.now()/1000;if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&!t.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{e.state='move';const slowNow=(performance.now()/1000)<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const stopNow=(performance.now()/1000)<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*60*dt;if(!slowNow)e.slowFactor=1}
    updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((e.id*7)%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
