@@ -1521,7 +1521,23 @@ function loadAIHighRecord(id){const m=loadAIHighMap(),v=m[String(id)]||{};return
 function updateAIHighRecord(ai){if(!ai)return;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)return;const old=m[id]||{};const previousMax=Number(old.maxRP||0);const maxRP=Math.max(previousMax,Number(ai.maxRP||0),Number(ai.rp||0));const bestRank=Math.max(0,Number(old.bestRank||0),Number(ai.bestRank||0));ai.maxRP=maxRP;ai.bestRank=bestRank;m[id]={maxRP,bestRank};storage.setItem('kinoshitaAIHighRecords',JSON.stringify(m));}
 function rankSeasonFinalEntries(){const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,ai:a,rp:Number(a.rp||0)});return hum.sort((a,b)=>b.rp-a.rp||String(a.id).localeCompare(String(b.id)));}
 function finalizeAISeasonRecords(){const ranking=rankSeasonFinalEntries();for(const ai of aiProfiles){const row=ranking.find(x=>x.ai===ai);if(!row)continue;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)continue;const old=m[id]||{};const bestRank=Math.min(Number(old.bestRank||0)||Infinity,ranking.indexOf(row)+1);ai.bestRank=Number.isFinite(bestRank)?bestRank:0;m[id]={maxRP:Number(old.maxRP||ai.maxRP||ai.rp||0),bestRank:ai.bestRank};}storage.setItem('kinoshitaAIHighRecords',JSON.stringify(loadAIHighMap()));}
-function saveRank(){for(const ai of aiProfiles)updateAIHighRecord(ai);storage.setItem('kinoshitaPlayerName',playerName);storage.setItem('kinoshitaRankPoints',rankPoints);storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));storage.setItem('kinoshitaRankWins',playerRankWins);storage.setItem('kinoshitaRankLosses',playerRankLosses);storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}
+function saveRank(){
+ const high=loadAIHighMap();
+ for(const ai of aiProfiles){
+  const id=String(ai.accountId||'');if(!id)continue;
+  const old=high[id]||{};
+  ai.maxRP=Math.max(Number(old.maxRP||0),Number(ai.maxRP||0),Number(ai.rp||0));
+  ai.bestRank=Math.max(Number(old.bestRank||0),Number(ai.bestRank||0));
+  high[id]={maxRP:ai.maxRP,bestRank:ai.bestRank};
+ }
+ storage.setItem('kinoshitaAIHighRecords',JSON.stringify(high));
+ storage.setItem('kinoshitaPlayerName',playerName);
+ storage.setItem('kinoshitaRankPoints',rankPoints);
+ storage.setItem('kinoshitaRankHistory',JSON.stringify(rankHistory.slice(0,30)));
+ storage.setItem('kinoshitaRankWins',playerRankWins);
+ storage.setItem('kinoshitaRankLosses',playerRankLosses);
+ storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));
+}
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
 function totalJapanClears(){return (chapterClears[0]||0)+(chapterClears[1]||0)+(chapterClears[2]||0);}
@@ -1530,7 +1546,14 @@ function rankPowerMultiplier(){return 1+(chapterClears[0]||0)*0.01+(chapterClear
 function aiPowerMultiplier(ai){return 1+(ai.chapterClears?.[0]||0)*0.01+(ai.chapterClears?.[1]||0)*0.002+(ai.chapterClears?.[2]||0)*0.003;}
 function isRankChaser(ai){const n=Number(String(ai?.accountId||'0').replace(/\D/g,''))||0;return n>0&&n%200===7;}
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
-function chooseRankAI(){const pi=rankIndex(rankPoints);const candidates=aiProfiles.map((a,i)=>({a,i,d:Math.abs(rankIndex(a.rp)-pi),gap:Math.abs(a.rp-rankPoints)})).sort((x,y)=>x.d-y.d||x.gap-y.gap||Math.random()-.5);return candidates[0]?.a||aiProfiles[0];}
+function chooseRankAI(){
+ const pi=rankIndex(rankPoints);let best=null,bestD=Infinity,bestGap=Infinity;
+ for(const a of aiProfiles){
+  const d=Math.abs(rankIndex(a.rp)-pi),gap=Math.abs(Number(a.rp||0)-rankPoints);
+  if(d<bestD||(d===bestD&&gap<bestGap)||(d===bestD&&gap===bestGap&&Math.random()<.5)){best=a;bestD=d;bestGap=gap;}
+ }
+ return best||aiProfiles[0];
+}
 function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;const chaser=isRankChaser(ai);return {patience:Math.max(.45,.55+h(1)*.9-(chaser?.08:0)),aggression:Math.min(1,.55+h(2)*1.15+(chaser?.12:0)),cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:Math.max(.05,h(9)-(chaser?.10:0)),pressure:Math.min(1,h(10)+(chaser?.12:0))};}
 function aiChooseFormation(ai){
  const ownedSet=new Set(ai.ownedCharacters||[0]);
@@ -1741,7 +1764,41 @@ function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOn
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{const battleRunning=!!running;runAISelfPlay(battleRunning?8:18);runAIActivities(battleRunning?40:100);aiAutoCycle++;if(aiAutoCycle%4===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none'&&!battleRunning)renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},1500);}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
-function renderAIAccountList(){const list=document.getElementById('aiAccountList');if(!list)return;const q=(document.getElementById('aiSearchInput').value||'').trim().toLowerCase();const sort=document.getElementById('aiSortSelect').value;let arr=aiProfiles.map((a,i)=>({a,i}));if(q)arr=arr.filter(x=>x.a.name.toLowerCase().includes(q)||x.a.accountId.toLowerCase().includes(q)||String(x.i+1).includes(q));arr.sort((x,y)=>{const a=x.a,b=y.a;if(sort==='matches')return b.matches-a.matches;if(sort==='wins')return b.wins-a.wins;if(sort==='clears'){const ac=(Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0]);const bc=(Array.isArray(b.chapterClears)?b.chapterClears:[0,0,0,0]);const av=(Number(ac[0])||0)+(Number(ac[1])||0)+(Number(ac[2])||0);const bv=(Number(bc[0])||0)+(Number(bc[1])||0)+(Number(bc[2])||0);return bv-av;}if(sort==='futureClears')return (Number(b.chapterClears?.[3])||0)-(Number(a.chapterClears?.[3])||0);if(sort==='spaceClears')return (Number(b.chapterClears?.[4])||0)-(Number(a.chapterClears?.[4])||0);if(sort==='ownedCharacters')return (Array.isArray(b.ownedCharacters)?b.ownedCharacters.length:0)-(Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0);if(sort==='generation')return b.generation-a.generation;if(sort==='name')return a.name.localeCompare(b.name,'ja');return b.rp-a.rp});document.getElementById('aiAccountCount').textContent=`表示：${arr.length} / 1000アカウント`;list.innerHTML=arr.map(({a,i})=>{const cc=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0];const japanClears=(Number(cc[0])||0)+(Number(cc[1])||0)+(Number(cc[2])||0);const futureClears=Number(cc[3])||0;const spaceClears=Number(cc[4])||0;const ownedCount=Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0;return `<div class="aiAccountRow" data-ai-index="${i}"><b>#${i+1}</b><span>🤖 ${a.name}<small>${a.population===2?'🆕 0から開始':'🌱 継続AI'}　${rankName(a.rp)} / ${strategyOf(a).label}</small></span><span>${a.rp} RP</span><span>${a.wins}勝 ${a.losses}敗</span><span>🇯🇵 日本編 ${japanClears}/144　🚀 未来編 ${futureClears}/48　🌌 宇宙編 ${spaceClears}/48　👤 キャラ ${ownedCount}/${cards.length}</span></div>`}).join('');list.querySelectorAll('.aiAccountRow').forEach(row=>row.onclick=()=>openAIDetail(Number(row.dataset.aiIndex)));saveRank();}
+function renderAIAccountList(){
+ const list=document.getElementById('aiAccountList');if(!list)return;
+ const q=(document.getElementById('aiSearchInput').value||'').trim().toLowerCase();
+ const sort=document.getElementById('aiSortSelect').value;
+ let arr=aiProfiles.map((a,i)=>({a,i}));
+ if(q)arr=arr.filter(x=>x.a.name.toLowerCase().includes(q)||x.a.accountId.toLowerCase().includes(q)||String(x.i+1).includes(q));
+ arr.sort((x,y)=>{
+  const a=x.a,b=y.a;
+  if(sort==='matches')return b.matches-a.matches;if(sort==='wins')return b.wins-a.wins;
+  if(sort==='clears'){const ac=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0],bc=Array.isArray(b.chapterClears)?b.chapterClears:[0,0,0,0];return ((Number(bc[0])||0)+(Number(bc[1])||0)+(Number(bc[2])||0))-((Number(ac[0])||0)+(Number(ac[1])||0)+(Number(ac[2])||0));}
+  if(sort==='futureClears')return (Number(b.chapterClears?.[3])||0)-(Number(a.chapterClears?.[3])||0);
+  if(sort==='spaceClears')return (Number(b.chapterClears?.[4])||0)-(Number(a.chapterClears?.[4])||0);
+  if(sort==='ownedCharacters')return (Array.isArray(b.ownedCharacters)?b.ownedCharacters.length:0)-(Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0);
+  if(sort==='generation')return b.generation-a.generation;if(sort==='name')return a.name.localeCompare(b.name,'ja');return b.rp-a.rp;
+ });
+ document.getElementById('aiAccountCount').textContent=`表示：${arr.length} / 1000アカウント`;
+ const token=String((window.__aiListRenderToken||0)+1);window.__aiListRenderToken=token;
+ list.innerHTML='';
+ let pos=0;
+ const renderChunk=()=>{
+  if(window.__aiListRenderToken!==token)return;
+  const end=Math.min(pos+60,arr.length);
+  const frag=document.createDocumentFragment();
+  for(let z=pos;z<end;z++){
+   const {a,i}=arr[z],cc=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0];
+   const japanClears=(Number(cc[0])||0)+(Number(cc[1])||0)+(Number(cc[2])||0),futureClears=Number(cc[3])||0,spaceClears=Number(cc[4])||0,ownedCount=Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0;
+   const row=document.createElement('div');row.className='aiAccountRow';row.dataset.aiIndex=i;
+   row.innerHTML=`<b>#${i+1}</b><span>🤖 ${a.name}<small>${a.population===2?'🆕 0から開始':'🌱 継続AI'}　${rankName(a.rp)} / ${strategyOf(a).label}</small></span><span>${a.rp} RP</span><span>${a.wins}勝 ${a.losses}敗</span><span>🇯🇵 日本編 ${japanClears}/144　🚀 未来編 ${futureClears}/48　🌌 宇宙編 ${spaceClears}/48　👤 キャラ ${ownedCount}/${cards.length}</span>`;
+   row.onclick=()=>openAIDetail(i);frag.appendChild(row);
+  }
+  list.appendChild(frag);pos=end;
+  if(pos<arr.length)requestAnimationFrame(renderChunk);
+ };
+ requestAnimationFrame(renderChunk);
+}
 function openAIManager(){document.getElementById('rankLobby').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
 function openAIDetail(index){const ai=aiProfiles[index];if(!ai)return;const f=aiFormationForView(ai);const formationHtml=f.map(i=>{const c=cards[i];return `<div class="aiCharRow"><b>${c.icon||'🌳'} ${c.name}</b><br>Lv.${ai.charLevels[i]||1}　HP ${Math.round(aiAccountStat(ai,i,'hp'))}　攻 ${Math.round(aiAccountStat(ai,i,'atk'))}</div>`}).join('')||'<div class="aiCharRow">編成はまだ決定されていません。</div>';const ownedSet=new Set(ai.ownedCharacters||[0]);const allChars=cards.map((c,i)=>`<div class="aiCharRow"><b>${ownedSet.has(i)?(c.icon||'🌳'):'🔒'} ${c.name}</b>　${ownedSet.has(i)?'Lv.'+(ai.charLevels[i]||1):'未入手'}</div>`).join('');const hist=(ai.matchHistory||[]).length?(ai.matchHistory||[]).map(x=>`<div>${x}</div>`).join(''):'最近の対戦記録はありません。';document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">最大RP<br>${Number(ai.maxRP||ai.rp||0)} RP</div><div class="aiStatBox">最高順位<br>${Number(ai.bestRank||0)>0?'第'+Number(ai.bestRank||0)+'位':'—'}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
 function closeAIDetail(){document.getElementById('aiDetailModal').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
