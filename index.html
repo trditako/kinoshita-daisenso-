@@ -1738,7 +1738,7 @@ function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOn
  const chasers=aiProfiles.filter(isRankChaser);
  for(const ai of chasers){for(let k=0;k<2;k++){const b=aiRankChaserOpponent(ai);if(!b)continue;const result=simulateAIBattle(ai,b);evolveAIFromMatch(result.winner,result.winner===ai?b:ai,result);}}
 }
-let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{runAISelfPlay(50);runAIActivities(300);aiAutoCycle++;if(aiAutoCycle%3===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},900);}
+let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){if(aiEvolutionTimer)return;aiEvolutionTimer=setInterval(()=>{try{const battleRunning=!!running;runAISelfPlay(battleRunning?8:18);runAIActivities(battleRunning?40:100);aiAutoCycle++;if(aiAutoCycle%4===0)saveRank();if(document.getElementById('rankLobby').style.display!=='none'&&!battleRunning)renderRankLobby();}catch(e){console.warn('AI自動活動エラー:',e)}},1500);}
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
 function renderAIAccountList(){const list=document.getElementById('aiAccountList');if(!list)return;const q=(document.getElementById('aiSearchInput').value||'').trim().toLowerCase();const sort=document.getElementById('aiSortSelect').value;let arr=aiProfiles.map((a,i)=>({a,i}));if(q)arr=arr.filter(x=>x.a.name.toLowerCase().includes(q)||x.a.accountId.toLowerCase().includes(q)||String(x.i+1).includes(q));arr.sort((x,y)=>{const a=x.a,b=y.a;if(sort==='matches')return b.matches-a.matches;if(sort==='wins')return b.wins-a.wins;if(sort==='clears'){const ac=(Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0]);const bc=(Array.isArray(b.chapterClears)?b.chapterClears:[0,0,0,0]);const av=(Number(ac[0])||0)+(Number(ac[1])||0)+(Number(ac[2])||0);const bv=(Number(bc[0])||0)+(Number(bc[1])||0)+(Number(bc[2])||0);return bv-av;}if(sort==='futureClears')return (Number(b.chapterClears?.[3])||0)-(Number(a.chapterClears?.[3])||0);if(sort==='spaceClears')return (Number(b.chapterClears?.[4])||0)-(Number(a.chapterClears?.[4])||0);if(sort==='ownedCharacters')return (Array.isArray(b.ownedCharacters)?b.ownedCharacters.length:0)-(Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0);if(sort==='generation')return b.generation-a.generation;if(sort==='name')return a.name.localeCompare(b.name,'ja');return b.rp-a.rp});document.getElementById('aiAccountCount').textContent=`表示：${arr.length} / 1000アカウント`;list.innerHTML=arr.map(({a,i})=>{const cc=Array.isArray(a.chapterClears)?a.chapterClears:[0,0,0,0];const japanClears=(Number(cc[0])||0)+(Number(cc[1])||0)+(Number(cc[2])||0);const futureClears=Number(cc[3])||0;const spaceClears=Number(cc[4])||0;const ownedCount=Array.isArray(a.ownedCharacters)?a.ownedCharacters.length:0;return `<div class="aiAccountRow" data-ai-index="${i}"><b>#${i+1}</b><span>🤖 ${a.name}<small>${a.population===2?'🆕 0から開始':'🌱 継続AI'}　${rankName(a.rp)} / ${strategyOf(a).label}</small></span><span>${a.rp} RP</span><span>${a.wins}勝 ${a.losses}敗</span><span>🇯🇵 日本編 ${japanClears}/144　🚀 未来編 ${futureClears}/48　🌌 宇宙編 ${spaceClears}/48　👤 キャラ ${ownedCount}/${cards.length}</span></div>`}).join('');list.querySelectorAll('.aiAccountRow').forEach(row=>row.onclick=()=>openAIDetail(Number(row.dataset.aiIndex)));saveRank();}
@@ -1773,7 +1773,7 @@ async function loadPreviousSeasonTop10(){
 }
 function renderRankLobby(){ensureRankSeason();startRankResetCountdown();const badge=document.getElementById('rankBadge'),rp=document.getElementById('rankRP'),inp=document.getElementById('playerNameInput'),info=document.getElementById('rankPowerInfo'),opp=document.getElementById('rankOpponentPreview'),hist=document.getElementById('rankHistory');if(!badge)return;badge.textContent=rankName(rankPoints);rp.textContent=rankPoints+' RP';const pr=document.getElementById('playerRankRecord');if(pr)pr.textContent=`${playerRankWins}勝 ${playerRankLosses}敗`;const prs=document.getElementById('playerRankStats');if(prs)prs.textContent=`👤 ${playerName}　ランク戦：${playerRankWins}勝 ${playerRankLosses}敗　勝率：${(playerRankWins+playerRankLosses?playerRankWins/(playerRankWins+playerRankLosses)*100:0).toFixed(1)}%`;inp.value=playerName;const clears=totalJapanClears();info.textContent=`${aiServerStatusText()}
 日本編クリア数：${clears}ステージ → ランク戦キャラ性能 ×${rankPowerMultiplier().toFixed(2)}（1ステージ+1%）。通常ステージでは補正なし。ランク戦だけHP・攻撃・射程・移動速度が上昇し、攻撃間隔が短縮されます。AIもプレイヤーと同じ基礎性能から開始します。`;const seasonInfo=document.getElementById('rankSeasonInfo');if(seasonInfo)seasonInfo.innerHTML='<b>📅 '+rankSeasonLabel()+'</b><br>📉 現在の弱体化対象：'+seasonWeakText()+'<br>前シーズンTOP5はランク戦で性能25%低下、今シーズンTOP5は性能60%低下。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間弱体化。<br>📊 使用率・勝率・流行編成はシーズン開始時にすべてリセット。弱体化TOP5の選定は勝率のみです。';const ai=chooseRankAI();rankMatchAIName=ai.name;const st=strategyOf(ai);opp.innerHTML=`<b>🤖 対戦AI：${ai.name}</b><br><span class="rankStat">段位：${rankName(ai.rp)}　RP：${ai.rp}　世代：${ai.generation}　AI強度：${Math.round(ai.skill*100)}%<br>戦術：${st.label} — ${st.desc}</span>`;renderRankLeaderboard();hist.innerHTML=rankHistory.length?rankHistory.map(x=>`<div>${x}</div>`).join(''):'AIは対戦を続けながら自動的に成長します。';}
-function openRank(){ensureRankSeason();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();loadPreviousSeasonTop10();syncPlayerRanking();}
+function openRank(){ensureRankSeason();noteRankSeasonTop10Qualification();document.getElementById('start').style.display='none';document.getElementById('rankLobby').style.display='flex';startAutoAISelfPlay();runAISelfPlay(8);renderRankLobby();loadPublicPlayerRankings();loadPreviousSeasonTop10();syncPlayerRanking();}
 function closeRank(){document.getElementById('rankLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function savePlayerName(){const v=(document.getElementById('playerNameInput').value||'').trim().slice(0,16);playerName=v||'プレイヤー';saveRank();syncPlayerRanking();}
 
@@ -1834,6 +1834,7 @@ function finishRank(win){
  try{
    win?playerRankWins++:playerRankLosses++;
    rankPoints=Math.max(0,old+delta);
+   noteRankSeasonTop10Qualification();
  }catch(err){
    console.error('rank result calculation error',err);
    rankPoints=Math.max(0,old+delta);
@@ -1905,12 +1906,13 @@ function finishRank(win){
 }
 
 function spawnYabayabaClone(deadUnit,level){if(!deadUnit)return;const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));const e={name:deadUnit.name+"（ヤバヤバ複製）",icon:deadUnit.icon,trait:deadUnit.trait||"無",hp,maxhp:hp,atk,range:deadUnit.range,spd:deadUnit.spd,interval:deadUnit.interval,attackType:deadUnit.attackType,kb:Math.max(1,deadUnit.kb||1),money:0,key:"ヤバヤバ複製",x:Math.max(145,Math.min(worldWidth-190,deadUnit.x)),cd:.15,state:"move",slowUntil:0,slowFactor:1,barrier:0,stageMultiplier:ratio,kbRemaining:Math.max(1,deadUnit.kb||1),isEnemy:true,role:"clone"};const d=document.createElement("div");d.className="unit enemy motion-enemy";d.innerHTML='<div class="hp"><i></i></div><div>👿'+e.icon+'</div><div class="typeTag">'+(e.attackType==="area"?"範囲":"単体")+'</div>';unitsEl.appendChild(d);e.el=d;enemies.push(e);popup("ヤバヤバ複製！",e.x,Math.max(25,field.clientHeight-145));}
-function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule.slice().sort((a,b)=>a.t-b.t);while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
+function loop(t){if(!running||paused)return;if(!last)last=t;const dt=Math.min(.035,(t-last)/1000);last=t;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule;while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
- for(const u of [...units]){u.cd-=dt;
-   let target=enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28).sort((a,b)=>a.x-b.x)[0];
+ for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;u.cd-=dt;
+   let target=null,bestDist=Infinity;
+   for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0)continue;const d=Math.abs(e.x-u.x);if(d<u.range+28&&d<bestDist){target=e;bestDist=d;}}
    if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0)removeEnemy(t)}if(u.waveLevel&&!u.ability?.waveChance)allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';u.x-=u.spd*60*dt}
@@ -1942,7 +1944,7 @@ function enemyWaveAttack(e){
  }
  setTimeout(()=>wave.remove(),520);
 }
- for(const e of [...enemies]){e.cd-=dt;
+ for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;e.cd-=dt;
    let target=units.filter(u=>Math.abs(u.x-e.x)<e.range+30).sort((a,b)=>b.x-a.x)[0];
    if(target){e.state='attack';const stopped=(performance.now()/1000)<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下')applyFrogAbility(t);const ea=e.ability||{};const now2=performance.now()/1000;if(ea.stopChance&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.waveLevel)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
@@ -2034,7 +2036,7 @@ document.addEventListener('click',e=>{
 document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankRewardInfoBtn').onclick=openRankRewardInfo;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
 document.getElementById('editFriendProfile').onclick=async()=>{const old=storage.getItem('kinoshitaPlayerBio')||'';const v=prompt('プロフィール文（80文字以内）',old);if(v===null)return;storage.setItem('kinoshitaPlayerBio',v.slice(0,80));document.getElementById('myFriendProfileText').textContent=v.slice(0,80)||'プロフィール文はありません。';await ensureMyPlayerProfile();};document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 /* AI自動処理はUIイベント登録を止めないよう安全に開始 */
-(async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(40);runAIActivities(120);}catch(e){console.warn("AI初期処理をスキップ:",e)}},50);setInterval(async()=>{try{await loadAIServerWorkerState();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){}},15000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
+(async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(12);runAIActivities(50);}catch(e){console.warn("AI初期処理をスキップ:",e)}},120);setInterval(async()=>{try{await loadAIServerWorkerState();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){}},15000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
 
 /* ===== UIボタンの安全な再バインド =====
    初期化途中の例外があっても、メインメニューのボタンが無反応にならないようにします。
@@ -2099,26 +2101,36 @@ function rankRewardSnapshotRank(){
  const i=hum.findIndex(x=>x.id===playerRankingId);
  return i<0?hum.length+1:i+1;
 }
+function rankSeasonTop10Key(season=rankRewardCycle()){return 'kinoshitaRankTop10Qualified_'+season}
+function noteRankSeasonTop10Qualification(){
+ const pos=rankRewardSnapshotRank(),season=rankRewardCycle();
+ if(pos<=10)storage.setItem(rankSeasonTop10Key(season),'1');
+ return pos;
+}
 function addRankRewardGift(){
  const cycle=rankRewardCycle(),last=Number(storage.getItem('kinoshitaRankRewardCycle')||-1);
  if(last>=cycle)return;
  const rp=Math.max(0,Number(rankPoints||0)),pos=rankRewardSnapshotRank();
- let coins=0,xp=0,badge='',char=false,label='';
- if(pos===1){coins=150000;xp=150000;badge='1位の証';char=true;label='ランク1位報酬'}
+ const reachedTop10=storage.getItem(rankSeasonTop10Key(cycle))==='1';
+ const eligibleForKinoshitaYoshida=reachedTop10||pos<=10;
+ let coins=0,xp=0,badge='',char=eligibleForKinoshitaYoshida,label='';
+ if(pos===1){coins=150000;xp=150000;badge='1位の証';label='ランク1位報酬'}
  else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
  else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
- else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';char=true;label='ランク'+pos+'位報酬'}
+ else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
+ else if(reachedTop10){const t=rankTierReward(rp);coins=t[1];xp=t[2];label='シーズンTop10到達報酬'}
  else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
- pendingRankGifts.push({cycle,label,coins,xp,badge,char});
+ pendingRankGifts.push({cycle,label,coins,xp,badge,char,kinoshitaYoshida:eligibleForKinoshitaYoshida});
  storage.setItem('kinoshitaRankRewardCycle',String(cycle));
+ storage.removeItem(rankSeasonTop10Key(cycle));
  rankPoints=0;saveRank();
 }
 let pendingRankGifts=[];try{pendingRankGifts=JSON.parse(storage.getItem('kinoshitaPendingRankGifts')||'[]')}catch(e){pendingRankGifts=[]}
 function saveRankGifts(){storage.setItem('kinoshitaPendingRankGifts',JSON.stringify(pendingRankGifts))}
-function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char?'<br>🎁 木下&吉田（ランク1位限定）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
+function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char&&g.kinoshitaYoshida?'<br>🎁 木下&吉田（シーズンTop10到達者／リセット時Top10）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
 async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}if(!pendingRankGifts.length)addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
 function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
-function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
+function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char&&g.kinoshitaYoshida){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
