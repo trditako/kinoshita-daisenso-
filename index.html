@@ -1771,12 +1771,22 @@ function aiActivityProgress(ai){
  let postExchanged=0;
  while(postExchanged<20 && aiTryGachaExchange(ai)) postExchanged++;
  aiLevelUpFromXP(ai);
+ if(Math.random()<.06)aiTryYabasugiEvent(ai);
  // イベント挑戦も独立した活動として抽選。狂乱は十分な進行・戦力が整うまで突破させない。
  if(Math.random()<.08){const name='狂乱の木下降臨';const idx=cards.findIndex(c=>c.name==='狂乱の木下');const power=aiPowerScore(ai);if(ai.stageClears>=100&&ai.ownedCharacters.length>=10&&power>50000&&Math.random()<.18){ai.eventClears[name]=true;if(idx>=0&&!ai.ownedCharacters.includes(idx)){ai.ownedCharacters.push(idx);ai.charLevels[idx]=1;}ai.activity='イベント攻略：狂乱の木下降臨クリア';pushAIActivity(ai,'🔥 狂乱の木下降臨クリア');}else{ai.activity='イベント攻略：狂乱の木下降臨に挑戦';pushAIActivity(ai,'🔥 狂乱の木下降臨に挑戦');}}
  ai.ownedCharacters=[...new Set(ai.ownedCharacters||[0])];ai.formation=(ai.formation||[]).filter(i=>ai.ownedCharacters.includes(i));if(!ai.formation.length)ai.formation=[0];
 }
 function aiSimulateSpaceStage(ai,stageNo){const st=spaceStages?.[stageNo-1];if(!st)return {win:false};const form=(ai.formation||[0]).filter(i=>Number.isInteger(i)&&cards[i]).slice(0,10);if(!form.length)return {win:false};let pd=0,ph=0,eh=0,ed=0;for(const i of form){const cc=cards[i],g=Math.pow(1.04,(ai.charLevels?.[i]||1)-1);pd+=(cc.atk||0)*g/Math.max(.2,cc.interval||1);ph+=(cc.hp||0)*g;}for(const ev of st.schedule||[]){const e=enemyTypes[ev.enemy];if(!e)continue;const m=Number(ev.mult??ev.multiplier??1)||1,n=Math.max(1,Number(ev.count||1));eh+=(e.hp||0)*m*n;ed+=(e.atk||0)/Math.max(.2,e.interval||1)*m*Math.min(n,6);}const power=aiPowerScore(ai),kill=eh/Math.max(1,pd),survive=ph/Math.max(1,ed),chance=Math.max(.03,Math.min(.95,.18+(ai.skill||.25)*.45+power/90000));return {win:kill<survive*1.25+60&&pd>ed*.18&&Math.random()<chance};}
 
+function aiTryYabasugiEvent(ai){
+ const name='ヤバすぎ木下降臨',idx=cards.findIndex(c=>c.name==='ヤバすぎ木下'),power=aiPowerScore(ai);
+ const canChallenge=(ai.chapterClears?.[2]||0)>=48&&(ai.ownedCharacters||[]).length>=8&&power>42000;
+ if(!canChallenge){ai.activity='イベント攻略：ヤバすぎ木下降臨を偵察中';pushAIActivity(ai,'👽 ヤバすぎ木下降臨はまだ戦力不足');return false;}
+ if(ai.eventClears?.[name]===true){ai.activity='イベント攻略：ヤバすぎ木下降臨を周回中';pushAIActivity(ai,'👽 ヤバすぎ木下降臨を再挑戦');return false;}
+ const chance=Math.max(.05,Math.min(.62,.06+ai.skill*.28+power/180000));
+ if(Math.random()<chance){ai.eventClears[name]=true;if(idx>=0&&!ai.ownedCharacters.includes(idx)){ai.ownedCharacters.push(idx);ai.charLevels[idx]=1;}ai.playerXP+=100;ai.coins+=180;ai.activity='イベント攻略：ヤバすぎ木下降臨クリア';pushAIActivity(ai,'👽 ヤバすぎ木下降臨クリア→ヤバすぎ木下を入手');return true;}
+ ai.activity='イベント攻略：ヤバすぎ木下降臨に挑戦';pushAIActivity(ai,'👽 ヤバすぎ木下降臨に挑戦（未クリア）');return false;
+}
 function aiPowerScore(ai){return (ai.ownedCharacters||[0]).reduce((sum,i)=>sum+aiAccountStat(ai,i,'hp')+aiAccountStat(ai,i,'atk')*5+(ai.charLevels?.[i]||1)*50,0);}
 function pushAIActivity(ai,text){ai.activityHistory=Array.isArray(ai.activityHistory)?ai.activityHistory:[];ai.activityHistory.unshift(text);ai.activityHistory=ai.activityHistory.slice(0,10);}
 function runAIActivities(n=300){
