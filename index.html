@@ -229,7 +229,6 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"ヤバすぎ木下",cost:1600,hp:6000,atk:350,range:35,spd:.3,interval:1.5,recharge:30,icon:"👽",motion:"super",attackType:"single",kb:4,series:"ヤバすぎ木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"ヤバすぎ木下降臨",trait:"宇宙",stopImmune:true,attackDownImmune:true,ability:{name:"ヤバヤバLv2・停止無効・攻撃力低下無効",desc:"ヤバヤバLv2。停止と攻撃力低下を無効化する。",yabayaba:2}});
 cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
 // エレメンタル木下s：ファイティング木下（伝説レア）に加え、5体の超激レアを期間限定交換所へ追加。
 cards.push(
@@ -243,6 +242,7 @@ cards.push(
 ['炎撃木下','水帝木下','大地木下','疾風木下','雷光木下','ファイティング木下'].forEach(n=>{const x=cards.find(c=>c.name===n);if(x)x.limitedExchange=true;});
 cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 cards.push({name:"千年に一歩歩く木下",cost:1001,hp:1001,atk:6000,range:600,minRange:150,detectionRange:800,spd:0,interval:5,recharge:120,icon:"🐦",motion:"thousandStep",attackType:"area",kb:1,trait:"宇宙",series:"千年に一歩",rarity:"SSR",gachaCost:15000,chargeTime:3,ability:{name:"千年に一歩",desc:"【専用能力】移動不可。感知射程800。150〜600の遠方範囲を攻撃し、150未満には攻撃不可。攻撃前に3秒間チャージする。チャージ中は専用モーションと攻撃範囲を表示。無・赤・黒に4倍ダメージ。",strong:{無:4,赤:4,黒:4}}});
+cards.push({name:"ヤバすぎ木下",cost:1600,hp:6000,atk:350,range:35,spd:.3,interval:1.5,recharge:30,icon:"👽",motion:"super",attackType:"single",kb:4,series:"ヤバすぎ木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"ヤバすぎ木下降臨",trait:"宇宙",stopImmune:true,attackDownImmune:true,ability:{name:"ヤバヤバLv2・停止無効・攻撃力低下無効",desc:"ヤバヤバLv2。停止と攻撃力低下を無効化する。",yabayaba:2}});
 const CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
