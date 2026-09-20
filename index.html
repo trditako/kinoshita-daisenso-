@@ -1400,7 +1400,7 @@ function normalizeAIAccount(ai,index,population){
  base.eventClears=base.eventClears&&typeof base.eventClears==='object'?base.eventClears:{};
  const progressOwned=aiOwnedFromProgress(base);
  // ガチャで交換したキャラも保存データから維持する。以前は進行報酬だけで再構築していたため、再読み込み時に交換キャラが消えていた。
- const savedOwnedRaw=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];const savedOwned=savedOwnedRaw.map(i=>Number.isInteger(i)?i:-1).map(i=>i===91?THOUSAND_STEP_INDEX:i).filter(i=>i>=0&&i<CURRENT_CHARACTER_COUNT);
+ const savedOwnedRaw=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];const savedOwned=savedOwnedRaw.map(i=>Number.isInteger(i)?i:-1).filter(i=>i>=0&&i<CURRENT_CHARACTER_COUNT);
  const rageIdx=cards.findIndex(c=>c.name==='狂乱の木下'); const waveIdx=cards.findIndex(c=>c.name==='波動木下'); const chapterRewardIdx=[1,2,3].map(ch=>chapterRewardIndex(ch)); const gatedOwned=savedOwned.filter(i=>{if(!Number.isInteger(i)||i<0||i>=cards.length)return false;if(i===rageIdx)return base.eventClears['狂乱の木下降臨']===true;if(i===waveIdx)return base.eventClears['波動木下降臨']===true;if(chapterRewardIdx.includes(i)){const ch=chapterRewardIdx.indexOf(i)+1;return base.chapterClears[ch-1]>=48;}return true;});base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])]; if(rageIdx>=0&&base.eventClears['狂乱の木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==rageIdx); if(waveIdx>=0&&base.eventClears['波動木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==waveIdx);
  const ownedSet=new Set(base.ownedCharacters);
  base.charLevels=base.charLevels.map((lv,i)=>ownedSet.has(i)?lv:1);
