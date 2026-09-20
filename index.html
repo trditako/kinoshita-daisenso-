@@ -202,7 +202,7 @@ function chapterRewardIndex(chapter){
  return name?cards.findIndex(c=>c.name===name):-1;
 }
 cards.push(...CHAPTER_REWARD_CARDS);
-cards.push({name:"千年に一歩歩く木下",cost:1001,hp:1001,atk:6000,range:1150,minRange:150,detectionRange:800,spd:0,interval:5,recharge:120,icon:"🐦",motion:"thousandStep",attackType:"area",kb:1,trait:"宇宙",series:"千年に一歩",rarity:"SSR",gachaCost:15000,chargeTime:3,ability:{name:"千年に一歩",desc:"移動不可。感知射程800。150〜1150の遠方範囲を攻撃し、攻撃準備に3秒かかる。無・赤・黒に4倍ダメージ。",strong:{無:4,赤:4,黒:4}}});
+
 // 日本・未来編攻略特化キャラクター20体（木下コイン交換専用）
 const 攻略特化キャラ=[
 {name:"対無木下",cost:500,hp:1000,atk:180,range:70,spd:.9,interval:1,recharge:8,icon:"🛡️",motion:"basic",attackType:"single",kb:3,series:"攻略特化隊",rarity:"R",gachaCost:2000,ability:{name:"無属性特効",desc:"無属性に攻撃1.8倍・被ダメージ0.6倍",strong:{無:1.8},resist:{無:.6}}},
@@ -241,6 +241,7 @@ cards.push(
 // 期間限定交換所の対象：エレメンタル木下sの超激レア5体＋ファイティング木下（伝説レア）
 ['炎撃木下','水帝木下','大地木下','疾風木下','雷光木下','ファイティング木下'].forEach(n=>{const x=cards.find(c=>c.name===n);if(x)x.limitedExchange=true;});
 cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
+cards.push({name:"千年に一歩歩く木下",cost:1001,hp:1001,atk:6000,range:1150,minRange:150,detectionRange:800,spd:0,interval:5,recharge:120,icon:"🐦",motion:"thousandStep",attackType:"area",kb:1,trait:"宇宙",series:"千年に一歩",rarity:"SSR",gachaCost:15000,chargeTime:3,ability:{name:"千年に一歩",desc:"移動不可。感知射程800。150〜1150の遠方範囲を攻撃し、攻撃準備に3秒かかる。無・赤・黒に4倍ダメージ。",strong:{無:4,赤:4,黒:4}}});
 
 // 全味方キャラクターに属性を付与。対人戦ではこの属性を相手側にも同期します。
 const allyTraits={
