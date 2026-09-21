@@ -692,7 +692,10 @@ let aiServerConnected=false;
 let aiServerLastSync=0;
 let aiServerSyncBusy=false;
 function supabaseHeaders(extra={}){return Object.assign({apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},extra)}
-async function loadAIServerProfiles(){
+let aiServerProfilesLoadBusy=false;
+async function loadAIServerProfiles(force=false){
+ if(aiServerProfilesLoadBusy)return false;
+ aiServerProfilesLoadBusy=true;
  try{
   const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=*&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
@@ -708,7 +711,8 @@ async function loadAIServerProfiles(){
     formation:Array.isArray(row.formation)?row.formation:[0],charLevels:Array.isArray(row.char_levels)?row.char_levels:Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1),
     eventClears:row.event_clears&&typeof row.event_clears==='object'?row.event_clears:{},trainingXP:Number(row.training_xp||0),matches:Number(row.matches||0),
     lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activity:typeof row.activity==='string'?row.activity:'待機中',
-    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],population:Number(row.population||1)
+    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],population:Number(row.population||1),
+    rewardRank:Number(row.reward_rank||0),rewardCycle:Number(row.reward_cycle??-1),rankBadge:String(row.rank_badge||''),limitedCharacterOwned:!!row.limited_character_owned,bestRankTitle:String(row.best_rank||'')
    };
    return normalizeAIAccount(a,i,Number(row.population||1));
   });
@@ -718,7 +722,7 @@ async function loadAIServerProfiles(){
   aiServerConnected=false;
   console.warn('Supabase AI読み込み失敗。端末側AIを使用します:',e);
   return false;
- }
+ }finally{aiServerProfilesLoadBusy=false;}
 }
 function aiServerStatusText(){return aiServerConnected?'☁️ AIサーバー接続中':'📱 端末AI（サーバー未接続）';}
 const OPERATOR_PLAYER_ID='cd19b245-1a70-45de-9bb7-967f6c568425';function isOperatorPlayer(id){return String(id)===OPERATOR_PLAYER_ID};const PLAYER_RANKINGS_URL=SUPABASE_REST_URL+'/player_rankings';
@@ -1862,7 +1866,7 @@ function renderAIAccountList(){
 }
 function openAIManager(){document.getElementById('rankLobby').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
 function openAIDetail(index){const ai=aiProfiles[index];if(!ai)return;const f=aiFormationForView(ai);const formationHtml=f.map(i=>{const c=cards[i];return `<div class="aiCharRow"><b>${c.icon||'🌳'} ${c.name}</b><br>Lv.${ai.charLevels[i]||1}　HP ${Math.round(aiAccountStat(ai,i,'hp'))}　攻 ${Math.round(aiAccountStat(ai,i,'atk'))}</div>`}).join('')||'<div class="aiCharRow">編成はまだ決定されていません。</div>';const ownedSet=new Set(ai.ownedCharacters||[0]);const allChars=cards.map((c,i)=>`<div class="aiCharRow"><b>${ownedSet.has(i)?(c.icon||'🌳'):'🔒'} ${c.name}</b>　${ownedSet.has(i)?'Lv.'+(ai.charLevels[i]||1):'未入手'}</div>`).join('');const hist=(ai.matchHistory||[]).length?(ai.matchHistory||[]).map(x=>`<div>${x}</div>`).join(''):'最近の対戦記録はありません。';const aiTitle=previousSeasonTitleMark('ai',ai.accountId);
- document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}${aiTitle?' <strong class="rankTitleBadge" title="前シーズンTop10実績">'+aiTitle+'</strong>':''}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">最大RP<br>${Number(ai.maxRP||ai.rp||0)} RP</div><div class="aiStatBox">最高順位<br>${Number(ai.bestRank||0)>0?'第'+Number(ai.bestRank||0)+'位':'—'}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
+ document.getElementById('aiDetailBody').innerHTML=`<div class="aiDetailHeader"><h2 style="margin:0">🤖 ${ai.name}${aiTitle?' <strong class="rankTitleBadge" title="前シーズンTop10実績">'+aiTitle+'</strong>':''}</h2><div style="font-size:11px;margin-top:4px">${ai.accountId}　${rankName(ai.rp)}　${strategyOf(ai).label}</div></div><div class="aiDetailGrid"><div class="aiStatBox">RP<br>${ai.rp}</div><div class="aiStatBox">最大RP<br>${Number(ai.maxRP||ai.rp||0)} RP</div><div class="aiStatBox">最高順位<br>${Number(ai.bestRank||0)>0?'第'+Number(ai.bestRank||0)+'位':'—'}</div><div class="aiStatBox">前シーズン報酬<br>${Number(ai.rewardRank||0)>=1&&Number(ai.rewardRank||0)<=10?'第'+Number(ai.rewardRank)+'位報酬':'段位報酬'}</div><div class="aiStatBox">戦績<br>${ai.wins}勝 ${ai.losses}敗</div><div class="aiStatBox">対戦数<br>${ai.matches}</div><div class="aiStatBox">AI強度<br>${Math.round(ai.skill*100)}%</div><div class="aiStatBox">世代<br>${ai.generation}</div><div class="aiStatBox">学習XP<br>${ai.trainingXP}/10</div><div class="aiStatBox">🪙 木下コイン<br>${ai.coins}</div><div class="aiStatBox">プレイヤーXP<br>${ai.playerXP}</div><div class="aiStatBox">日本編 第1章<br>${ai.chapterClears?.[0]||0}/48</div><div class="aiStatBox">日本編 第2章<br>${ai.chapterClears?.[1]||0}/48</div><div class="aiStatBox">日本編 第3章<br>${ai.chapterClears?.[2]||0}/48</div><div class="aiStatBox">未来編 第1章<br>${ai.chapterClears?.[3]||0}/48</div><div class="aiStatBox">日本編補正<br>×${aiPowerMultiplier(ai).toFixed(3)}</div><div class="aiStatBox">最終結果<br>${ai.lastResult||'—'}</div><div class="aiStatBox">戦術<br>${strategyOf(ai).desc}</div></div><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">${formationHtml}</div><div class="aiSection">📈 全キャラLv</div><div class="aiFormation">${allChars}</div><div class="aiSection">🕒 最近の対戦結果</div><div class="aiRecent">${hist}</div><div class="aiSection">🤖 最近の活動</div><div class="aiRecent">${(ai.activityHistory||[]).map(x=>`<div>${x}</div>`).join('')||'活動記録はありません。'}</div><div class="aiStatBox" style="margin-top:7px">現在の活動：${ai.activity||'待機中'}　所持キャラ：${(ai.ownedCharacters||[0]).length}/${cards.length}</div>`;document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';}
 function closeAIDetail(){document.getElementById('aiDetailModal').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
 function closeAIManager(){document.getElementById('aiManager').style.display='none';document.getElementById('rankLobby').style.display='flex';renderRankLobby();}
 function previousSeasonTitleMark(source,id){
@@ -1874,9 +1878,13 @@ function previousSeasonTitleMark(source,id){
 }
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
+ if(aiServerConnected&&!window.__rankLeaderboardServerRefresh){
+  window.__rankLeaderboardServerRefresh=true;
+  loadAIServerProfiles(true).then(()=>{window.__rankLeaderboardServerRefresh=false;renderRankLeaderboard();}).catch(()=>{window.__rankLeaderboardServerRefresh=false;});
+ }
  const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',operator:isOperatorPlayer(x.player_id),rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true,id:String(x.player_id||'')}));
  if(!humans.some(x=>x.me))humans.push({name:playerName,operator:isOperatorPlayer(playerRankingId),rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true,id:String(playerRankingId)});
- const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||''),seasonTitle:a.seasonTitle||''}));
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||''),seasonTitle:a.seasonTitle||'',rewardRank:Number(a.rewardRank||0),rewardCycle:Number(a.rewardCycle??-1),rankBadge:String(a.rankBadge||'')}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
  el.innerHTML=rows.map((x,i)=>{
    const lookupId=x.human?x.id:String(x.id).replace(/^AI-/,'');
