@@ -2149,6 +2149,16 @@ function enemyWaveAttack(e){
 function renderCards(){
  const el=document.getElementById('cards');
  if(!el)return;
+ // ランク戦では毎フレームのUI更新で生産カードDOMが再生成されるため、
+ // iPhone Safariのタップがカード個別ハンドラの付け替えタイミングに入っても
+ // 生産できるよう、ランク戦だけ親要素でもPointer入力を受け取る。
+ el.onpointerdown=rankMode?(e=>{
+   const card=e.target.closest?.('.card[data-i]');
+   if(!card||!el.contains(card))return;
+   e.preventDefault();
+   e.stopPropagation();
+   deploy(Number(card.dataset.i));
+ }):null;
  // 戦闘画面には「現在の編成」に入っている最大10体だけを表示する。
  // 所持しているだけのキャラは、編成に入れない限り出撃できない。
  normalizeFormation();
