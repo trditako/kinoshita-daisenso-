@@ -1422,6 +1422,12 @@ function renderRankMeta(){
  '<h3>🧩 流行編成</h3><div class="metaSimpleList">'+(forms.length?forms.slice(0,5).map((x,i)=>'<div><b>#'+(i+1)+' '+x.ids.map(j=>cards[j].icon).join(' ')+'</b><span>'+x.u+'回　｜　勝率 '+(x.g?(x.wr*100).toFixed(1):'—')+'%</span></div>').join(''):'<div>まだ編成データがありません。</div>')+'</div>'+
  '<div class="metaSimpleNote">この画面は表示専用です。ゲームの進行データやランクポイントは変更しません。</div></div>';
 }
+function openRankMeta(){
+ const modal=document.getElementById('rankMetaModal'),body=document.getElementById('rankMetaBody');
+ if(!modal||!body)return;
+ modal.style.display='flex';
+ renderRankMeta();
+}
 function openRankRewardInfo(){ensureRankSeason();const el=document.getElementById('rankMetaBody');if(!el)return;el.innerHTML=rankRewardRulesHTML();document.getElementById('rankMetaModal').style.display='flex'}function closeRankMeta(){document.getElementById('rankMetaModal').style.display='none'}
 let playerRankWins=Math.max(0,Number(storage.getItem('kinoshitaRankWins')||0));
 let playerRankLosses=Math.max(0,Number(storage.getItem('kinoshitaRankLosses')||0));
