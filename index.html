@@ -2166,7 +2166,25 @@ function renderCards(){
    return `<div class="card ${disabled?'disabled':'ready'}" data-i="${i}"><div class="face">${c.icon}</div><b>${c.name}</b><span>${c.cost}円</span><small>Lv.${charLevel[i]||1}</small><div class="${statusClass}">${status}</div></div>`;
  });
  el.innerHTML=slots.join('');
- el.querySelectorAll('.card[data-i]').forEach(x=>x.onclick=()=>deploy(+x.dataset.i));
+ el.querySelectorAll('.card[data-i]').forEach(x=>{
+   const index=Number(x.dataset.i);
+   let pointerHandled=false;
+   const activate=e=>{
+     if(e){e.preventDefault();e.stopPropagation();}
+     if(pointerHandled)return;
+     pointerHandled=true;
+     deploy(index);
+     setTimeout(()=>{pointerHandled=false;},350);
+   };
+   // iPhone/iPad Safariでは戦場全体のpointerdownとカードのclickが競合する場合があるため、
+   // 生産カードはpointerdownを優先し、クリックの二重発火も防ぐ。
+   x.style.touchAction='manipulation';
+   x.addEventListener('pointerdown',activate,{passive:false});
+   x.addEventListener('click',e=>{
+     if(pointerHandled){e.preventDefault();e.stopPropagation();return;}
+     activate(e);
+   });
+ });
 }
 function showBattleCharacterList(){
  const detail=document.getElementById('detail');
