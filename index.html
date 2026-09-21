@@ -1873,8 +1873,9 @@ function renderRankLeaderboard(){
  el.innerHTML=rows.map((x,i)=>{
    const lookupId=x.human?x.id:String(x.id).replace(/^AI-/,'');
    const prev=previousSeasonTop10.find(p=>p.source===(x.human?'human':'ai')&&String(p.account_id)===lookupId);
-   const title=prev?'🏅【'+Number(prev.rank_position)+'位の証】':'';
-   return '<div class="rankRow '+(x.me?'me':'')+'"><b>'+(i+1)+'位</b><span>'+(x.human?'👤 ':'🤖 ')+escapeRankText(x.name)+(x.operator?' 🛠️運営':'')+(title?' <strong class="rankTitleBadge">'+title+'</strong>':'')+'<small class="rankStrategy">'+x.strategy+'</small></span><span>'+x.rp+' RP</span><span>'+x.wins+'勝</span></div>';
+   const titleMarks=['','🥇','🥈','🥉','🏅','🎖️','🏆','🏆','🏆','🏆','🏆'];
+   const title=prev?titleMarks[Math.max(1,Math.min(10,Number(prev.rank_position)||0))]:'';
+   return '<div class="rankRow '+(x.me?'me':'')+'"><b>'+(i+1)+'位</b><span>'+(x.human?'👤 ':'🤖 ')+escapeRankText(x.name)+(title?' <strong class="rankTitleBadge" title="'+Number(prev.rank_position)+'位の証">'+title+'</strong>':'')+(x.operator?' 🛠️運営':'')+'<small class="rankStrategy">'+x.strategy+'</small></span><span>'+x.rp+' RP</span><span>'+x.wins+'勝</span></div>';
  }).join('');
  el.querySelectorAll('.rankInviteBtn').forEach(b=>b.onclick=()=>inviteToAlliance(b.dataset.inviteId,b.dataset.inviteType,b.dataset.inviteName));
 }
