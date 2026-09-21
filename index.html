@@ -1868,11 +1868,12 @@ function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
  const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',operator:isOperatorPlayer(x.player_id),rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true,id:String(x.player_id||'')}));
  if(!humans.some(x=>x.me))humans.push({name:playerName,operator:isOperatorPlayer(playerRankingId),rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true,id:String(playerRankingId)});
- const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||'')}));
+ const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||''),seasonTitle:a.seasonTitle||''}));
  const rows=humans.concat(ais).sort((a,b)=>b.rp-a.rp||b.wins-a.wins);
  el.innerHTML=rows.map((x,i)=>{
-   const prev=previousSeasonTop10.find(p=>p.source===(x.human?'human':'ai')&&String(p.account_id)===x.id);
-   const mark=prev?' 🏆'+Number(prev.rank_position):'';
+   const lookupId=x.human?x.id:String(x.id).replace(/^AI-/,'');
+   const prev=previousSeasonTop10.find(p=>p.source===(x.human?'human':'ai')&&String(p.account_id)===lookupId);
+   const mark=prev?' 🏆'+Number(prev.rank_position)+'位の証':'';
    return '<div class="rankRow '+(x.me?'me':'')+'"><b>'+(i+1)+'位</b><span>'+(x.human?'👤 ':'🤖 ')+escapeRankText(x.name)+(x.operator?' 🛠️運営':'')+mark+'<small class="rankStrategy">'+x.strategy+'</small></span><span>'+x.rp+' RP</span><span>'+x.wins+'勝</span></div>';
  }).join('');
  el.querySelectorAll('.rankInviteBtn').forEach(b=>b.onclick=()=>inviteToAlliance(b.dataset.inviteId,b.dataset.inviteType,b.dataset.inviteName));
