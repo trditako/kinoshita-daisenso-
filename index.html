@@ -2149,9 +2149,9 @@ function enemyWaveAttack(e){
 function renderCards(){
  const el=document.getElementById('cards');
  if(!el)return;
- // ランク戦では毎フレームのUI更新で生産カードDOMが再生成されるため、
- // iPhone Safariのタップがカード個別ハンドラの付け替えタイミングに入っても
- // 生産できるよう、ランク戦だけ親要素でもPointer入力を受け取る。
+ // ランク戦では毎フレームのUI更新でカードDOMを作り直さない。
+ // iPhone Safariでは、pointerdown中にDOMが再生成されると最初のタップが
+ // 取りこぼされることがあるため、ランク戦中は既存カードを維持して表示だけ更新する。
  el.onpointerdown=rankMode?(e=>{
    const card=e.target.closest?.('.card[data-i]');
    if(!card||!el.contains(card))return;
@@ -2159,6 +2159,26 @@ function renderCards(){
    e.stopPropagation();
    deploy(Number(card.dataset.i));
  }):null;
+ normalizeFormation();
+ if(rankMode){
+   const current=Array.from(el.querySelectorAll('.card[data-i]')).map(x=>Number(x.dataset.i));
+   const desired=formation.slice(0,10);
+   const sameStructure=current.length===desired.length&&current.every((v,n)=>v===desired[n]);
+   if(sameStructure){
+     el.querySelectorAll('.card[data-i]').forEach(x=>{
+       const i=Number(x.dataset.i),c=cards[i];
+       if(!c)return;
+       const remaining=Math.max(0,rechargeLeft[i]||0);
+       const ready=remaining<=0.01;
+       const disabled=!running||!hasCharacter(i)||money<c.cost||!ready||isRankCharacterBanned(i);
+       x.classList.toggle('disabled',disabled);
+       x.classList.toggle('ready',!disabled);
+       const status=x.querySelector('.rechargeText');
+       if(status)status.textContent=!running?'出撃前':isRankCharacterBanned(i)?'今季禁止':!hasCharacter(i)?'未所持':money<c.cost?'お金不足':ready?'出撃OK':`再出撃まで ${remaining.toFixed(1)}秒`;
+     });
+     return;
+   }
+ }
  // 戦闘画面には「現在の編成」に入っている最大10体だけを表示する。
  // 所持しているだけのキャラは、編成に入れない限り出撃できない。
  normalizeFormation();
