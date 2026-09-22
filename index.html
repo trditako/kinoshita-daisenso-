@@ -1442,13 +1442,13 @@ function renderRankMeta(){
  html+=traitRows.length?traitRows.map((x,i)=>'<button type="button" class="rankMetaTraitButton" data-trait="'+esc(x[0])+'"><strong>#'+(i+1)+' '+esc(x[0])+'</strong><span>'+((x[1]/total)*100).toFixed(1)+'% 使用</span></button>').join(''):'<div>まだデータがありません。</div>';
  html+='</div><div id="rankMetaTraitDetail" class="rankMetaTraitDetail" style="display:none"></div>';
  html+='<h3>🔥 使用率（全キャラ）</h3><div class="metaSimpleList">';
- html+=rows.map((x,i)=>'<div><b>#'+(i+1)+' '+x.c.icon+' '+esc(x.c.name)+'</b><span>'+((x.u/total)*100).toFixed(1)+'%　｜　勝率 '+(x.g?(x.wr*100).toFixed(1):'—')+'%</span></div>').join('');
+ html+=rows.map((x,i)=>'<div><b>#'+(i+1)+' '+x.c.icon+' '+esc(x.c.name)+'</b><span>'+x.u+'回出撃　｜　使用率 '+((x.u/total)*100).toFixed(1)+'%　｜　勝率 '+(x.g?(x.wr*100).toFixed(1):'—')+'%</span></div>').join('');
  html+='</div><h3>🧩 流行編成</h3><div class="metaSimpleList">';
  html+=forms.length?forms.slice(0,5).map((x,i)=>'<div><b>#'+(i+1)+' '+x.ids.map(j=>cards[j].icon).join(' ')+'</b><span>'+x.u+'回　｜　勝率 '+(x.g?(x.wr*100).toFixed(1):'—')+'%</span></div>').join(''):'<div>まだ編成データがありません。</div>';
  html+='</div><div class="metaSimpleNote">この画面は表示専用です。ゲームの進行データやランクポイントは変更しません。</div></div>';
  m.innerHTML=html;
  const detail=document.getElementById('rankMetaTraitDetail');
- m.querySelectorAll('.rankMetaTraitButton').forEach(btn=>{btn.onclick=()=>{try{const trait=btn.getAttribute('data-trait')||'無';const members=rows.filter(x=>(x.c.trait||'無')===trait);if(!detail)return;detail.style.display='block';detail.innerHTML='<b>🔎 '+esc(trait)+'属性のキャラ使用率</b>'+members.map(x=>'<div><span>'+x.c.icon+' '+esc(x.c.name)+'</span><strong>'+((x.u/total)*100).toFixed(1)+'%</strong></div>').join('');}catch(e){console.error('rank meta trait detail',e);}};});
+ m.querySelectorAll('.rankMetaTraitButton').forEach(btn=>{btn.onclick=()=>{try{const trait=btn.getAttribute('data-trait')||'無';const members=rows.filter(x=>(x.c.trait||'無')===trait);if(!detail)return;detail.style.display='block';detail.innerHTML='<b>🔎 '+esc(trait)+'属性のキャラ使用率</b>'+members.map(x=>'<div><span>'+x.c.icon+' '+esc(x.c.name)+'</span><strong>'+x.u+'回　｜　'+((x.u/total)*100).toFixed(1)+'%</strong></div>').join('');}catch(e){console.error('rank meta trait detail',e);}};});
 }
 function openRankMeta(){
  const modal=document.getElementById('rankMetaModal'),body=document.getElementById('rankMetaBody');
