@@ -2181,9 +2181,14 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  const playerBaseStop=worldWidth-178;
  for(let ui=units.length-1;ui>=0;ui--){const u=units[ui];if(!u||u.hp<=0)continue;u.cd-=dt;
    const isThousandStep=!!u.minRange;
-   let target=null,bestDist=Infinity;
+   let target=u.target;
    const detectionRange=isThousandStep?u.detectionRange:(u.range+28);
-   for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0)continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);if(d<detectionRange&&d<bestDist){target=e;bestDist=d;}}
+   const targetValid=target&&target.hp>0&&enemies.includes(target)&&Math.abs(target.x-u.x)<detectionRange&&simNow>=Number(target.spawnProtectedUntil||0);
+   if(!targetValid){
+     target=null;let bestDist=Infinity;
+     for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0)continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);if(d<detectionRange&&d<bestDist){target=e;bestDist=d;}}
+     u.target=target;
+   }
    if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=u.range);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
    else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}if(u.waveLevel&&!u.ability?.waveChance&&!isAbilitySealed(u))allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
@@ -2233,8 +2238,13 @@ function enemyWaveAttack(e){
  setTimeout(()=>wave.remove(),520);
 }
  for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;e.cd-=dt;
-   let target=null,bestDist=Infinity;
-   for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);if(d<e.range+30&&d<bestDist){target=u;bestDist=d;}}
+   let target=e.target;
+   const targetValid=target&&target.hp>0&&units.includes(target)&&Math.abs(target.x-e.x)<e.range+30;
+   if(!targetValid){
+     target=null;let bestDist=Infinity;
+     for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);if(d<e.range+30&&d<bestDist){target=u;bestDist=d;}}
+     e.target=target;
+   }
    if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下'&&!sourceSealed)applyFrogAbility(t);const ea=e.ability||{};const now2=simNow;if(!sourceSealed&&!isAbilitySealed(t)){if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&!t.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(!sourceSealed&&ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.key==='ヤバヤバ複製'&&!sourceSealed)applyYabayabaCloneAbility(e,t);if(e.waveLevel&&e.key!=='ヤバヤバ複製'&&!sourceSealed)enemyWaveAttack(e);e.cd=e.interval}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{e.state='move';const nowMove=simNow;const slowNow=nowMove<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const cursedNow=nowMove<(e.cursedUntil||0);const curseSf=cursedNow?(Number(e.cursedSpeedFactor)||1):1;const stopNow=nowMove<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*curseSf*60*dt;if(!slowNow)e.slowFactor=1}
