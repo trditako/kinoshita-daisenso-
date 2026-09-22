@@ -1967,10 +1967,8 @@ function previousSeasonTitleMark(source,id){
 }
 function renderRankLeaderboard(){
  const el=document.getElementById('rankBoard');if(!el)return;
- if(aiServerConnected&&!window.__rankLeaderboardServerRefresh){
-  window.__rankLeaderboardServerRefresh=true;
-  loadAIServerProfiles(true).then(()=>{window.__rankLeaderboardServerRefresh=false;renderRankLeaderboard();}).catch(()=>{window.__rankLeaderboardServerRefresh=false;});
- }
+ // ランク画面を開くたびに1000アカウントを再取得しない。
+ // AIデータの同期は15秒間隔のサーバー同期処理に任せる。
  const humans=publicPlayerRankings.map(x=>({name:x.name||'プレイヤー',operator:isOperatorPlayer(x.player_id),rp:Number(x.rp||0),strategy:'プレイヤー',me:x.player_id===playerRankingId,wins:Number(x.wins||0),losses:Number(x.losses||0),human:true,id:String(x.player_id||'')}));
  if(!humans.some(x=>x.me))humans.push({name:playerName,operator:isOperatorPlayer(playerRankingId),rp:rankPoints,strategy:'プレイヤー',me:true,wins:playerRankWins,losses:playerRankLosses,human:true,id:String(playerRankingId)});
  const ais=aiProfiles.map(a=>({name:a.name,rp:Number(a.rp||0),strategy:strategyOf(a).label,me:false,wins:Number(a.wins||0),losses:Number(a.losses||0),human:false,id:String(a.accountId||''),seasonTitle:a.seasonTitle||'',rewardRank:Number(a.rewardRank||0),rewardCycle:Number(a.rewardCycle??-1),rankBadge:String(a.rankBadge||'')}));
@@ -2047,7 +2045,10 @@ function rankAIThink(dt){
  const st=strategyOf(rankAI);
  rankAIMoney=Math.min(6000,rankAIMoney+(112+rankAI.skill*28)*dt);
  rankAITimer+=dt;rankAICooldown=Math.max(0,rankAICooldown-dt);
- const form=aiBuildFormation(rankAI).filter(i=>!isRankCharacterBanned(i));
+ // 編成計算は毎フレーム行わず、必要なときだけ再計算する。
+ const form=(rankAI._battleFormationCache&&rankAI._battleFormationCache.length)
+   ? rankAI._battleFormationCache
+   : (rankAI._battleFormationCache=aiBuildFormation(rankAI).filter(i=>!isRankCharacterBanned(i)));
  for(let ri=0;ri<rankAIRecharge.length;ri++)rankAIRecharge[ri]=Math.max(0,rankAIRecharge[ri]-dt);
  const affordable=form.filter(i=>rankAIMoney>=cards[i].cost&&rankAIRecharge[i]<=0);
  if(rankAICooldown>0||!affordable.length)return;
@@ -2059,7 +2060,7 @@ function rankAIThink(dt){
  renderUnitElement(e);enemies.push(e);rankAITimer=0;
  const jitter=.72+((Number(String(rankAI.accountId||'0').replace(/\D/g,''))%13)/20);rankAICooldown=Math.max(.72,stRate(rankAI)*jitter);
 }
-function startRankBattle(){savePlayerName();gameSpeed=1;updateGameSpeedButton();rankAI=chooseRankAI();rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);playSE('boss');requestAnimationFrame(loop);}
+function startRankBattle(){savePlayerName();gameSpeed=1;updateGameSpeedButton();rankAI=chooseRankAI();if(rankAI)rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);playSE('boss');requestAnimationFrame(loop);}
 function finishRank(win){
  if(!rankMode && document.getElementById('rankResultOverlay')) return;
  // ランク戦の終了処理は「結果画面を先に確実に表示」してから、保存などを行う。
