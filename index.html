@@ -128,7 +128,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
@@ -143,6 +143,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <button id="rankClose" class="backbtn">戻る</button>
 </div></div>
 <div id="giftBox" class="overlay" style="display:none"><div class="panel rankPanel"><h1>🎁 プレゼントBOX</h1><div id="giftBoxBody"></div><button id="giftClaimAll" class="formationBtn">🎁 すべて受け取る</button><button id="giftClose" class="backbtn">戻る</button></div></div>
+<div id="loginBonus" class="overlay" style="display:none"><div class="panel rankPanel"><h1>📅 ログインボーナス</h1><div id="loginBonusBody"></div><button id="loginBonusClose" class="backbtn">閉じる</button></div></div>
 <div id="aiManager" class="overlay" style="display:none"><div class="panel aiManagePanel">
 <h1>🤖 AIアカウント管理</h1>
 <div style="font-size:12px;font-weight:800;color:#475569">1000個のAIアカウントを、現在の成長状態ごとに確認できます。AIは対戦・学習によって個別にRP、キャラLv、編成、戦績などが変化します。</div>
@@ -1010,7 +1011,7 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV2')!=='done'){
 
 let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
-let formationPresets;try{formationPresets=JSON.parse(storage.getItem('kinoshitaFormationPresets')||'[]')}catch(e){formationPresets=[]}if(!Array.isArray(formationPresets))formationPresets=[];formationPresets=formationPresets.slice(0,5);let activeFormationPreset=Number(storage.getItem('kinoshitaActiveFormationPreset')||0);if(activeFormationPreset<0||activeFormationPreset>4)activeFormationPreset=0;function save(){storage.setItem('kinoshitaActiveFormationPreset',String(activeFormationPreset));storage.setItem('kinoshitaFormationPresets',JSON.stringify(formationPresets));storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears))}function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i);if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul/weakMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;return Math.round(v*100)/100;}
+let formationPresets;try{formationPresets=JSON.parse(storage.getItem('kinoshitaFormationPresets')||'[]')}catch(e){formationPresets=[]}if(!Array.isArray(formationPresets))formationPresets=[];formationPresets=formationPresets.slice(0,5);let activeFormationPreset=Number(storage.getItem('kinoshitaActiveFormationPreset')||0);if(activeFormationPreset<0||activeFormationPreset>4)activeFormationPreset=0;function save(){storage.setItem('kinoshitaActiveFormationPreset',String(activeFormationPreset));storage.setItem('kinoshitaFormationPresets',JSON.stringify(formationPresets));storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears));storage.setItem('kinoshitaLoginBonusLastDate',storage.getItem('kinoshitaLoginBonusLastDate')||'')}function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i);if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul/weakMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
 function damageAgainst(u,target){if(target?.metal)return 1;let mult=1;const tr=target.trait||"無";const a=isAbilitySealed(u)?{}:(u?.ability||{});if(a.strong?.[tr])mult*=Number(a.strong[tr])||1;else if(a.strong?.["*"])mult*=Number(a.strong["*"])||1;if(target?.cursedUntil&&performance.now()/1000<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;return Math.max(1,Math.round(u.atk*mult));}
@@ -2437,9 +2438,52 @@ const pauseButton=document.getElementById('battlePauseBtn');pauseButton.addEvent
 document.getElementById('battleDetailBtn').onclick=showBattleCharacterList;document.getElementById('battleEnemyBookBtn').onclick=showEnemyBook;document.getElementById('enemyBookBtn').onclick=showEnemyBook;
 document.getElementById('nextBtn').onclick=()=>{const r=document.getElementById('result');r.style.setProperty('display','none','important');if(document.getElementById('nextBtn').textContent==='ランク戦に戻る'){document.getElementById('start').style.display='none';openRank();return;}if(document.getElementById('nextBtn').textContent==='もう一度挑戦'){startStage(selectedStage);return;}if((selectedMode==='japan'||selectedMode==='future'||selectedMode==='space')&&selectedStage<48){selectedStage++;const pool=chapterPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('stageBack').onclick=()=>{document.getElementById('result').style.setProperty('display','none','important');document.getElementById('start').style.display='flex';renderStageSelect()};
-document.getElementById('giftBoxBtn').onclick=openGiftBox;document.getElementById('giftClose').onclick=closeGiftBox;document.getElementById('giftClaimAll').onclick=claimAllGifts;document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
+document.getElementById('giftBoxBtn').onclick=openGiftBox;document.getElementById('giftClose').onclick=closeGiftBox;document.getElementById('giftClaimAll').onclick=claimAllGifts;document.getElementById('loginBonusBtn').onclick=()=>claimDailyLoginBonus(true);document.getElementById('loginBonusClose').onclick=closeLoginBonus;document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
 document.getElementById('formationClose').onclick=()=>{document.getElementById('formation').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('removeAll').onclick=()=>{formation=[];normalizeFormation();save();renderFormation();renderCards()};
+
+
+// ===== 毎日ログインボーナス（日本時間0:00更新） =====
+const LOGIN_BONUS_REWARDS=[
+ {coins:300,xp:0,label:'木下コイン 300枚'},
+ {coins:500,xp:0,label:'木下コイン 500枚'},
+ {coins:700,xp:500,label:'木下コイン 700枚 + 500 XP'},
+ {coins:1000,xp:500,label:'木下コイン 1,000枚 + 500 XP'},
+ {coins:1500,xp:1000,label:'木下コイン 1,500枚 + 1,000 XP'},
+ {coins:2000,xp:1500,label:'木下コイン 2,000枚 + 1,500 XP'},
+ {coins:3000,xp:3000,label:'木下コイン 3,000枚 + 3,000 XP'}
+];
+function loginBonusDate(){
+ try{return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/\\//g,'-');}
+ catch(e){return new Date().toISOString().slice(0,10);}
+}
+function loginBonusDay(dateKey=loginBonusDate()){
+ const n=Number(dateKey.replace(/-/g,''))||1;
+ return ((n%7)+7)%7;
+}
+function renderLoginBonus(){
+ const el=document.getElementById('loginBonusBody');if(!el)return;
+ const today=loginBonusDay(),last=storage.getItem('kinoshitaLoginBonusLastDate')||'',claimed=last===loginBonusDate();
+ el.innerHTML='<div class="rankNotice" style="text-align:left;margin-bottom:8px"><b>'+ (claimed?'✅ 本日のログインボーナスは受け取り済みです。':'🎉 本日のログインボーナスを受け取りました！') +'</b><br>毎日0:00（日本時間）に次のボーナスへ更新されます。</div>'+
+ '<div style="display:grid;gap:6px">'+LOGIN_BONUS_REWARDS.map((r,i)=>'<div class="rankNotice" style="text-align:left;'+(i===today?'border:3px solid #06b6d4;background:#ecfeff;color:#164e63':'')+'"><b>Day '+(i+1)+(i===today?'　← 今日':'')+'</b><br>🎁 '+r.label+'</div>').join('')+'</div>';
+}
+function claimDailyLoginBonus(forceOpen=false){
+ const today=loginBonusDate(),last=storage.getItem('kinoshitaLoginBonusLastDate')||'';
+ if(last!==today){
+  const reward=LOGIN_BONUS_REWARDS[loginBonusDay(today)];
+  gachaCoins+=reward.coins;playerXP+=reward.xp;
+  storage.setItem('kinoshitaLoginBonusLastDate',today);
+  save();
+  renderOwnedStart();
+  renderLoginBonus();
+  document.getElementById('loginBonus').style.display='flex';
+ }else if(forceOpen){
+  renderLoginBonus();
+  document.getElementById('start').style.display='none';
+  document.getElementById('loginBonus').style.display='flex';
+ }
+}
+function closeLoginBonus(){document.getElementById('loginBonus').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();}
 
 const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
 function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
@@ -2483,6 +2527,8 @@ async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}if(!pending
 function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
 function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char&&g.kinoshitaYoshida){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
+// 起動時に本日のログインボーナスを1日1回だけ自動付与する。
+setTimeout(()=>{claimDailyLoginBonus(false);},150);
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 </script>
