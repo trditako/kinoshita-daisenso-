@@ -1894,15 +1894,20 @@ function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOn
 }
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){
  if(aiEvolutionTimer)return;
+ // AIの本体進行はSupabaseのai-worker/ai-cronで行う。
+ // ブラウザ側では大量の自己対戦・進行シミュレーションを常時実行しない。
+ // これにより通常プレイ中のCPU負荷と数秒ごとのカクつきを防ぐ。
  aiEvolutionTimer=setInterval(()=>{
   try{
-   // プレイヤーが戦闘中はバックグラウンドAIを停止し、ゲーム側のフレーム処理を優先する。
    if(running)return;
-   runAISelfPlay(18);runAIActivities(100);aiAutoCycle++;
-   if(aiAutoCycle%4===0)saveRank();
+   // サーバーAIが利用できない場合だけ、軽量な表示用更新を行う。
+   if(!aiServerConnected){
+    runAISelfPlay(2);runAIActivities(10);aiAutoCycle++;
+    if(aiAutoCycle%4===0)saveRank();
+   }
    if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();
   }catch(e){console.warn('AI自動活動エラー:',e)}
- },1500);
+ },15000);
 }
 function stopAutoAISelfPlay(){if(aiEvolutionTimer){clearInterval(aiEvolutionTimer);aiEvolutionTimer=null;}}
 function aiFormationForView(ai){const f=aiBuildFormation(ai);return Array.isArray(f)?f.slice(0,10):[];}
