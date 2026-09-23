@@ -232,7 +232,6 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"パーフェクト木下",cost:1500,hp:7500,atk:5000,range:100,spd:.9,interval:3.5,recharge:45,icon:"🌟",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"LR",series:"パーフェクト木下降臨クリア報酬",specialReward:true,eventReward:"パーフェクト木下降臨",ability:{name:"完全対宇宙決戦",desc:"呪い無効・波動無効。無/宇宙/赤に与えるダメージ3倍。",strong:{"無":3,"宇宙":3,"赤":3},waveImmune:true,curseImmune:true}});
 cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
 // エレメンタル木下s：ファイティング木下（伝説レア）に加え、5体の超激レアを期間限定交換所へ追加。
 cards.push(
@@ -253,6 +252,8 @@ cards.push({name:"呪詛木下",cost:2400,hp:2400,atk:850,range:180,spd:.5,inter
 cards.push({name:"呪影木下",cost:1900,hp:3600,atk:1600,range:110,spd:1.0,interval:0.9,recharge:21,icon:"🌑",motion:"ninja",attackType:"single",kb:4,trait:"浮",rarity:"SSR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",ability:{name:"呪影・追撃",desc:"40%の確率で4秒間呪う。呪われた敵への攻撃力1.5倍。呪われた敵に20%の確率で1秒間鈍足。自分が呪われている間は攻撃力70%。",curseChance:.4,curseDuration:4,cursedAttackMultiplier:1.5,cursedSlowChance:.2,cursedSlowFactor:.5,cursedSlowDuration:1,selfCursedAttackFactor:.7}});
 cards.push({name:"呪王木下",cost:3900,hp:14000,atk:3800,range:160,spd:.4,interval:1.2,recharge:27,icon:"👑",motion:"king",attackType:"area",kb:2,trait:"鋼",rarity:"SSR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",ability:{name:"呪王・重呪",desc:"100%の確率で3秒間呪い。40%の確率で3秒間、敵の攻撃力を50%にする。30%の確率で3秒間、移動速度を50%にする。呪われた敵への攻撃力1.4倍。波動無効・烈波無効。",curseChance:1,curseDuration:3,attackDownChance:.4,attackDownFactor:.5,attackDownDuration:3,curseSlowChance:.3,curseSlowFactor:.5,curseSlowDuration:3,cursedAttackMultiplier:1.4,waveImmunity:true,surgeImmunity:true}});
 cards.push({name:"呪神木下",cost:4800,hp:24000,atk:6500,range:180,spd:.7,interval:1.0,recharge:30,icon:"☯️",motion:"super",attackType:"area",kb:3,trait:"無",rarity:"LR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",ability:{name:"呪神・大呪",desc:"100%の確率で6秒間呪い。呪われた敵は攻撃力70%、移動速度60%、特殊能力発動不可。呪われた敵への攻撃力1.5倍。",curseChance:1,curseDuration:6,curseSeal:true,cursedAttackFactor:.7,cursedSpeedFactor:.6,cursedAttackMultiplier:1.5}});
+
+cards.push({name:"パーフェクト木下",cost:1500,hp:7500,atk:5000,range:100,spd:.9,interval:3.5,recharge:45,icon:"🌟",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"LR",series:"パーフェクト木下降臨クリア報酬",specialReward:true,eventReward:"パーフェクト木下降臨",ability:{name:"完全対宇宙決戦",desc:"呪い無効・波動無効。無/宇宙/赤に与えるダメージ3倍。",strong:{"無":3,"宇宙":3,"赤":3},waveImmune:true,curseImmune:true}});
 
 const CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
 
@@ -457,7 +458,7 @@ const midBossPlan={11:'巨大木下将軍',14:'木下大将',17:'巨大木下将
 function makeJapanSchedule(stageNo,baseStage,chapter=1){
  // 1ステージ最大10種類。後半ほど「種類を増やす」のではなく、限られた敵の組み合わせと出現パターンで個性を出す。
  const basic=['鬼木下','赤鬼木下','突進木下','赤い強化木下','木下戦車'];
- const advancedSpecial=stageNo>=10?['カエル木下','めっちゃ木下']:[];
+ const advancedSpecial=[];
  const regularNewPool=newEnemyPool.filter(k=>!['巨大木下将軍','木下大将','覇王木下','超巨大木下','木下帝王'].includes(k));
  const chapterBonus=chapter===2?['花木下','水木下']:chapter===3?['花木下','水木下','光木下']:[];
  const chapterRegular=[...chapterBonus,...regularNewPool.filter(k=>!['花木下','水木下','光木下'].includes(k))];
