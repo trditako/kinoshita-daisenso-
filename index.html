@@ -7,6 +7,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
+<script>
+const GAME_VERSION='v1.0.0';
+const UPDATE_LOG=[
+ {date:'2026-09-23',version:'v1.0.0',title:'現在版',items:['ゲーム内にバージョン表示とアップデートログを追加','ランク戦・AI・同盟・図鑑・ガチャなど主要機能を収録']},
+ {date:'2026-09-22',version:'開発版',title:'ランク戦・AI関連の更新',items:['AIランク戦の活動性を改善するための調整','ランク戦メタ情報・流行属性・使用キャラの表示を追加']},
+ {date:'2026-09-21',version:'開発版',title:'称号・同盟機能の更新',items:['称号機能を追加','同盟チャットの自動更新・AI同士の会話機能を追加']},
+ {date:'2026-09-19',version:'開発版',title:'AI・ランク戦の更新',items:['AIアカウントの進行・対戦機能を強化','ランク戦の表示・報酬・シーズン関連機能を追加']}
+];
+function openUpdateLog(){
+ const el=document.getElementById('updateLog'),body=document.getElementById('updateLogBody');
+ if(!el||!body)return;
+ body.innerHTML='<div class="updateVersion">現在のゲームバージョン：'+GAME_VERSION+'</div>'+UPDATE_LOG.map(x=>'<div class="updateEntry"><b>📅 '+x.date+'　'+x.version+'</b><br><strong>'+x.title+'</strong><ul>'+x.items.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>').join('');
+ document.getElementById('start').style.display='none';
+ el.style.display='flex';
+}
+function closeUpdateLog(){
+ const el=document.getElementById('updateLog');if(el)el.style.display='none';
+ document.getElementById('start').style.display='flex';
+ if(typeof renderStageSelect==='function')renderStageSelect();
+ if(typeof renderCards==='function')renderCards();
+}
+</script>
+<style>
+.updateVersion{background:#dbeafe;border:3px solid #2563eb;border-radius:10px;padding:10px;margin-bottom:10px;font-size:18px;font-weight:1000;color:#172554}
+.updateEntry{background:#f1f5f9;color:#111;border:2px solid #64748b;border-radius:10px;padding:10px;margin-bottom:8px;text-align:left;font-size:13px}
+.updateEntry ul{margin:5px 0 0 18px;padding:0}
+.updateClose{width:100%;margin-top:8px;background:#334155!important;color:#fff!important}
+</style>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-family:system-ui,"Noto Sans JP",sans-serif;color:#fff}
@@ -128,8 +156,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
- <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab eventTab" data-chapter="event">イベント</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="stages" id="eventStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="updateLog" class="overlay" style="display:none;z-index:220"><div class="panel"><h2 style="margin:0 0 10px;color:#135a9e">📝 バージョン・アップデートログ</h2><div id="updateLogBody"></div><button id="updateLogClose" class="updateClose">閉じる</button></div></div>\n <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
 <div style="margin-top:8px;text-align:left;font-weight:900">プレイヤー名</div>
@@ -2577,4 +2605,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-</body></html>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const b=document.getElementById('updateLogBtn'),x=document.getElementById('updateLogClose');
+ if(b)b.onclick=openUpdateLog;
+ if(x)x.onclick=closeUpdateLog;
+});
+</script>\n</body></html>
