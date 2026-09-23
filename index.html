@@ -232,6 +232,7 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
+cards.push({name:"パーフェクト木下",cost:1500,hp:7500,atk:5000,range:100,spd:.9,interval:3.5,recharge:45,icon:"🌟",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"LR",series:"パーフェクト木下降臨クリア報酬",specialReward:true,eventReward:"パーフェクト木下降臨",ability:{name:"完全対宇宙決戦",desc:"呪い無効・波動無効。無/宇宙/赤に与えるダメージ3倍。",strong:{"無":3,"宇宙":3,"赤":3},waveImmune:true,curseImmune:true}});
 cards.push({name:"ファイティング木下",cost:450,hp:1800,atk:400,secondAtk:800,thirdAtk:200,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
 // エレメンタル木下s：ファイティング木下（伝説レア）に加え、5体の超激レアを期間限定交換所へ追加。
 cards.push(
@@ -330,6 +331,11 @@ Object.assign(enemyTypes,{
 
 // ===== 宇宙編 第1章：専用敵・新能力 =====
 Object.assign(enemyTypes,{メタル木下:{name:"メタル木下",icon:"🤖",trait:"メタル",hp:100,atk:95,range:55,spd:.75,interval:.9,attackType:"single",kb:8,money:90,metal:true},メタル巨木下:{name:"メタル巨木下",icon:"🦾",trait:"メタル",hp:200,atk:420,range:80,spd:.28,interval:1.6,attackType:"area",kb:4,money:500,metal:true},ワープ木下:{name:"ワープ木下",icon:"🌀",trait:"宇宙",hp:1800,atk:260,range:110,spd:.55,interval:1.35,attackType:"single",kb:5,money:180,ability:{name:"ワープ",desc:"40%で後方へワープ",warpChance:.4,warpDistance:180}},呪縛木下:{name:"呪縛木下",icon:"🔒",trait:"宇宙",hp:2600,atk:310,range:135,spd:.38,interval:1.5,attackType:"area",kb:4,money:230,ability:{name:"能力封印",desc:"35%で能力封印",sealChance:.35,sealDuration:4}},ヤバすぎ木下:{name:"ヤバすぎ木下",icon:"👽",trait:"宇宙",hp:20000,atk:850,range:75,spd:.3,interval:.8,attackType:"single",kb:4,money:2200,ability:{name:"ヤバヤバLv5・停止無効",desc:"ヤバヤバLv5。停止を無効化する。",yabayaba:5},stopImmune:true},停止木下:{name:"停止木下",icon:"⏸️",trait:"宇宙",hp:3100,atk:360,range:120,spd:.34,interval:1.7,attackType:"area",kb:3,money:260,ability:{name:"時間停止",desc:"25%で1.5秒停止",stopChance:.25,stopDuration:1.5}},崩壊木下:{name:"崩壊木下",icon:"☄️",trait:"宇宙",hp:4800,atk:520,range:95,spd:.5,interval:1.25,attackType:"area",kb:4,money:350,ability:{name:"攻撃力低下",desc:"35%で攻撃力80%低下",attackDownChance:.35,attackDownDuration:4,attackDownFactor:.2}},ヤバ木下:{name:"ヤバ木下",icon:"👾",trait:"宇宙",hp:3600,atk:430,range:105,spd:.62,interval:1.2,attackType:"single",kb:5,money:300},ヤバヤバ木下:{name:"ヤバヤバ木下",icon:"👿",trait:"宇宙",hp:5200,atk:650,range:115,spd:.5,interval:1.35,attackType:"area",kb:5,money:500,ability:{name:"ヤバヤバLv2",desc:"倒した味方を40%で複製",yabayaba:2}},ヤバヤバ星人:{name:"ヤバヤバ星人",icon:"👽",trait:"宇宙",hp:7600,atk:900,range:145,spd:.42,interval:1.5,attackType:"area",kb:6,money:800,ability:{name:"ヤバヤバLv3",desc:"倒した味方を60%で複製",yabayaba:3}},ヤバヤバ皇帝:{name:"ヤバヤバ皇帝",icon:"👑",trait:"宇宙",hp:15000,atk:1800,range:180,spd:.3,interval:1.8,attackType:"area",kb:7,money:2000,ability:{name:"ヤバヤバLv5",desc:"倒した味方を100%で複製",yabayaba:5},boss:true},終焉ヤバヤバ木下:{name:"終焉ヤバヤバ木下",icon:"🌌",trait:"宇宙",hp:32000,atk:4200,range:220,spd:.22,interval:2,attackType:"area",kb:8,money:5000,ability:{name:"ヤバヤバLv5",desc:"倒した味方を100%で複製",yabayaba:5},boss:true}});
+// パーフェクト木下降臨・専用敵/能力
+Object.assign(enemyTypes,{
+ パーフェクト木下:{name:"パーフェクト木下",icon:"🌟",trait:"宇宙",hp:750000,atk:8600,range:75,spd:1.3,interval:1.7,attackType:"single",kb:2,money:12000,ability:{name:"完全反射・三属性特効",desc:"呪い/停止/攻撃力低下/波動無効。受けた波動を反射し、反射波動にも自身の能力を適用。攻撃時75%で波動Lv3・ヤバヤバLv4・呪い5秒。無/宇宙/赤に5倍。",waveLevel:3,waveChance:.75,waveReflect:true,curseChance:1,curseDuration:5,strong:{"無":5,"宇宙":5,"赤":5},curseOnWave:true},stopImmune:true,attackDownImmune:true},
+ めっちゃ木下:{name:"めっちゃ木下",icon:"💥",trait:"無",hp:1000000,atk:3000,range:1,spd:3,interval:1,attackType:"area",kb:1,money:5000,ability:{name:"一撃自壊・波動Lv15",desc:"1回攻撃すると自身が即死。その攻撃で波動Lv15・15秒呪い。呪い無効・停止無効。宇宙/赤の攻撃力を20秒99%低下。波動にも効果適用。",waveLevel:15,wave:true,curseChance:1,curseDuration:15,areaAttackDownChance:1,areaAttackDownDuration:20,areaAttackDownFactor:.01,suicideAfterAttack:true},stopImmune:true}
+});
 const SPACE_ENEMY_KEYS=["メタル木下","メタル巨木下","ワープ木下","呪縛木下","停止木下","崩壊木下","ヤバ木下","ヤバヤバ木下","ヤバヤバ星人","ヤバヤバ皇帝","終焉ヤバヤバ木下"];
 const FUTURE_ENEMY_KEYS=["未来天使木下","天使突撃木下","天使砲木下","天使盾木下","天使巨木下","天使司令木下","天使流星木下","堕天使木下","黒速木下","黒突撃木下","黒戦車木下","黒忍木下","黒巨木下","黒砲木下","黒王木下","漆黒木下","宇宙木下","宇宙漂流木下","宇宙盾木下","宇宙獣木下","宇宙巨木下","宇宙砲木下","宇宙騎士木下","宇宙王木下","銀河皇帝木下"];
 const FUTURE_LORE={
@@ -598,6 +604,25 @@ const eventStages=[
   {t:18.0,enemy:'速木下',mult:7.5,fixedMultiplier:true},
   {t:24.0,enemy:'巨木下',mult:3.5,fixedMultiplier:true}
  ],repeatSpawns:[{start:32,interval:20,enemy:'木下戦車',mult:2.6,fixedMultiplier:true}]},
+ {name:'パーフェクト木下降臨',width:2200,baseHp:180000,xp:4500,eventReward:'パーフェクト木下',rewardCharacter:'パーフェクト木下',enemies:['メタル木下','ヤバ木下','パーフェクト木下','崩壊木下','カエル木下','めっちゃ木下'],schedule:[
+  {t:0,enemy:'メタル木下',mult:1.2,fixedMultiplier:true},
+  {t:1,enemy:'メタル木下',mult:1.2,fixedMultiplier:true},
+  {t:2,enemy:'メタル木下',mult:1.2,fixedMultiplier:true},
+  {t:3,enemy:'メタル木下',mult:1.2,fixedMultiplier:true},
+  {t:4,enemy:'メタル木下',mult:1.2,fixedMultiplier:true},
+  {t:7,enemy:'ヤバ木下',mult:6,fixedMultiplier:true}
+ ],triggerSpawns:{threshold:.99,spawns:[
+  {delay:0,enemy:'パーフェクト木下',mult:1,fixedMultiplier:true,role:'boss'},
+  {delay:6,enemy:'崩壊木下',mult:5,fixedMultiplier:true},
+  {delay:7,enemy:'カエル木下',mult:3,fixedMultiplier:true},
+  {delay:7,enemy:'カエル木下',mult:3,fixedMultiplier:true},
+  {delay:12,enemy:'めっちゃ木下',mult:1,fixedMultiplier:true},
+  {delay:15,enemy:'メタル木下',mult:2,fixedMultiplier:true},
+  {delay:15,enemy:'めっちゃ木下',mult:1,fixedMultiplier:true}
+ ]},repeatSpawns:[
+  {start:48,interval:33,enemy:'メタル木下',mult:2,fixedMultiplier:true},
+  {start:42,interval:27,enemy:'めっちゃ木下',mult:1,fixedMultiplier:true}
+ ]},
  {name:'ヤバすぎ木下降臨',width:2100,baseHp:160000,xp:3000,eventReward:'ヤバすぎ木下',rewardCharacter:'ヤバすぎ木下',enemies:['ヤバすぎ木下','ワープ木下','カエル木下','ヤバヤバ星人'],schedule:[
   {t:0,enemy:'ヤバすぎ木下',mult:1,fixedMultiplier:true,role:'boss'},
   {t:1,enemy:'ワープ木下',mult:5,fixedMultiplier:true},{t:2,enemy:'ワープ木下',mult:5,fixedMultiplier:true},{t:3,enemy:'ワープ木下',mult:5,fixedMultiplier:true},{t:4,enemy:'ワープ木下',mult:5,fixedMultiplier:true},{t:5,enemy:'ワープ木下',mult:5,fixedMultiplier:true},
@@ -1009,7 +1034,7 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV2')!=='done'){
  }catch(e){console.warn('character index migration failed',e);}
 }
 
-let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[];
+let money=1500,enemyHp=1000,enemyMaxHp=1000,baseHp=5000,level=1,workerMax=6000,workerIncome=120,running=false,units=[],enemies=[],last=0,spawn=0,income=0,stageTime=0,spawnIndex=0,rechargeLeft=[],repeatNextTimes=[],eventTriggerTime=-1,eventTriggerSpawnIndex=0;
 const field=document.getElementById('field'),world=document.getElementById('world'),unitsEl=document.getElementById('units'),effects=document.getElementById('effects');
 let formationPresets;try{formationPresets=JSON.parse(storage.getItem('kinoshitaFormationPresets')||'[]')}catch(e){formationPresets=[]}if(!Array.isArray(formationPresets))formationPresets=[];formationPresets=formationPresets.slice(0,5);let activeFormationPreset=Number(storage.getItem('kinoshitaActiveFormationPreset')||0);if(activeFormationPreset<0||activeFormationPreset>4)activeFormationPreset=0;function save(){storage.setItem('kinoshitaActiveFormationPreset',String(activeFormationPreset));storage.setItem('kinoshitaFormationPresets',JSON.stringify(formationPresets));storage.setItem('kinoshitaUnlocked',unlocked);storage.setItem('kinoshitaOwned',owned);storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));storage.setItem('kinoshitaGachaCoins',gachaCoins);storage.setItem('kinoshitaFormation',JSON.stringify(formation));storage.setItem('kinoshitaPlayerXP',playerXP);storage.setItem('kinoshitaCharLevel',JSON.stringify(charLevel));storage.setItem('kinoshitaChapterClears',JSON.stringify(chapterClears));storage.setItem('kinoshitaEventClears',JSON.stringify(eventClears));storage.setItem('kinoshitaLoginBonusLastDate',storage.getItem('kinoshitaLoginBonusLastDate')||'')}function statAt(i,key){const c=cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i);if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul/weakMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
@@ -1046,7 +1071,7 @@ function applyAbility(u,target,damage){const now=performance.now()/1000;if(!targ
  if(a.stopChance&&!target.stopImmune&&Math.random()<Number(a.stopChance)){target.stopUntil=performance.now()/1000+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
  if(a.slowChance&&Math.random()<Number(a.slowChance))applySlow(target,{trait:'*',factor:Number(a.slowFactor||.6),duration:Number(a.slowDuration||2)});
  if(a.guaranteeKnockback&&target.hp>0){const distance=48;target.x=Math.max(120,target.x-distance);target.cd=Math.max(target.cd,.22);}
- if(a.waveChance&&Math.random()<Number(a.waveChance))allyWaveAttack(u);
+ if(a.waveChance&&Math.random()<Number(a.waveChance))allyWaveAttack(u);if(a.areaAttackDownChance&&Math.random()<Number(a.areaAttackDownChance)){for(const e of enemies){if(e!==target&&Math.abs(e.x-target.x)<90){};if(e.trait==='宇宙'||e.trait==='赤') {e.attackDownUntil=now+Number(a.areaAttackDownDuration||20);e.attackDownFactor=Number(a.areaAttackDownFactor||.01);}}}
  if(a.slow&&Math.random()<a.slow.chance)applySlow(target,a.slow);
  if(a.slow?.all&&Math.random()<a.slow.chance){for(const e of enemies)if(e!==target)applySlow(e,a.slow);}
 }
@@ -2039,7 +2064,7 @@ function startPvpBattle(){document.getElementById('pvpLobby').style.display='non
 function pvpApplyRemoteHit(msg){const target=units.find(u=>u.id===msg.targetId);if(!target||target.hp<=0)return;const attacker=cards[msg.attackerIndex]?{...cards[msg.attackerIndex],ability:cards[msg.attackerIndex].ability,trait:cards[msg.attackerIndex].trait,isEnemy:true}:null;hit(target,Math.max(1,Math.round(msg.damage)),attacker,true);if(target.hp<=0)removeUnit(target);}
 function pvpQuit(){pvpSend({type:'result',win:false});pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function pvpFinish(opponentWon){pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';showResult(!opponentWon);}
-function startStage(n){selectedStage=n;gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=5000;money=1500;setupWorld();level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);update();requestAnimationFrame(loop)}
+function startStage(n){selectedStage=n;gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=5000;money=1500;setupWorld();level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);eventTriggerTime=-1;eventTriggerSpawnIndex=0;update();requestAnimationFrame(loop)}
 function attackAnim(el){if(!el)return;el.classList.remove('attacking');void el.offsetWidth;el.classList.add('attacking');setTimeout(()=>el?.classList.remove('attacking'),240)}
 function rankAIThink(dt){
  if(!rankMode||!running||!rankAI)return;
@@ -2177,7 +2202,11 @@ function spawnYabayabaClone(deadUnit,level,asAlly=false){
 let lastBattleStatusAt=0;
 function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.min(.035,(t-last)/1000);const dt=realDt*((rankMode||pvpMode)?1:gameSpeed);last=t;
  const simNow=t/1000;
- const refreshStatuses=(t-lastBattleStatusAt)>=100;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule;while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}}
+ const refreshStatuses=(t-lastBattleStatusAt)>=100;for(let i=0;i<rechargeLeft.length;i++)rechargeLeft[i]=Math.max(0,(rechargeLeft[i]||0)-dt);income+=dt;money=Math.min(workerMax,money+workerIncome*dt);stageTime+=dt;const stage=currentStage();if(rankMode){rankAIThink(dt);}else{const schedule=stage.schedule;while(spawnIndex<schedule.length&&stageTime>=schedule[spawnIndex].t){const q=schedule[spawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);spawnIndex++;}
+ const trig=stage.triggerSpawns;
+ if(trig&&eventTriggerTime<0&&enemyHp<=enemyMaxHp*Number(trig.threshold||.99)){eventTriggerTime=stageTime;eventTriggerSpawnIndex=0;for(const e of enemies){if(!e||e.hp<=0)continue;e.x=Math.max(120,e.x-90);e.cd=Math.max(e.cd,.22);e.el?.classList.add('hitback');setTimeout(()=>e.el?.classList.remove('hitback'),220);}playSE('boss');popup('⚡ 敵軍が一斉に吹き飛ばされた！',Math.max(40,worldWidth*.5),Math.max(35,field.clientHeight-170));}
+ if(trig&&eventTriggerTime>=0){while(eventTriggerSpawnIndex<trig.spawns.length&&stageTime>=eventTriggerTime+Number(trig.spawns[eventTriggerSpawnIndex].delay||0)){const q=trig.spawns[eventTriggerSpawnIndex];spawnEnemy(q.enemy,q.role||'normal',q.mult??null,q.fixedMultiplier===true);eventTriggerSpawnIndex++;}}
+}
  const repeats=stage.repeatSpawns||[];for(let ri=0;ri<repeats.length;ri++){const r=repeats[ri];while(stageTime>=repeatNextTimes[ri]){spawnEnemy(r.enemy,r.role||'normal',r.mult??null,r.fixedMultiplier===true);repeatNextTimes[ri]+=r.interval;}}
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
@@ -2212,13 +2241,21 @@ function applyYabayabaCloneAbility(e,target){
  if(a.waveChance&&Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel||a.waveLevel||3));enemyWaveAttack(e);}
  else if(a.wave===true&&e.waveLevel>0)enemyWaveAttack(e);
 }
-function enemyWaveAttack(e){
+function reflectEnemyWave(sourceWave,reflector){
+ const reflectedDamage=Math.max(1,Math.round(Number(sourceWave.atk||0)+Number(reflector.atk||0)));
+ const range=90*Math.max(1,Number(sourceWave.waveLevel||1));
+ const targets=enemies.filter(e=>e!==sourceWave&&e.hp>0&&e.x<=reflector.x&&Math.abs(e.x-reflector.x)<=range);
+ for(const e of targets){hit(e,reflectedDamage,reflector,null);if(reflector.ability?.curseChance&&Math.random()<Number(reflector.ability.curseChance))applyCurseStatus(reflector,e);if(e.hp<=0)removeEnemy(e);}
+ const wave=document.createElement('div');wave.className='enemyWaveEffect';wave.style.left=reflector.x+'px';wave.style.bottom='105px';wave.style.setProperty('--wave-width',Math.min(worldWidth-120,reflector.x+range)-reflector.x+'px');wave.style.setProperty('--wave-level',Math.max(1,Number(sourceWave.waveLevel||1)));effects.appendChild(wave);setTimeout(()=>wave.remove(),520);
+}
+function enemyWaveAttack(e,allowReflect=true){
  if(isAbilitySealed(e))return;
  const level=Math.max(1,Number(e.waveLevel||0));
  if(!level)return;
  const waveRange=90*level;
  const targets=units.filter(u=>u.x>=e.x&&Math.abs(u.x-e.x)<=waveRange);
  for(const u of targets){
+   if(allowReflect&&u.waveReflect&&!isAbilitySealed(u)){reflectEnemyWave(e,u);continue;}
    const before=u.hp;
    hit(u,e.atk,e,null);
    if(u.hp<=0)removeUnit(u);
@@ -2247,7 +2284,7 @@ function enemyWaveAttack(e){
      for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);if(d<e.range+30&&d<bestDist){target=u;bestDist=d;}}
      e.target=target;
    }
-   if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下'&&!sourceSealed)applyFrogAbility(t);const ea=e.ability||{};const now2=simNow;if(!sourceSealed&&!isAbilitySealed(t)){if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&!t.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(!sourceSealed&&ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.key==='ヤバヤバ複製'&&!sourceSealed)applyYabayabaCloneAbility(e,t);if(e.waveLevel&&e.key!=='ヤバヤバ複製'&&!sourceSealed)enemyWaveAttack(e);e.cd=e.interval}}
+   if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const targets=e.attackType==='area'?units.filter(u=>Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){attackEffect(e,t);const taken=damageTakenBy(t,e);hit(t,taken,e);if(e.key==='カエル木下'&&!sourceSealed)applyFrogAbility(t);const ea=e.ability||{};const now2=simNow;if(!sourceSealed&&!isAbilitySealed(t)){if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}if(ea.attackDownChance&&!t.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}}if(pvpMode&&e.isRemote)pvpSend({type:'hit',targetId:t.id,damage:taken,attackerIndex:e.remoteIndex});if(t.hp<=0){if(!sourceSealed&&ea.yabayaba)spawnYabayabaClone(t,ea.yabayaba);removeUnit(t)}}if(e.key==='ヤバヤバ複製'&&!sourceSealed)applyYabayabaCloneAbility(e,t);if(e.waveLevel&&e.key!=='ヤバヤバ複製'&&!sourceSealed)enemyWaveAttack(e);if(!sourceSealed&&ea.areaAttackDownChance){for(const ally of units){if(ally.trait==='宇宙'||ally.trait==='赤'){ally.attackDownUntil=now2+Number(ea.areaAttackDownDuration||20);ally.attackDownFactor=Number(ea.areaAttackDownFactor||.01);}}}e.cd=e.interval;if(!sourceSealed&&ea.suicideAfterAttack){removeEnemy(e);continue;}}}
    else if(e.x>=playerBaseStop){e.state='base';if(e.cd<=0){attackAnim(e.el);const base=document.querySelector('.playerbase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');baseHp-=e.atk;if(pvpMode)pvpSend({type:'baseHit',damage:e.atk});e.cd=e.interval;popup('-'+e.atk,Math.min(field.clientWidth-70,e.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{e.state='move';const nowMove=simNow;const slowNow=nowMove<(e.slowUntil||0);const sf=slowNow?(e.slowFactor||1):1;const cursedNow=nowMove<(e.cursedUntil||0);const curseSf=cursedNow?(Number(e.cursedSpeedFactor)||1):1;const stopNow=nowMove<(e.stopUntil||0);if(!stopNow)e.x+=e.spd*sf*curseSf*60*dt;if(!slowNow)e.slowFactor=1}
    if(refreshStatuses)updateStatusMark(e);e.el.style.left=e.x+'px';e.el.style.bottom=(40+((e.id*7)%5))+'px';e.el.querySelector('i').style.width=Math.max(0,e.hp/e.maxhp*100)+'%';
