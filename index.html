@@ -457,10 +457,11 @@ const midBossPlan={11:'巨大木下将軍',14:'木下大将',17:'巨大木下将
 function makeJapanSchedule(stageNo,baseStage,chapter=1){
  // 1ステージ最大10種類。後半ほど「種類を増やす」のではなく、限られた敵の組み合わせと出現パターンで個性を出す。
  const basic=['鬼木下','赤鬼木下','突進木下','赤い強化木下','木下戦車'];
+ const advancedSpecial=stageNo>=10?['カエル木下','めっちゃ木下']:[];
  const regularNewPool=newEnemyPool.filter(k=>!['巨大木下将軍','木下大将','覇王木下','超巨大木下','木下帝王'].includes(k));
  const chapterBonus=chapter===2?['花木下','水木下']:chapter===3?['花木下','水木下','光木下']:[];
  const chapterRegular=[...chapterBonus,...regularNewPool.filter(k=>!['花木下','水木下','光木下'].includes(k))];
- const pool=[...basic,...chapterRegular];
+ const pool=[...basic,...advancedSpecial,...chapterRegular];
  const patterns=[
   'rush','tank','sparse','burst','escort','bossEscort','speed','longRange','elite','finale','rush','trap'
  ];
@@ -476,7 +477,7 @@ function makeJapanSchedule(stageNo,baseStage,chapter=1){
  // 序盤は既存5種中心。新敵は10ステージ以降に段階解禁。
  const maxNew=Math.min(chapterRegular.length,Math.max(0,Math.floor((stageNo-9)/2)+1));
  const unlockedNew=chapterRegular.slice(0,maxNew);
- let types=candidates.filter(k=>basic.includes(k)||unlockedNew.includes(k));
+ let types=candidates.filter(k=>basic.includes(k)||advancedSpecial.includes(k)||unlockedNew.includes(k));
  if(!types.length)types=['鬼木下'];
  // 10種類を絶対に超えない。
  types=[...new Set(types)].slice(0,10);
