@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.0.11';
+const GAME_VERSION='v1.0.12';
 const UPDATE_LOG=[
+ {date:'2026-09-24',version:'v1.0.12',title:'ステージごとの背景・BGMと音量改善',items:['ステージごとに背景テーマを切り替えるように変更','ステージごとに異なるBGMパターンを再生','SE・BGMの出力音量を全体的に引き上げ、端末音量を最大にしなくても聞き取りやすい音量へ調整']},
  {date:'2026-09-24',version:'v1.0.11',title:'通常交換所にランク戦向け小型キャラクターを追加',items:['木下コインで交換できる小型キャラクター3体を通常交換所へ追加','低コスト・高速再出撃・高速突撃・二連撃などランク戦で使いやすい性能を追加','通常交換所の既存キャラクターやランク戦システムは変更なし']},{date:'2026-09-24',version:'v1.0.10',title:'未来編クリアによる自陣城体力強化',items:['未来編を1ステージクリアするごとに自陣城の最大体力が150増加','プレイヤーの通常戦・ランク戦に反映','未来編クリア数を基準にするため再クリアで二重加算されない']},
  {date:'2026-09-24',version:'v1.0.9',title:'編成画面のキャラクター表示をコンパクト化',items:['所持キャラクターを小さく整理して一覧性を改善','名前・属性・能力・Lvを見やすく1カード内に整理','スマホ画面でも多くのキャラクターを一度に確認できるよう調整']}, {date:'2026-09-24',version:'v1.0.8',title:'編成キャラクター検索を追加',items:['名前・属性・能力名・能力説明・シリーズなどで所持キャラを検索可能に変更','属性フィルターと能力フィルターを追加','検索結果の所持数・表示数を表示']},{date:'2026-09-24',version:'v1.0.7',title:'iPhoneの倍速・キャラ詳細ボタンをタップ対応',items:['戦場の横スワイプ用pointerdownがボタン操作を奪わないよう修正','倍速ボタンをiPhoneのタップで確実に操作できるよう修正','キャラ詳細ボタンをiPhoneのタップで確実に操作できるよう修正']},{date:'2026-09-24',version:'v1.0.6',title:'パーフェクト木下降臨の能力を安全に実装',items:['パーフェクト木下の波動無効・波動反射・各種無効を追加','パーフェクト木下の無/宇宙/赤5倍と攻撃時能力を維持','めっちゃ木下を射程1・呪い無効・攻撃後自壊仕様へ更新']},{date:'2026-09-24',version:'v1.0.5',title:'パーフェクト木下・めっちゃ木下の能力発動を再修正',items:['敵生成時に敵専用能力を確実に戦闘オブジェクトへ反映','パーフェクト木下の波動・呪い・ヤバヤバを攻撃処理から直接発動','めっちゃ木下の波動・呪い・攻撃力低下と一撃自壊を攻撃直後に確実に発動']},
  {date:'2026-09-23',version:'v1.0.4',title:'パーフェクト木下・めっちゃ木下の能力修正',items:['パーフェクト木下の3属性特効を敵攻撃ダメージにも正しく適用','パーフェクト木下の75%波動・呪い・ヤバヤバLv4判定を修正','めっちゃ木下の波動・呪い・攻撃力低下を専用処理で正しく発動']},
@@ -1334,7 +1335,45 @@ function renderFormation(){
 function clampCamera(x){return Math.max(0,Math.min(Math.max(0,worldWidth-field.clientWidth),x));}
 function applyCamera(){cameraX=clampCamera(cameraX);world.style.transform=`translate3d(${-cameraX}px,0,0)`;}
 function currentStage(){if(selectedMode==='pvp')return {name:'プレイヤー対戦',width:1900,baseHp:5000,xp:0,schedule:[],repeatSpawns:[],enemies:[]};return (selectedMode==='event'?eventStages:chapterPool())[selectedStage-1]}
-function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyCamera();}
+function stageVisualInfo(){
+ const n=Math.max(1,Number(selectedStage||1));
+ if(selectedMode==='event'){
+  const eventName=String(currentStage()?.name||'');
+  if(eventName.includes('狂乱'))return {name:'狂乱の荒野',bg:'linear-gradient(180deg,#3b0764 0%,#7f1d1d 52%,#3f2a1d 53%,#17110d 100%),radial-gradient(circle at 78% 20%,#f59e0b55 0 7%,transparent 8%)',bgm:'event_rage'};
+  if(eventName.includes('パーフェクト'))return {name:'宇宙研究都市',bg:'linear-gradient(180deg,#020617 0%,#172554 58%,#1e293b 59%,#0f172a 100%),radial-gradient(circle at 18% 20%,#fff 0 1px,transparent 2px),radial-gradient(circle at 72% 32%,#c4b5fd 0 1px,transparent 2px)',bgm:'event_perfect'};
+  return {name:'イベントフィールド',bg:'linear-gradient(180deg,#164e63 0%,#0891b2 58%,#365314 59%,#1a2e05 100%)',bgm:'event'};
+ }
+ if(selectedMode==='pvp')return {name:'対戦アリーナ',bg:'linear-gradient(180deg,#111827 0%,#334155 58%,#312e81 59%,#0f172a 100%),radial-gradient(circle at 50% 35%,#60a5fa33,transparent 30%)',bgm:'rank'};
+ const ch=Math.max(1,Number(selectedChapter||1));
+ const global=((ch-1)*48)+(n-1);
+ const hue=(global*23+ch*61)%360;
+ const style=n%8;
+ const ground='hsl('+(hue+55)%360+' 42% 36%)';
+ const ground2='hsl('+(hue+35)%360+' 48% 22%)';
+ const sky='hsl('+hue+' 72% 72%)';
+ const dark='hsl('+hue+' 55% 18%)';
+ const bg=[
+  'linear-gradient(180deg,'+sky+' 0 58%,'+ground+' 59% 100%),radial-gradient(circle at 18% 20%,#ffffff88 0 6%,transparent 7%),radial-gradient(circle at 72% 28%,#ffffff66 0 5%,transparent 6%)',
+  'linear-gradient(180deg,'+dark+' 0 58%,'+ground2+' 59% 100%),radial-gradient(circle at 76% 18%,#fef08a99 0 5%,transparent 6%)',
+  'linear-gradient(180deg,#fb923c 0 22%,'+sky+' 58%,'+ground+' 59% 100%),radial-gradient(circle at 78% 22%,#fde68a 0 7%,transparent 8%)',
+  'linear-gradient(180deg,#14532d 0 58%,'+ground2+' 59% 100%),radial-gradient(ellipse at 20% 25%,#86efac55 0 12%,transparent 13%),radial-gradient(ellipse at 70% 30%,#bbf7d055 0 10%,transparent 11%)',
+  'linear-gradient(180deg,#fef3c7 0 58%,#a16207 59% 100%),radial-gradient(circle at 30% 30%,#ffffff66 0 8%,transparent 9%)',
+  'linear-gradient(180deg,#dbeafe 0 58%,#64748b 59% 100%),radial-gradient(circle at 70% 18%,#ffffffaa 0 9%,transparent 10%),radial-gradient(circle at 22% 30%,#ffffff88 0 7%,transparent 8%)',
+  'linear-gradient(180deg,#020617 0 58%,#1e1b4b 59% 100%),radial-gradient(circle at 18% 18%,#fff 0 1px,transparent 2px),radial-gradient(circle at 72% 28%,#c4b5fd 0 1px,transparent 2px),radial-gradient(circle at 50% 12%,#93c5fd 0 1px,transparent 2px)',
+  'linear-gradient(180deg,#450a0a 0 58%,#292524 59% 100%),radial-gradient(circle at 35% 25%,#fb7185aa 0 5%,transparent 6%),radial-gradient(circle at 80% 20%,#f97316aa 0 6%,transparent 7%)'
+ ][style];
+ return {name:'第'+ch+'章・ステージ'+n,bg:bg,bgm:'ch'+ch+'_'+style};
+}
+function applyStageVisual(){
+ const w=document.getElementById('world');if(!w)return;
+ const v=stageVisualInfo();
+ w.style.background=v.bg;
+ w.dataset.stageTheme=v.name;
+ w.style.backgroundSize='100% 100%';
+}
+function stageBgmKey(){return stageVisualInfo().bgm||'menu';}
+
+function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
 field.addEventListener('pointerdown',e=>{if(!running)return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
@@ -1343,49 +1382,57 @@ field.addEventListener('pointerup',e=>{draggingCamera=false;field.releasePointer
 field.addEventListener('pointercancel',()=>{draggingCamera=false;});
 /* ===== 木下大戦争 オーディオシステム =====
    Web Audio APIでSE/BGMを生成します。
-   音声コンテキストはユーザー操作中に確実に作成・resumeします。
+   ステージごとにBGMパターンを切り替え、出力音量も全体的に調整します。
 */
-let audioCtx=null,audioMaster=null,bgmTimer=null,bgmStep=0,audioEnabled=true,audioStarted=false,audioStarting=false;
+const AUDIO_MASTER_GAIN=.86;
+const AUDIO_VOLUME_BOOST=1.7;
+const BGM_PATTERNS={
+ menu:[262,330,392,330,294,349,440,349,262,330,392,523,440,392,330,294],
+ rank:[196,247,294,247,220,262,330,262,196,247,294,392,330,294,247,220],
+ event:[330,392,494,392,349,440,523,440,330,392,494,659,523,494,392,349],
+ event_rage:[110,147,165,147,123,165,196,165,110,147,220,196,165,147,123,110],
+ event_perfect:[220,277,330,370,440,370,330,277,247,311,370,415,494,415,370,311]
+};
+const BGM_STAGE_PATTERNS=[
+ [262,294,330,392,330,294,247,294,262,330,392,440,392,330,294,247],
+ [330,392,440,523,440,392,349,392,330,440,523,659,523,440,392,349],
+ [196,247,294,330,294,247,220,247,196,294,330,392,330,294,247,220],
+ [294,370,440,494,440,370,330,370,294,440,494,587,494,440,370,330],
+ [247,311,370,415,370,311,277,311,247,370,415,494,415,370,311,277],
+ [262,349,415,523,415,349,294,349,262,415,523,622,523,415,349,294],
+ [220,262,330,392,330,262,247,294,220,330,392,523,392,330,262,247],
+ [370,440,523,659,523,440,392,440,370,523,659,784,659,523,440,392]
+];
+let audioCtx=null,audioMaster=null,bgmTimer=null,bgmStep=0,audioEnabled=true,audioStarted=false,audioStarting=false,currentBgmKey='menu';
 function initAudio(){
   if(!audioEnabled)return Promise.resolve(false);
   const AC=window.AudioContext||window.webkitAudioContext;
   if(!AC)return Promise.resolve(false);
   try{
-    if(!audioCtx){
-      audioCtx=new AC();
-      audioMaster=audioCtx.createGain();
-      audioMaster.gain.value=.42;
-      audioMaster.connect(audioCtx.destination);
-    }
+    if(!audioCtx){audioCtx=new AC();audioMaster=audioCtx.createGain();audioMaster.gain.value=AUDIO_MASTER_GAIN;audioMaster.connect(audioCtx.destination);}
+    else if(audioMaster)audioMaster.gain.value=AUDIO_MASTER_GAIN;
     const resume=audioCtx.state==='suspended'||audioCtx.state==='interrupted'?audioCtx.resume():Promise.resolve();
-    return Promise.resolve(resume).then(()=>{
-      audioStarted=audioCtx.state==='running';
-      if(audioStarted)startBGM();
-      return audioStarted;
-    }).catch(()=>false);
+    return Promise.resolve(resume).then(()=>{audioStarted=audioCtx.state==='running';if(audioStarted)startBGM(currentBgmKey);return audioStarted;}).catch(()=>false);
   }catch(e){return Promise.resolve(false);}
 }
 function tone(freq,duration=.08,type='sine',volume=.08,slide=0){
   if(!audioEnabled||!audioCtx||!audioMaster||audioCtx.state!=='running')return;
   try{
-    const now=audioCtx.currentTime;
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type;o.frequency.setValueAtTime(Math.max(30,freq),now);
     if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),now+duration);
-    g.gain.setValueAtTime(.0001,now);
-    g.gain.exponentialRampToValueAtTime(Math.max(.0001,volume),now+.008);
-    g.gain.exponentialRampToValueAtTime(.0001,now+duration);
+    const out=Math.min(.9,Math.max(.0001,volume*AUDIO_VOLUME_BOOST));
+    g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(out,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+duration);
     o.connect(g);g.connect(audioMaster);o.start(now);o.stop(now+duration+.02);
   }catch(e){}
 }
 function noise(duration=.07,volume=.06){
   if(!audioEnabled||!audioCtx||!audioMaster||audioCtx.state!=='running')return;
   try{
-    const len=Math.max(1,Math.floor(audioCtx.sampleRate*duration));
-    const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate),d=buf.getChannelData(0);
+    const len=Math.max(1,Math.floor(audioCtx.sampleRate*duration)),buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate),d=buf.getChannelData(0);
     for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
     const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
-    f.type='highpass';f.frequency.value=700;g.gain.value=volume;src.buffer=buf;src.connect(f);f.connect(g);g.connect(audioMaster);src.start();
+    f.type='highpass';f.frequency.value=700;g.gain.value=Math.min(.9,volume*AUDIO_VOLUME_BOOST);src.buffer=buf;src.connect(f);f.connect(g);src.start();
   }catch(e){}
 }
 function playSE(name){
@@ -1404,40 +1451,28 @@ function playSE(name){
     case 'lose':[330,247,196].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.05,-35),i*120));break;
   }
 }
-function startBGM(){
-  if(!audioEnabled||bgmTimer||!audioStarted)return;
-  const melody=[262,330,392,330,294,349,440,349,262,330,392,523,440,392,330,294];
+function buildStageBgmPattern(){
+  const ch=Math.max(1,Number(selectedChapter||1)),st=Math.max(1,Number(selectedStage||1)),idx=(ch-1)*48+(st-1);
+  const scales=[[262,294,330,392,440,494,523],[220,247,294,330,370,440,494],[196,220,262,294,330,392,440],[294,330,370,440,494,587,659]];
+  const scale=scales[idx%scales.length],shift=(idx*2)%scale.length;
+  return Array.from({length:16},(_,i)=>scale[(i*2+shift+(i%4===3?1:0))%scale.length]);
+}
+function startBGM(key='menu'){
+  if(!audioEnabled||!audioStarted||!audioCtx)return;
+  currentBgmKey=key||'menu';stopBGM();
+  const pattern=BGM_PATTERNS[currentBgmKey]||(String(currentBgmKey).startsWith('ch')?buildStageBgmPattern():BGM_STAGE_PATTERNS[(Number(selectedStage||1)-1)%BGM_STAGE_PATTERNS.length]||BGM_PATTERNS.menu);
   bgmStep=0;
-  bgmTimer=setInterval(()=>{
-    if(!audioEnabled||!audioCtx||audioCtx.state!=='running'){if(audioCtx&&audioCtx.state==='suspended')initAudio();return;}
-    const f=melody[bgmStep%melody.length];
-    tone(f,.18,'triangle',.035);
-    if(bgmStep%4===0)tone(f/2,.28,'sine',.022);
-    bgmStep++;
-  },300);
+  bgmTimer=setInterval(()=>{if(!audioEnabled||!audioCtx||audioCtx.state!=='running')return;const f=pattern[bgmStep%pattern.length];tone(f,.18,'triangle',.055);if(bgmStep%4===0)tone(f/2,.28,'sine',.028);bgmStep++;},300);
 }
 function stopBGM(){if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;}}
 function toggleAudio(){
-  if(!audioEnabled){
-    audioEnabled=true;
-    const b=document.getElementById('audioToggle');if(b)b.textContent='🔊';
-    initAudio();
-  }else{
-    audioEnabled=false;stopBGM();
-    if(audioMaster)audioMaster.gain.value=0;
-    const b=document.getElementById('audioToggle');if(b)b.textContent='🔇';
-  }
+  if(!audioEnabled){audioEnabled=true;const b=document.getElementById('audioToggle');if(b)b.textContent='🔊';initAudio();}
+  else{audioEnabled=false;stopBGM();if(audioMaster)audioMaster.gain.value=0;const b=document.getElementById('audioToggle');if(b)b.textContent='🔇';}
 }
 const audioToggle=document.getElementById('audioToggle');
-if(audioToggle)audioToggle.addEventListener('click',e=>{e.stopPropagation();
-  if(!audioEnabled){toggleAudio();}
-  else if(!audioStarted){initAudio();}
-  else{toggleAudio();}
-});
-/* 最初のタップを確実に音声開始に使う。 */
+if(audioToggle)audioToggle.addEventListener('click',e=>{e.stopPropagation();if(!audioEnabled){toggleAudio();}else if(!audioStarted){initAudio();}else{toggleAudio();}});
 window.addEventListener('pointerdown',()=>{if(audioEnabled&&!audioStarted&&!audioStarting){audioStarting=true;initAudio().finally(()=>audioStarting=false);}},{capture:true});
 window.addEventListener('keydown',()=>{if(audioEnabled&&!audioStarted&&!audioStarting){audioStarting=true;initAudio().finally(()=>audioStarting=false);}});
-
 function workerUpgradeCost(){return 250*level;}
 function workerUpgrade(){if(!running||level>=10)return;const cost=workerUpgradeCost();if(money<cost){popup('💰 '+cost+'円必要',18,field.clientHeight-185);return;}money-=cost;level++;playSE('upgrade');workerMax=6000+(level-1)*1000;workerIncome=120+(level-1)*15;update();popup('🌳 働き木下 LEVEL '+level,18,field.clientHeight-185);}
 function updateWorkerUI(){const btn=document.getElementById('workerBtn');const cost=workerUpgradeCost();document.getElementById('workerText').textContent=level>=10?'MAX　自動収入 '+workerIncome+'円/秒':`タップで強化：${cost}円　自動収入 ${workerIncome}円/秒`;document.getElementById('levelbar').style.width=(level*10)+'%';btn.classList.toggle('ready',running&&level<10&&money>=cost);}
@@ -2211,7 +2246,7 @@ function startPvpBattle(){document.getElementById('pvpLobby').style.display='non
 function pvpApplyRemoteHit(msg){const target=units.find(u=>u.id===msg.targetId);if(!target||target.hp<=0)return;const attacker=cards[msg.attackerIndex]?{...cards[msg.attackerIndex],ability:cards[msg.attackerIndex].ability,trait:cards[msg.attackerIndex].trait,isEnemy:true}:null;hit(target,Math.max(1,Math.round(msg.damage)),attacker,true);if(target.hp<=0)removeUnit(target);}
 function pvpQuit(){pvpSend({type:'result',win:false});pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function pvpFinish(opponentWon){pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';showResult(!opponentWon);}
-function startStage(n){selectedStage=n;gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=playerCastleMaxHp();money=1500;setupWorld();level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);eventTriggerTime=-1;eventTriggerSpawnIndex=0;eventTriggerRepeatNextTimes=[];update();requestAnimationFrame(loop)}
+function startStage(n){selectedStage=n;gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=playerCastleMaxHp();money=1500;setupWorld();if(audioEnabled){if(audioStarted)startBGM(stageBgmKey());else initAudio();}level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);eventTriggerTime=-1;eventTriggerSpawnIndex=0;eventTriggerRepeatNextTimes=[];update();requestAnimationFrame(loop)}
 function attackAnim(el){if(!el)return;el.classList.remove('attacking');void el.offsetWidth;el.classList.add('attacking');setTimeout(()=>el?.classList.remove('attacking'),240)}
 function rankAIThink(dt){
  if(!rankMode||!running||!rankAI)return;
@@ -2233,7 +2268,7 @@ function rankAIThink(dt){
  renderUnitElement(e);enemies.push(e);rankAITimer=0;
  const jitter=.72+((Number(String(rankAI.accountId||'0').replace(/\D/g,''))%13)/20);rankAICooldown=Math.max(.72,stRate(rankAI)*jitter);
 }
-function startRankBattle(){savePlayerName();gameSpeed=1;updateGameSpeedButton();rankAI=chooseRankAI();if(rankAI)rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=playerCastleMaxHp();setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);playSE('boss');requestAnimationFrame(loop);}
+function startRankBattle(){savePlayerName();gameSpeed=1;updateGameSpeedButton();rankAI=chooseRankAI();if(rankAI)rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=playerCastleMaxHp();setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);if(audioEnabled){if(audioStarted)startBGM('rank');else initAudio();}playSE('boss');requestAnimationFrame(loop);}
 function finishRank(win){
  if(!rankMode && document.getElementById('rankResultOverlay')) return;
  // ランク戦の終了処理は「結果画面を先に確実に表示」してから、保存などを行う。
