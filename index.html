@@ -1462,11 +1462,22 @@ function playSE(name){
     case 'lose':[330,247,196].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.05,-35),i*120));break;
   }
 }
+function buildStageBgmPattern(){
+  const ch=Math.max(1,Number(selectedChapter||1));
+  const st=Math.max(1,Number(selectedStage||1));
+  const idx=(ch-1)*48+(st-1);
+  const scales=[[262,294,330,392,440,494,523],[220,247,294,330,370,440,494],[196,220,262,294,330,392,440],[294,330,370,440,494,587,659]];
+  const scale=scales[idx%scales.length],shift=(idx*2)%scale.length;
+  return Array.from({length:16},(_,i)=>{
+    const step=(i*2+shift+(i%4===3?1:0))%scale.length;
+    return scale[step];
+  });
+}
 function startBGM(key='menu'){
   if(!audioEnabled||!audioStarted||!audioCtx)return;
   currentBgmKey=key||'menu';
   stopBGM();
-  const pattern=BGM_PATTERNS[currentBgmKey]||BGM_STAGE_PATTERNS[(Number(selectedStage||1)-1)%BGM_STAGE_PATTERNS.length]||BGM_PATTERNS.menu;
+  const pattern=BGM_PATTERNS[currentBgmKey]||(String(currentBgmKey).startsWith('ch')?buildStageBgmPattern():BGM_STAGE_PATTERNS[(Number(selectedStage||1)-1)%BGM_STAGE_PATTERNS.length]||BGM_PATTERNS.menu);
   bgmStep=0;
   bgmTimer=setInterval(()=>{
     if(!audioEnabled||!audioCtx||audioCtx.state!=='running')return;
