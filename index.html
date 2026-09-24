@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.0';
+const GAME_VERSION='v1.1.1';
 const UPDATE_LOG=[
  {date:'2026-09-25',version:'v1.1.0',title:'古代編 第1章を追加',items:['宇宙編よりさらに高難度の全48ステージを追加','新属性「古代」を追加。呪いと複数の妨害無効、波動などを持つ強敵を追加','古代属性の新敵を35体追加。カエル木下・めっちゃ木下も古代編に登場']},
  {date:'2026-09-24',version:'v1.0.13',title:'BGMの系統多様化・音量再調整',items:['ステージごとに明るい曲、穏やかな曲、緊張感のある曲、禍々しい曲、宇宙的な曲、ボス系など異なる音楽系統を使用','BGMにベース・リズム・コードを追加し、単純な単音ループから変更','SE・BGMの出力音量をさらに引き上げ']},
@@ -871,7 +871,7 @@ const ancientStages=Array.from({length:48},(_,i)=>makeAncientStage(i+1));
 const spaceStages=Array.from({length:48},(_,i)=>makeSpaceStage(i+1));const chapterStages=[stages,[],[],futureStages,spaceStages,ancientStages];
 for(let ch=2;ch<=3;ch++) chapterStages[ch-1]=stages.map((st,i)=>cloneChapterStage(st,i+1,ch));
 function chapterPool(){return chapterStages[selectedChapter-1]||stages;}
-function chapterUnlocked(ch){if(ch===1)return unlocked;if(ch===2)return chapterClears[0]>=48;if(ch===3)return chapterClears[1]>=48;if(ch===4)return true;if(ch===5)return Number(chapterClears[3]||0)>=0;if(ch===6)return Number(chapterClears[4]||0)>=48;return false;}
+function chapterUnlocked(ch){if(ch===1)return unlocked;if(ch===2)return chapterClears[0]>=48;if(ch===3)return chapterClears[1]>=48;if(ch===4)return true;if(ch===5)return Number(chapterClears[3]||0)>=0;if(ch===6)return true;return false;}
 function chapterScale(ch,stageNo,key){if(ch===4)return futureScale(stageNo,key);if(ch===5)return spaceScale(stageNo,key);if(ch===6)return ancientScale(stageNo,key);const base=enemyScaleForStage(Math.min(20,stageNo),key);const factor=ch===1?1:(ch===2?(1.05+((stageNo*3+key.length)%5)*.08):(1.18+((stageNo*5+key.length)%6)*.09));return +(base*factor).toFixed(2);}
 function enemyScaleForStage(stageNo,enemyKey){
  const row=enemyScaleTable[stageNo]||{};
