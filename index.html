@@ -1261,7 +1261,7 @@ function renderStageSelect(){
    el.style.display='grid';
    const pool=chapterPool()||stages;
    el.innerHTML=pool.map((s,i)=>stageCardHTML(s,i+1,'japan',selectedChapter)).join('');
-   info.textContent=selectedChapter===4?'🚀 未来編 第1章　日本編1章未クリアでも挑戦可能・全48ステージ・最低倍率×3.00':`日本編 第${selectedChapter}章　${chapterUnlocked(selectedChapter)?'挑戦可能':'未解放：第'+(selectedChapter-1)+'章をクリアすると挑戦できます（ステージ一覧は表示中）'}`;
+   info.textContent=selectedChapter===4?'🚀 未来編 第1章　日本編1章未クリアでも挑戦可能・全48ステージ・最低倍率×3.00':selectedChapter===5?'🌌 宇宙編 第1章　全48ステージ・最大倍率×20.00':selectedChapter===6?'🏺 古代編 第1章　宇宙編を全48ステージクリアすると解放・全48ステージ・最大倍率×50.00':`日本編 第${selectedChapter}章　${chapterUnlocked(selectedChapter)?'挑戦可能':'未解放：第'+(selectedChapter-1)+'章をクリアすると挑戦できます（ステージ一覧は表示中）'}`;
  }
  const roots=[el,document.getElementById('eventStages')];
  roots.forEach(root=>{
