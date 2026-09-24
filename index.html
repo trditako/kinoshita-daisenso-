@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.1';
+const GAME_VERSION='v1.1.2';
 const UPDATE_LOG=[
  {date:'2026-09-25',version:'v1.1.0',title:'古代編 第1章を追加',items:['宇宙編よりさらに高難度の全48ステージを追加','新属性「古代」を追加。呪いと複数の妨害無効、波動などを持つ強敵を追加','古代属性の新敵を35体追加。カエル木下・めっちゃ木下も古代編に登場']},
  {date:'2026-09-24',version:'v1.0.13',title:'BGMの系統多様化・音量再調整',items:['ステージごとに明るい曲、穏やかな曲、緊張感のある曲、禍々しい曲、宇宙的な曲、ボス系など異なる音楽系統を使用','BGMにベース・リズム・コードを追加し、単純な単音ループから変更','SE・BGMの出力音量をさらに引き上げ']},
@@ -2692,7 +2692,7 @@ bindSafeClick('kinoshitaBookBtn',openKinoshitaBook);
 bindSafeClick('enemyBookBtn',showEnemyBook);
 bindSafeClick('gachaBtn',openGacha);
 bindSafeClick('startBtn',()=>{
- const ok=selectedMode==='event'?chapterUnlocked(1):(selectedChapter===4?selectedStage<=(Number(chapterClears[3]||0)+1):selectedChapter===5?selectedStage<=(Number(chapterClears[4]||0)+1):selectedStage<=(selectedChapter===1?unlocked:(chapterClears[selectedChapter-1]||0)+1));
+ const ok=selectedMode==='event'?chapterUnlocked(1):(selectedChapter===4?selectedStage<=(Number(chapterClears[3]||0)+1):selectedChapter===5?selectedStage<=(Number(chapterClears[4]||0)+1):selectedChapter===6?selectedStage<=(Number(chapterClears[5]||0)+1):selectedStage<=(selectedChapter===1?unlocked:(chapterClears[selectedChapter-1]||0)+1));
  if(ok)startStage(selectedStage);
 });
 document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
@@ -2708,7 +2708,7 @@ function selectChapterTab(t){
    document.getElementById('startBtn').textContent=eventStages[0].name+'を開始';
  }else{
    const ch=Number(v);
-   if(!Number.isInteger(ch)||ch<1||ch>5)return;
+   if(!Number.isInteger(ch)||ch<1||ch>6)return;
    selectedMode='japan';selectedChapter=ch;selectedStage=1;if(ch===5)selectedMode='space';
    const pool=chapterPool();
    document.getElementById('startBtn').textContent=pool[0].name+(chapterUnlocked(ch)?'を開始':'（未解放）');
