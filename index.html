@@ -350,12 +350,6 @@ cards.push(
  {name:"疾風木下",cost:750,hp:2400,atk:560,range:75,spd:1.25,interval:.75,recharge:16,icon:"🌪️",motion:"ninja",attackType:"single",kb:4,trait:"浮",rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"疾風・連撃",desc:"攻撃間隔が短く、攻撃時30%の確率で追加攻撃。移動速度が高い。",extraAttackChance:.3}},
  {name:"雷光木下",cost:1100,hp:3300,atk:1050,range:110,spd:.7,interval:1.2,recharge:23,icon:"⚡",motion:"awakened",attackType:"area",kb:3,trait:"宇宙",rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"雷光・感電",desc:"攻撃時40%の確率で敵を1秒停止。さらに20%の確率で波動Lv3を放つ。",stopChance:.4,stopDuration:1,waveChance:.2,waveLevel:3,wave:true}}
 );
-// 通常交換所：ランク戦向け小型キャラクター3体
-cards.push(
- {name:"前衛木下",cost:75,hp:850,atk:72,range:45,spd:1.45,interval:.9,recharge:3.8,icon:"🪖",motion:"basic",attackType:"single",kb:3,series:"ランク戦小型隊",rarity:"R",gachaCost:1800,ability:{name:"前線維持",desc:"低コスト・短い再出撃時間で前線を維持する"}} ,
- {name:"突撃木下",cost:140,hp:620,atk:210,range:55,spd:2.05,interval:.82,recharge:5.5,icon:"🏃",motion:"ninja",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"R",gachaCost:2400,ability:{name:"高速突撃",desc:"移動速度が高く、敵前線へ素早く接近する"}} ,
- {name:"連撃木下",cost:260,hp:980,atk:125,secondAtk:125,range:62,spd:1.35,interval:.72,recharge:7.5,icon:"🥋",motion:"power",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"SR",gachaCost:4500,multiAttack:[125,125],ability:{name:"二連撃",desc:"短い間隔で2回攻撃する"}}
-);
 // 期間限定交換所の対象：エレメンタル木下sの超激レア5体＋ファイティング木下（伝説レア）
 ['炎撃木下','水帝木下','大地木下','疾風木下','雷光木下','ファイティング木下'].forEach(n=>{const x=cards.find(c=>c.name===n);if(x)x.limitedExchange=true;});
 cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
@@ -369,6 +363,13 @@ cards.push({name:"呪王木下",cost:3900,hp:14000,atk:3800,range:160,spd:.4,int
 cards.push({name:"呪神木下",cost:4800,hp:24000,atk:6500,range:180,spd:.7,interval:1.0,recharge:30,icon:"☯️",motion:"super",attackType:"area",kb:3,trait:"無",rarity:"LR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",ability:{name:"呪神・大呪",desc:"100%の確率で6秒間呪い。呪われた敵は攻撃力70%、移動速度60%、特殊能力発動不可。呪われた敵への攻撃力1.5倍。",curseChance:1,curseDuration:6,curseSeal:true,cursedAttackFactor:.7,cursedSpeedFactor:.6,cursedAttackMultiplier:1.5}});
 
 cards.push({name:"パーフェクト木下",cost:1500,hp:7500,atk:5000,range:100,spd:.9,interval:3.5,recharge:45,icon:"🌟",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"LR",series:"パーフェクト木下降臨クリア報酬",specialReward:true,eventReward:"パーフェクト木下降臨",ability:{name:"完全対宇宙決戦",desc:"呪い無効・波動無効。無/宇宙/赤に与えるダメージ3倍。",strong:{"無":3,"宇宙":3,"赤":3},waveImmune:true,curseImmune:true}});
+
+// 通常交換所：ランク戦向け小型キャラクター3体
+cards.push(
+ {name:"前衛木下",cost:75,hp:850,atk:72,range:45,spd:1.45,interval:.9,recharge:3.8,icon:"🪖",motion:"basic",attackType:"single",kb:3,series:"ランク戦小型隊",rarity:"R",gachaCost:1800,ability:{name:"前線維持",desc:"低コスト・短い再出撃時間で前線を維持する"}} ,
+ {name:"突撃木下",cost:140,hp:620,atk:210,range:55,spd:2.05,interval:.82,recharge:5.5,icon:"🏃",motion:"ninja",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"R",gachaCost:2400,ability:{name:"高速突撃",desc:"移動速度が高く、敵前線へ素早く接近する"}} ,
+ {name:"連撃木下",cost:260,hp:980,atk:125,secondAtk:125,range:62,spd:1.35,interval:.72,recharge:7.5,icon:"🥋",motion:"power",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"SR",gachaCost:4500,multiAttack:[125,125],ability:{name:"二連撃",desc:"短い間隔で2回攻撃する"}}
+);
 
 const CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
 
