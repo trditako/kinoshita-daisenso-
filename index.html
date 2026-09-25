@@ -2166,23 +2166,22 @@ function runAIActivities(n=300){
 let aiActivityCursor=0;
 function aiRankChaserOpponent(ai){const pool=aiProfiles.filter(x=>x!==ai&&Number(x.rp||0)>=Math.max(0,Number(ai.rp||0)-80));if(!pool.length)return null;const top=pool.slice().sort((a,b)=>Number(b.rp||0)-Number(a.rp||0));return top[Math.floor(Math.random()*Math.min(12,top.length))]||top[0];}
 function aiSelfPlayOnce(){if(aiProfiles.length<2)return;const a=aiProfiles[aiMatchCursor%aiProfiles.length];let b=null;if(isRankChaser(a))b=aiRankChaserOpponent(a);if(!b)b=aiProfiles[(aiMatchCursor+1+Math.floor(Math.random()*Math.min(aiProfiles.length-1,400)))%aiProfiles.length];aiMatchCursor=(aiMatchCursor+2)%aiProfiles.length;const result=simulateAIBattle(a,b);evolveAIFromMatch(result.winner,result.winner===a?b:a,result);}
-function runAISelfPlay(n=20){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();
- // 全体の約0.5%だけを「ランカー型」にし、通常AIより少し多くランク戦を行う。
+function runAISelfPlay(n=200){ensureRankSeason();for(let i=0;i<n;i++)aiSelfPlayOnce();
+ // ランク戦AIを通常の約10倍ペースで回す。ランク上位だけに偏らず全AIへ広く配分する。
  const chasers=aiProfiles.filter(isRankChaser);
- for(const ai of chasers){for(let k=0;k<2;k++){const b=aiRankChaserOpponent(ai);if(!b)continue;const result=simulateAIBattle(ai,b);evolveAIFromMatch(result.winner,result.winner===ai?b:ai,result);}}
+ for(const ai of chasers){for(let k=0;k<4;k++){const b=aiRankChaserOpponent(ai);if(!b)continue;const result=simulateAIBattle(ai,b);evolveAIFromMatch(result.winner,result.winner===ai?b:ai,result);}}
 }
 let aiEvolutionTimer=null;let aiAutoCycle=0;function startAutoAISelfPlay(){
  if(aiEvolutionTimer)return;
- // AIの本体進行はSupabaseのai-worker/ai-cronで行う。
- // ブラウザ側では大量の自己対戦・進行シミュレーションを常時実行しない。
- // これにより通常プレイ中のCPU負荷と数秒ごとのカクつきを防ぐ。
+ // AIの本体進行はSupabaseのai-worker/ai-cronを優先しつつ、ブラウザ側のランク戦も十分な頻度で回す。
+ // 1回あたりの試合は軽量シミュレーションなので、通常プレイ中はrunning中を除外する。
  aiEvolutionTimer=setInterval(()=>{
   try{
    if(running)return;
    // サーバーAIが利用できない場合だけ、軽量な表示用更新を行う。
    if(!aiServerConnected){
-    runAISelfPlay(2);runAIActivities(10);aiAutoCycle++;
-    if(aiAutoCycle%4===0)saveRank();
+    runAISelfPlay(20);runAIActivities(10);aiAutoCycle++;
+    if(aiAutoCycle%2===0)saveRank();
    }
    /* ランクロビー全体の再描画は15秒ごとに行わず、表示中の負荷を抑える。 */
   }catch(e){console.warn('AI自動活動エラー:',e)}
