@@ -374,7 +374,7 @@ cards.push(
  {name:"連撃木下",cost:260,hp:980,atk:125,secondAtk:125,range:62,spd:1.35,interval:.72,recharge:7.5,icon:"🥋",motion:"power",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"SR",gachaCost:4500,multiAttack:[125,125],ability:{name:"二連撃",desc:"短い間隔で2回攻撃する"}}
 );
 
-const CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
+let CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
 
 // 機械防衛隊！木下s
 // 既存キャラクターを1体も上書き・移動せず、全既存カード登録後にこの6体だけを追加する。
@@ -391,6 +391,7 @@ cards.push(
 const MACHINE_DEFENSE_NAMES=['機甲前線木下','電磁砲木下','高速機動木下','古代掃討砲木下','超装甲木下','機神木下'];
 const MACHINE_DEFENSE_ID_BASE=cards.length-6;
 MACHINE_DEFENSE_NAMES.forEach((name,offset)=>{const c=cards.find(x=>x.name===name);if(c)c.id=MACHINE_DEFENSE_ID_BASE+offset;});
+CURRENT_CHARACTER_COUNT=cards.length;
 
 // ランク戦・最新キャラクター出撃RPボーナス対象。現在の最新9体を固定IDで管理し、既存IDを変更しない。
 const LATEST_RANK_BONUS_NAMES=['前衛木下','突撃木下','連撃木下','機甲前線木下','電磁砲木下','高速機動木下','古代掃討砲木下','超装甲木下','機神木下'];
