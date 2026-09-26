@@ -934,7 +934,7 @@ function legendBossCharacterNames(){
  return set;
 }
 function balanceLegendBossSpawns(stage){
- const bossNames=legendBossCharacterNames(),seen=new Set(),bossSpawned=false;
+ const bossNames=legendBossCharacterNames(),seen=new Set();let bossSpawned=false;
  const balanceList=(list)=>{
   if(!Array.isArray(list))return [];
   const out=[];
