@@ -919,7 +919,34 @@ const legendEnemyPool=[...new Set([...legendAllyPool,...legendExistingEnemyPool]
 const legendChapterNames=['黄昏の木立','忘却の砂時計','機械仕掛けの夜','逆さまの楽園','終焉の木下王国','星喰らいの森','幻影回廊','崩壊する楽園','禁断の木下城','最後の一秒'];
 const legendStageNames=[['木漏れ日の迷宮','静かな森の入口','枯れ葉の行進','月影の獣道','深緑の境界','黄昏の最奥'],['砂塵の街','崩れた時計塔','時を喰らう者','逆さまの時間','砂時計の底','忘却の果て'],['鋼鉄の街路','赤い警報','歯車の迷宮','暴走工場','真夜中の機械兵','終焉製造区'],['空に沈む庭園','反転世界','虹色の罠','沈黙の楽園','裏返る城壁','逆さまの王座'],['王国への細道','千年木下城','黒き行進','王の側近','五つの門','木下王国・最終門'],['星明かりの獣道','月蝕の森','星を隠す者','銀河樹海','流星の巣','星喰らいの最深部'],['幻影の入口','二重の戦場','消える足跡','鏡合わせ','無限回廊','幻影回廊・終点'],['崩落都市','落ちる空','壊れた時間','最後の避難所','崩壊前夜','崩壊の中心'],['封印された門','禁じられた庭','古の警告','王座への階段','禁断の守護者','禁断の木下城'],['最後の森','最後の行進','最後の城壁','最後の反撃','最後の一撃','木下大戦争・終章']];
 function legendEnemyName(ch,n,o=0){return legendEnemyPool[(ch*17+n*11+o*7)%legendEnemyPool.length]}
-function makeLegendStage(ch,n){const name=legendStageNames[ch-1][n-1],width=900+ch*90+n*35,baseHp=Math.round(14000+ch*4200+n*1800),pool=[];for(let i=0;i<4+(n%3);i++)pool.push(legendEnemyName(ch,n,i));if(n>=4)pool.push(['鬼木下','木下戦車','巨木下','盾木下'][(ch+n)%4]);const uniq=[...new Set(pool)].filter(k=>enemyTypes[k]).slice(0,8),schedule=[];let t=1.5;for(let i=0;i<18+n*2;i++){const enemy=uniq[i%uniq.length],role=(i===uniq.length*2-1&&n%3===0)?'midboss':'normal',mult=+(1.45+ch*.22+n*.09+(i%4)*.12).toFixed(2);schedule.push({t:+t.toFixed(2),enemy,role,mult,fixedMultiplier:true});t+=Math.max(.7,1.55-ch*.025-n*.018)}if(n===6){const boss=legendEnemyName(ch,n,8);schedule.push({t:+(t+1.5).toFixed(2),enemy:boss,role:'boss',mult:+(2.4+ch*.25).toFixed(2),fixedMultiplier:true})}const stage={name,width,baseHp,xp:Math.round(900+ch*180+n*90),enemies:[...new Set(schedule.map(x=>x.enemy))],schedule,legend:true,legendChapter:ch};if(n===3||n===6){const triggerEnemy=legendEnemyName(ch,n,9);stage.triggerSpawns={threshold:n===3?.55:.45,spawns:[{delay:0,enemy:triggerEnemy,role:'boss',mult:+(2.5+ch*.22).toFixed(2),fixedMultiplier:true},{delay:1.2,enemy:legendEnemyName(ch,n,10),role:'midboss',mult:+(2.0+ch*.18).toFixed(2),fixedMultiplier:true}],repeats:n===6?[{delay:3,interval:12,enemy:legendEnemyName(ch,n,11),mult:+(1.8+ch*.15).toFixed(2),fixedMultiplier:true}]:[]}}if(n===5)stage.repeatSpawns=[{start:18,interval:16,enemy:legendEnemyName(ch,n,12),mult:+(1.8+ch*.16).toFixed(2),fixedMultiplier:true}];return stage}
+function legendBossCharacterNames(){
+ const set=new Set(['パーフェクト木下']);
+ for(const c of cards){if(c&&c.name&&(c.rarity==='LR'||c.boss===true))set.add(c.name);}
+ for(const [name,e] of Object.entries(enemyTypes)){if(e&&e.boss===true)set.add(name);}
+ return set;
+}
+function balanceLegendBossSpawns(stage){
+ const bossNames=legendBossCharacterNames(),seen=new Set();
+ const balanceList=(list)=>{
+  if(!Array.isArray(list))return [];
+  const out=[];
+  for(const sp of list){
+   if(!sp||!sp.enemy){out.push(sp);continue;}
+   const isBoss=sp.role==='boss'||bossNames.has(sp.enemy);
+   if(!isBoss){out.push(sp);continue;}
+   if(seen.has(sp.enemy))continue;
+   seen.add(sp.enemy);
+   out.push({...sp,role:'boss',mult:Math.min(1,Number(sp.mult)||1),fixedMultiplier:true});
+  }
+  return out;
+ };
+ stage.schedule=balanceList(stage.schedule);
+ if(stage.triggerSpawns){stage.triggerSpawns.spawns=balanceList(stage.triggerSpawns.spawns);stage.triggerSpawns.repeats=balanceList(stage.triggerSpawns.repeats);}
+ if(stage.repeatSpawns)stage.repeatSpawns=balanceList(stage.repeatSpawns);
+ stage.enemies=[...new Set([...(stage.schedule||[]),...(stage.triggerSpawns?.spawns||[]),...(stage.triggerSpawns?.repeats||[]),...(stage.repeatSpawns||[])].map(x=>x.enemy).filter(Boolean))];
+ return stage;
+}
+function makeLegendStage(ch,n){const name=legendStageNames[ch-1][n-1],width=900+ch*90+n*35,baseHp=Math.round(14000+ch*4200+n*1800),pool=[];for(let i=0;i<4+(n%3);i++)pool.push(legendEnemyName(ch,n,i));if(n>=4)pool.push(['鬼木下','木下戦車','巨木下','盾木下'][(ch+n)%4]);const uniq=[...new Set(pool)].filter(k=>enemyTypes[k]).slice(0,8),schedule=[];let t=1.5;for(let i=0;i<18+n*2;i++){const enemy=uniq[i%uniq.length],role=(i===uniq.length*2-1&&n%3===0)?'midboss':'normal',mult=+(1.45+ch*.22+n*.09+(i%4)*.12).toFixed(2);schedule.push({t:+t.toFixed(2),enemy,role,mult,fixedMultiplier:true});t+=Math.max(.7,1.55-ch*.025-n*.018)}if(n===6){const boss=legendEnemyName(ch,n,8);schedule.push({t:+(t+1.5).toFixed(2),enemy:boss,role:'boss',mult:+(2.4+ch*.25).toFixed(2),fixedMultiplier:true})}const stage={name,width,baseHp,xp:Math.round(900+ch*180+n*90),enemies:[...new Set(schedule.map(x=>x.enemy))],schedule,legend:true,legendChapter:ch};if(n===3||n===6){const triggerEnemy=legendEnemyName(ch,n,9);stage.triggerSpawns={threshold:n===3?.55:.45,spawns:[{delay:0,enemy:triggerEnemy,role:'boss',mult:+(2.5+ch*.22).toFixed(2),fixedMultiplier:true},{delay:1.2,enemy:legendEnemyName(ch,n,10),role:'midboss',mult:+(2.0+ch*.18).toFixed(2),fixedMultiplier:true}],repeats:n===6?[{delay:3,interval:12,enemy:legendEnemyName(ch,n,11),mult:+(1.8+ch*.15).toFixed(2),fixedMultiplier:true}]:[]}}if(n===5)stage.repeatSpawns=[{start:18,interval:16,enemy:legendEnemyName(ch,n,12),mult:+(1.8+ch*.16).toFixed(2),fixedMultiplier:true}];return balanceLegendBossSpawns(stage)}
 const legendStages=Array.from({length:10},(_,ci)=>Array.from({length:6},(_,si)=>makeLegendStage(ci+1,si+1)));function legendChapterUnlocked(ch){return ch===1||Number(legendClears[ch-2]||0)>=6}function legendStageUnlocked(ch,n){return legendChapterUnlocked(ch)&&n<=Number(legendClears[ch-1]||0)+1}function legendPool(){return legendStages[selectedLegendChapter-1]||legendStages[0]}function saveLegendClears(){storage.setItem('kinoshitaLegendClears',JSON.stringify(legendClears))}
 
 const spaceStages=Array.from({length:48},(_,i)=>makeSpaceStage(i+1));const chapterStages=[stages,[],[],futureStages,spaceStages,ancientStages];
