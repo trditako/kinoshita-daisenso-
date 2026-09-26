@@ -1143,11 +1143,11 @@ let aiServerWorkerLastRun=null;
 let serverRankMatchCount=null;
 async function loadServerRankMatchCount(){
  try{
-  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=rank_matches&rank_cycle=eq.'+encodeURIComponent(currentRankSeason()),{headers:supabaseHeaders(),cache:'no-store'});
+  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=current_rank_matches&rank_cycle=eq.'+encodeURIComponent(currentRankSeason()),{headers:supabaseHeaders(),cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
   const rows=await res.json();
   if(!Array.isArray(rows))throw new Error('invalid response');
-  const total=rows.reduce((sum,row)=>sum+Math.max(0,Number(row?.rank_matches||0)),0);
+  const total=rows.reduce((sum,row)=>sum+Math.max(0,Number(row?.current_rank_matches||0)),0);
   serverRankMatchCount=Math.floor(total/2);
   return serverRankMatchCount;
  }catch(e){console.warn('サーバーランク戦試合数取得失敗:',e);return null;}
