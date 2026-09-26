@@ -1665,7 +1665,7 @@ let rankPoints=Math.max(0,Number(storage.getItem('kinoshitaRankPoints')||0));
 let rankHistory;try{rankHistory=JSON.parse(storage.getItem('kinoshitaRankHistory')||'[]')}catch(e){rankHistory=[]}
 let rankMode=false,rankAI=null,rankAIUnits=[],rankAIMoney=1500,rankAITimer=0,rankAICooldown=0,rankMatchAIName='',rankAIRecharge=[];
 let rankPlayerUsed=[],rankAIUsed=[];
-const RANK_META_KEY='kinoshitaRankMetaV2';
+const RANK_META_KEY='kinoshitaRankMetaV3';
 let rankMetaStats;try{rankMetaStats=JSON.parse(storage.getItem(RANK_META_KEY)||'null')}catch(e){rankMetaStats=null}
 if(!rankMetaStats||typeof rankMetaStats!=='object')rankMetaStats={matches:0,totalDeploys:0,chars:{},formations:{}};
 rankMetaStats.matches=Number(rankMetaStats.matches||0);rankMetaStats.totalDeploys=Number(rankMetaStats.totalDeploys||0);rankMetaStats.chars=rankMetaStats.chars&&typeof rankMetaStats.chars==='object'?rankMetaStats.chars:{};rankMetaStats.formations=rankMetaStats.formations&&typeof rankMetaStats.formations==='object'?rankMetaStats.formations:{};let rankMetaPairA=0,rankMetaPairB=1;
