@@ -934,7 +934,7 @@ function legendBossCharacterNames(){
  return set;
 }
 function balanceLegendBossSpawns(stage){
- const bossNames=legendBossCharacterNames(),seen=new Set();
+ const bossNames=legendBossCharacterNames(),seen=new Set(),bossSpawned=false;
  const balanceList=(list)=>{
   if(!Array.isArray(list))return [];
   const out=[];
@@ -943,8 +943,10 @@ function balanceLegendBossSpawns(stage){
    const isBoss=sp.role==='boss'||bossNames.has(sp.enemy);
    if(!isBoss){out.push(sp);continue;}
    // ボス級は1ステージにつき原則1体。倍率も等倍を上限にする。
-   if(seen.has(sp.enemy))continue;
+   // ボス級は同一ステージで原則1体まで。別名のボスが重なる場合も抑止する。
+   if(bossSpawned||seen.has(sp.enemy))continue;
    seen.add(sp.enemy);
+   bossSpawned=true;
    out.push({...sp,role:'boss',mult:Math.min(1,Number(sp.mult)||1),fixedMultiplier:true});
   }
   return out;
