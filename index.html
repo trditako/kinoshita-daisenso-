@@ -921,8 +921,16 @@ const legendStageNames=[['木漏れ日の迷宮','静かな森の入口','枯れ
 function legendEnemyName(ch,n,o=0){return legendEnemyPool[(ch*17+n*11+o*7)%legendEnemyPool.length]}
 function legendBossCharacterNames(){
  const set=new Set(['パーフェクト木下']);
- for(const c of cards){if(c&&c.name&&(c.rarity==='LR'||c.boss===true))set.add(c.name);}
- for(const [name,e] of Object.entries(enemyTypes)){if(e&&e.boss===true)set.add(name);}
+ for(const c of cards){
+  if(!c||!c.name)continue;
+  // LR・明示的ボスに加え、基礎性能が突出して高い味方キャラも
+  // Legendではボス級として扱い、通常敵と同じ高倍率抽選に入らないようにする。
+  if(c.rarity==='LR'||c.boss===true||Number(c.hp)>=300000||Number(c.atk)>=7000)set.add(c.name);
+ }
+ for(const [name,e] of Object.entries(enemyTypes)){
+  if(!e)continue;
+  if(e.boss===true||Number(e.hp)>=300000||Number(e.atk)>=7000)set.add(name);
+ }
  return set;
 }
 function balanceLegendBossSpawns(stage){
@@ -934,6 +942,7 @@ function balanceLegendBossSpawns(stage){
    if(!sp||!sp.enemy){out.push(sp);continue;}
    const isBoss=sp.role==='boss'||bossNames.has(sp.enemy);
    if(!isBoss){out.push(sp);continue;}
+   // ボス級は1ステージにつき原則1体。倍率も等倍を上限にする。
    if(seen.has(sp.enemy))continue;
    seen.add(sp.enemy);
    out.push({...sp,role:'boss',mult:Math.min(1,Number(sp.mult)||1),fixedMultiplier:true});
@@ -941,9 +950,20 @@ function balanceLegendBossSpawns(stage){
   return out;
  };
  stage.schedule=balanceList(stage.schedule);
- if(stage.triggerSpawns){stage.triggerSpawns.spawns=balanceList(stage.triggerSpawns.spawns);stage.triggerSpawns.repeats=balanceList(stage.triggerSpawns.repeats);}
+ if(stage.triggerSpawns){
+  stage.triggerSpawns.spawns=balanceList(stage.triggerSpawns.spawns);
+  stage.triggerSpawns.repeats=balanceList(stage.triggerSpawns.repeats);
+ }
  if(stage.repeatSpawns)stage.repeatSpawns=balanceList(stage.repeatSpawns);
- stage.enemies=[...new Set([...(stage.schedule||[]),...(stage.triggerSpawns?.spawns||[]),...(stage.triggerSpawns?.repeats||[]),...(stage.repeatSpawns||[])].map(x=>x.enemy).filter(Boolean))];
+ // Legendでは旧形式のtriggerRepeatsも同じ制限対象にする。
+ if(stage.triggerRepeats)stage.triggerRepeats=balanceList(stage.triggerRepeats);
+ stage.enemies=[...new Set([
+  ...(stage.schedule||[]),
+  ...(stage.triggerSpawns?.spawns||[]),
+  ...(stage.triggerSpawns?.repeats||[]),
+  ...(stage.repeatSpawns||[]),
+  ...(stage.triggerRepeats||[])
+ ].map(x=>x.enemy).filter(Boolean))];
  return stage;
 }
 function makeLegendStage(ch,n){const name=legendStageNames[ch-1][n-1],width=900+ch*90+n*35,baseHp=Math.round(14000+ch*4200+n*1800),pool=[];for(let i=0;i<4+(n%3);i++)pool.push(legendEnemyName(ch,n,i));if(n>=4)pool.push(['鬼木下','木下戦車','巨木下','盾木下'][(ch+n)%4]);const uniq=[...new Set(pool)].filter(k=>enemyTypes[k]).slice(0,8),schedule=[];let t=1.5;for(let i=0;i<18+n*2;i++){const enemy=uniq[i%uniq.length],role=(i===uniq.length*2-1&&n%3===0)?'midboss':'normal',mult=+(1.45+ch*.22+n*.09+(i%4)*.12).toFixed(2);schedule.push({t:+t.toFixed(2),enemy,role,mult,fixedMultiplier:true});t+=Math.max(.7,1.55-ch*.025-n*.018)}if(n===6){const boss=legendEnemyName(ch,n,8);schedule.push({t:+(t+1.5).toFixed(2),enemy:boss,role:'boss',mult:+(2.4+ch*.25).toFixed(2),fixedMultiplier:true})}const stage={name,width,baseHp,xp:Math.round(900+ch*180+n*90),enemies:[...new Set(schedule.map(x=>x.enemy))],schedule,legend:true,legendChapter:ch};if(n===3||n===6){const triggerEnemy=legendEnemyName(ch,n,9);stage.triggerSpawns={threshold:n===3?.55:.45,spawns:[{delay:0,enemy:triggerEnemy,role:'boss',mult:+(2.5+ch*.22).toFixed(2),fixedMultiplier:true},{delay:1.2,enemy:legendEnemyName(ch,n,10),role:'midboss',mult:+(2.0+ch*.18).toFixed(2),fixedMultiplier:true}],repeats:n===6?[{delay:3,interval:12,enemy:legendEnemyName(ch,n,11),mult:+(1.8+ch*.15).toFixed(2),fixedMultiplier:true}]:[]}}if(n===5)stage.repeatSpawns=[{start:18,interval:16,enemy:legendEnemyName(ch,n,12),mult:+(1.8+ch*.16).toFixed(2),fixedMultiplier:true}];return balanceLegendBossSpawns(stage)}
