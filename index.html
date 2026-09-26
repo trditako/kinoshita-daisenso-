@@ -1109,6 +1109,18 @@ async function loadPublicPlayerRankings(){
   renderRankLeaderboard();
 }
 let aiServerWorkerLastRun=null;
+let serverRankMatchCount=null;
+async function loadServerRankMatchCount(){
+ try{
+  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=rank_matches&rank_cycle=eq.'+encodeURIComponent(currentRankSeason()),{headers:supabaseHeaders(),cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const rows=await res.json();
+  if(!Array.isArray(rows))throw new Error('invalid response');
+  const total=rows.reduce((sum,row)=>sum+Math.max(0,Number(row?.rank_matches||0)),0);
+  serverRankMatchCount=Math.floor(total/2);
+  return serverRankMatchCount;
+ }catch(e){console.warn('サーバーランク戦試合数取得失敗:',e);return null;}
+}
 async function loadAIServerWorkerState(){try{const res=await fetch(SUPABASE_REST_URL+'/ai_server_state?select=last_run_at,last_run_count,last_run_message&id=eq.1',{headers:supabaseHeaders(),cache:'no-store'});if(!res.ok)return null;const rows=await res.json();const row=rows&&rows[0];if(!row)return null;aiServerWorkerLastRun=row;return row;}catch(e){return null;}}
 function aiServerWorkerStatusText(){if(!aiServerConnected)return 'サーバーAI：未接続';if(!aiServerWorkerLastRun)return 'サーバーAI：稼働確認中';const t=aiServerWorkerLastRun.last_run_at?new Date(aiServerWorkerLastRun.last_run_at):null;const age=t?Math.max(0,Math.floor((Date.now()-t.getTime())/1000)):999999;return age<120?`🤖 サーバーAI稼働中（${aiServerWorkerLastRun.last_run_count||0}体）`:'⚠️ サーバーAIの最終実行が古い';}
 
@@ -1698,7 +1710,7 @@ function counterScoreForTrait(i,trait){const c=cards[i]||{},a=c.ability||{};let 
 function rankMetaCounterCandidates(trait,limit=3){const total=Object.values(rankMetaStats.chars||{}).reduce((s,v)=>s+Number(v.used||0),0);return cards.map((c,i)=>{const v=rankMetaStats.chars[String(i)]||{used:0,wins:0,losses:0};const g=Number(v.wins||0)+Number(v.losses||0);const base=counterScoreForTrait(i,trait);const usageBoost=total?Math.min(1,Number(v.used||0)/total)*.8:0;return {i,score:base+usageBoost,base,used:Number(v.used||0),wr:g?Number(v.wins||0)/g:0}}).filter(x=>x.base>0).sort((a,b)=>b.score-a.score||b.used-a.used||b.wr-a.wr||a.i-b.i).slice(0,limit)}
 function aiMetaTraitWeights(opponentUnits){const weights={};for(const u of opponentUnits||[]){const t=u.trait||cards[u.i]?.trait||'無';weights[t]=(weights[t]||0)+1}const metaTotal=Object.values(rankMetaStats?.chars||{}).reduce((s,v)=>s+Number(v.used||0),0);if(metaTotal){for(const [k,v] of Object.entries(rankMetaStats.chars)){if(Number(v.used||0)<=0)continue;const i=Number(k),t=cards[i]?.trait||'無';weights[t]=(weights[t]||0)+Math.min(2,Number(v.used||0)/Math.max(1,metaTotal)*4)}}return weights}
 function aiCounterScore(i,opponentUnits=[]){const weights=aiMetaTraitWeights(opponentUnits);let score=0;for(const [trait,w] of Object.entries(weights))score+=counterScoreForTrait(i,trait)*w;return score}
-function renderRankMeta(){
+async function renderRankMeta(){
  const m=document.getElementById('rankMetaBody');if(!m)return;
  const banned=new Set((()=>{try{return rankSeasonBannedIndices()}catch(e){return[]}})());
  const safe=cards.map((c,i)=>({i:i,c:c,v:(rankMetaStats&&rankMetaStats.chars&&rankMetaStats.chars[String(i)])||{}})).filter(x=>!banned.has(x.i));
@@ -1709,7 +1721,7 @@ function renderRankMeta(){
  const traitRows=Object.entries(traits).sort((a,b)=>b[1]-a[1]).slice(0,5);
  const forms=[];Object.entries((rankMetaStats&&rankMetaStats.formations)||{}).forEach(([k,v])=>{if(k==='empty'||!v)return;const ids=k.split('-').map(Number);if(ids.some(i=>!Number.isInteger(i)||!cards[i]||banned.has(i)))return;const w=Number(v.wins)||0,l=Number(v.losses)||0,g=w+l;forms.push({ids:ids,u:Number(v.used)||0,wr:g?w/g:0,g:g});});forms.sort((a,b)=>b.u-a.u);
  let html='<div class="rankMetaSimple"><h2>📊 ランク戦メタ情報</h2><p>現在のランク戦で記録されたデータです。禁止キャラは自動で除外しています。</p>';
- html+='<div class="metaSimpleStats"><b>'+ (Number(rankMetaStats&&rankMetaStats.matches)||0) +'<small>試合</small></b><b>'+total+'<small>出撃</small></b><b>'+rows.filter(x=>x.u>0).length+'<small>使用キャラ</small></b></div>';
+ html+='<div class="metaSimpleStats"><b>'+ (serverRankMatchCount!==null?Number(serverRankMatchCount):Number(rankMetaStats&&rankMetaStats.matches)||0) +'<small>AIランク戦試合</small></b><b>'+total+'<small>出撃</small></b><b>'+rows.filter(x=>x.u>0).length+'<small>使用キャラ</small></b></div>';
  html+='<h3>🌈 流行属性</h3><div id="rankMetaTraitButtons" class="metaSimpleGrid">';
  html+=traitRows.length?traitRows.map((x,i)=>'<button type="button" class="rankMetaTraitButton" data-trait="'+esc(x[0])+'"><strong>#'+(i+1)+' '+esc(x[0])+'</strong><span>'+((x[1]/total)*100).toFixed(1)+'% 使用</span></button>').join(''):'<div>まだデータがありません。</div>';
  html+='</div><div id="rankMetaTraitDetail" class="rankMetaTraitDetail" style="display:none"></div>';
@@ -1727,6 +1739,7 @@ function openRankMeta(){
  if(!modal||!body)return;
  modal.style.display='flex';
  renderRankMeta();
+ loadServerRankMatchCount().then(()=>{if(modal.style.display!=='none')renderRankMeta();});
 }
 function openRankRewardInfo(){ensureRankSeason();const el=document.getElementById('rankMetaBody');if(!el)return;el.innerHTML=rankRewardRulesHTML();document.getElementById('rankMetaModal').style.display='flex'}function closeRankMeta(){document.getElementById('rankMetaModal').style.display='none'}
 let playerRankWins=Math.max(0,Number(storage.getItem('kinoshitaRankWins')||0));
