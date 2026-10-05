@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.6';
+const GAME_VERSION='v1.1.7';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.7',title:'🌋 ゾクラテスの烈波判定を修正',items:['烈波を生成位置にいる敵へ0.2秒間隔で繰り返し判定するよう修正','各判定で烈波生成元の攻撃力を基準にダメージを与え、能力効果も適用','烈波の持続時間が終了すると判定処理を安全に停止']},
  {date:'2026-10-05',version:'v1.1.6',title:'🌟 聖なる偉人達を追加・ゾクラテスを強化',items:['期間限定交換所「聖なる偉人達」に6体の新キャラクターを追加','哲学の賢者ゾクラテスをHP19500・攻撃力3200+2000+1750へ強化','ゾクラテスの波動反射・烈波・射程低下・呪いなどの専用能力を調整・改善','重力の賢者ニュトーンの属性を無属性へ変更']},
  {date:'2026-09-26',version:'v1.1.5',title:'🌟 レジェンドステージを追加',items:['全10章・各6ステージの新コンテンツを追加','味方キャラクターも敵として登場する専用ステージを実装','敵専用キャラクターは味方として使用できない仕様を維持','一部ステージに敵城HPトリガー・反復出現などの特殊ギミックを追加']},
  {date:'2026-09-25',version:'v1.1.4',title:'機械防衛隊！木下sのAI交換・呪い無効を強化',items:['AIが木下コインで機械防衛隊！木下sを確実に交換候補として扱うよう調整','機械防衛隊！木下sの6体すべてに呪い無効を追加']},{date:'2026-09-25',version:'v1.1.3',title:'機械防衛隊！木下sを期間限定交換所に追加',items:['超激レア5体＋伝説レア1体を追加','古代属性に極端に強い一方、古代以外には大幅な弱点を持つシリーズ特性を追加','シリーズ専用能力「古代掃討システム」「属性過負荷」を追加','期間限定交換所を機械防衛隊！木下sへ更新']},{date:'2026-09-25',version:'v1.1.0',title:'古代編 第1章を追加',items:['宇宙編よりさらに高難度の全48ステージを追加','新属性「古代」を追加。呪いと複数の妨害無効、波動などを持つ強敵を追加','古代属性の新敵を35体追加。カエル木下・めっちゃ木下も古代編に登場']},
@@ -1657,7 +1658,6 @@ function triggerSocratesSurge(source,origin){
  const damageBase=Math.max(1,Number(source.atk)||0); // 烈波ダメージは発生元キャラの攻撃力
  const center=Number(origin.x||0);
  const radius=105+level*35;
- const until=performance.now()/1000+duration;
  const surge=document.createElement('div');
  surge.className='socratesSurgeEffect';
  surge.style.left=center+'px';
@@ -1665,16 +1665,35 @@ function triggerSocratesSurge(source,origin){
  surge.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
  surge.style.setProperty('--surge-duration',duration+'s');
  effects.appendChild(surge);
- // 発生時の烈波ダメージにも通常攻撃と同じ能力補正・属性相性・状態異常を適用。
- const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-center)<=radius);
- for(const t of targets){
-   const dealt=damageAgainst(source,t);
-   hit(t,dealt,source);
-   if(!isAbilitySealed(source))applyAbility(source,t,dealt);
-   if(t.hp<=0)removeEnemy(t);
- }
+
+ // 烈波は生成位置に敵がいる間、0.2秒間隔で繰り返し判定する。
+ // 各判定は烈波を生成したキャラの攻撃力を基準にし、通常攻撃と同じ能力補正・属性相性・状態異常を適用する。
+ const applySurgeHit=()=>{
+   const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-center)<=radius);
+   for(const t of targets){
+     const dealt=damageAgainst(source,t);
+     hit(t,dealt,source);
+     if(!isAbilitySealed(source))applyAbility(source,t,dealt);
+     if(t.hp<=0)removeEnemy(t);
+   }
+ };
+
+ const surgeEndTime=performance.now()+duration*1000;
+ // 生成時に1回判定し、その後0.2秒ごとに再判定する。
+ applySurgeHit();
+ const surgeTimer=setInterval(()=>{
+   if(performance.now()>=surgeEndTime){
+     clearInterval(surgeTimer);
+     return;
+   }
+   applySurgeHit();
+ },200);
+
  setStatusMark(origin,'🌋','烈波Lv'+level,duration,'socratesSurge');
- setTimeout(()=>surge.remove(),duration*1000+120);
+ setTimeout(()=>{
+   clearInterval(surgeTimer);
+   surge.remove();
+ },duration*1000+50);
 }
 function allyWaveAttack(u){
  const level=Math.max(1,Number(u.waveLevel||0));
