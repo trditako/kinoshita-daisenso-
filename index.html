@@ -2749,15 +2749,35 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  if(!source||isAbilitySealed(source))return;
  const a=source.ability||{},level=Number(a.phoenixSurgeLevel||0);if(!level)return;
  const isAlly=units.includes(source);
- const targets=isAlly?(Array.isArray(hitTargets)?hitTargets.filter(e=>e&&e.hp>0):[]):units.filter(u=>u&&u.hp>0&&Math.abs(u.x-center)>=Number(a.phoenixSurgeMin??1)&&Math.abs(u.x-center)<=Number(a.phoenixSurgeMax??200));
- const count=Math.max(1,targets.length),surgeRange=Math.max(70,70+level*35);
+ const min=Number(a.phoenixSurgeMin??1),max=Number(a.phoenixSurgeMax??200);
+ // 味方は右側から左側へ攻撃するため、正の烈波射程を左方向へ反転する。
+ // 敵側は ability に定義された符号付き射程をそのまま座標範囲として使う。
+ const targets=isAlly
+   ? (Array.isArray(hitTargets)?hitTargets.filter(e=>e):[])
+   : units.filter(u=>u&&u.hp>0&&u.x>=center+min&&u.x<=center+max);
+ const count=targets.length;
+ if(count<=0)return;
  for(let i=0;i<count;i++){
   const origin=Number(targets[i]?.x??center);
-  const affected=isAlly?enemies.filter(e=>e&&e.hp>0&&!isSurgeImmuneEntity(e)&&Math.abs(e.x-origin)<=surgeRange):units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&Math.abs(u.x-origin)<=surgeRange);
+  const lo=isAlly?origin-max:origin+min;
+  const hi=isAlly?origin-min:origin+max;
+  const affected=isAlly
+   ? enemies.filter(e=>e&&e.hp>0&&!isSurgeImmuneEntity(e)&&e.x>=lo&&e.x<=hi)
+   : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&u.x>=lo&&u.x<=hi);
   for(const t of affected){
-   const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));hit(t,dealt,source);applyPhoenixAttackAbility(source,t);if(t.hp<=0)(isAlly?removeEnemy(t):removeUnit(t));
+   const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
+   hit(t,dealt,source);
+   applyPhoenixAttackAbility(source,t);
+   if(t.hp<=0)(isAlly?removeEnemy(t):removeUnit(t));
   }
-  const fx=document.createElement('div');fx.className='socratesSurgeEffect';fx.style.left=origin+'px';fx.style.bottom='105px';fx.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');fx.style.setProperty('--surge-duration',level+'s');effects.appendChild(fx);setTimeout(()=>fx.remove(),level*1000+50);
+  const fx=document.createElement('div');
+  fx.className='socratesSurgeEffect';
+  fx.style.left=origin+'px';
+  fx.style.bottom='105px';
+  fx.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
+  fx.style.setProperty('--surge-duration',level+'s');
+  effects.appendChild(fx);
+  setTimeout(()=>fx.remove(),level*1000+50);
  }
 }
 function enemyAttackTarget(e,t,ea,now2,sourceSealed){
