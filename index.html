@@ -2694,7 +2694,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
      u.target=target;
    }
    if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=u.range);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
-   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:u.maxRange??u.range},e)):u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u))applyAbility(u,t,dealt);if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true)}else removeEnemy(t)}}if(!isAbilitySealed(u)&&u.ability?.phoenixSurgeLevel)triggerPhoenixSurge(u,u.x);if(u.waveLevel&&!u.ability?.waveChance&&!isAbilitySealed(u))allyWaveAttack(u);u.cd=u.interval}}
+   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:u.maxRange??u.range},e)):u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u))applyAbility(u,t,dealt);if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true)}else removeEnemy(t)}}if(!isAbilitySealed(u)&&u.ability?.phoenixSurgeLevel)triggerPhoenixSurge(u,u.x,targets);if(u.waveLevel&&!u.ability?.waveChance&&!isAbilitySealed(u))allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const cursedNow=nowMove<(u.cursedUntil||0);const curseSf=cursedNow?(Number(u.cursedSpeedFactor)||1):1;if(!isThousandStep&&!stopNow)u.x-=u.spd*curseSf*60*dt}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';const barrierBar=u.el.querySelector('.barrierBar i');const barrierLabel=u.el.querySelector('.barrierLabel');if(barrierBar&&u.barrierMax>0)barrierBar.style.width=Math.max(0,u.barrier/u.barrierMax*100)+'%';if(barrierLabel&&u.barrierMax>0&&u.barrier>0)barrierLabel.textContent='🛡 バリア '+Math.ceil(u.barrier).toLocaleString()+' / '+Math.ceil(u.barrierMax).toLocaleString();
@@ -2745,7 +2745,37 @@ function reflectEnemyWave(sourceWave,reflector){
 }
 function enemyInAllRange(e,u){const d=Number(u.x)-Number(e.x);return d>=Number(e.minRange??0)&&d<=Number(e.maxRange??e.range??0);}
 function applyPhoenixAttackAbility(source,target){const a=source?.ability||{},now=performance.now()/1000;if(!source||!target||target.hp<=0||isAbilitySealed(source)||isAbilitySealed(target))return;if(a.curseChance&&Math.random()<Number(a.curseChance)&&(!a.curseTargets||a.curseTargets.includes(target.trait)))applyCurseStatus(source,target);if(a.stopChance&&Math.random()<Number(a.stopChance)&&!target.stopImmune){target.stopUntil=now+Number(a.stopDuration||2);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||2),'stop');}if(a.slowChance&&!target.slowImmune&&Math.random()<Number(a.slowChance)){target.slowUntil=now+Number(a.slowDuration||2);target.slowFactor=.5;setStatusMark(target,'🐌','速度低下',Number(a.slowDuration||2),'slow');}}
-function triggerPhoenixSurge(source,center){if(!source||isAbilitySealed(source))return;const a=source.ability||{},level=Number(a.phoenixSurgeLevel||0);if(!level)return;const min=Number(a.phoenixSurgeMin??1),max=Number(a.phoenixSurgeMax??200),targets=units.filter(u=>u&&u.hp>0&&Math.abs(u.x-center)>=min&&Math.abs(u.x-center)<=max),count=Math.max(1,targets.length);for(let i=0;i<count;i++){const origin=targets[i]?.x??center;for(const t of units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&Math.abs(u.x-origin)<=70+level*35)){const dealt=Math.max(1,Number(damageTakenBy(t,source))||1);hit(t,dealt,source);applyPhoenixAttackAbility(source,t);if(t.hp<=0)removeUnit(t);}const fx=document.createElement('div');fx.className='socratesSurgeEffect';fx.style.left=origin+'px';fx.style.bottom='105px';fx.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');fx.style.setProperty('--surge-duration',level+'s');effects.appendChild(fx);setTimeout(()=>fx.remove(),level*1000+50);}}
+function triggerPhoenixSurge(source,center,hitTargets=[]){
+ if(!source||isAbilitySealed(source))return;
+ const a=source.ability||{},level=Number(a.phoenixSurgeLevel||0);
+ if(!level)return;
+ const isAlly=units.includes(source);
+ const targets=isAlly
+   ? (Array.isArray(hitTargets)?hitTargets.filter(e=>e&&e.hp>0):[])
+   : units.filter(u=>u&&u.hp>0&&Math.abs(u.x-center)>=Number(a.phoenixSurgeMin??1)&&Math.abs(u.x-center)<=Number(a.phoenixSurgeMax??200));
+ const count=Math.max(1,targets.length);
+ const surgeRange=Math.max(70,70+level*35);
+ for(let i=0;i<count;i++){
+   const origin=Number(targets[i]?.x??center);
+   const affected=isAlly
+     ? enemies.filter(e=>e&&e.hp>0&&!isSurgeImmuneEntity(e)&&Math.abs(e.x-origin)<=surgeRange)
+     : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&Math.abs(u.x-origin)<=surgeRange);
+   for(const t of affected){
+     const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
+     hit(t,dealt,source);
+     applyPhoenixAttackAbility(source,t);
+     if(t.hp<=0)(isAlly?removeEnemy(t):removeUnit(t));
+   }
+   const fx=document.createElement('div');
+   fx.className='socratesSurgeEffect';
+   fx.style.left=origin+'px';
+   fx.style.bottom='105px';
+   fx.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
+   fx.style.setProperty('--surge-duration',level+'s');
+   effects.appendChild(fx);
+   setTimeout(()=>fx.remove(),level*1000+50);
+ }
+}
 function enemyAttackTarget(e,t,ea,now2,sourceSealed){
  if(!e||!t||t.hp<=0)return;
  const raw=Math.max(1,Number(damageTakenBy(t,e))||1),before=t.hp;let dealt=raw;
