@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.9';
+const GAME_VERSION='v1.1.10';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.10',title:'🐦‍🔥 フェニックスの妨害判定を調整',items:['フェニックスの通常攻撃にも指定確率の速度低下を適用','通常攻撃の吹っ飛ばしを33%／66%で判定するよう修正']},
  {date:'2026-10-05',version:'v1.1.9',title:'🐦‍🔥 イベント「フェニックス降臨」を追加',items:['イベントステージ「フェニックス降臨」を追加','敵フェニックスの復活・覚醒ギミックを追加','フェニックスの烈波に生成元キャラクターの能力を適用','クリア報酬として味方フェニックスを追加']},
  {date:'2026-10-05',version:'v1.1.8',title:'🌟 レジェンド序盤の難易度を調整',items:['第1～2章からボス級味方キャラクターが通常敵として出現しないよう調整','第3～4章ではパーフェクト木下をまだ登場させず、段階的に高難度化','レジェンド後半では従来どおりボス級キャラクターを解禁']},
  {date:'2026-10-05',version:'v1.1.7',title:'🌋 ゾクラテスの烈波判定を修正',items:['烈波を生成位置にいる敵へ0.2秒間隔で繰り返し判定するよう修正','各判定で烈波生成元の攻撃力を基準にダメージを与え、能力効果も適用','烈波の持続時間が終了すると判定処理を安全に停止']},
@@ -505,8 +506,8 @@ Object.assign(enemyTypes,{
  めっちゃ木下:{name:"めっちゃ木下",icon:"💥",trait:"無",hp:1000000,atk:3000,range:1,spd:3,interval:1,attackType:"area",kb:1,money:5000,stopImmune:true,curseImmune:true,ability:{name:"一撃自壊・波動Lv15",desc:"1回攻撃すると自身が即死。その攻撃で波動Lv15・15秒呪い。呪い無効・停止無効。宇宙/赤の攻撃力を20秒99%低下。波動にも効果適用。",waveLevel:15,wave:true,waveCarriesEffects:true,curseChance:1,curseDuration:15,areaAttackDownChance:1,areaAttackDownDuration:20,areaAttackDownFactor:.01,suicideAfterAttack:true}}
 });
 Object.assign(enemyTypes,{
- フェニックス:{name:"フェニックス🐦‍🔥",icon:"🐦‍🔥",trait:"赤・黒",hp:500000,atk:2300,range:126,spd:1.1,interval:1.5,attackType:"allrange",kb:1,money:12000,minRange:-500,maxRange:126,phoenixForm:"normal",ability:{name:"不死鳥の炎",curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowChance:.33,slowDuration:2,phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,revive:true}},
- "フェニックス(覚醒)":{name:"フェニックス🐦‍🔥(覚醒)",icon:"🔥",trait:"赤・黒",hp:750000,atk:1450,range:146,spd:1.25,interval:2,attackType:"allrange",kb:5,money:18000,minRange:-500,maxRange:126,phoenixForm:"awakened",ability:{name:"不死鳥の覚醒",curseChance:.5,curseDuration:3,stopChance:.66,stopDuration:2,slowChance:.66,slowDuration:2,phoenixSurgeLevel:2,phoenixSurgeMin:-500,phoenixSurgeMax:200,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,yabayaba:5,yabayabaChance:1,phoenixAura:.75,phoenixLowHpMultiplier:3}}});
+ フェニックス:{name:"フェニックス🐦‍🔥",icon:"🐦‍🔥",trait:"赤・黒",hp:500000,atk:2300,range:126,spd:1.1,interval:1.5,attackType:"allrange",kb:1,money:12000,minRange:-500,maxRange:126,phoenixForm:"normal",ability:{name:"不死鳥の炎",curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowChance:.33,slowDuration:2,phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,knockbackChance:.33,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,revive:true}},
+ "フェニックス(覚醒)":{name:"フェニックス🐦‍🔥(覚醒)",icon:"🔥",trait:"赤・黒",hp:750000,atk:1450,range:146,spd:1.25,interval:2,attackType:"allrange",kb:5,money:18000,minRange:-500,maxRange:126,phoenixForm:"awakened",ability:{name:"不死鳥の覚醒",curseChance:.5,curseDuration:3,stopChance:.66,stopDuration:2,slowChance:.66,slowDuration:2,phoenixSurgeLevel:2,phoenixSurgeMin:-500,phoenixSurgeMax:200,knockbackChance:.66,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,yabayaba:5,yabayabaChance:1,phoenixAura:.75,phoenixLowHpMultiplier:3}}});
 Object.assign(enemyTypes,{
 古代カエル:{name:"古代カエル",icon:"🐸",trait:"古代",hp:42000,atk:4200,range:250,spd:.78,interval:1.45,attackType:"area",kb:4,money:1200,curseImmune:true,stopImmune:true,attackDownImmune:true,ability:{name:"古代呪い",desc:"呪い・停止・攻撃力低下無効。攻撃時35%で3秒呪い。",curseChance:.35,curseDuration:3}},
 古代田中:{name:"古代田中",icon:"🗿",trait:"古代",hp:65000,atk:7200,range:95,spd:.62,interval:1.2,attackType:"single",kb:5,money:1500,curseImmune:true,stopImmune:true,ability:{name:"古代咆哮",desc:"呪い・停止無効。50%で攻撃力低下4秒。",attackDownChance:.5,attackDownDuration:4,attackDownFactor:.25}},
@@ -2662,10 +2663,10 @@ function enemyAttackTarget(e,t,ea,now2,sourceSealed){
  const raw=Math.max(1,Number(damageTakenBy(t,e))||1),before=t.hp;let dealt=raw;
  if(Number(t.barrier||0)>0){const absorbed=Math.min(t.barrier,dealt);t.barrier-=absorbed;dealt-=absorbed;const bi=t.el?.querySelector('.barrierBar i'),bl=t.el?.querySelector('.barrierLabel');if(bi&&t.barrierMax>0)bi.style.width=Math.max(0,t.barrier/t.barrierMax*100)+'%';if(bl&&t.barrierMax>0)bl.textContent=t.barrier>0?'🛡 バリア '+Math.ceil(t.barrier).toLocaleString()+' / '+Math.ceil(t.barrierMax).toLocaleString():'🛡 バリア破壊！';if(absorbed>0)popup('🛡️-'+absorbed,t.x,Math.max(25,field.clientHeight-145));}
  t.hp=Math.max(0,t.hp-dealt);if(t.el){t.el.classList.remove('hit');t.el.classList.add('hit');setTimeout(()=>t.el?.classList.remove('hit'),170);const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}
- playSE('impact');popup('-'+raw,t.x,Math.max(25,field.clientHeight-115));if(t.hp>0)triggerKnockback(t,e,before);
+ playSE('impact');popup('-'+raw,t.x,Math.max(25,field.clientHeight-115));if(t.hp>0&&(!ea.knockbackChance||Math.random()<Number(ea.knockbackChance)))triggerKnockback(t,e,before);
  if(!sourceSealed&&!isAbilitySealed(t)){
    if(ea.curseChance&&Math.random()<Number(ea.curseChance))applyCurseStatus(e,t);
-   if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');}
+   if(ea.stopChance&&!t.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');} if(ea.slowChance&&!t.slowImmune&&Math.random()<Number(ea.slowChance)){t.slowUntil=now2+Number(ea.slowDuration||2);t.slowFactor=.5;setStatusMark(t,'🐌','速度低下',Number(ea.slowDuration||2),'slow');}
    if(ea.sealChance&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=now2+Number(ea.sealDuration||4);setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}
    if(ea.attackDownChance&&!t.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}
    if(ea.warpChance&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}
