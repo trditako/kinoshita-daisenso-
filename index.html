@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.8';
+const GAME_VERSION='v1.1.9';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.9',title:'🐦‍🔥 イベント「フェニックス降臨」を追加',items:['イベントステージ「フェニックス降臨」を追加','敵フェニックスの復活・覚醒ギミックを追加','フェニックスの烈波に生成元キャラクターの能力を適用','クリア報酬として味方フェニックスを追加']},
  {date:'2026-10-05',version:'v1.1.8',title:'🌟 レジェンド序盤の難易度を調整',items:['第1～2章からボス級味方キャラクターが通常敵として出現しないよう調整','第3～4章ではパーフェクト木下をまだ登場させず、段階的に高難度化','レジェンド後半では従来どおりボス級キャラクターを解禁']},
  {date:'2026-10-05',version:'v1.1.7',title:'🌋 ゾクラテスの烈波判定を修正',items:['烈波を生成位置にいる敵へ0.2秒間隔で繰り返し判定するよう修正','各判定で烈波生成元の攻撃力を基準にダメージを与え、能力効果も適用','烈波の持続時間が終了すると判定処理を安全に停止']},
  {date:'2026-10-05',version:'v1.1.6',title:'🌟 聖なる偉人達を追加・ゾクラテスを強化',items:['期間限定交換所「聖なる偉人達」に6体の新キャラクターを追加','哲学の賢者ゾクラテスをHP19500・攻撃力3200+2000+1750へ強化','ゾクラテスの波動反射・烈波・射程低下・呪いなどの専用能力を調整・改善','重力の賢者ニュトーンの属性を無属性へ変更']},
@@ -309,6 +310,9 @@ const cards=[
 
 
 ];
+const PHOENIX_REWARD_CARD={name:"フェニックス",cost:3500,hp:16000,atk:1150,range:100,spd:1.1,interval:1.6,recharge:45,icon:"🐦‍🔥",motion:"super",attackType:"allrange",kb:1,minRange:-70,maxRange:100,trait:"赤・黒",specialReward:true,ability:{name:"不死鳥の炎",phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowImmune:true,waveImmune:true,surgeImmune:true,curseTargets:["古代","宇宙","天使"]}};
+cards.push(PHOENIX_REWARD_CARD);
+
 // 日本編クリア報酬キャラクター（3体ともここで新規定義）
 const CHAPTER_REWARD_CARDS=[
 {name:"突撃ハーランド木下",cost:777,hp:1200,atk:400,range:45,spd:1.2,interval:.7,recharge:25,icon:"🏃",motion:"power",attackType:"area",kb:2,series:"日本編 第1章クリア報酬",rarity:"SR",specialReward:true,chapterReward:1,ability:{name:"突撃ハーランド",desc:"高速で前線へ進み、範囲攻撃を行う"}},
@@ -500,6 +504,9 @@ Object.assign(enemyTypes,{
  パーフェクト木下:{name:"パーフェクト木下",icon:"🌟",trait:"宇宙",hp:750000,atk:8600,range:75,spd:1.3,interval:1.7,attackType:"single",kb:2,money:12000,stopImmune:true,attackDownImmune:true,curseImmune:true,waveImmune:true,waveReflect:true,ability:{name:"完全反射・三属性特効",desc:"呪い無効・停止無効・攻撃力低下無効・波動無効・波動反射。攻撃時75%で波動Lv3・ヤバヤバLv4・呪い5秒。無/宇宙/赤に与えるダメージ5倍。波動にも効果が乗る。",waveLevel:3,waveChance:.75,waveCarriesEffects:true,waveReflect:true,yabayaba:4,yabayabaChance:.75,curseChance:.75,curseDuration:5,strong:{"無":5,"宇宙":5,"赤":5},curseOnWave:true}},
  めっちゃ木下:{name:"めっちゃ木下",icon:"💥",trait:"無",hp:1000000,atk:3000,range:1,spd:3,interval:1,attackType:"area",kb:1,money:5000,stopImmune:true,curseImmune:true,ability:{name:"一撃自壊・波動Lv15",desc:"1回攻撃すると自身が即死。その攻撃で波動Lv15・15秒呪い。呪い無効・停止無効。宇宙/赤の攻撃力を20秒99%低下。波動にも効果適用。",waveLevel:15,wave:true,waveCarriesEffects:true,curseChance:1,curseDuration:15,areaAttackDownChance:1,areaAttackDownDuration:20,areaAttackDownFactor:.01,suicideAfterAttack:true}}
 });
+Object.assign(enemyTypes,{
+ フェニックス:{name:"フェニックス🐦‍🔥",icon:"🐦‍🔥",trait:"赤・黒",hp:500000,atk:2300,range:126,spd:1.1,interval:1.5,attackType:"allrange",kb:1,money:12000,minRange:-500,maxRange:126,phoenixForm:"normal",ability:{name:"不死鳥の炎",curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowChance:.33,slowDuration:2,phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,revive:true}},
+ "フェニックス(覚醒)":{name:"フェニックス🐦‍🔥(覚醒)",icon:"🔥",trait:"赤・黒",hp:750000,atk:1450,range:146,spd:1.25,interval:2,attackType:"allrange",kb:5,money:18000,minRange:-500,maxRange:126,phoenixForm:"awakened",ability:{name:"不死鳥の覚醒",curseChance:.5,curseDuration:3,stopChance:.66,stopDuration:2,slowChance:.66,slowDuration:2,phoenixSurgeLevel:2,phoenixSurgeMin:-500,phoenixSurgeMax:200,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,yabayaba:5,yabayabaChance:1,phoenixAura:.75,phoenixLowHpMultiplier:3}}});
 Object.assign(enemyTypes,{
 古代カエル:{name:"古代カエル",icon:"🐸",trait:"古代",hp:42000,atk:4200,range:250,spd:.78,interval:1.45,attackType:"area",kb:4,money:1200,curseImmune:true,stopImmune:true,attackDownImmune:true,ability:{name:"古代呪い",desc:"呪い・停止・攻撃力低下無効。攻撃時35%で3秒呪い。",curseChance:.35,curseDuration:3}},
 古代田中:{name:"古代田中",icon:"🗿",trait:"古代",hp:65000,atk:7200,range:95,spd:.62,interval:1.2,attackType:"single",kb:5,money:1500,curseImmune:true,stopImmune:true,ability:{name:"古代咆哮",desc:"呪い・停止無効。50%で攻撃力低下4秒。",attackDownChance:.5,attackDownDuration:4,attackDownFactor:.25}},
@@ -841,8 +848,14 @@ const eventStages=[
   {t:95.4,enemy:'カエル木下',mult:1,fixedMultiplier:true}
  ],repeatSpawns:[
   {start:20,interval:20,enemy:'黒忍木下',mult:4,fixedMultiplier:true}
- ]}
-];
+ ]},
+ {name:"フェニックス降臨",width:2300,baseHp:250000,xp:6000,eventReward:"フェニックス",rewardCharacter:"フェニックス",enemies:["古代吉田","めっちゃ木下","古代木村","古代井上","カエル木下","フェニックス","ワープ木下"],schedule:[
+  {t:0,enemy:"古代吉田",mult:3,fixedMultiplier:true},{t:2,enemy:"古代吉田",mult:3,fixedMultiplier:true},{t:4,enemy:"古代吉田",mult:3,fixedMultiplier:true},{t:11,enemy:"古代木村",mult:1,fixedMultiplier:true}
+ ],repeatSpawns:[{start:7,interval:26,enemy:"めっちゃ木下",mult:1,fixedMultiplier:true}],
+ triggerSpawns:{threshold:.99,spawns:[
+  {delay:1,enemy:"古代井上",mult:2,fixedMultiplier:true},{delay:3,enemy:"カエル木下",mult:5.55,fixedMultiplier:true},{delay:4,enemy:"カエル木下",mult:5.55,fixedMultiplier:true},{delay:5,enemy:"カエル木下",mult:5.55,fixedMultiplier:true},{delay:7,enemy:"フェニックス",mult:1,fixedMultiplier:true,role:"boss"}
+ ],repeats:[{delay:19,interval:25,enemy:"ワープ木下",mult:20,fixedMultiplier:true}]},knockbackAll:true
+ ];
 
 // ===== 日本編 第2章・第3章 =====
 function cloneChapterStage(base, stageNo, chapter){
