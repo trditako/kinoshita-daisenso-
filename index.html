@@ -114,7 +114,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 @keyframes enemyAttackAnim{0%{transform:scaleX(-1) translateX(0) scale(1)}45%{transform:scaleX(-1) translateX(-5px) scale(1.08)}100%{transform:scaleX(-1) translateX(2px) scale(.98)}}
 @keyframes enemyHitAnim{0%{transform:scaleX(-1);filter:drop-shadow(2px 3px 1px #333)}50%{transform:scaleX(-1);filter:brightness(2) drop-shadow(2px 3px 1px #333)}100%{transform:scaleX(-1);filter:drop-shadow(2px 3px 1px #333)}}
 .effects{position:absolute;inset:0;pointer-events:none;z-index:15;overflow:hidden}
-.enemyWaveEffect{position:absolute;width:min(var(--wave-width),calc(100vw - 120px));height:150px;pointer-events:none;z-index:18;overflow:visible;animation:waveRush .5s ease-out forwards;}
+.socratesSurgeEffect{position:absolute;width:92px;height:var(--surge-height,200px);pointer-events:none;z-index:19;transform:translateX(-50%);overflow:visible;animation:socratesSurge var(--surge-duration,2s) ease-out forwards;filter:drop-shadow(0 0 8px rgba(255,85,35,.95));}.socratesSurgeEffect::before,.socratesSurgeEffect::after{content:"";position:absolute;left:50%;bottom:0;width:34px;height:100%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(255,245,160,.98),rgba(255,100,30,.92) 42%,rgba(205,35,20,.88));clip-path:polygon(48% 0,67% 13%,57% 27%,82% 43%,61% 57%,76% 73%,54% 100%,38% 81%,20% 100%,34% 68%,12% 52%,35% 37%,22% 22%,43% 12%);}.socratesSurgeEffect::after{width:70px;opacity:.42;filter:blur(5px);transform:translateX(-50%) scaleX(1.45);}.socratesSurgeEffect{box-shadow:0 0 22px 5px rgba(255,90,25,.35) inset;}@keyframes socratesSurge{0%{opacity:0;transform:translateX(-50%) scaleY(.2) scaleX(.7)}12%{opacity:1}55%{opacity:1;transform:translateX(-50%) scaleY(1) scaleX(1)}100%{opacity:.18;transform:translateX(-50%) scaleY(1) scaleX(1.12)}}.enemyWaveEffect{position:absolute;width:min(var(--wave-width),calc(100vw - 120px));height:150px;pointer-events:none;z-index:18;overflow:visible;animation:waveRush .5s ease-out forwards;}
 .enemyWaveEffect::before,.enemyWaveEffect::after{content:"";position:absolute;left:0;top:50%;width:100%;height:18px;border:7px solid rgba(145,220,255,.95);border-left:0;border-radius:0 50% 50% 0;filter:drop-shadow(0 0 7px rgba(110,210,255,.95));transform-origin:left center;}
 .enemyWaveEffect::before{transform:translateY(-50%) scaleY(2.8);clip-path:polygon(0 42%,6% 8%,12% 42%,18% 82%,24% 42%,30% 8%,36% 42%,42% 82%,48% 42%,54% 8%,60% 42%,66% 82%,72% 42%,78% 8%,84% 42%,90% 82%,100% 42%,100% 58%,90% 98%,84% 58%,78% 92%,72% 58%,66% 98%,60% 58%,54% 92%,48% 58%,42% 98%,36% 58%,30% 92%,24% 58%,18% 98%,12% 58%,6% 92%,0 58%);}
 .enemyWaveEffect::after{height:10px;border-width:4px;opacity:.7;transform:translateY(-50%) scaleY(1.7);filter:drop-shadow(0 0 4px rgba(210,245,255,.9));}
@@ -1647,6 +1647,34 @@ function reflectAllyWave(sourceWave,reflector){
  for(let i=0;i<Math.min(10,level);i++){const crest=document.createElement('span');crest.className='waveCrest';crest.style.left=(i/Math.max(1,Math.min(10,level)-1)*Math.min(100,range*.11))+'%';crest.style.animationDelay=(i*18)+'ms';wave.appendChild(crest);}
  setTimeout(()=>wave.remove(),520);
 }
+function triggerSocratesSurge(source,origin){
+ if(!source||!origin||source.name!=='哲学の賢者ゾクラテス'||isAbilitySealed(source))return;
+ const band=source.ability?.rangeBands?.[1];
+ const level=Math.max(1,Number(band?.surgeLevel||0));
+ if(!level)return;
+ const duration=level; // 烈波Lv2 = 2秒
+ const damageBase=Math.max(1,Number(source.atk)||0); // 烈波ダメージは発生元キャラの攻撃力
+ const center=Number(origin.x||0);
+ const radius=105+level*35;
+ const until=performance.now()/1000+duration;
+ const surge=document.createElement('div');
+ surge.className='socratesSurgeEffect';
+ surge.style.left=center+'px';
+ surge.style.bottom='105px';
+ surge.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
+ surge.style.setProperty('--surge-duration',duration+'s');
+ effects.appendChild(surge);
+ // 発生時の烈波ダメージにも通常攻撃と同じ能力補正・属性相性・状態異常を適用。
+ const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-center)<=radius);
+ for(const t of targets){
+   const dealt=damageAgainst(source,t);
+   hit(t,dealt,source);
+   if(!isAbilitySealed(source))applyAbility(source,t,dealt);
+   if(t.hp<=0)removeEnemy(t);
+ }
+ setStatusMark(origin,'🌋','烈波Lv'+level,duration,'socratesSurge');
+ setTimeout(()=>surge.remove(),duration*1000+120);
+}
 function allyWaveAttack(u){
  const level=Math.max(1,Number(u.waveLevel||0));
  if(!level)return;
@@ -2528,7 +2556,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
      u.target=target;
    }
    if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=u.range);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
-   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}if(u.waveLevel&&!u.ability?.waveChance&&!isAbilitySealed(u))allyWaveAttack(u);u.cd=u.interval}}
+   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='area'?enemies.filter(e=>Math.abs(e.x-u.x)<u.range+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u))applyAbility(u,t,dealt);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}if(u.waveLevel&&!u.ability?.waveChance&&!isAbilitySealed(u))allyWaveAttack(u);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const cursedNow=nowMove<(u.cursedUntil||0);const curseSf=cursedNow?(Number(u.cursedSpeedFactor)||1):1;if(!u.minRange&&!stopNow)u.x-=u.spd*curseSf*60*dt}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';const barrierBar=u.el.querySelector('.barrierBar i');const barrierLabel=u.el.querySelector('.barrierLabel');if(barrierBar&&u.barrierMax>0)barrierBar.style.width=Math.max(0,u.barrier/u.barrierMax*100)+'%';if(barrierLabel&&u.barrierMax>0&&u.barrier>0)barrierLabel.textContent='🛡 バリア '+Math.ceil(u.barrier).toLocaleString()+' / '+Math.ceil(u.barrierMax).toLocaleString();
