@@ -10,6 +10,7 @@
 <script>
 const GAME_VERSION='v1.1.13';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.15',title:'🐦‍🔥 フェニックスを最新IDへ固定',items:['フェニックスを全キャラクター登録の最後へ移動','フェニックス実装前の既存キャラクター順・IDを維持','図鑑番号を既存キャラクターとフェニックスの固定順に合わせて表示']},
  {date:'2026-10-05',version:'v1.1.14',title:'📚 図鑑番号を追加',items:['図鑑に全キャラクターの図鑑No.を表示','未入手キャラクターも図鑑番号を確認できるよう調整']},
  {date:'2026-10-05',version:'v1.1.13',title:'🐦‍🔥 フェニックスのキャラクターIDを修正',items:['v1.1.11の正しい旧ID 20を基準に既存セーブを修復','フェニックス追加後も既存キャラクターのIDがずれないよう補正']},
  
@@ -399,10 +400,8 @@ cards.push(
  {name:"機神木下",cost:5000,hp:55000,atk:9000,range:360,spd:.28,interval:2.2,recharge:45,icon:"🤖",motion:"super",attackType:"area",kb:5,trait:"鋼",rarity:"LR",series:"機械防衛隊！木下s",limitedExchange:true,limitedExchangeSeries:"機械防衛隊！木下s",curseImmune:true,waveLevel:10,ability:{name:"古代掃討システム・機神",desc:"古代に6倍ダメージ・古代からの被ダメージ0.15倍。古代以外への攻撃0.35倍・古代以外からの被ダメージ2.5倍。波動Lv10、停止・攻撃力低下・烈波無効。",ancientHunter:6,ancientHunterResist:.15,attributeOverload:{outgoing:.35,incoming:2.5},wave:true,stopImmune:true,attackDownImmune:true,surgeImmunity:true}}
 );
 
-cards.push(PHOENIX_REWARD_CARD);
-PHOENIX_REWARD_CARD.id=cards.length-1;
-
-// 新6体のIDは「全カード登録後」の末尾IDに固定。既存IDは一切変更しない。
+// フェニックスは既存キャラクターの配列位置を変更しないため、全カード登録の最後に追加します。
+// これによりフェニックス実装前のキャラクターID/図鑑順を維持し、フェニックスだけが最新IDになります。
 const MACHINE_DEFENSE_NAMES=['機甲前線木下','電磁砲木下','高速機動木下','古代掃討砲木下','超装甲木下','機神木下'];
 const MACHINE_DEFENSE_ID_BASE=cards.length-6;
 MACHINE_DEFENSE_NAMES.forEach((name,offset)=>{const c=cards.find(x=>x.name===name);if(c)c.id=MACHINE_DEFENSE_ID_BASE+offset;});
@@ -423,6 +422,12 @@ cards.push(
 const SACRED_GREAT_NAMES=['哲学の賢者ゾクラテス','発明の賢者アルキメデェス','星空の賢者ガリレオ・ガリレェン','重力の賢者ニュトーン','芸術の賢者レオナルド・ダ・ピンチ','教えの賢者コウシィ'];
 const SACRED_GREAT_ID_BASE=cards.length-7;
 SACRED_GREAT_NAMES.forEach((name,offset)=>{const card=cards.find(x=>x.name===name);if(card)card.id=SACRED_GREAT_ID_BASE+offset;});
+CURRENT_CHARACTER_COUNT=cards.length;
+
+// フェニックスを全キャラクター登録後の末尾へ追加。
+// 既存キャラクターの配列位置・IDを変更せず、フェニックスだけを最新IDにします。
+cards.push(PHOENIX_REWARD_CARD);
+PHOENIX_REWARD_CARD.id=cards.length-1;
 CURRENT_CHARACTER_COUNT=cards.length;
 
 // ランク戦・最新キャラクター出撃RPボーナス対象。現在の最新9体を固定IDで管理し、既存IDを変更しない。
@@ -1510,7 +1515,7 @@ function showEnemyBook(){
 function formatAbilityInfo(obj,opts={}){const c=obj||{},a=c.ability||{},parts=[];if(a.name&&a.name!=='基本攻撃')parts.push(a.name);if(a.desc&&a.desc!=='特殊能力なし')parts.push(a.desc);if(c.barrier)parts.push('バリア '+Number(c.barrier)+'（最初に受けるダメージを吸収）');if(c.metal)parts.push('メタル特性');if(c.healAura)parts.push('回復支援（周囲の味方を回復）');if(c.waveLevel&&!parts.some(x=>String(x).includes('波動')))parts.push('波動Lv'+c.waveLevel);if(c.stopChance)parts.push('停止 '+Math.round(Number(c.stopChance)*100)+'%・'+(c.stopDuration||1)+'秒');if(c.warpChance)parts.push('ワープ '+Math.round(Number(c.warpChance)*100)+'%');if(c.sealChance)parts.push('能力封印 '+Math.round(Number(c.sealChance)*100)+'%・'+(c.sealDuration||0)+'秒');if(c.attackDownChance)parts.push('攻撃力低下 '+Math.round(Number(c.attackDownChance)*100)+'%・'+(c.attackDownDuration||0)+'秒');if(c.damageReduce)parts.push('被ダメージ軽減 '+Math.round(Number(c.damageReduce)*100)+'%');if(c.guaranteeKnockback)parts.push('確定ノックバック');if(c.yabayaba)parts.push('ヤバヤバLv'+c.yabayaba);if(a.phoenixSurgeLevel)parts.push('命中数と同数の烈波Lv'+a.phoenixSurgeLevel+'（射程 '+(a.phoenixSurgeMin??1)+'〜'+(a.phoenixSurgeMax??200)+'）');if(a.revive)parts.push('撃破時3秒後に1回だけ覚醒復活');if(a.phoenixAura)parts.push('覚醒中：味方HP・攻撃力25%低下');if(a.phoenixLowHpMultiplier)parts.push('自身HP50%未満で与ダメージ3倍');if(a.curseImmune)parts.push('呪い無効');if(a.stopImmune)parts.push('停止無効');if(a.slowImmune)parts.push('鈍足無効');if(a.waveImmune)parts.push('波動無効');if(a.surgeImmune)parts.push('烈波無効');if(a.curseTargets?.length)parts.push('呪い対象：'+a.curseTargets.join('・'));if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');return parts.length?parts.join(' / '):'なし';}
 function showEnemyDetail(key){const e=enemyTypes[key];if(!e||!enemyEncountered[key])return;const l=enemyLore[key]||{ability:'',story:'この敵についての記録はまだ少ない。'};const abilityText=(l.ability&&l.ability!=='なし')?l.ability:formatAbilityInfo(e,{trait:e.trait,attackType:e.attackType});document.getElementById('detailTitle').textContent=e.icon+' '+e.name;document.getElementById('detailBody').innerHTML=`<div class="detailIcon">${e.icon}</div><div class="detailGrid"><div>🏷️ 属性</div><b>${e.trait}</b><div>❤️ HP</div><b>${e.hp}</b><div>⚔️ 攻撃力</div><b>${e.atk}</b><div>🎯 射程</div><b>${e.range}</b><div>💨 移動速度</div><b>${e.spd}</b><div>⏱️ 攻撃間隔</div><b>${e.interval.toFixed(2)}秒</b><div>🎯 攻撃タイプ</div><b>${e.attackType==='area'?'範囲攻撃':'単体攻撃'}</b><div>💥 ヒットバック</div><b>${e.kb}回</b></div><div class="enemyAbility"><b>⭐ 能力</b><br>${abilityText}</div><div class="enemyLore"><b>📖 ストーリー</b><br>${l.story}</div><button class="backbtn" style="margin-top:10px" onclick="showEnemyBook()">図鑑に戻る</button>`;document.getElementById('detail').style.display='flex'}
 
-function showCharacterDetail(i){const c=cards[i];if(!c)return;const lv=charLevel[i]||1,need=xpNeed(i),can=lv<20;const bookNo=String(i+1).padStart(3,'0');document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name;document.getElementById('detailBody').innerHTML=`<div class="detailIcon">${c.icon}</div><div class="xpBox"><b>Lv.${lv} / 20</b><div>プレイヤーXP：${playerXP}</div><div>次のレベルまで：${can?need+' XP':'MAX'}</div><button class="levelUpBtn" ${can&&playerXP>=need?'':'disabled'} onclick="levelUpCharacter(${i})">${can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル'}</button></div><div class="detailGrid"><div>💰 コスト</div><b>${c.cost}円</b><div>❤️ HP</div><b>${statAt(i,'hp')}</b><div>⚔️ 攻撃力</div><b>${statAt(i,'atk')}</b><div>🎯 射程</div><b>${statAt(i,'range')}</b><div>💨 移動速度</div><b>${statAt(i,'spd')}</b><div>⏱️ 攻撃間隔</div><b>${statAt(i,'interval').toFixed(2)}秒</b><div>🔄 再生時間</div><b>${c.recharge.toFixed(1)}秒</b><div>📊 攻撃回数/秒</div><b>${(1/statAt(i,'interval')).toFixed(2)}回</b><div>🎯 攻撃タイプ</div><b>${c.attackType==='area'?'範囲攻撃':'単体攻撃'}</b><div>💥 ヒットバック</div><b>${c.kb}回</b><div>🏷️ 属性</div><b>${c.trait||'無'}</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">${formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})}</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>`;document.getElementById('detail').style.display='flex'}
+function showCharacterDetail(i){const c=cards[i];if(!c)return;const lv=charLevel[i]||1,need=xpNeed(i),can=lv<20;const bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name;document.getElementById('detailBody').innerHTML=`<div class="detailIcon">${c.icon}</div><div class="xpBox"><b>Lv.${lv} / 20</b><div>プレイヤーXP：${playerXP}</div><div>次のレベルまで：${can?need+' XP':'MAX'}</div><button class="levelUpBtn" ${can&&playerXP>=need?'':'disabled'} onclick="levelUpCharacter(${i})">${can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル'}</button></div><div class="detailGrid"><div>💰 コスト</div><b>${c.cost}円</b><div>❤️ HP</div><b>${statAt(i,'hp')}</b><div>⚔️ 攻撃力</div><b>${statAt(i,'atk')}</b><div>🎯 射程</div><b>${statAt(i,'range')}</b><div>💨 移動速度</div><b>${statAt(i,'spd')}</b><div>⏱️ 攻撃間隔</div><b>${statAt(i,'interval').toFixed(2)}秒</b><div>🔄 再生時間</div><b>${c.recharge.toFixed(1)}秒</b><div>📊 攻撃回数/秒</div><b>${(1/statAt(i,'interval')).toFixed(2)}回</b><div>🎯 攻撃タイプ</div><b>${c.attackType==='area'?'範囲攻撃':'単体攻撃'}</b><div>💥 ヒットバック</div><b>${c.kb}回</b><div>🏷️ 属性</div><b>${c.trait||'無'}</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">${formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})}</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>`;document.getElementById('detail').style.display='flex'}
 function levelUpCharacter(i){if(running||!hasCharacter(i)||charLevel[i]>=20)return;const need=xpNeed(i);if(playerXP<need)return;playerXP-=need;charLevel[i]++;save();showCharacterDetail(i);renderCards();renderStageSelect()}
 let kinoshitaBookFilter='all';
 function openKinoshitaBook(){
@@ -1538,7 +1543,7 @@ function renderKinoshitaBook(){
  if(!indexes.length){grid.innerHTML='<div class="bookEmpty">該当する木下はいません。</div>';return;}
  grid.innerHTML=indexes.map(i=>{
    const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本';
-   const bookNo=String(i+1).padStart(3,'0');
+   const bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');
    if(!have){
      return `<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.${bookNo}</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div></div>`;
    }
