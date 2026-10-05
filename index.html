@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.7';
+const GAME_VERSION='v1.1.8';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.8',title:'🌟 レジェンド序盤の難易度を調整',items:['第1～2章からボス級味方キャラクターが通常敵として出現しないよう調整','第3～4章ではパーフェクト木下をまだ登場させず、段階的に高難度化','レジェンド後半では従来どおりボス級キャラクターを解禁']},
  {date:'2026-10-05',version:'v1.1.7',title:'🌋 ゾクラテスの烈波判定を修正',items:['烈波を生成位置にいる敵へ0.2秒間隔で繰り返し判定するよう修正','各判定で烈波生成元の攻撃力を基準にダメージを与え、能力効果も適用','烈波の持続時間が終了すると判定処理を安全に停止']},
  {date:'2026-10-05',version:'v1.1.6',title:'🌟 聖なる偉人達を追加・ゾクラテスを強化',items:['期間限定交換所「聖なる偉人達」に6体の新キャラクターを追加','哲学の賢者ゾクラテスをHP19500・攻撃力3200+2000+1750へ強化','ゾクラテスの波動反射・烈波・射程低下・呪いなどの専用能力を調整・改善','重力の賢者ニュトーンの属性を無属性へ変更']},
  {date:'2026-09-26',version:'v1.1.5',title:'🌟 レジェンドステージを追加',items:['全10章・各6ステージの新コンテンツを追加','味方キャラクターも敵として登場する専用ステージを実装','敵専用キャラクターは味方として使用できない仕様を維持','一部ステージに敵城HPトリガー・反復出現などの特殊ギミックを追加']},
@@ -937,7 +938,18 @@ const legendAllyPool=cards.map(c=>c.name).filter(Boolean);
 const legendEnemyPool=[...new Set([...legendAllyPool,...legendExistingEnemyPool])];
 const legendChapterNames=['黄昏の木立','忘却の砂時計','機械仕掛けの夜','逆さまの楽園','終焉の木下王国','星喰らいの森','幻影回廊','崩壊する楽園','禁断の木下城','最後の一秒'];
 const legendStageNames=[['木漏れ日の迷宮','静かな森の入口','枯れ葉の行進','月影の獣道','深緑の境界','黄昏の最奥'],['砂塵の街','崩れた時計塔','時を喰らう者','逆さまの時間','砂時計の底','忘却の果て'],['鋼鉄の街路','赤い警報','歯車の迷宮','暴走工場','真夜中の機械兵','終焉製造区'],['空に沈む庭園','反転世界','虹色の罠','沈黙の楽園','裏返る城壁','逆さまの王座'],['王国への細道','千年木下城','黒き行進','王の側近','五つの門','木下王国・最終門'],['星明かりの獣道','月蝕の森','星を隠す者','銀河樹海','流星の巣','星喰らいの最深部'],['幻影の入口','二重の戦場','消える足跡','鏡合わせ','無限回廊','幻影回廊・終点'],['崩落都市','落ちる空','壊れた時間','最後の避難所','崩壊前夜','崩壊の中心'],['封印された門','禁じられた庭','古の警告','王座への階段','禁断の守護者','禁断の木下城'],['最後の森','最後の行進','最後の城壁','最後の反撃','最後の一撃','木下大戦争・終章']];
-function legendEnemyName(ch,n,o=0){return legendEnemyPool[(ch*17+n*11+o*7)%legendEnemyPool.length]}
+function legendEnemyName(ch,n,o=0){
+ const bossNames=legendBossCharacterNames();
+ // レジェンド序盤はボス級味方を通常敵抽選から除外し、章ごとに段階的に解禁する。
+ // 第1～2章：ボス級なし / 第3～4章：ボス級は解禁するがパーフェクト木下はまだ禁止。
+ const pool=ch<=2
+  ?legendEnemyPool.filter(name=>!bossNames.has(name))
+  :ch<=4
+   ?legendEnemyPool.filter(name=>name!=='パーフェクト木下')
+   :legendEnemyPool;
+ const safePool=pool.length?pool:legendEnemyPool;
+ return safePool[(ch*17+n*11+o*7)%safePool.length];
+}
 function legendBossCharacterNames(){
  const set=new Set(['パーフェクト木下']);
  for(const c of cards){
