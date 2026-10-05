@@ -8,8 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.1.12';
+const GAME_VERSION='v1.1.13';
 const UPDATE_LOG=[
+ {date:'2026-10-05',version:'v1.1.13',title:'🐦‍🔥 フェニックスのキャラクターIDを修正',items:['v1.1.11の正しい旧ID 20を基準に既存セーブを修復','フェニックス追加後も既存キャラクターのIDがずれないよう補正']},
+ 
  {date:'2026-10-05',version:'v1.1.11',title:'🐦‍🔥 フェニックスの妨害判定を調整',items:['フェニックスの通常攻撃にも指定確率の速度低下を適用','通常攻撃の吹っ飛ばしを33%／66%で判定するよう修正']},
  {date:'2026-10-05',version:'v1.1.9',title:'🐦‍🔥 イベント「フェニックス降臨」を追加',items:['イベントステージ「フェニックス降臨」を追加','敵フェニックスの復活・覚醒ギミックを追加','フェニックスの烈波に生成元キャラクターの能力を適用','クリア報酬として味方フェニックスを追加']},
  {date:'2026-10-05',version:'v1.1.8',title:'🌟 レジェンド序盤の難易度を調整',items:['第1～2章からボス級味方キャラクターが通常敵として出現しないよう調整','第3～4章ではパーフェクト木下をまだ登場させず、段階的に高難度化','レジェンド後半では従来どおりボス級キャラクターを解禁']},
@@ -1316,41 +1318,79 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV4')!=='done'){
  }catch(e){console.warn('character ID migration V4 failed',e);}
 }
 
-/* ===== キャラクター配列変更時の既存セーブデータ修復 V5 =====
-   フェニックスをカード配列の末尾へ移動したため、v1.1.11以前の
-   旧インデックス（フェニックス=40、41以降は新配列で1つ前）を補正する。 */
-if(storage.getItem('kinoshitaCharacterIndexMigrationV5')!=='done'){
+/* ===== キャラクター配列変更時の既存セーブデータ修復 V6 =====
+   v1.1.11の実配列ではフェニックスはID 20でした。
+   v1.1.12で末尾へ移動した際に誤って旧ID 40として補正していたため、
+   既存セーブを旧配列へ一度戻してから、正しいID 20→末尾の変換を行います。 */
+if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
  try{
   const oldFlags=Array.isArray(ownedFlags)?ownedFlags.slice():null;
   const oldFormation=Array.isArray(formation)?formation.slice():[];
   const oldLevels=Array.isArray(charLevel)?charLevel.slice():[];
-  const looksLikePhoenixLayout=oldFlags&&oldFlags.length>=152;
-  if(looksLikePhoenixLayout){
-   const phoenixNewIndex=cards.findIndex(c=>c.name==='フェニックス');
-   const remapPhoenixIndex=(i)=>{
+  const phoenixNewIndex=cards.findIndex(c=>c.name==='フェニックス');
+  const hadV5=storage.getItem('kinoshitaCharacterIndexMigrationV5')==='done';
+
+  /*
+   * V5済みセーブは、V5の誤変換を逆変換してv1.1.11配列へ戻す。
+   * V5変換:
+   *   old 40 -> new Phoenix末尾
+   *   old >40 -> new old-1
+   *   old <=40 -> new old
+   */
+  let legacyFlags=oldFlags,legacyFormation=oldFormation,legacyLevels=oldLevels;
+  if(hadV5&&oldFlags){
+   const reverse=(i)=>{
     if(!Number.isInteger(i))return -1;
-    if(i===40)return phoenixNewIndex;
-    if(i>40)return i-1;
+    if(i===phoenixNewIndex)return 40;
+    if(i>40&&i<phoenixNewIndex)return i+1;
+    return i;
+   };
+   const legacyLength=Math.max(phoenixNewIndex,oldFlags.length-1);
+   const f=Array(legacyLength).fill(false);
+   for(let ni=0;ni<oldFlags.length;ni++){
+    const oi=reverse(ni);
+    if(oi>=0&&oi<f.length)f[oi]=!!oldFlags[ni];
+   }
+   legacyFlags=f;
+   legacyFormation=oldFormation.map(reverse).filter(i=>i>=0&&i<f.length);
+   const l=Array(legacyLength).fill(1);
+   for(let ni=0;ni<oldLevels.length;ni++){
+    const oi=reverse(ni);
+    if(oi>=0&&oi<l.length)l[oi]=Math.max(1,Math.min(20,Number(oldLevels[ni]||1)));
+   }
+   legacyLevels=l;
+  }
+
+  /*
+   * v1.1.11 -> 現在:
+   *   旧ID 20 = フェニックス -> 新末尾
+   *   旧ID >20 -> 新ID = 旧ID - 1
+   *   旧ID <20 -> そのまま
+   */
+  if(legacyFlags){
+   const remap=(i)=>{
+    if(!Number.isInteger(i))return -1;
+    if(i===20)return phoenixNewIndex;
+    if(i>20)return i-1;
     return i;
    };
    const newFlags=Array(cards.length).fill(false);
-   for(let oi=0;oi<oldFlags.length;oi++){
-    const ni=remapPhoenixIndex(oi);
-    if(ni>=0&&ni<newFlags.length)newFlags[ni]=!!oldFlags[oi];
+   for(let oi=0;oi<legacyFlags.length;oi++){
+    const ni=remap(oi);
+    if(ni>=0&&ni<newFlags.length)newFlags[ni]=!!legacyFlags[oi];
    }
    ownedFlags=newFlags;
-   formation=oldFormation.map(remapPhoenixIndex).filter(i=>i>=0&&i<cards.length);
+   formation=legacyFormation.map(remap).filter(i=>i>=0&&i<cards.length);
    const newLevels=Array(cards.length).fill(1);
-   for(let oi=0;oi<oldLevels.length;oi++){
-    const ni=remapPhoenixIndex(oi);
-    if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(oldLevels[oi]||1)));
+   for(let oi=0;oi<legacyLevels.length;oi++){
+    const ni=remap(oi);
+    if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(legacyLevels[oi]||1)));
    }
    charLevel=newLevels;
   }
-  storage.setItem('kinoshitaCharacterIndexMigrationV5','done');
- }catch(e){console.warn('character index migration V5 failed',e);}
+  storage.setItem('kinoshitaCharacterIndexMigrationV6','done');
+ }catch(e){console.warn('character index migration V6 failed',e);}
 }
-
 function normalizeFormation(){
  formation=Array.isArray(formation)?formation.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i)):[];
  formation=[...new Set(formation)].slice(0,10);
