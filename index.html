@@ -394,6 +394,23 @@ const MACHINE_DEFENSE_ID_BASE=cards.length-6;
 MACHINE_DEFENSE_NAMES.forEach((name,offset)=>{const c=cards.find(x=>x.name===name);if(c)c.id=MACHINE_DEFENSE_ID_BASE+offset;});
 CURRENT_CHARACTER_COUNT=cards.length;
 
+// 聖なる偉人達：期間限定交換所の最新シリーズ。
+// 既存の戦闘処理には手を入れず、既存能力システムで安全に動作する能力だけを使用する。
+// 哲学の賢者ゾクラテスの「射程別攻撃」は今後専用処理を追加できるようデータとして保持する。
+cards.push(
+ {name:"哲学の賢者ゾクラテス",cost:2300,hp:2700,atk:1200,secondAtk:800,thirdAtk:200,range:600,spd:.9,interval:4,recharge:30,icon:"🏛️",motion:"super",attackType:"area",kb:8,trait:"天使",rarity:"LR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",multiAttack:[1200,800,200],waveLevel:2,wave:true,waveReflect:true,curseImmune:true,stopImmune:true,surgeImmunity:true,strong:{"黒":4,"宇宙":4,"無":4},damageReduce:{chance:1,factor:.35},ability:{name:"哲学・三距離問答",desc:"射程1〜100は1200＋波動Lv2、101〜250は800＋烈波Lv2、251〜600は200＋黒・宇宙・無属性への射程低下・呪いを行う設計。波動反射・呪い無効・停止無効・烈波無効、黒・宇宙・無属性に4倍、被ダメージ0.35倍。",rangeBands:[{max:100,damage:1200,waveLevel:2},{min:101,max:250,damage:800,surgeLevel:2},{min:251,max:600,damage:200,rangeDownFactor:.2,rangeDownDuration:5,curseChance:1,curseDuration:5}],waveReflect:true,curseImmune:true,stopImmune:true,surgeImmunity:true}},
+ {name:"発明の賢者アルキメデェス",cost:1800,hp:6200,atk:2600,range:190,spd:.55,interval:1.7,recharge:25,icon:"⚙️",motion:"scientist",attackType:"area",kb:4,trait:"鋼",rarity:"SSR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",ability:{name:"発明・浮力機構",desc:"バリアブレイク・波動無効・被ダメージ30%軽減。攻撃時35%で1秒停止、20%で追加攻撃。",barrierBreak:true,waveImmunity:true,damageReduce:{chance:1,factor:.7},stopChance:.35,stopDuration:1,extraAttackChance:.2}},
+ {name:"星空の賢者ガリレオ・ガリレェン",cost:2100,hp:4800,atk:1700,range:420,spd:.42,interval:2.2,recharge:27,icon:"🔭",motion:"scientist",attackType:"area",kb:5,trait:"宇宙",rarity:"SSR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",ability:{name:"星空・観測眼",desc:"長射程。60%で2秒鈍足、30%で波動Lv3、宇宙に3倍ダメージ。",slowChance:.6,slowDuration:2,wave:true,waveLevel:3,waveChance:.3,strong:{"宇宙":3}}},
+ {name:"重力の賢者ニュトーン",cost:1500,hp:4200,atk:1500,range:170,spd:.72,interval:1.1,recharge:21,icon:"🍎",motion:"power",attackType:"area",kb:4,trait:"光",rarity:"SSR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",ability:{name:"重力・落下法則",desc:"50%で1.5秒停止、30%で吹っ飛ばし、被ダメージ20%軽減。",stopChance:.5,stopDuration:1.5,knockbackChance:.3,damageReduce:{chance:1,factor:.8}}},
+ {name:"芸術の賢者レオナルド・ダ・ピンチ",cost:2000,hp:7500,atk:2100,range:150,spd:.5,interval:1.6,recharge:26,icon:"🎨",motion:"muscle",attackType:"area",kb:5,trait:"浮",rarity:"SSR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",ability:{name:"芸術・万能設計図",desc:"40%で1秒停止、30%で2秒鈍足、50%で被ダメージ半減、バリアブレイク。",stopChance:.4,stopDuration:1,slowChance:.3,slowDuration:2,damageReduce:{chance:.5,factor:.5},barrierBreak:true}},
+ {name:"教えの賢者コウシィ",cost:1250,hp:5600,atk:1150,range:130,spd:.8,interval:1.25,recharge:22,icon:"📜",motion:"king",attackType:"area",kb:6,trait:"無",rarity:"SSR",series:"聖なる偉人達",limitedExchange:true,limitedExchangeSeries:"聖なる偉人達",ability:{name:"教え・五徳",desc:"100%で4秒呪い、50%で4秒攻撃力50%低下、40%で2秒速度50%低下。呪い・停止・攻撃力低下無効。",curseChance:1,curseDuration:4,attackDownChance:.5,attackDownFactor:.5,attackDownDuration:4,curseSlowChance:.4,curseSlowFactor:.5,curseSlowDuration:2,curseImmune:true,stopImmune:true,attackDownImmune:true}}
+);
+// 既存キャラのIDを変更せず、今回の6体だけをカード配列の最新6枠へ割り当てる。
+const SACRED_GREAT_NAMES=['哲学の賢者ゾクラテス','発明の賢者アルキメデェス','星空の賢者ガリレオ・ガリレェン','重力の賢者ニュトーン','芸術の賢者レオナルド・ダ・ピンチ','教えの賢者コウシィ'];
+const SACRED_GREAT_ID_BASE=cards.length-6;
+SACRED_GREAT_NAMES.forEach((name,offset)=>{const card=cards.find(x=>x.name===name);if(card)card.id=SACRED_GREAT_ID_BASE+offset;});
+CURRENT_CHARACTER_COUNT=cards.length;
+
 // ランク戦・最新キャラクター出撃RPボーナス対象。現在の最新9体を固定IDで管理し、既存IDを変更しない。
 const LATEST_RANK_BONUS_NAMES=['前衛木下','突撃木下','連撃木下','機甲前線木下','電磁砲木下','高速機動木下','古代掃討砲木下','超装甲木下','機神木下'];
 const LATEST_RANK_BONUS_IDS=LATEST_RANK_BONUS_NAMES.map(name=>cards.findIndex(c=>c.name===name)).filter(i=>i>=0);
@@ -2711,9 +2728,9 @@ function renderGacha(){
 }
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const series='機械防衛隊！木下s';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。更新中はこのシリーズのキャラクターのみ交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
- const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries==='機械防衛隊！木下s');
+ const series='聖なる偉人達';
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。偉人をモチーフにした6体のキャラクターを交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
+ const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries==='聖なる偉人達');
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
  result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
