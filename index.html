@@ -2957,9 +2957,24 @@ function renderGacha(){
 }
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const series='聖なる偉人達';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。偉人をモチーフにした6体のキャラクターを交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
- const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries==='聖なる偉人達');
+ const LIMITED_ALL_SERIES_KEY='kinoshitaLimitedAllSeriesStart';
+ let LIMITED_ALL_SERIES_START=Number(storage.getItem(LIMITED_ALL_SERIES_KEY)||0);
+ if(!LIMITED_ALL_SERIES_START){
+   LIMITED_ALL_SERIES_START=Date.now();
+   storage.setItem(LIMITED_ALL_SERIES_KEY,String(LIMITED_ALL_SERIES_START));
+ }
+ const LIMITED_ALL_SERIES_END=LIMITED_ALL_SERIES_START+60*60*1000;
+ const allSeriesActive=Date.now()<LIMITED_ALL_SERIES_END;
+ if(!allSeriesActive){
+   const series='聖なる偉人達';
+   if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
+   const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries===series);
+   if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
+   result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+   result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
+   return;
+ }
+ const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange);
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
  result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
