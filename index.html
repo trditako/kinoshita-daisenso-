@@ -1283,6 +1283,11 @@ for(let ch=1;ch<=3;ch++){if((chapterClears[ch-1]||0)>=48){const ri=chapterReward
 function hasCharacter(i){return !!ownedFlags[i];}
 function syncOwnedCount(){owned=ownedFlags.filter(Boolean).length;}
 function addStageXP(){const gain=Math.max(1,Math.round(currentStage().xp||0));playerXP+=gain;return gain;}
+/* 運営アカウントのキャラクター復旧：パーフェクト木下だけは除外 */
+if(typeof playerRankingId==='string' && isOperatorPlayer(playerRankingId)){
+ const perfectIndex=cards.findIndex(c=>c&&c.name==='パーフェクト木下');
+ for(let i=0;i<cards.length;i++){ if(i!==perfectIndex) ownedFlags[i]=true; }
+}
 let owned=ownedFlags.filter(Boolean).length;
 let gachaCoins=Math.max(0,Number(storage.getItem('kinoshitaGachaCoins')??900));
 let playerXP=Math.max(0,Number(storage.getItem('kinoshitaPlayerXP')||0));
