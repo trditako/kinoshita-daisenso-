@@ -2957,9 +2957,14 @@ function renderGacha(){
 }
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const LIMITED_ALL_SERIES_START=Date.parse('2026-10-07T01:20:00+09:00');
+ const LIMITED_ALL_SERIES_KEY='kinoshitaLimitedAllSeriesStart';
+ let LIMITED_ALL_SERIES_START=Number(storage.getItem(LIMITED_ALL_SERIES_KEY)||0);
+ if(!LIMITED_ALL_SERIES_START){
+   LIMITED_ALL_SERIES_START=Date.now();
+   storage.setItem(LIMITED_ALL_SERIES_KEY,String(LIMITED_ALL_SERIES_START));
+ }
  const LIMITED_ALL_SERIES_END=LIMITED_ALL_SERIES_START+60*60*1000;
- const allSeriesActive=Date.now()>=LIMITED_ALL_SERIES_START&&Date.now()<LIMITED_ALL_SERIES_END;
+ const allSeriesActive=Date.now()<LIMITED_ALL_SERIES_END;
  if(!allSeriesActive){
    const series='聖なる偉人達';
    if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
