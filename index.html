@@ -1085,14 +1085,6 @@ if(!playerRankingId){
   try{playerRankingId=crypto.randomUUID();}catch(e){playerRankingId='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,m=>{const r=Math.random()*16|0,v=m==='x'?r:(r&3|8);return v.toString(16)})}
   storage.setItem('kinoshitaPlayerRankingId',playerRankingId);
 }
-/* 運営アカウントの所持キャラクター復旧（ownedFlags初期化後に実行） */
-if(isOperatorPlayer(playerRankingId)){
-  const perfectIndex=cards.findIndex(c=>c&&c.name==='パーフェクト木下');
-  for(let i=0;i<cards.length;i++){if(i!==perfectIndex)ownedFlags[i]=true;}
-  owned=ownedFlags.filter(Boolean).length;
-  storage.setItem('kinoshitaOwnedFlags',JSON.stringify(ownedFlags));
-  storage.setItem('kinoshitaOwned',String(owned));
-}
 let publicPlayerRankings=[];
 let playerRankingSyncBusy=false;
 function escapeRankText(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
