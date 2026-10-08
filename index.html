@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.4.0';
+const GAME_VERSION='v1.4.1';
 const UPDATE_LOG=[
+ {date:'2026-10-08',version:'v1.4.1',title:'🔧 神話編の敵出現・敵図鑑を修正',items:['神話編の新敵が敵キャラ図鑑に専用枠で表示されるよう修正','神話編ステージで新敵を確実に敵データへ登録してから出現させるよう修正','神話編の新敵が「❔」になって出現しない問題を修正']},
  {date:'2026-10-08',version:'v1.3.4',title:'🌌 神話編ボタン・ステージ一覧を再構築',items:['神話編の章ボタンを専用ボタンとして再構築し、タップ時の処理を独立化','神話編を選択したときは神話編48ステージを専用描画処理で必ず表示','他章のクリア状況に関係なく神話編第1ステージから挑戦可能']},
  {date:'2026-10-08',version:'v1.3.2',title:'🌌 神話編に新規戦闘能力を追加',items:['反撃・回避・反射・死亡爆発・分裂・怒り・蓄積攻撃・追加攻撃・攻撃時回復など、実際の戦闘処理を伴う新能力を追加']},{date:'2026-10-08',version:'v1.3.1',title:'🌌 神話編の解放条件を変更',items:['神話編は他の章をクリアしていなくても選択・挑戦できるよう変更','神話編は第1ステージから順番に挑戦できる仕様に変更']},{date:'2026-10-08',version:'v1.3.0',title:'🌌 神話編 第1章を追加',items:['クトゥルフ神話を題材にした第7章「神話編」を追加','神話編専用の敵キャラクター40体と15種類の新能力を追加']},
  {date:'2026-10-08',version:'v1.2.3',title:'🪬 呪いの能力封印を強化',items:['呪い中は波動・烈波を含む特殊能力を発動できない仕様に変更','呪い状態と能力封印判定を統一し、通常攻撃は継続可能']},
@@ -1558,24 +1559,17 @@ function showEnemyBook(){
  const body=document.getElementById('detailBody');
  if(!detail||!title||!body)return;
  title.textContent='📚 敵キャラ図鑑';
- const normalKeys=Object.keys(enemyTypes);
- const mythologyKeys=MYTHOLOGY_ENEMY_SPECS.map(e=>e.name).filter((k,i,a)=>a.indexOf(k)===i);
- const keys=[...new Set([...normalKeys,...mythologyKeys])];
+ const mythKeys=Array.isArray(MYTHOLOGY_ENEMY_SPECS)?MYTHOLOGY_ENEMY_SPECS.map(e=>e.name).filter(Boolean):[];
+ const mythSet=new Set(mythKeys);
+ const keys=Object.keys(enemyTypes);
+ const normalKeys=keys.filter(k=>!mythSet.has(k));
  const met=keys.filter(k=>enemyEncountered[k]);
- const bookCard=k=>{
-   const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(v=>v.name===k);
-   if(!e)return '';
-   return enemyEncountered[k]
-    ? `<button class="enemyBookPick" data-enemy-book="${k}"><div class="bookFace">${e.icon||'❔'}</div><b>${e.name}</b><span class="enemyTrait ${traitClass(e.trait)}">${e.trait||'神話'}属性</span></button>`
-    : `<button class="enemyBookPick locked" disabled><div class="bookFace">❔</div><b>？？？？</b><span class="enemyTrait">未遭遇</span></button>`;
- };
- const mythCards=mythologyKeys.map(bookCard).join('');
- const otherKeys=normalKeys.filter(k=>!mythologyKeys.includes(k));
- const otherCards=otherKeys.map(bookCard).join('');
- body.innerHTML=`<p style="font-weight:900">遭遇済み ${met.length}/${keys.length}体。未遭遇の敵は「？」のままです。</p>
- <h3 style="margin:8px 0 6px">🌌 神話編の敵</h3><div class="enemyBookGrid">${mythCards}</div>
- <h3 style="margin:12px 0 6px">👹 その他の敵</h3><div class="enemyBookGrid">${otherCards}</div>`;
- document.querySelectorAll('[data-enemy-book]').forEach(b=>b.onclick=()=>showEnemyDetail(b.dataset.enemyBook));
+ const buttonHTML=k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);if(!e)return '';return enemyEncountered[k]?'<button class="enemyBookPick" data-enemy-book="'+k+'"><div class="bookFace">'+e.icon+'</div><b>'+e.name+'</b><span class="enemyTrait '+traitClass(e.trait)+'">'+e.trait+'属性</span></button>':'<button class="enemyBookPick locked" disabled><div class="bookFace">❔</div><b>？？？？</b><span class="enemyTrait">未遭遇</span></button>'};
+ if(!met.length){body.innerHTML='<div class="enemyLore"><b>まだ出会った敵はいません。</b><br>ステージで敵が実際に出現すると、図鑑に登録されます。</div>';}
+ else{
+  body.innerHTML='<p style="font-weight:900">遭遇済み '+met.length+'/'+keys.length+'体。未遭遇の敵は「？」のままです。</p>'+(mythKeys.length?'<h3 style="margin:10px 0 6px">🌌 神話編の敵（'+mythKeys.length+'体）</h3><div class="enemyBookGrid">'+mythKeys.map(buttonHTML).join('')+'</div>':'')+'<h3 style="margin:14px 0 6px">📚 その他の敵</h3><div class="enemyBookGrid">'+normalKeys.map(buttonHTML).join('')+'</div>';
+ }
+ document.querySelectorAll('[data-enemy-book]').forEach(btn=>btn.onclick=()=>showEnemyDetail(btn.dataset.enemyBook));
  detail.style.setProperty('display','flex','important');
 }
 function formatAbilityInfo(obj,opts={}){const c=obj||{},a=c.ability||{},parts=[];if(a.name&&a.name!=='基本攻撃')parts.push(a.name);if(a.desc&&a.desc!=='特殊能力なし')parts.push(a.desc);if(c.barrier)parts.push('バリア '+Number(c.barrier)+'（最初に受けるダメージを吸収）');if(c.metal)parts.push('メタル特性');if(c.healAura)parts.push('回復支援（周囲の味方を回復）');if(c.waveLevel&&!parts.some(x=>String(x).includes('波動')))parts.push('波動Lv'+c.waveLevel);if(c.stopChance)parts.push('停止 '+Math.round(Number(c.stopChance)*100)+'%・'+(c.stopDuration||1)+'秒');if(c.warpChance)parts.push('ワープ '+Math.round(Number(c.warpChance)*100)+'%');if(c.sealChance)parts.push('能力封印 '+Math.round(Number(c.sealChance)*100)+'%・'+(c.sealDuration||0)+'秒');if(c.attackDownChance)parts.push('攻撃力低下 '+Math.round(Number(c.attackDownChance)*100)+'%・'+(c.attackDownDuration||0)+'秒');if(c.damageReduce)parts.push('被ダメージ軽減 '+Math.round(Number(c.damageReduce)*100)+'%');if(c.guaranteeKnockback)parts.push('確定ノックバック');if(c.yabayaba)parts.push('ヤバヤバLv'+c.yabayaba);if(a.phoenixSurgeLevel)parts.push('命中数と同数の烈波Lv'+a.phoenixSurgeLevel+'（射程 '+(a.phoenixSurgeMin??1)+'〜'+(a.phoenixSurgeMax??200)+'）');if(a.revive)parts.push('撃破時3秒後に1回だけ覚醒復活');if(a.phoenixAura)parts.push('覚醒中：味方HP・攻撃力25%低下');if(a.phoenixLowHpMultiplier)parts.push('自身HP50%未満で与ダメージ3倍');if(a.curseImmune)parts.push('呪い無効');if(a.stopImmune)parts.push('停止無効');if(a.slowImmune)parts.push('鈍足無効');if(a.waveImmune)parts.push('波動無効');if(a.surgeImmune)parts.push('烈波無効');if(a.curseTargets?.length)parts.push('呪い対象：'+a.curseTargets.join('・'));if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');return parts.length?parts.join(' / '):'なし';}
