@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.3';
+const GAME_VERSION='v1.5.4';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.4',title:'✨ 真髄を独立化・SSR衣装を追加',items:['真髄を木下交換所から分離し、専用ボタンと独立画面へ変更','SSR限定衣装を3キャラクター分追加','真髄の提供割合をSSR追加後の100%構成へ更新']},
  {date:'2026-10-09',version:'v1.5.3',title:'✨ 真髄システムを追加',items:['既存の衣装・携帯品を全キャラクターから回収し、真髄から衣装・携帯品を獲得する方式へ変更','1連1,000コイン／11連10,000コインを追加','普通の木下専用の限定UR衣装・限定UR携帯品を追加','限定アイテム各0.2%、色のパワー45%、ノーマルキャラの金15%、XP20%、コイン19.6%の排出率を設定']},
   {date:'2026-10-09',version:'v1.5.0',title:'🎯 ミッション・実績・称号アップデート',items:['デイリーミッションと週間ミッションを追加','実績を20種類追加し、条件達成で称号を獲得可能に変更','称号の装備・変更画面を追加','ミッション報酬として木下コイン・XPを獲得可能に変更']},
  {date:'2026-10-09',version:'v1.4.2',title:'📚 図鑑UIリワーク',items:['敵キャラ図鑑に神話編15能力の詳細説明・数値・発動条件を追加','敵キャラ図鑑に検索・章フィルター・遭遇済みフィルター・能力フィルターを追加','木下図鑑に検索・レア度フィルター・並び替えを追加','図鑑カードの情報密度とスマホ表示を改善']},{date:'2026-10-08',version:'v1.4.1',title:'🔧 神話編の敵出現・敵図鑑を修正',items:['神話編の新敵が敵キャラ図鑑に専用枠で表示されるよう修正','神話編ステージで新敵を確実に敵データへ登録してから出現させるよう修正','神話編の新敵が「❔」になって出現しない問題を修正']},
@@ -306,7 +307,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下ガチャ</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下交換</button><button id="shinjuBtn" class="formationBtn" style="background:#a855f7!important;color:#fff!important">✨ 真髄</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px">期間限定ではなく、いつでも遊べる特別ステージです。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="updateLog" class="overlay" style="display:none;z-index:220"><div class="panel"><h2 style="margin:0 0 10px;color:#135a9e">📝 バージョン・アップデートログ</h2><div id="updateLogBody"></div><button id="updateLogClose" class="updateClose">閉じる</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
@@ -340,7 +341,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div id="pvpRoomDisplay" style="display:none"><div>ルームID</div><div id="pvpRoomText" class="pvpRoom"></div><div class="pvpHint">友達に3桁のIDとパスワードを伝えてください。</div></div>
 <button id="pvpClose" class="backbtn">戻る</button>
 </div></div>
-<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下ガチャ</h1><div class="gachaCoin" id="gachaCoinText"></div><p>ステージクリアなどで貯めた木下コインを使って、木下を確定で入手できます。ランダム抽選はありません。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
+<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下交換</h1><div class="gachaCoin" id="gachaCoinText"></div><p>木下コインでキャラクターを確定交換できます。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
+<div id="shinju" class="overlay" style="display:none;z-index:225"><div class="panel gachaPanel"><h1>✨ 真髄</h1><div class="gachaCoin" id="shinjuCoinText"></div><div id="shinjuBanner"></div><div id="shinjuResult"></div><button id="shinjuClose" class="backbtn">戻る</button></div></div>
 
 <div id="missionAchievement" class="overlay" style="display:none;z-index:230">
  <div class="panel missionPanel">
@@ -3211,9 +3213,8 @@ let gachaShopMode='normal';
 function renderGacha(){
  const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins+'枚';
- if(tabs)tabs.innerHTML='<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">期間限定交換所</button><button class="gachaTab '+(gachaShopMode==='shinju'?'active':'')+'" data-gacha-mode="shinju">✨ 真髄</button>';
+ if(tabs)tabs.innerHTML='<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">期間限定交換所</button>';
  tabs?.querySelectorAll('[data-gacha-mode]').forEach(b=>b.onclick=()=>{gachaShopMode=b.dataset.gachaMode;renderGacha();});
- if(gachaShopMode==='shinju'){renderShinju();return;}
  if(gachaShopMode==='limited'){renderLimitedExchangeShop();return;}
  if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下交換</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
  if(!result)return;
@@ -3675,7 +3676,16 @@ const SHINJU_UR_ACCESSORY={
  name:'普通の木下・天命の木札',emoji:'🪬',
  desc:'覚醒の力を宿した普通の木下専用・限定UR携帯品。'
 };
-const SHINJU_ITEMS=[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY];
+const SHINJU_SSR_COSTUME_A={id:'shinju_s1_ssr_costume_moriking',type:'costume',rarity:'SSR',characterIndex:-1,name:'森王木下・翠嵐の王衣',emoji:'🌳',color:'#16a34a',desc:'森王木下専用のSSR限定衣装。深い森の力をまとった王衣。'};
+const SHINJU_SSR_COSTUME_B={id:'shinju_s1_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,name:'木下（AI）・演算機装',emoji:'🧠',color:'#38bdf8',desc:'木下（AI）専用のSSR限定衣装。高度な演算機構を思わせる装束。'};
+const SHINJU_SSR_COSTUME_C={id:'shinju_s1_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,name:'星王木下・星冠の王装',emoji:'🌟',color:'#c084fc',desc:'星王木下専用のSSR限定衣装。星々を束ねる王のための装束。'};
+const SHINJU_ITEMS=[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C];
+function initShinjuCostumeTargets(){
+ SHINJU_SSR_COSTUME_A.characterIndex=cards.findIndex(c=>c.name==='森王木下');
+ SHINJU_SSR_COSTUME_B.characterIndex=cards.findIndex(c=>c.name==='木下（AI）');
+ SHINJU_SSR_COSTUME_C.characterIndex=cards.findIndex(c=>c.name==='星王木下');
+}
+initShinjuCostumeTargets();
 const SHINJU_POWER_COLORS=['赤','青','黄','緑','紫'];
 let shinjuInventory={};
 try{shinjuInventory=JSON.parse(storage.getItem(SHINJU_INVENTORY_KEY)||'{}')||{}}catch(e){shinjuInventory={}}
@@ -3711,25 +3721,15 @@ function shinjuRandomGold(){
 function shinjuDrawOne(){
  const r=Math.random()*100;
  let reward;
- if(r<0.2){
-   const item=SHINJU_UR_COSTUME;
-   shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);
-   reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};
- }else if(r<0.4){
-   const item=SHINJU_UR_ACCESSORY;
-   shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);
-   reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};
- }else if(r<45.4){
-   reward=shinjuRandomPower();
- }else if(r<60.4){
-   reward=shinjuRandomGold();
- }else if(r<80.4){
-   const xp=shinjuRandomInt(100,10000);playerXP+=xp;
-   reward={type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};
- }else{
-   const coins=shinjuRandomInt(100,1500);gachaCoins+=coins;
-   reward={type:'coins',label:'💰 木下コイン ×'+coins.toLocaleString()};
- }
+ if(r<0.2){const item=SHINJU_UR_COSTUME;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};
+ }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};
+ }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
+ }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
+ }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
+ }else if(r<48.4){reward=shinjuRandomPower();
+ }else if(r<63.4){reward=shinjuRandomGold();
+ }else if(r<83.4){const xp=shinjuRandomInt(100,10000);playerXP+=xp;reward={type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};
+ }else{const coins=shinjuRandomInt(100,1500);gachaCoins+=coins;reward={type:'coins',label:'💰 木下コイン ×'+coins.toLocaleString()};}
  shinjuDrawCount++;
  return reward;
 }
@@ -3740,10 +3740,13 @@ function shinjuRewardHTML(reward,index){
  return '<div class="shinjuReward '+shinjuRarityClass(reward)+'"><span class="shinjuRewardNo">'+(index+1)+'</span><span>'+reward.label+'</span>'+(reward.item?'<small>普通の木下専用</small>':'')+'</div>';
 }
 function renderShinju(){
- const coin=document.getElementById('gachaCoinText'),result=document.getElementById('gachaResult'),banner=document.getElementById('gachaBanner');
+ const coin=document.getElementById('shinjuCoinText'),result=document.getElementById('shinjuResult'),banner=document.getElementById('shinjuBanner');
  if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>✨ 今シーズン真髄</h2><p>普通の木下の第二形態実装記念シーズン。</p><div class="shinjuBannerItems"><span>👕 '+SHINJU_UR_COSTUME.name+'</span><span>🎒 '+SHINJU_UR_ACCESSORY.name+'</span></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>✨ 今シーズン真髄</h2><p>普通の木下の第二形態実装記念シーズン。</p><div class="shinjuBannerItems"><span>👕 UR：'+SHINJU_UR_COSTUME.name+'</span><span>🎒 UR：'+SHINJU_UR_ACCESSORY.name+'</span><span>✨ SSR：'+SHINJU_SSR_COSTUME_A.name+'／'+SHINJU_SSR_COSTUME_B.name+'／'+SHINJU_SSR_COSTUME_C.name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装 0.2%　｜ 限定UR携帯品 0.2%<br>限定SSR衣装 1.0%×3種　｜ 色のパワー 45%<br>ノーマルキャラの金 15%　｜ XP 20%　｜ コイン 16.6%</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
+ const one=document.getElementById('shinjuSingleBtn'),eleven=document.getElementById('shinjuElevenBtn');
+ if(one)one.onclick=()=>performShinjuDraw(1);
+ if(eleven)eleven.onclick=()=>performShinjuDraw(11);
 }
 function performShinjuDraw(count){
  const n=count===11?11:1,cost=n===11?10000:1000;
@@ -3754,7 +3757,7 @@ function performShinjuDraw(count){
  saveShinjuState();
  if(typeof missionTrack==='function')missionTrack('gachaBuys',n);
  renderShinju();renderOwnedStart?.();renderCards?.();renderKinoshitaBook?.();
- const result=document.getElementById('gachaResult');
+ const result=document.getElementById('shinjuResult');
  if(result){
   const ur=rewards.filter(x=>x.type==='costume'||x.type==='accessory').length;
   result.innerHTML='<div class="shinjuResultHeader">'+(n===11?'✨ 11連結果':'✨ 真髄結果')+(ur?'　🎉 UR '+ur+'個':'')+'</div><div class="shinjuResults">'+rewards.map(shinjuRewardHTML).join('')+'</div>';
@@ -3816,8 +3819,7 @@ function spawnCosmeticEffect(u,kind){
  if(!['attack','move','spawn'].includes(kind))return;
  const d=document.createElement('div');d.className='cosmeticTrail';d.textContent=kind==='attack'?accessory.emoji:kind==='spawn'?'✨':'•';d.style.color=getCharacterEquippedCosmetic(i,'costume')?.color||'#f59e0b';u.el.appendChild(d);setTimeout(()=>d.remove(),500);
 }
-document.getElementById('shinjuSingleBtn')?.addEventListener('click',()=>performShinjuDraw(1));
-document.getElementById('shinjuElevenBtn')?.addEventListener('click',()=>performShinjuDraw(11));
-renderShinju();
+document.getElementById('shinjuBtn')?.addEventListener('click',()=>{document.getElementById('start').style.display='none';document.getElementById('shinju').style.display='flex';renderShinju();});
+document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.getElementById('shinju').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();});
 </script></script>
 </body></html>
