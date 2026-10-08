@@ -1495,7 +1495,7 @@ let formationPresets;try{formationPresets=JSON.parse(storage.getItem('kinoshitaF
 function statAt(i,key){const c=activeCard(i)||cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i);if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul/weakMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
-function damageAgainst(u,target){if(target?.metal)return 1;let mult=1;if(u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;const tr=target.trait||"無";const a=isAbilitySealed(u)?{}:(u?.ability||{});if(a.strong?.[tr])mult*=Number(a.strong[tr])||1;else if(a.strong?.["*"])mult*=Number(a.strong["*"])||1;if(a.ancientHunter&&tr==="古代")mult*=Number(a.ancientHunter)||1;if(a.attributeOverload&&tr!=="古代"&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;if(u?.series==="機械防衛隊！木下s"&&tr!=="古代")mult*=.35;if(target?.cursedUntil&&performance.now()/1000<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;return Math.max(1,Math.round(u.atk*mult));}
+function damageAgainst(u,target){if(target?.metal)return 1;let mult=1;if(u?.mythDomainUntil&&performance.now()/1000<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);if(u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;const tr=target.trait||"無";const a=isAbilitySealed(u)?{}:(u?.ability||{});if(a.strong?.[tr])mult*=Number(a.strong[tr])||1;else if(a.strong?.["*"])mult*=Number(a.strong["*"])||1;if(a.ancientHunter&&tr==="古代")mult*=Number(a.ancientHunter)||1;if(a.attributeOverload&&tr!=="古代"&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;if(u?.series==="機械防衛隊！木下s"&&tr!=="古代")mult*=.35;if(target?.cursedUntil&&performance.now()/1000<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;return Math.max(1,Math.round(u.atk*mult));}
 function damageTakenBy(u,attacker){if(!u||!attacker)return 1;let mult=1;if(attacker?.ability?.mythic==='cosmicRuin'&&attacker.hp<attacker.maxhp*Number(attacker.ability.threshold||.5))mult*=Number(attacker.ability.multiplier||2);if(attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;if(attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;const now=performance.now()/1000;const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
 if(attacker?.ability?.mythicNew==='rage'&&attacker.hp<attacker.maxhp*Number(attacker.ability.rageThreshold||.5))mult*=Number(attacker.ability.rageMultiplier||1.7);
 if(attacker?.ability?.mythicNew==='stacking')mult*=1+Math.min(Number(attacker.ability.maxStacks||5),Number(attacker.mythicStackCount||0))*Number(attacker.ability.stackFactor||.12);const targetTrait=u.trait||"無";const attackerTrait=attacker.trait||"無";const ua=u.ability||{};const aa=isAbilitySealed(attacker)?{}:(attacker.ability||{});if(aa.strong?.[targetTrait])mult*=Number(aa.strong[targetTrait])||1;else if(aa.strong?.["*"])mult*=Number(aa.strong["*"])||1;if(aa.ancientHunter&&targetTrait==="古代")mult*=Number(aa.ancientHunter)||1;if(aa.attributeOverload&&targetTrait!=="古代")mult*=Number(aa.attributeOverload.outgoing)||1;if(ua.resist?.[attackerTrait])mult*=Number(ua.resist[attackerTrait])||1;else if(ua.resist?.["*"])mult*=Number(ua.resist["*"])||1;if(ua.ancientHunter&&attackerTrait==="古代")mult*=Number(ua.ancientHunterResist)||1;if(ua.attributeOverload&&attackerTrait!=="古代"&&u?.series!=="機械防衛隊！木下s")mult*=Number(ua.attributeOverload.incoming)||1;if(u?.series==="機械防衛隊！木下s"&&attackerTrait!=="古代")mult*=2.5;if(u.metal)return 1;if(ua.damageReduce&&Math.random()<Number(ua.damageReduce.chance??.5))mult*=Number(ua.damageReduce.factor??ua.damageReduce)||1;if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)mult*=Number(attacker.cursedAttackFactor)||1;if(u.cursedUntil&&now<u.cursedUntil&&aa.cursedAttackMultiplier)mult*=Number(aa.cursedAttackMultiplier)||1;return Math.max(1,Math.round(effectiveAtk*mult));}
@@ -2795,13 +2795,17 @@ function mythologyV2PreHit(target,damage,source){
  if(mythologyV2Has(target,'absorb')){target.mythAbsorbed=(Number(target.mythAbsorbed)||0)+dealt*Number(a.absorbFactor||.2);dealt*=1-Number(a.absorbFactor||.2);}
  return {damage:Math.max(0,dealt)};
 }
-function mythologyV2OnHit(e,t,damage){
- if(!e||!t||e.isEnemy!==true)return;const a=e.ability||{},now=performance.now()/1000;
- if(mythologyV2Has(e,'rune')&&t.isEnemy!==true){let n=Number(t.mythRuneCount||0)+1;t.mythRuneCount=n;if(n>=Number(a.runeStacks||4)){t.attackDownUntil=now+Number(a.runeDuration||5);t.attackDownFactor=Number(a.runeAttackDown||.65);t.mythRuneCount=0;setStatusMark(t,'🔱','神紋蓄積',Number(a.runeDuration||5),'mythRune');}}
+function mythologyV2OnEnemyAttack(e,t){
+ if(!e||!t||e.isEnemy!==true||t.isEnemy)return;
+ const a=e.ability||{},now=performance.now()/1000;
+ if(mythologyV2Has(e,'rune')){
+  let n=Number(t.mythRuneCount||0)+1;t.mythRuneCount=n;
+  if(n>=Number(a.runeStacks||4)){t.attackDownUntil=now+Number(a.runeDuration||5);t.attackDownFactor=Number(a.runeAttackDown||.65);t.mythRuneCount=0;setStatusMark(t,'🔱','神紋蓄積',Number(a.runeDuration||5),'mythRune');}
+ }
 }
 function mythologyV2OnUnitDeath(u){
  if(!u||u.isEnemy)return;
- for(const e of enemies){if(!e||e.hp<=0||!mythologyV2Has(e,'soulFeast'))continue;const a=e.ability||{};e.mythBaseAtk=e.mythBaseAtk||e.atk;e.atk=Math.round(e.mythBaseAtk*(1+Number(a.soulAtk||.08)));e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(a.soulHeal||.03)));mythicPopup('👻 魂喰い',e);}
+ for(const e of enemies){if(!e||e.hp<=0||!mythologyV2Has(e,'soulFeast'))continue;const a=e.ability||{};e.mythBaseAtk=e.mythBaseAtk||e.atk;e.mythSoulStacks=(e.mythSoulStacks||0)+1;e.atk=Math.round(e.mythBaseAtk*(1+Number(e.mythSoulStacks)*Number(a.soulAtk||.08)));e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(a.soulHeal||.03)));mythicPopup('👻 魂喰い',e);}
 }
 function mythologyV2OnDeath(e){
  if(!e||e.mythDeathHandled)return false;const a=e.ability||{};
@@ -2949,7 +2953,7 @@ function enemyAttackTarget(e,t,ea,now2,sourceSealed){
    }
    removeUnit(t);
  }
- mythicNewAbilityOnHit(e,t,now2); mythicApplyAttackAbility(e,t,now2);
+ mythologyV2OnEnemyAttack(e,t);
 
 }
 function shouldReflectWave(target,source){
