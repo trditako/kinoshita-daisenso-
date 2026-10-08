@@ -3633,8 +3633,9 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(x)x.onclick=closeUpdateLog;
 });
 
-<script>
-const COSMETIC_STORAGE_KEY='kinoshitaCosmeticsV1';
+
+</script>
+<script>const COSMETIC_STORAGE_KEY='kinoshitaCosmeticsV1';
 const COSMETIC_COSTUMES=[
 {id:'c_flame',name:'🔥 炎装',desc:'炎のオーラ',effect:'flame',emoji:'🔥'},
 {id:'c_starlight',name:'✨ 星光装',desc:'星のオーラ',effect:'star',emoji:'✨'},
@@ -3657,6 +3658,5 @@ function closeCosmeticPanel(){const p=document.getElementById('cosmeticPanel');i
 function cosmeticColor(effect){return effect==='flame'?'#ff5722':effect==='star'?'#ffd54f':effect==='aurora'?'#7c4dff':effect==='shadow'?'#374151':'#38bdf8'}
 function applyCosmeticToElement(u){if(!u?.el)return;u.el.querySelectorAll('.cosmeticBadge,.cosmeticAura').forEach(x=>x.remove());const costume=getEquippedCosmetic('costume'),accessory=getEquippedCosmetic('accessory');if(costume){const aura=document.createElement('div');aura.className='cosmeticAura';aura.style.color=cosmeticColor(costume.effect);u.el.appendChild(aura)}if(accessory){const badge=document.createElement('div');badge.className='cosmeticBadge';badge.textContent=accessory.emoji;u.el.appendChild(badge)}}
 function spawnCosmeticEffect(u,kind){if(!u?.el)return;const a=getEquippedCosmetic('accessory');if(!a)return;if(kind==='move'&&a.effect!=='feather')return;if(kind==='attack'&&a.effect!=='crown'&&a.effect!=='orb')return;if(kind==='spawn'&&a.effect!=='moon')return;const d=document.createElement('div');d.className='cosmeticTrail';d.textContent=kind==='attack'?(a.effect==='crown'?'👑':'🔮'):kind==='spawn'?'🌙':'🪶';d.style.color=cosmeticColor(getEquippedCosmetic('costume')?.effect||'none');u.el.appendChild(d);setTimeout(()=>d.remove(),500)}
-</script>
 </script>
 </body></html>
