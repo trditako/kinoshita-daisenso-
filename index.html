@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.4.1';
+const GAME_VERSION='v1.4.2';
 const UPDATE_LOG=[
- {date:'2026-10-08',version:'v1.4.1',title:'🔧 神話編の敵出現・敵図鑑を修正',items:['神話編の新敵が敵キャラ図鑑に専用枠で表示されるよう修正','神話編ステージで新敵を確実に敵データへ登録してから出現させるよう修正','神話編の新敵が「❔」になって出現しない問題を修正']},
+ {date:'2026-10-09',version:'v1.4.2',title:'📚 図鑑UIリワーク',items:['敵キャラ図鑑に神話編15能力の詳細説明・数値・発動条件を追加','敵キャラ図鑑に検索・章フィルター・遭遇済みフィルター・能力フィルターを追加','木下図鑑に検索・レア度フィルター・並び替えを追加','図鑑カードの情報密度とスマホ表示を改善']},{date:'2026-10-08',version:'v1.4.1',title:'🔧 神話編の敵出現・敵図鑑を修正',items:['神話編の新敵が敵キャラ図鑑に専用枠で表示されるよう修正','神話編ステージで新敵を確実に敵データへ登録してから出現させるよう修正','神話編の新敵が「❔」になって出現しない問題を修正']},
  {date:'2026-10-08',version:'v1.3.4',title:'🌌 神話編ボタン・ステージ一覧を再構築',items:['神話編の章ボタンを専用ボタンとして再構築し、タップ時の処理を独立化','神話編を選択したときは神話編48ステージを専用描画処理で必ず表示','他章のクリア状況に関係なく神話編第1ステージから挑戦可能']},
  {date:'2026-10-08',version:'v1.3.2',title:'🌌 神話編に新規戦闘能力を追加',items:['反撃・回避・反射・死亡爆発・分裂・怒り・蓄積攻撃・追加攻撃・攻撃時回復など、実際の戦闘処理を伴う新能力を追加']},{date:'2026-10-08',version:'v1.3.1',title:'🌌 神話編の解放条件を変更',items:['神話編は他の章をクリアしていなくても選択・挑戦できるよう変更','神話編は第1ステージから順番に挑戦できる仕様に変更']},{date:'2026-10-08',version:'v1.3.0',title:'🌌 神話編 第1章を追加',items:['クトゥルフ神話を題材にした第7章「神話編」を追加','神話編専用の敵キャラクター40体と15種類の新能力を追加']},
  {date:'2026-10-08',version:'v1.2.3',title:'🪬 呪いの能力封印を強化',items:['呪い中は波動・烈波を含む特殊能力を発動できない仕様に変更','呪い状態と能力封印判定を統一し、通常攻撃は継続可能']},
@@ -245,7 +245,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 }
 </style>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-</head>
+<style>
+.bookToolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:7px 0}.bookToolbar input,.bookToolbar select{width:100%;min-width:0;padding:9px;border:2px solid #64748b;border-radius:9px;background:#fff;color:#111;font-weight:800}.bookSearchCount{background:#e2e8f0;color:#0f172a;border-radius:8px;padding:6px 8px;margin:6px 0;font-size:12px;font-weight:900;text-align:left}.bookSection{margin-top:10px}.enemyBookAbilityCount{display:block;margin-top:4px;color:#7c2d12;font-size:11px;font-weight:1000}.enemyBookBadge{background:#dcfce7;color:#166534;border:2px solid #22c55e;border-radius:9px;padding:6px 8px;font-weight:1000;margin-bottom:8px}.abilityCard{background:#fff;border:2px solid #93c5fd;border-radius:9px;padding:8px;margin-top:7px;color:#1e3a8a}.abilityCard b{display:block;color:#075985;margin-bottom:3px}.bookLockedHint{font-size:10px;color:#64748b;margin-top:4px}.kinoshitaBookCard.owned{cursor:pointer}.kinoshitaBookCard.owned:active{transform:scale(.98)}
+@media(max-width:600px){.bookToolbar{grid-template-columns:1fr 1fr}.bookToolbar input{grid-column:1/-1}.enemyBookGrid{grid-template-columns:1fr 1fr}.kinoshitaBookGrid{grid-template-columns:1fr 1fr!important}}
+</style></head>
 <body>
 <div id="game">
  <div class="top"><div class="title">木下大戦争</div><div style="display:flex;align-items:center;gap:10px"><button id="audioToggle" type="button" style="font-size:20px;background:#fff;border:2px solid #222;border-radius:9px;padding:4px 8px;cursor:pointer">🔊</button><div class="money">💰 <span id="money">1500</span>/<span id="moneyMax">6000</span>円</div></div></div>
@@ -291,7 +294,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <button id="pvpClose" class="backbtn">戻る</button>
 </div></div>
 <div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下ガチャ</h1><div class="gachaCoin" id="gachaCoinText"></div><p>ステージクリアなどで貯めた木下コインを使って、木下を確定で入手できます。ランダム抽選はありません。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
-<div id="kinoshitaBook" class="overlay" style="display:none"><div class="panel kinoshitaBookPanel"><h1>📖 木下図鑑</h1><div class="bookHeader"><span>木下コレクション</span><span class="bookCount" id="kinoshitaBookCount"></span></div><div class="bookFilters" id="kinoshitaBookFilters"><button class="bookFilter active" data-book-filter="all">すべて</button><button class="bookFilter" data-book-filter="owned">所持済み</button><button class="bookFilter" data-book-filter="locked">未入手</button></div><div class="bookHint">入手した木下は詳しい性能を確認できます。未入手の木下は「？」で表示されます。</div><div id="kinoshitaBookGrid" class="kinoshitaBookGrid"></div><button id="kinoshitaBookClose" class="backbtn">戻る</button></div></div>
+<div id="kinoshitaBook" class="overlay" style="display:none"><div class="panel kinoshitaBookPanel"><h1>📖 木下図鑑</h1><div class="bookHeader"><span>木下コレクション</span><span class="bookCount" id="kinoshitaBookCount"></span></div><div class="bookFilters" id="kinoshitaBookFilters"><button class="bookFilter active" data-book-filter="all">すべて</button><button class="bookFilter" data-book-filter="owned">所持済み</button><button class="bookFilter" data-book-filter="locked">未入手</button></div><div class="bookHint">検索・レア度絞り込み・並び替えに対応。入手済みなら詳細画面から全性能と固有能力を確認できます。</div><div id="kinoshitaBookToolbar" class="bookToolbar"></div><div id="kinoshitaBookGrid" class="kinoshitaBookGrid"></div><button id="kinoshitaBookClose" class="backbtn">戻る</button></div></div>
 <div id="formation" class="overlay" style="display:none"><div class="panel"><h1>編成</h1><p>持っているキャラから最大10体を自由に選べます。<br>追加・削除だけでなく、▲▼で出撃順も自由に変更できます。</p><div class="formationHint">保存編成</div><div class="formationPresetBar" id="formationPresetBar"></div><div class="formationHint">出撃スロット</div><div class="formationSlots" id="formationSlots"></div><div><button id="removeAll" class="removeAll">全員はずす</button><button id="formationClose" class="backbtn">戻る</button></div><div class="formationHint">所持キャラクター（タップで追加）</div><div class="formationSearchBox"><input id="formationSearch" type="search" placeholder="🔎 名前・属性・能力で検索" autocomplete="off"><select id="formationTraitFilter"><option value="">属性：すべて</option><option value="無">無</option><option value="赤">赤</option><option value="鋼">鋼</option><option value="浮">浮</option><option value="宇宙">宇宙</option><option value="ゾンビ">ゾンビ</option><option value="天使">天使</option><option value="悪魔">悪魔</option></select><select id="formationAbilityFilter"><option value="">能力：すべて</option><option value="強い">強い・超ダメージ</option><option value="耐性">撃たれ強い・耐性</option><option value="妨害">妨害系</option><option value="波動">波動</option><option value="呪い">呪い</option><option value="攻撃力低下">攻撃力低下</option><option value="バリア">バリア</option><option value="反射">反射</option></select></div><div id="formationSearchCount" class="formationSearchCount"></div><div class="availableChars" id="availableChars"></div></div></div>
  <div id="detail" class="overlay" style="display:none"><div class="panel detailPanel"><h1 id="detailTitle">キャラクター詳細</h1><div id="detailBody"></div><button id="detailClose" class="backbtn">閉じる</button></div></div>
  <div id="pause" class="overlay" style="display:none"><div class="panel pausePanel"><h1>⏸ 一時停止中</h1><p>ゲームを一時停止しています。</p><button id="pauseResume" class="pauseResume">▶ 再開</button><button id="pauseQuit" class="pauseQuit">🚪 試合を抜ける</button></div></div>
@@ -1554,26 +1557,53 @@ function traitClass(trait){
  return map[trait]||'';
 }
 function showEnemyBook(){
- const detail=document.getElementById('detail');
- const title=document.getElementById('detailTitle');
- const body=document.getElementById('detailBody');
+ const detail=document.getElementById('detail'),title=document.getElementById('detailTitle'),body=document.getElementById('detailBody');
  if(!detail||!title||!body)return;
  title.textContent='📚 敵キャラ図鑑';
  const mythKeys=Array.isArray(MYTHOLOGY_ENEMY_SPECS)?MYTHOLOGY_ENEMY_SPECS.map(e=>e.name).filter(Boolean):[];
- const mythSet=new Set(mythKeys);
- const keys=Object.keys(enemyTypes);
- const normalKeys=keys.filter(k=>!mythSet.has(k));
- const met=keys.filter(k=>enemyEncountered[k]);
- const buttonHTML=k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);if(!e)return '';return enemyEncountered[k]?'<button class="enemyBookPick" data-enemy-book="'+k+'"><div class="bookFace">'+e.icon+'</div><b>'+e.name+'</b><span class="enemyTrait '+traitClass(e.trait)+'">'+e.trait+'属性</span></button>':'<button class="enemyBookPick locked" disabled><div class="bookFace">❔</div><b>？？？？</b><span class="enemyTrait">未遭遇</span></button>'};
- if(!met.length){body.innerHTML='<div class="enemyLore"><b>まだ出会った敵はいません。</b><br>ステージで敵が実際に出現すると、図鑑に登録されます。</div>';}
- else{
-  body.innerHTML='<p style="font-weight:900">遭遇済み '+met.length+'/'+keys.length+'体。未遭遇の敵は「？」のままです。</p>'+(mythKeys.length?'<h3 style="margin:10px 0 6px">🌌 神話編の敵（'+mythKeys.length+'体）</h3><div class="enemyBookGrid">'+mythKeys.map(buttonHTML).join('')+'</div>':'')+'<h3 style="margin:14px 0 6px">📚 その他の敵</h3><div class="enemyBookGrid">'+normalKeys.map(buttonHTML).join('')+'</div>';
- }
- document.querySelectorAll('[data-enemy-book]').forEach(btn=>btn.onclick=()=>showEnemyDetail(btn.dataset.enemyBook));
+ const mythSet=new Set(mythKeys),keys=Object.keys(enemyTypes),met=keys.filter(k=>enemyEncountered[k]);
+ const q=(window.enemyBookQuery||'').trim().toLowerCase(),mode=window.enemyBookMode||'all',af=window.enemyBookAbility||'all';
+ const allAbilities=[...new Set(keys.flatMap(k=>{const e=enemyTypes[k];const a=Array.isArray(e?.ability?.mythologyV2)?e.ability.mythologyV2:[];return a.length?a:(e?.ability?.name?[e.ability.name]:[])}))];
+ const matches=k=>{const e=enemyTypes[k];if(!e)return false;if(mode==='myth'&&!mythSet.has(k))return false;if(mode==='encountered'&&!enemyEncountered[k])return false;if(af!=='all'&&!((e.ability?.mythologyV2||[]).includes(af)||e.ability?.name===af))return false;return !q||[k,e.trait,e.ability?.name,...(e.ability?.mythologyV2||[])].join(' ').toLowerCase().includes(q)};
+ const filtered=keys.filter(matches),buttonHTML=k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);if(!e)return '';const locked=!enemyEncountered[k];return locked?'<button class="enemyBookPick locked" disabled><div class="bookFace">❔</div><b>？？？？</b><span class="enemyTrait">'+(e.trait||'未遭遇')+'</span></button>':'<button class="enemyBookPick" data-enemy-book="'+k+'"><div class="bookFace">'+e.icon+'</div><b>'+e.name+'</b><span class="enemyTrait">'+(e.trait||'無')+'属性</span>'+(e.ability?.mythologyV2?.length?'<span class="enemyBookAbilityCount">⭐ 特殊能力 '+e.ability.mythologyV2.length+'種</span>':'')+'</button>'};
+ body.innerHTML='<div class="bookToolbar"><input id="enemyBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索" value="'+(window.enemyBookQuery||'')+'"><select id="enemyBookMode"><option value="all">すべて</option><option value="myth">神話編のみ</option><option value="encountered">遭遇済み</option></select><select id="enemyBookAbility"><option value="all">能力：すべて</option>'+allAbilities.map(a=>'<option value="'+a+'">'+mythologyV2AbilityName(a)+'</option>').join('')+'</select></div><div class="bookSearchCount">表示 '+filtered.length+'体 / 全'+keys.length+'体　｜遭遇済み '+met.length+'体</div><div class="bookSection"><h3>🌌 神話編</h3><div class="enemyBookGrid">'+filtered.filter(k=>mythSet.has(k)).map(buttonHTML).join('')+'</div></div><div class="bookSection"><h3>📚 その他の敵</h3><div class="enemyBookGrid">'+filtered.filter(k=>!mythSet.has(k)).map(buttonHTML).join('')+'</div></div>';
+ const s=document.getElementById('enemyBookSearch'),m=document.getElementById('enemyBookMode'),a=document.getElementById('enemyBookAbility');
+ if(s){s.oninput=()=>{window.enemyBookQuery=s.value;showEnemyBook()};s.onkeydown=e=>e.stopPropagation()}
+ if(m)m.onchange=()=>{window.enemyBookMode=m.value;showEnemyBook()};
+ if(a)a.onchange=()=>{window.enemyBookAbility=a.value;showEnemyBook()};
+ body.querySelectorAll('[data-enemy-book]').forEach(btn=>btn.onclick=()=>showEnemyDetail(btn.dataset.enemyBook));
  detail.style.setProperty('display','flex','important');
 }
 function formatAbilityInfo(obj,opts={}){const c=obj||{},a=c.ability||{},parts=[];if(a.name&&a.name!=='基本攻撃')parts.push(a.name);if(a.desc&&a.desc!=='特殊能力なし')parts.push(a.desc);if(c.barrier)parts.push('バリア '+Number(c.barrier)+'（最初に受けるダメージを吸収）');if(c.metal)parts.push('メタル特性');if(c.healAura)parts.push('回復支援（周囲の味方を回復）');if(c.waveLevel&&!parts.some(x=>String(x).includes('波動')))parts.push('波動Lv'+c.waveLevel);if(c.stopChance)parts.push('停止 '+Math.round(Number(c.stopChance)*100)+'%・'+(c.stopDuration||1)+'秒');if(c.warpChance)parts.push('ワープ '+Math.round(Number(c.warpChance)*100)+'%');if(c.sealChance)parts.push('能力封印 '+Math.round(Number(c.sealChance)*100)+'%・'+(c.sealDuration||0)+'秒');if(c.attackDownChance)parts.push('攻撃力低下 '+Math.round(Number(c.attackDownChance)*100)+'%・'+(c.attackDownDuration||0)+'秒');if(c.damageReduce)parts.push('被ダメージ軽減 '+Math.round(Number(c.damageReduce)*100)+'%');if(c.guaranteeKnockback)parts.push('確定ノックバック');if(c.yabayaba)parts.push('ヤバヤバLv'+c.yabayaba);if(a.phoenixSurgeLevel)parts.push('命中数と同数の烈波Lv'+a.phoenixSurgeLevel+'（射程 '+(a.phoenixSurgeMin??1)+'〜'+(a.phoenixSurgeMax??200)+'）');if(a.revive)parts.push('撃破時3秒後に1回だけ覚醒復活');if(a.phoenixAura)parts.push('覚醒中：味方HP・攻撃力25%低下');if(a.phoenixLowHpMultiplier)parts.push('自身HP50%未満で与ダメージ3倍');if(a.curseImmune)parts.push('呪い無効');if(a.stopImmune)parts.push('停止無効');if(a.slowImmune)parts.push('鈍足無効');if(a.waveImmune)parts.push('波動無効');if(a.surgeImmune)parts.push('烈波無効');if(a.curseTargets?.length)parts.push('呪い対象：'+a.curseTargets.join('・'));if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');return parts.length?parts.join(' / '):'なし';}
-function showEnemyDetail(key){const e=enemyTypes[key];if(!e||!enemyEncountered[key])return;const l=enemyLore[key]||{ability:'',story:'この敵についての記録はまだ少ない。'};const abilityText=(l.ability&&l.ability!=='なし')?l.ability:formatAbilityInfo(e,{trait:e.trait,attackType:e.attackType});document.getElementById('detailTitle').textContent=e.icon+' '+e.name;document.getElementById('detailBody').innerHTML=`<div class="detailIcon">${e.icon}</div><div class="detailGrid"><div>🏷️ 属性</div><b>${e.trait}</b><div>❤️ HP</div><b>${e.hp}</b><div>⚔️ 攻撃力</div><b>${e.atk}</b><div>🎯 射程</div><b>${e.range}</b><div>💨 移動速度</div><b>${e.spd}</b><div>⏱️ 攻撃間隔</div><b>${e.interval.toFixed(2)}秒</b><div>🎯 攻撃タイプ</div><b>${e.attackType==='area'?'範囲攻撃':'単体攻撃'}</b><div>💥 ヒットバック</div><b>${e.kb}回</b></div><div class="enemyAbility"><b>⭐ 能力</b><br>${abilityText}</div><div class="enemyLore"><b>📖 ストーリー</b><br>${l.story}</div><button class="backbtn" style="margin-top:10px" onclick="showEnemyBook()">図鑑に戻る</button>`;document.getElementById('detail').style.display='flex'}
+function mythologyV2AbilityName(key){return ({barrier:'結界',distanceArmor:'距離装甲',longReflect:'遠隔反射',rune:'神紋蓄積',summon:'召喚',split:'核分裂',timeSurge:'時間加速',causality:'因果転換',absorb:'吸収',domain:'神域',omen:'天罰予告',soulFeast:'魂喰い',reincarnate:'再臨',gravityWell:'重力圏',finalPhase:'終端化'})[key]||key}
+function mythologyV2AbilityDetail(key,a,e){
+ const n=mythologyV2AbilityName(key);
+ const d={
+ barrier:'ダメージを吸収する結界。耐久値 '+Number(a.barrier||0).toLocaleString()+'。クールダウン '+Number(a.barrierCooldown||0)+'秒で再生。',
+ distanceArmor:'攻撃者との距離が '+Number(a.distanceThreshold||0)+' 以上なら被ダメージを '+Math.round((1-Number(a.distanceArmor||1))*100)+'%軽減。',
+ longReflect:'距離 '+Number(a.reflectRange||0)+' 以上から受けた攻撃の '+Math.round(Number(a.reflectFactor||0)*100)+'%を反射。反射クールダウン '+Number(a.reflectCooldown||0)+'秒。',
+ rune:'攻撃を受けた対象に神紋を蓄積。'+Number(a.runeStacks||0)+'回で攻撃力を '+Math.round((1-Number(a.runeAttackDown||1))*100)+'%低下させ、'+Number(a.runeDuration||0)+'秒持続。',
+ summon:'約 '+Number(a.summonCooldown||0)+'秒ごとに「'+(a.summon||'専用兵')+'」を召喚。召喚体の倍率は約 '+Math.round(Number(a.summonScale||1)*100)+'%。',
+ split:'撃破時に「'+(a.splitInto||'分裂体')+'」を '+Number(a.splitCount||0)+'体生成。生成体は本体の約 '+Math.round(Number(a.splitScale||1)*100)+'%の強さ。',
+ timeSurge:'一定間隔で '+Number(a.timeSurgeDuration||0)+'秒間、攻撃力×'+Number(a.timeSurgeAtk||1).toFixed(2)+'・速度×'+Number(a.timeSurgeSpd||1).toFixed(2)+'。周期 '+Number(a.timeSurgeCooldown||0)+'秒。',
+ causality:'致命傷を受けても死亡を回避し、HPを最大HPの約 '+Math.round(Number(a.causalityHeal||0)*100)+'%まで回復。クールダウン '+Number(a.causalityCooldown||0)+'秒。',
+ absorb:'受けたダメージの約 '+Math.round(Number(a.absorbFactor||0)*100)+'%を吸収・蓄積し、クールダウン '+Number(a.absorbCooldown||0)+'秒で周囲へ約 '+Math.round(Number(a.absorbRelease||0)*100)+'%を放出。',
+ domain:'周囲 '+Number(a.domainRange||0)+' の神域。味方の攻撃力を×'+Number(a.domainAtk||1).toFixed(2)+'、射程を×'+Number(a.domainRangeFactor||1).toFixed(2)+'に低下。',
+ omen:'攻撃前に予告してから、約 '+Number(a.omenCharge||0)+'秒後に範囲 '+Number(a.omenRange||0)+' へ攻撃。ダメージ係数×'+Number(a.omenFactor||1).toFixed(2)+'。',
+ soulFeast:'味方が倒れるたびに攻撃力を '+Math.round(Number(a.soulAtk||0)*100)+'%強化し、最大HPの '+Math.round(Number(a.soulHeal||0)*100)+'%を回復。',
+ reincarnate:'撃破時に一度だけ復活。復活時HPは最大HPの約 '+Math.round(Number(a.reincarnateHp||0)*100)+'%。',
+ gravityWell:'周囲 '+Number(a.gravityRange||0)+' の味方を減速。移動速度を×'+Number(a.gravityFactor||1).toFixed(2)+'にする。',
+ finalPhase:'HPが約 '+Math.round(Number(a.finalHp||0)*100)+'%以下になると最終段階へ。攻撃力×'+Number(a.finalAtk||1).toFixed(2)+'・速度×'+Number(a.finalSpd||1).toFixed(2)+'・射程+'+Number(a.finalRange||0)+'。'
+ }[key];
+ return '<div class="abilityCard"><b>⭐ '+n+'</b><div>'+((d||'この能力の詳細データがあります。'))+'</div></div>';
+}
+function showEnemyDetail(key){
+ const e=enemyTypes[key]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===key);if(!e||!enemyEncountered[key])return;
+ const l=enemyLore[key]||{story:'この敵についての記録はまだ少ない。'},a=e.ability||{},myths=Array.isArray(a.mythologyV2)?a.mythologyV2:[];
+ const abilityHTML=myths.length?'<div class="enemyAbility"><b>🌌 神話能力（詳細）</b>'+myths.map(k=>mythologyV2AbilityDetail(k,a,e)).join('')+'</div>':'<div class="enemyAbility"><b>⭐ 能力</b><br>'+((l.ability&&l.ability!=='なし')?l.ability:formatAbilityInfo(e,{trait:e.trait,attackType:e.attackType}))+'</div>';
+ const detail=document.getElementById('detail');document.getElementById('detailTitle').textContent=e.icon+' '+e.name;document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+e.icon+'</div><div class="enemyBookBadge">図鑑登録済み　｜　'+(e.trait||'無')+'属性</div><div class="detailGrid"><div>❤️ HP</div><b>'+Number(e.hp||0).toLocaleString()+'</b><div>⚔️ 攻撃力</div><b>'+Number(e.atk||0).toLocaleString()+'</b><div>🎯 射程</div><b>'+e.range+'</b><div>💨 移動速度</div><b>'+e.spd+'</b><div>⏱️ 攻撃間隔</div><b>'+Number(e.interval||0).toFixed(2)+'秒</b><div>🎯 攻撃タイプ</div><b>'+(e.attackType==='area'?'範囲攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+e.kb+'回</b></div>'+abilityHTML+'<div class="enemyLore"><b>📖 ストーリー</b><br>'+l.story+'</div><button class="backbtn" style="margin-top:10px" onclick="showEnemyBook()">図鑑に戻る</button>';
+ detail.style.display='flex';
+}
 
 function normalPowerRequirements(i){return NORMAL_POWER_REQUIREMENTS[i]||{}}
 function hasNormalPowerRequirements(i){const req=normalPowerRequirements(i);return Object.entries(req).every(([color,n])=>(colorPowers[color]||0)>=n)}
@@ -1584,7 +1614,6 @@ function toggleNormalForm(i){if(running||i<0||i>=10||!cards[i]?.secondForm||!nor
 function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=cards[i];if(!form||!base)return '';const growth=Math.pow(1.04,29);const hp=Math.round(form.hp*growth);const atk=Math.round(form.atk*growth);const ability=formatAbilityInfo({ability:form.ability},{trait:base.trait||'無',attackType:base.attackType});return '<div style="margin-top:10px;background:#0f172a;border:2px solid #38bdf8;border-radius:10px;padding:10px;color:#f8fafc;text-align:left"><b style="color:#7dd3fc;font-size:16px">✨ 進化後プレビュー（Lv30）</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:13px"><div>❤️ HP</div><b>'+hp+'</b><div>⚔️ 攻撃力</div><b>'+atk+'</b><div>🎯 射程</div><b>'+form.range+'</b><div>💨 移動速度</div><b>'+form.spd+'</b><div>⏱️ 攻撃間隔</div><b>'+Number(form.interval).toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+Number(form.recharge).toFixed(1)+'秒</b><div>💥 ヒットバック</div><b>'+form.kb+'回</b></div><div style="margin-top:8px;padding:8px;background:#1e293b;border-radius:8px"><b>⭐ 性能</b><div style="margin-top:4px;font-size:13px;line-height:1.5">'+ability+'</div></div></div>'}function showCharacterDetail(i){const c=activeCard(i);if(!c)return;const base=cards[i],lv=charLevel[i]||1,maxLv=charMaxLevel[i]||20,need=xpNeed(i),can=lv<maxLv,bookNo=String(base===PHOENIX_REWARD_CARD?cards.length:Number(base.id??i+1)).padStart(3,'0');const isNormal=i<10,req=normalPowerRequirements(i),reqText=Object.entries(req).map(([color,n])=>color+'×'+n+'（所持 '+(colorPowers[color]||0)+'）').join('　');let extra='';if(isNormal){extra='<div class="xpBox normalGoldUseBox" style="margin-top:8px;background:#fff7ed;border:3px solid #ea580c;color:#7c2d12"><b style="color:#7c2d12;font-size:16px">🪙 ノーマルキャラの金：'+normalGold+'個</b><div style="color:#431407;font-weight:900;margin:5px 0">このキャラ専用。最大Lvを1上げるアイテムです。</div><button class="levelUpBtn" '+(normalGold>0&&maxLv<30?'':'disabled')+' onclick="useNormalGold('+i+')">'+(maxLv<30?'このキャラの最大Lvを+1':'最大Lv30')+'</button></div><div class="xpBox" style="margin-top:8px;background:#312e81;border-color:#a78bfa;color:#ffffff"><b>🌈 第二形態</b><div>必要条件：Lv30＋'+reqText+'</div><div>赤 '+(colorPowers.赤||0)+'　青 '+(colorPowers.青||0)+'　黄 '+(colorPowers.黄||0)+'　緑 '+(colorPowers.緑||0)+'　紫 '+(colorPowers.紫||0)+'</div>'+normalEvolutionPreview(i)+(charForm[i]===2?'<button class="levelUpBtn" onclick="toggleNormalForm('+i+')">第一形態に戻す</button>':normalEvolved[i]?'<button class="levelUpBtn" onclick="toggleNormalForm('+i+')">第二形態に切り替える</button>':normalEvolutionReady(i)?'<button class="levelUpBtn" onclick="evolveNormalCharacter('+i+')">第二形態へ進化</button>':'<button class="levelUpBtn" disabled>進化条件未達成</button>')+'</div>';}
 document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name+(isNormal&&charForm[i]===2?'【第二形態】':'');document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+statAt(i,'hp')+'</b><div>⚔️ 攻撃力</div><b>'+statAt(i,'atk')+'</b><div>🎯 射程</div><b>'+statAt(i,'range')+'</b><div>💨 移動速度</div><b>'+statAt(i,'spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+statAt(i,'interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+c.recharge.toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/statAt(i,'interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';document.getElementById('detail').style.display='flex'}
 function levelUpCharacter(i){if(running||!hasCharacter(i)||charLevel[i]>=charMaxLevel[i])return;const need=xpNeed(i);if(playerXP<need)return;playerXP-=need;charLevel[i]++;save();showCharacterDetail(i);renderCards();renderStageSelect()}
-let kinoshitaBookFilter='all';
 function openKinoshitaBook(){
  const el=document.getElementById('kinoshitaBook');
  if(!el)return;
@@ -1599,23 +1628,25 @@ function closeKinoshitaBook(){
  renderStageSelect();
  renderCards();
 }
+let kinoshitaBookFilter='all',kinoshitaBookQuery='',kinoshitaBookRarity='all',kinoshitaBookSort='number';
+function openKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(!el)return;document.getElementById('start').style.display='none';el.style.display='flex';renderKinoshitaBook()}
+function closeKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(el)el.style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()}
 function renderKinoshitaBook(){
- const count=document.getElementById('kinoshitaBookCount');
- const grid=document.getElementById('kinoshitaBookGrid');
- if(!grid)return;
+ const count=document.getElementById('kinoshitaBookCount'),grid=document.getElementById('kinoshitaBookGrid');if(!grid)return;
  const ownedCount=ownedFlags.filter(Boolean).length;
- if(count)count.textContent=`${ownedCount} / ${cards.length}体`;
+ if(count)count.textContent=ownedCount+' / '+cards.length+'体';
+ const q=kinoshitaBookQuery.trim().toLowerCase();
+ const indexes=cards.map((c,i)=>i).filter(i=>{
+  const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',text=[c.name,c.trait||'無',c.series||'通常木下',rarity,c.ability?.name||'',c.ability?.desc||''].join(' ').toLowerCase();
+  return (kinoshitaBookFilter==='all'||(kinoshitaBookFilter==='owned'&&have)||(kinoshitaBookFilter==='locked'&&!have))&&(kinoshitaBookRarity==='all'||rarity===kinoshitaBookRarity)&&(!q||text.includes(q));
+ });
+ indexes.sort((a,b)=>kinoshitaBookSort==='name'?cards[a].name.localeCompare(cards[b].name,'ja'):kinoshitaBookSort==='rarity'?(String(cards[a].rarity||'').localeCompare(String(cards[b].rarity||''))):a-b);
  document.querySelectorAll('[data-book-filter]').forEach(b=>b.classList.toggle('active',b.dataset.bookFilter===kinoshitaBookFilter));
- const indexes=cards.map((c,i)=>i).filter(i=>kinoshitaBookFilter==='all'||(kinoshitaBookFilter==='owned'?hasCharacter(i):!hasCharacter(i)));
- if(!indexes.length){grid.innerHTML='<div class="bookEmpty">該当する木下はいません。</div>';return;}
- grid.innerHTML=indexes.map(i=>{
-   const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本';
-   const bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');
-   if(!have){
-     return `<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.${bookNo}</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div></div>`;
-   }
-   return `<button type="button" class="kinoshitaBookCard owned" data-book-char="${i}"><span class="bookNo">図鑑No.${bookNo}</span><span class="bookRarity">${rarity}</span><div class="bookIcon">${c.icon}</div><div class="bookName">${c.name}</div><div class="bookSeries">${c.series||'通常木下'}</div><div class="bookMiniStats"><span>HP <b>${statAt(i,'hp')}</b></span><span>攻撃 <b>${statAt(i,'atk')}</b></span><span>射程 <b>${statAt(i,'range')}</b></span><span>コスト <b>${c.cost}円</b></span></div><div class="bookAbility">⭐ ${formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})}</div></button>`;
- }).join('');
+ const rarities=[...new Set(cards.map(c=>c.rarity||'基本'))];
+ const toolbar=document.getElementById('kinoshitaBookToolbar');if(toolbar&&!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option>'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option></select>';toolbar.dataset.ready='1';const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');s.oninput=()=>{kinoshitaBookQuery=s.value;renderKinoshitaBook()};r.onchange=()=>{kinoshitaBookRarity=r.value;renderKinoshitaBook()};o.onchange=()=>{kinoshitaBookSort=o.value;renderKinoshitaBook()}}
+ const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');if(s)s.value=kinoshitaBookQuery;if(r)r.value=kinoshitaBookRarity;if(o)o.value=kinoshitaBookSort;
+ if(!indexes.length){grid.innerHTML='<div class="bookEmpty">条件に一致する木下はいません。</div>';return}
+ grid.innerHTML=indexes.map(i=>{const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');if(!have)return '<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div><div class="bookLockedHint">入手すると詳細性能を閲覧できます</div></div>';return '<button type="button" class="kinoshitaBookCard owned" data-book-char="'+i+'"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">'+rarity+'</span><div class="bookIcon">'+c.icon+'</div><div class="bookName">'+c.name+'</div><div class="bookSeries">'+(c.series||'通常木下')+'</div><div class="bookMiniStats"><span>HP <b>'+Number(statAt(i,'hp')).toLocaleString()+'</b></span><span>攻撃 <b>'+Number(statAt(i,'atk')).toLocaleString()+'</b></span><span>射程 <b>'+statAt(i,'range')+'</b></span><span>コスト <b>'+c.cost+'円</b></span></div><div class="bookAbility">⭐ '+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</div></button>'}).join('');
  grid.querySelectorAll('[data-book-char]').forEach(b=>b.onclick=()=>showCharacterDetail(Number(b.dataset.bookChar)));
 }
 function renderFormation(){
