@@ -1888,12 +1888,12 @@ function renderUnitElement(u){const d=document.createElement('div');d.className=
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};
 /* ===== 神話編専用敵 40体 ===== */
 const MYTHOLOGY_ENEMY_SPECS=[
-{name:'深きもの',icon:'🐟',trait:'神話',hp:18000,atk:1250,range:72,spd:1.05,interval:.9,attackType:'single',kb:8,money:180,ability:{mythic:'waterAdapt'}},
+{name:'深きもの',icon:'🐟',trait:'神話',hp:18000,atk:1250,range:72,spd:1.05,interval:.9,attackType:'single',kb:8,money:180,ability:{mythic:'waterAdapt',mythicNew:'dodge',newChance:.22}},
 {name:'父なるダゴン',icon:'🌊',trait:'神話',hp:150000,atk:6200,range:115,spd:.38,interval:1.8,attackType:'area',kb:4,money:900,ability:{mythic:'oceanPressure',chance:.35,mythicNew:'counter',newChance:.35,counterFactor:.4}},
 {name:'チャウグナル・ファウグン',icon:'🐘',trait:'神話',hp:165000,atk:6900,range:145,spd:.36,interval:1.55,attackType:'area',kb:6,money:1050,ability:{mythic:'lifeDrain',chance:.45,mythicNew:'lifestealHit',newChance:.45,healFactor:.2}},
 {name:'母なるハイドラ',icon:'🐍',trait:'神話',hp:210000,atk:5100,range:150,spd:.32,interval:1.6,attackType:'area',kb:5,money:1000,ability:{mythic:'regeneration',regeneration:.04}},
 {name:'クトゥルフの落とし子',icon:'🦑',trait:'神話',hp:68000,atk:2900,range:105,spd:.72,interval:1.1,attackType:'area',kb:6,money:420,ability:{mythic:'tentacle',chance:.35,mythicNew:'multiShot',newChance:.3,extraFactor:.4,extraRange:120}},
-{name:'ショゴス',icon:'🫧',trait:'神話',hp:98000,atk:3600,range:68,spd:1.15,interval:.75,attackType:'area',kb:12,money:500,ability:{mythic:'morph'}},
+{name:'ショゴス',icon:'🫧',trait:'神話',hp:98000,atk:3600,range:68,spd:1.15,interval:.75,attackType:'area',kb:12,money:500,ability:{mythic:'morph',mythicNew:'rage',rageThreshold:.5,rageMultiplier:1.7}},
 {name:'ミ＝ゴ',icon:'🪽',trait:'神話',hp:46000,atk:2400,range:170,spd:1.25,interval:1,attackType:'single',kb:10,money:360,ability:{mythic:'dimensionalWarp',chance:.28}},
 {name:'古のもの',icon:'⭐',trait:'神話',hp:125000,atk:3300,range:190,spd:.46,interval:1.45,attackType:'area',kb:6,money:700,ability:{mythic:'nullField',chance:.3}},
 {name:'夜鬼',icon:'👤',trait:'神話',hp:39000,atk:2150,range:85,spd:1.55,interval:.68,attackType:'single',kb:9,money:300,ability:{mythic:'fear',chance:.3}},
@@ -1904,7 +1904,7 @@ const MYTHOLOGY_ENEMY_SPECS=[
 {name:'空飛ぶポリプ',icon:'🌪️',trait:'神話',hp:105000,atk:4300,range:205,spd:.78,interval:1.3,attackType:'area',kb:5,money:760,ability:{mythic:'phaseShift',phaseChance:.32}},
 {name:'ティンダロスの猟犬',icon:'🐺',trait:'神話',hp:62000,atk:3900,range:95,spd:1.7,interval:.72,attackType:'single',kb:11,money:520,ability:{mythic:'dimensionalWarp',chance:.35}},
 {name:'ネズミの怪異',icon:'🐀',trait:'神話',hp:34000,atk:1500,range:60,spd:1.4,interval:.55,attackType:'single',kb:13,money:210,ability:{mythic:'summonGate',summon:'グール',cooldown:7}},
-{name:'星の精',icon:'✨',trait:'神話',hp:54000,atk:3200,range:155,spd:.92,interval:1.05,attackType:'single',kb:8,money:410,ability:{mythic:'abilityErosion',chance:.3}},
+{name:'星の精',icon:'✨',trait:'神話',hp:54000,atk:3200,range:155,spd:.92,interval:1.05,attackType:'single',kb:8,money:410,ability:{mythic:'abilityErosion',chance:.3,mythicNew:'stacking',maxStacks:5,stackFactor:.12}},
 {name:'ダンウィッチの怪異',icon:'👁️',trait:'神話',hp:130000,atk:5200,range:120,spd:.5,interval:1.45,attackType:'area',kb:5,money:850,ability:{mythic:'sanityBreak',chance:.4}},
 {name:'ウィルバー・ウェイトリー',icon:'📜',trait:'神話',hp:72000,atk:3500,range:180,spd:.7,interval:1,attackType:'area',kb:7,money:600,ability:{mythic:'rangeCollapse',chance:.3}},
 {name:'ヨグ＝ソトースの落とし子',icon:'🔮',trait:'神話',hp:145000,atk:6100,range:240,spd:.34,interval:1.65,attackType:'area',kb:4,money:980,ability:{mythic:'realityWarp',chance:.35}},
