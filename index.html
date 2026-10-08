@@ -2771,7 +2771,7 @@ let lastBattleStatusAt=0;
 function mythicPopup(text,e){const x=Math.max(60,Math.min(worldWidth-100,Number(e?.x||worldWidth/2)));popup(text,x,Math.max(35,field.clientHeight-175));}
 function mythicApplyAttackAbility(e,t,now2){
  const a=e?.ability||{},m=a.mythic;if(!e||!t||t.hp<=0||!m||isAbilitySealed(e))return;
- const chance=a.chance==null?.35:Number(a.chance);
+ const chance=a.chance==null?0.35:Number(a.chance);
  if(m==='waterAdapt'){if(t.slowUntil&&t.slowUntil>now2)t.slowUntil=now2;return;}
  if(m==='oceanPressure'&&Math.random()<chance&&!t.stopImmune){t.stopUntil=now2+1.5;t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'🌊','深海停止',1.5,'mythicStop');}
  if(m==='tentacle'&&Math.random()<chance)hit(t,Math.max(1,Math.round(e.atk*.45)),e,{mythicExtra:true});
