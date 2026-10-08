@@ -1186,7 +1186,7 @@ function spawnCosmeticEffect(u,phase='attack',target=null){
  const effect=ac?.effect||co.costume?.effect||'star';
  const glyph=effect==='flame'?'🔥':effect==='aurora'?'✦':effect==='shadow'?'🌙':'★';
  const count=phase==='attack'?2:phase==='spawn'?3:1;
- const baseX=Number(target?.x??u.x||0);
+ const baseX=Number((target?.x ?? u.x) || 0);
  for(let n=0;n<count;n++){
    if(document.querySelectorAll('.cosmeticEffect').length>24)break;
    const fx=document.createElement('div');fx.className='cosmeticEffect';fx.textContent=glyph;
