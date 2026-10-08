@@ -342,7 +342,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <div id="pvpRoomDisplay" style="display:none"><div>ルームID</div><div id="pvpRoomText" class="pvpRoom"></div><div class="pvpHint">友達に3桁のIDとパスワードを伝えてください。</div></div>
 <button id="pvpClose" class="backbtn">戻る</button>
 </div></div>
-<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel shinjuPanel"><h1>✨ 真髄</h1><div class="gachaCoin" id="gachaCoinText"></div><div class="shinjuSeason"><b>今シーズン真髄</b><strong>「普通の木下・覚醒の装束」＆「普通の木下・天命の木札」</strong><small>限定UR衣装・限定UR携帯品</small></div><div class="shinjuNotice">キャラクターではなく、衣装・携帯品・育成素材・XP・コインが排出されます。</div><div class="shinjuRateBox"><b>排出率</b><div>👕 限定UR衣装：<strong>0.2%</strong></div><div>🎒 限定UR携帯品：<strong>0.2%</strong></div><div>🌈 ランダムな色のパワー：<strong>45%</strong></div><div>🪙 ランダムなレアリティの金：<strong>15%</strong>（現在はノーマルのみ）</div><div>⭐ XP 100～10,000：<strong>20%</strong></div><div>💰 コイン 100～1,500：<strong>19.6%</strong></div></div><div class="shinjuButtons"><button id="shinjuSingleBtn">✨ 1連<br><small>1,000コイン</small></button><button id="shinjuElevenBtn">✨ 11連<br><small>10,000コイン</small></button></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
+<div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下ガチャ</h1><div class="gachaCoin" id="gachaCoinText"></div><p>ステージクリアなどで貯めた木下コインを使って、木下を確定で入手できます。ランダム抽選はありません。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
 
 <div id="missionAchievement" class="overlay" style="display:none;z-index:230">
  <div class="panel missionPanel">
@@ -3203,416 +3203,64 @@ function showBattleCharacterList(){
  detail.style.display='flex';
 }
 function openGacha(){
- const g=document.getElementById('gacha');if(!g)return;
- g.style.display='flex';renderShinju();
+ const g=document.getElementById('gacha');
+ if(!g)return;
+ g.style.display='flex';
+ renderGacha();
 }
 function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
-function buyGachaCharacter(i){return false;}
-
-document.addEventListener('click',e=>{
- const b=e.target.closest('button');
- if(b && b.id!=='audioToggle' && !b.disabled)playSE('click');
-},{capture:true});
-document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankRewardInfoBtn').onclick=openRankRewardInfo;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
-document.getElementById('editFriendProfile').onclick=async()=>{const old=storage.getItem('kinoshitaPlayerBio')||'';const v=prompt('プロフィール文（80文字以内）',old);if(v===null)return;storage.setItem('kinoshitaPlayerBio',v.slice(0,80));document.getElementById('myFriendProfileText').textContent=v.slice(0,80)||'プロフィール文はありません。';await ensureMyPlayerProfile();};document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
-/* AI自動処理はUIイベント登録を止めないよう安全に開始 */
-(async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(12);runAIActivities(50);}catch(e){console.warn("AI初期処理をスキップ:",e)}},120);setInterval(async()=>{try{await loadAIServerWorkerState();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){}},15000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
-
-/* ===== UIボタンの安全な再バインド =====
-   初期化途中の例外があっても、メインメニューのボタンが無反応にならないようにします。
-*/
-function bindSafeClick(id,fn){
- const el=document.getElementById(id); if(!el)return;
- el.onclick=(e)=>{try{e.preventDefault();e.stopPropagation();fn(e)}catch(err){console.error(id,err)}};
+let gachaShopMode='normal';
+function renderGacha(){
+ const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
+ if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins+'枚';
+ if(tabs)tabs.innerHTML='<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">期間限定交換所</button><button class="gachaTab '+(gachaShopMode==='shinju'?'active':'')+'" data-gacha-mode="shinju">✨ 真髄</button>';
+ tabs?.querySelectorAll('[data-gacha-mode]').forEach(b=>b.onclick=()=>{gachaShopMode=b.dataset.gachaMode;renderGacha();});
+ if(gachaShopMode==='shinju'){renderShinju();return;}
+ if(gachaShopMode==='limited'){renderLimitedExchangeShop();return;}
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>木下交換</h2><p>木下コインでキャラクターを選んで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">攻略特化隊：レア 2,000枚／激レア 4,000枚／超激レア 10,000枚</p></div>';
+ if(!result)return;
+ const available=[]; cards.forEach((c,i)=>{if(i>0&&!ownedFlags[i]&&c.gachaCost)available.push(i);});
+ if(!available.length){result.innerHTML='<div class="gachaResult">🎉 現在交換できる未所持キャラクターはありません。</div>';return;}
+ result.innerHTML='<div style="font-size:15px;margin-bottom:7px">交換する木下を選んでください</div><div class="gachaChars">'+available.map(i=>{const c=activeCard(i)||cards[i],cost=c.gachaCost,can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div>';
+ result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));
 }
-bindSafeClick('formationBtn',()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()});
-bindSafeClick('pvpBtn',openPvp);
-bindSafeClick('friendsOpen',openFriends);
-document.getElementById('friendClose').onclick=closeFriends;
-document.getElementById('friendAddBtn').onclick=addFriend;
-document.getElementById('copyPlayerId').onclick=async()=>{try{await navigator.clipboard.writeText(playerRankingId);document.getElementById('friendStatus').textContent='プレイヤーIDをコピーしました。';}catch(e){document.getElementById('friendStatus').textContent='コピーできませんでした。IDを長押ししてコピーしてください。';}};
-bindSafeClick('rankBtn',openRank);bindSafeClick('allianceBtn',openAlliance);bindSafeClick('allianceClose',closeAlliance);bindSafeClick('allianceCreateBtn',createAlliance);
-document.getElementById('allianceBody').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!document.getElementById('allianceLobby').contains(b))return;e.preventDefault();e.stopPropagation();try{if(b.id==='allianceLeaveBtn')leaveAlliance();else if(b.id==='allianceAllianceRankingBtn')allianceShowAllianceRanking();else if(b.id==='allianceRankingBtn')allianceShowRanking();else if(b.id==='allianceChatBtn')allianceShowChat();else if(b.id==='allianceMembersBtn')openAllianceMembers();else if(b.dataset.allianceMemberId)openAllianceMemberDetail(b.dataset.allianceMemberId,b.dataset.allianceMemberType);else if(b.dataset.kickAllianceId)kickAllianceMember(b.dataset.kickAllianceId,b.dataset.kickAllianceType);else if(b.id==='allianceEditBtn')editAlliance();else if(b.id==='allianceRejectNonMatching')rejectNonMatchingAllianceRequests();else if(b.id==='allianceRankingBack'||b.id==='allianceChatBack'||b.id==='allianceEditCancel')renderAlliance();else if(b.dataset.acceptAlliance)acceptAllianceInvite(Number(b.dataset.acceptAlliance));else if(b.dataset.declineAlliance)declineAllianceInvite(Number(b.dataset.declineAlliance));else if(b.dataset.joinAlliance)requestAllianceJoin(Number(b.dataset.joinAlliance));else if(b.dataset.approveAlliance)approveAllianceJoin(Number(b.dataset.approveAlliance),true);else if(b.dataset.rejectAlliance)approveAllianceJoin(Number(b.dataset.rejectAlliance),false);}catch(err){console.error('alliance button',err)}});
-bindSafeClick('kinoshitaBookBtn',openKinoshitaBook);
-bindSafeClick('enemyBookBtn',showEnemyBook);
-bindSafeClick('gachaBtn',openGacha);
-function canStageStart(mode=selectedMode,ch=selectedChapter,n=selectedStage){if(mode==='legend')return legendStageUnlocked(ch,n);if(mode==='event'||mode==='growth')return chapterUnlocked(1);if(ch===4)return n<=48;if(ch===5)return n<=(Number(chapterClears[4]||0)+1);if(ch===6)return n<=(Number(chapterClears[5]||0)+1);if(ch===7)return n<=(Number(chapterClears[6]||0)+1);return n<=(ch===1?unlocked:(chapterClears[ch-1]||0)+1)}
-bindSafeClick('startBtn',()=>{
- const ok=canStageStart();
- if(ok)startStage(selectedStage);
-});
-document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
-document.getElementById('startBtn').onclick=()=>{
- const ok=canStageStart();
- if(!ok)return;
- startStage(selectedStage);
-};
-function selectChapterTab(t){const v=t.dataset.chapter;if(v==='legend'){selectedMode='legend';selectedLegendChapter=Math.max(1,Math.min(10,selectedLegendChapter||1));selectedStage=1;document.getElementById('startBtn').textContent=legendPool()[0].name+'を開始';}else if(v==='event'){selectedMode='event';selectedStage=1;const pool=eventStages.filter(st=>!st.itemReward);document.getElementById('startBtn').textContent=(pool[0]?.name||'イベントステージ')+'を開始';}else if(v==='growth'){selectedMode='growth';selectedStage=1;const pool=eventStages.filter(st=>st.itemReward);document.getElementById('startBtn').textContent=(pool[0]?.name||'強化素材ステージ')+'を開始';}else{const ch=Number(v);if(!Number.isInteger(ch)||ch<1||ch>7)return;selectedMode='japan';selectedChapter=ch;selectedStage=1;if(ch===5)selectedMode='space';const pool=chapterPool();document.getElementById('startBtn').textContent=pool[0].name+(chapterUnlocked(ch)?'を開始':'（未解放）')}renderStageSelect()}
-document.querySelectorAll('.chapterTab').forEach(t=>{
- if(t.dataset.chapter==='7')return;
- t.onclick=(e)=>{e.preventDefault();e.stopPropagation();try{selectChapterTab(t)}catch(err){console.error('chapterTab',err)}};
-});
-const mythologyChapterButton=document.getElementById('mythologyChapterBtn');
-let mythologyChapterTapLock=0;
-function openMythologyChapter(e){
- if(e){e.preventDefault();e.stopPropagation();}
- const now=Date.now();if(now-mythologyChapterTapLock<350)return;mythologyChapterTapLock=now;
- selectedMode='japan';selectedChapter=7;selectedStage=1;
- const first=mythologyStages?.[0];
- const startBtn=document.getElementById('startBtn');
- if(startBtn&&first)startBtn.textContent=first.name+'を開始';
- renderStageSelect();
-}
-if(mythologyChapterButton){
- mythologyChapterButton.addEventListener('pointerup',openMythologyChapter,{capture:true});
- mythologyChapterButton.addEventListener('click',openMythologyChapter,{capture:true});
-}
-document.querySelectorAll('[data-game-speed]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.stopPropagation();},{passive:true});b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setGameSpeed(Number(b.dataset.gameSpeed));});});
-const pauseButton=document.getElementById('battlePauseBtn');pauseButton.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();pauseBattle();});pauseButton.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();e.stopPropagation();pauseBattle();}});document.getElementById('pauseResume').onclick=resumeBattle;document.getElementById('pauseQuit').onclick=quitBattle;document.getElementById('detailClose').onclick=()=>document.getElementById('detail').style.display='none';
-const battleDetailBtn=document.getElementById('battleDetailBtn');battleDetailBtn.addEventListener('pointerdown',e=>{e.stopPropagation();},{passive:true});battleDetailBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showBattleCharacterList();});document.getElementById('battleEnemyBookBtn').onclick=showEnemyBook;document.getElementById('enemyBookBtn').onclick=showEnemyBook;
-document.getElementById('nextBtn').onclick=()=>{const r=document.getElementById('result');r.style.setProperty('display','none','important');if(document.getElementById('nextBtn').textContent==='ランク戦に戻る'){document.getElementById('start').style.display='none';openRank();return;}if(document.getElementById('nextBtn').textContent==='もう一度挑戦'||document.getElementById('nextBtn').textContent==='もう一度遊ぶ'){startStage(selectedStage);return;}if(selectedMode==='legend'&&selectedStage<6){selectedStage++;const pool=legendPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}if((selectedMode==='japan'||selectedMode==='future'||selectedMode==='space')&&selectedStage<48){selectedStage++;const pool=chapterPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}document.getElementById('start').style.display='flex';renderStageSelect()};
-document.getElementById('stageBack').onclick=()=>{document.getElementById('result').style.setProperty('display','none','important');document.getElementById('start').style.display='flex';renderStageSelect()};
-document.getElementById('giftBoxBtn').onclick=openGiftBox;document.getElementById('giftClose').onclick=closeGiftBox;document.getElementById('giftClaimAll').onclick=claimAllGifts;document.getElementById('loginBonusBtn').onclick=()=>claimDailyLoginBonus(true);document.getElementById('loginBonusClose').onclick=closeLoginBonus;document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
-document.getElementById('formationClose').onclick=()=>{document.getElementById('formation').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()};
-document.getElementById('removeAll').onclick=()=>{formation=[];normalizeFormation();save();renderFormation();renderCards()};
-
-
-// ===== 毎日ログインボーナス（日本時間0:00更新） =====
-const LOGIN_BONUS_REWARDS=[
- {coins:300,xp:0,label:'木下コイン 300枚'},
- {coins:500,xp:0,label:'木下コイン 500枚'},
- {coins:700,xp:500,label:'木下コイン 700枚 + 500 XP'},
- {coins:1000,xp:500,label:'木下コイン 1,000枚 + 500 XP'},
- {coins:1500,xp:1000,label:'木下コイン 1,500枚 + 1,000 XP'},
- {coins:2000,xp:1500,label:'木下コイン 2,000枚 + 1,500 XP'},
- {coins:3000,xp:3000,label:'木下コイン 3,000枚 + 3,000 XP'}
-];
-function loginBonusDate(){
- try{return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/\\//g,'-');}
- catch(e){return new Date().toISOString().slice(0,10);}
-}
-function loginBonusDay(dateKey=loginBonusDate()){
- const n=Number(dateKey.replace(/-/g,''))||1;
- return ((n%7)+7)%7;
-}
-function renderLoginBonus(){
- const el=document.getElementById('loginBonusBody');if(!el)return;
- const today=loginBonusDay(),last=storage.getItem('kinoshitaLoginBonusLastDate')||'',claimed=last===loginBonusDate();
- el.innerHTML='<div class="rankNotice" style="text-align:left;margin-bottom:8px"><b>'+ (claimed?'✅ 本日のログインボーナスは受け取り済みです。':'🎉 本日のログインボーナスを受け取りました！') +'</b><br>毎日0:00（日本時間）に次のボーナスへ更新されます。</div>'+
- '<div style="display:grid;gap:6px">'+LOGIN_BONUS_REWARDS.map((r,i)=>'<div class="rankNotice" style="text-align:left;'+(i===today?'border:3px solid #06b6d4;background:#ecfeff;color:#164e63':'')+'"><b>Day '+(i+1)+(i===today?'　← 今日':'')+'</b><br>🎁 '+r.label+'</div>').join('')+'</div>';
-}
-function claimDailyLoginBonus(forceOpen=false){
- const today=loginBonusDate(),last=storage.getItem('kinoshitaLoginBonusLastDate')||'';
- if(last!==today){
-  const reward=LOGIN_BONUS_REWARDS[loginBonusDay(today)];
-  gachaCoins+=reward.coins;playerXP+=reward.xp;
-  storage.setItem('kinoshitaLoginBonusLastDate',today);
-  save();
-  renderOwnedStart();
-  renderLoginBonus();
-  document.getElementById('loginBonus').style.display='flex';
- }else if(forceOpen){
-  renderLoginBonus();
-  document.getElementById('start').style.display='none';
-  document.getElementById('loginBonus').style.display='flex';
+function renderLimitedExchangeShop(){
+ const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
+ const LIMITED_ALL_SERIES_KEY='kinoshitaLimitedAllSeriesStart';
+ let LIMITED_ALL_SERIES_START=Number(storage.getItem(LIMITED_ALL_SERIES_KEY)||0);
+ if(!LIMITED_ALL_SERIES_START){
+   LIMITED_ALL_SERIES_START=Date.now();
+   storage.setItem(LIMITED_ALL_SERIES_KEY,String(LIMITED_ALL_SERIES_START));
  }
-}
-function closeLoginBonus(){document.getElementById('loginBonus').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();}
-
-const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
-function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
-function rankTierReward(rp){const t=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];let x=t[0];for(const v of t)if(rp>=rankDefs.find(d=>d.name===v[0]).need)x=v;return x}
-function rankRewardSnapshotRank(){
- const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];
- const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});
- for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,rp:Number(a.rp||0)});
- hum.sort((a,b)=>b.rp-a.rp);
- const i=hum.findIndex(x=>x.id===playerRankingId);
- return i<0?hum.length+1:i+1;
-}
-function rankSeasonTop10Key(season=rankRewardCycle()){return 'kinoshitaRankTop10Qualified_'+season}
-function noteRankSeasonTop10Qualification(){
- const pos=rankRewardSnapshotRank(),season=rankRewardCycle();
- if(pos<=10)storage.setItem(rankSeasonTop10Key(season),'1');
- return pos;
-}
-function addRankRewardGift(){
- const cycle=rankRewardCycle(),last=Number(storage.getItem('kinoshitaRankRewardCycle')||-1);
- if(last>=cycle)return;
- const rp=Math.max(0,Number(rankPoints||0)),pos=rankRewardSnapshotRank();
- const reachedTop10=storage.getItem(rankSeasonTop10Key(cycle))==='1';
- const eligibleForKinoshitaYoshida=reachedTop10||pos<=10;
- let coins=0,xp=0,badge='',char=eligibleForKinoshitaYoshida,label='';
- if(pos===1){coins=150000;xp=150000;badge='1位の証';label='ランク1位報酬'}
- else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
- else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
- else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
- else if(reachedTop10){const t=rankTierReward(rp);coins=t[1];xp=t[2];label='シーズンTop10到達報酬'}
- else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
- pendingRankGifts.push({cycle,label,coins,xp,badge,char,kinoshitaYoshida:eligibleForKinoshitaYoshida});
- storage.setItem('kinoshitaRankRewardCycle',String(cycle));
- storage.removeItem(rankSeasonTop10Key(cycle));
- rankPoints=0;saveRank();
-}
-let pendingRankGifts=[];try{pendingRankGifts=JSON.parse(storage.getItem('kinoshitaPendingRankGifts')||'[]')}catch(e){pendingRankGifts=[]}
-function saveRankGifts(){storage.setItem('kinoshitaPendingRankGifts',JSON.stringify(pendingRankGifts))}
-function renderGiftBox(){const el=document.getElementById('giftBoxBody');if(!el)return;el.innerHTML=pendingRankGifts.length?pendingRankGifts.map((g,i)=>'<div class="rankNotice" style="margin-bottom:7px;text-align:left"><b>🎁 '+escapeRankText(g.label)+'</b><br>🪙 '+Number(g.coins||0).toLocaleString()+' 木下コイン　⭐ '+Number(g.xp||0).toLocaleString()+' XP'+(g.badge?'<br>🏅 '+escapeRankText(g.badge):'')+(g.char&&g.kinoshitaYoshida?'<br>🎁 木下&吉田（シーズンTop10到達者／リセット時Top10）':'')+'</div>').join(''):'<div class="rankNotice">現在、受け取れるプレゼントはありません。</div>'}
-async function openGiftBox(){try{await syncPlayerRanking()}catch(e){}if(!pendingRankGifts.length)addRankRewardGift();document.getElementById('start').style.display='none';document.getElementById('giftBox').style.display='flex';renderGiftBox()}
-function closeGiftBox(){document.getElementById('giftBox').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect()}
-function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoins+=Number(g.coins||0);playerXP+=Number(g.xp||0);if(g.char&&g.kinoshitaYoshida){const i=cards.findIndex(c=>c.name==='木下&吉田');if(i>=0)ownedFlags[i]=true;}got=true}if(got){pendingRankGifts=[];saveRankGifts();save();renderGiftBox();renderOwnedStart();renderCards();} }
-function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
-// 起動時に本日のログインボーナスを1日1回だけ自動付与する。
-setTimeout(()=>{claimDailyLoginBonus(false);},150);
-// ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
-setTimeout(()=>{syncPlayerRanking();},300);
-
-/* ===== v1.5.0 ミッション・実績・称号システム ===== */
-const KINOSHITA_MISSION_SYSTEM_V1='1';
-const MISSION_STORAGE_KEY='kinoshitaMissionSystemV1';
-const ACHIEVEMENT_STORAGE_KEY='kinoshitaAchievementsV1';
-const TITLE_STORAGE_KEY='kinoshitaEquippedTitleV1';
-
-const DAILY_MISSION_DEFS=[
- {id:'daily_clear',title:'今日も出撃',desc:'ステージを3回クリア',stat:'stageWins',target:3,rewardCoins:500,rewardXP:100},
- {id:'daily_deploy',title:'木下軍を動かせ',desc:'味方キャラクターを10体出撃させる',stat:'deploys',target:10,rewardCoins:350,rewardXP:80},
- {id:'daily_worker',title:'働かせろ！',desc:'働き木下を1回強化する',stat:'workerUpgrades',target:1,rewardCoins:300,rewardXP:100},
- {id:'daily_level',title:'育成の日',desc:'キャラクターを1回レベルアップする',stat:'levelUps',target:1,rewardCoins:400,rewardXP:150},
- {id:'daily_enemy',title:'敵を倒せ！',desc:'敵を50体撃破する',stat:'enemyKills',target:50,rewardCoins:450,rewardXP:100}
-];
-const WEEKLY_MISSION_DEFS=[
- {id:'weekly_clear',title:'週間出撃隊',desc:'ステージを15回クリア',stat:'stageWins',target:15,rewardCoins:1800,rewardXP:500},
- {id:'weekly_deploy',title:'総動員',desc:'味方キャラクターを60体出撃させる',stat:'deploys',target:60,rewardCoins:1500,rewardXP:400},
- {id:'weekly_enemy',title:'大掃討',desc:'敵を300体撃破する',stat:'enemyKills',target:300,rewardCoins:1700,rewardXP:450},
- {id:'weekly_gacha',title:'木下コレクター',desc:'キャラクターを3体交換する',stat:'gachaBuys',target:3,rewardCoins:1600,rewardXP:450},
- {id:'weekly_level',title:'育成週間',desc:'キャラクターを5回レベルアップする',stat:'levelUps',target:5,rewardCoins:1800,rewardXP:600},
- {id:'weekly_rank',title:'ランク挑戦者',desc:'ランク戦で2勝する',stat:'rankWins',target:2,rewardCoins:2200,rewardXP:700}
-];
-const ACHIEVEMENT_DEFS=[
- {id:'first_clear',icon:'🌱',name:'はじめの一歩',desc:'ステージを1回クリア',stat:'stageWins',target:1,title:'新人木下'},
- {id:'clear10',icon:'⚔️',name:'駆け出し戦士',desc:'ステージを10回クリア',stat:'stageWins',target:10,title:'駆け出し戦士'},
- {id:'clear50',icon:'🔥',name:'百戦への道',desc:'ステージを50回クリア',stat:'stageWins',target:50,title:'百戦への道'},
- {id:'clear150',icon:'👑',name:'大戦争制覇者',desc:'ステージを150回クリア',stat:'stageWins',target:150,title:'大戦争制覇者'},
- {id:'japan_master',icon:'🇯🇵',name:'日本統一',desc:'日本編3章をすべてクリア',kind:'japanMaster',target:1,title:'日本統一者'},
- {id:'myth_master',icon:'🌌',name:'神話踏破',desc:'神話編48ステージをすべてクリア',kind:'mythMaster',target:1,title:'神話踏破者'},
- {id:'legend_master',icon:'🌟',name:'伝説の踏破者',desc:'レジェンド全60ステージをクリア',kind:'legendMaster',target:1,title:'伝説の踏破者'},
- {id:'owned10',icon:'📚',name:'木下収集家',desc:'キャラクターを10体所持',kind:'owned',target:10,title:'木下収集家'},
- {id:'owned30',icon:'📖',name:'木下研究家',desc:'キャラクターを30体所持',kind:'owned',target:30,title:'木下研究家'},
- {id:'owned50',icon:'🏛️',name:'木下博士',desc:'キャラクターを50体所持',kind:'owned',target:50,title:'木下博士'},
- {id:'level10',icon:'📈',name:'育成マスター',desc:'キャラクターを10回レベルアップ',stat:'levelUps',target:10,title:'育成マスター'},
- {id:'level100',icon:'💎',name:'限界への挑戦',desc:'キャラクターを100回レベルアップ',stat:'levelUps',target:100,title:'限界への挑戦者'},
- {id:'evolve5',icon:'✨',name:'進化の研究者',desc:'ノーマルキャラクターを5体進化',stat:'evolutions',target:5,title:'進化研究者'},
- {id:'gacha10',icon:'🎟️',name:'交換上手',desc:'キャラクターを10体交換',stat:'gachaBuys',target:10,title:'交換上手'},
- {id:'rank10',icon:'🏆',name:'ランカー',desc:'ランク戦で10勝',stat:'rankWins',target:10,title:'ランカー'},
- {id:'rank50',icon:'🥇',name:'上位常連',desc:'ランク戦で50勝',stat:'rankWins',target:50,title:'上位常連'},
- {id:'pvp5',icon:'⚔️',name:'対戦好き',desc:'プレイヤー対戦で5勝',stat:'pvpWins',target:5,title:'対戦好き'},
- {id:'deploy100',icon:'🚀',name:'総動員',desc:'味方キャラクターを100体出撃',stat:'deploys',target:100,title:'総動員司令官'},
- {id:'worker10',icon:'🌳',name:'働き木下主任',desc:'働き木下を10回強化',stat:'workerUpgrades',target:10,title:'働き木下主任'},
- {id:'enemy500',icon:'💥',name:'大掃討',desc:'敵を500体撃破',stat:'enemyKills',target:500,title:'大掃討者'}
-];
-let missionSystem;
-try{missionSystem=JSON.parse(storage.getItem(MISSION_STORAGE_KEY)||'null')}catch(e){missionSystem=null}
-if(!missionSystem||typeof missionSystem!=='object')missionSystem={version:KINOSHITA_MISSION_SYSTEM_V1,stats:{},daily:{},weekly:{}};
-missionSystem.stats=missionSystem.stats&&typeof missionSystem.stats==='object'?missionSystem.stats:{};
-for(const k of ['stageWins','deploys','workerUpgrades','levelUps','enemyKills','gachaBuys','rankWins','pvpWins','evolutions'])missionSystem.stats[k]=Math.max(0,Number(missionSystem.stats[k]||0));
-let equippedTitle=storage.getItem(TITLE_STORAGE_KEY)||'新人木下';
-let unlockedTitles=new Set();
-try{unlockedTitles=new Set(JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY)||'[]').filter(Boolean))}catch(e){unlockedTitles=new Set()}
-if(!unlockedTitles.has('first_clear')&&missionSystem.stats.stageWins>0)unlockedTitles.add('first_clear');
-
-function missionTokyoParts(date=new Date()){
- try{
-  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(date);
-  const o={};for(const p of parts)o[p.type]=p.value;return o;
- }catch(e){const d=new Date(date);return {year:String(d.getFullYear()),month:String(d.getMonth()+1).padStart(2,'0'),day:String(d.getDate()).padStart(2,'0'),weekday:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]};}
-}
-function missionDateKey(date=new Date()){const p=missionTokyoParts(date);return p.year+'-'+p.month+'-'+p.day}
-function missionWeekKey(date=new Date()){
- const p=missionTokyoParts(date);
- const base=new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day)));
- const day=base.getUTCDay(),diff=(day+6)%7;
- base.setUTCDate(base.getUTCDate()-diff);
- return base.getUTCFullYear()+'-'+String(base.getUTCMonth()+1).padStart(2,'0')+'-'+String(base.getUTCDate()).padStart(2,'0');
-}
-function missionMakeState(defs,key){
- return {key,items:Object.fromEntries(defs.map(d=>[d.id,{progress:0,claimed:false}]))};
-}
-function missionEnsurePeriods(){
- const today=missionDateKey(),week=missionWeekKey();
- if(missionSystem.daily?.key!==today)missionSystem.daily=missionMakeState(DAILY_MISSION_DEFS,today);
- if(missionSystem.weekly?.key!==week)missionSystem.weekly=missionMakeState(WEEKLY_MISSION_DEFS,week);
- saveMissionSystem();
-}
-function saveMissionSystem(){
- storage.setItem(MISSION_STORAGE_KEY,JSON.stringify(missionSystem));
- storage.setItem(ACHIEVEMENT_STORAGE_KEY,JSON.stringify([...unlockedTitles]));
- storage.setItem(TITLE_STORAGE_KEY,equippedTitle);
-}
-function missionStatValue(stat){return Math.max(0,Number(missionSystem.stats?.[stat]||0))}
-function missionProgress(def,state){return Math.min(def.target,missionStatValue(def.stat))}
-function missionRewardText(def){return '🪙 '+Number(def.rewardCoins||0).toLocaleString()+'　⭐ '+Number(def.rewardXP||0).toLocaleString()+' XP'}
-function claimMission(type,id){
- missionEnsurePeriods();
- const defs=type==='daily'?DAILY_MISSION_DEFS:WEEKLY_MISSION_DEFS,state=missionSystem[type],def=defs.find(d=>d.id===id),item=state.items?.[id];
- if(!def||!item||item.claimed)return;
- if(missionProgress(def,state)<def.target)return;
- item.claimed=true;gachaCoins+=Number(def.rewardCoins||0);playerXP+=Number(def.rewardXP||0);
- save();saveMissionSystem();renderMissionAchievement();
- renderOwnedStart();
-}
-function missionTrack(stat,amount=1){
- missionEnsurePeriods();
- const n=Math.max(0,Number(amount)||0);if(!n)return;
- missionSystem.stats[stat]=Math.max(0,Number(missionSystem.stats[stat]||0)+n);
- for(const type of ['daily','weekly']){
-  const defs=type==='daily'?DAILY_MISSION_DEFS:WEEKLY_MISSION_DEFS,state=missionSystem[type];
-  for(const d of defs){if(d.stat===stat&&state.items?.[d.id])state.items[d.id].progress=Math.min(d.target,Number(state.items[d.id].progress||0)+n);}
+ const LIMITED_ALL_SERIES_END=LIMITED_ALL_SERIES_START+60*60*1000;
+ const allSeriesActive=Date.now()<LIMITED_ALL_SERIES_END;
+ if(!allSeriesActive){
+   const series='聖なる偉人達';
+   if(banner)banner.innerHTML='<div class="gachaBanner"><h2>⏳ 期間限定交換所</h2><p>現在の期間限定シリーズは「'+series+'」です。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
+   const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries===series);
+   if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
+   result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+   result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
+   return;
  }
- missionCheckAchievements();
- saveMissionSystem();
+ const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange);
+ if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
+ result.innerHTML='<div style="font-size:15px;margin-bottom:7px">期間限定キャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+ result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
 }
-function missionAchievementValue(def){
- if(def.stat)return missionStatValue(def.stat);
- if(def.kind==='owned')return ownedFlags.filter(Boolean).length;
- if(def.kind==='japanMaster')return chapterClears.slice(0,3).every(x=>Number(x||0)>=48)?1:0;
- if(def.kind==='mythMaster')return Number(chapterClears[6]||0)>=48?1:0;
- if(def.kind==='legendMaster')return legendClears.reduce((a,b)=>a+Number(b||0),0)>=60?1:0;
- return 0;
+function buyLimitedExchangeCharacter(i){
+ if(!Number.isInteger(i)||!cards[i]||!cards[i].limitedExchange||ownedFlags[i])return;
+ const cost=cards[i].rarity==='LR'?50000:10000;
+ if(gachaCoins<cost)return;
+ gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
 }
-function missionCheckAchievements(){
- let changed=false;
- for(const d of ACHIEVEMENT_DEFS){
-  if(unlockedTitles.has(d.id))continue;
-  if(missionAchievementValue(d)>=d.target){unlockedTitles.add(d.id);changed=true;missionSystem.lastAchievement=d.id;}
- }
- if(changed){
-  const last=ACHIEVEMENT_DEFS.find(d=>d.id===missionSystem.lastAchievement);
-  if(last&&last.title&&!equippedTitle)equippedTitle=last.title;
-  saveMissionSystem();
- }
+function buyGachaCharacter(i){
+ if(!Number.isInteger(i)||!cards[i]||ownedFlags[i])return;
+ const c=activeCard(i)||cards[i],cost=Number(c.gachaCost||0);
+ if(!cost||gachaCoins<cost)return;
+ gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
 }
-function missionAchievementProgressText(d){
- const v=missionAchievementValue(d),t=d.target;
- if(d.kind==='japanMaster'||d.kind==='mythMaster'||d.kind==='legendMaster')return v>=1?'達成':'未達成';
- return Math.min(v,t).toLocaleString()+' / '+t.toLocaleString();
-}
-function missionRemainingLabel(type){
- return type==='daily'?'毎日0:00（日本時間）に更新':'毎週月曜0:00（日本時間）に更新';
-}
-function missionCardHTML(def,state,type){
- const item=state.items?.[def.id]||{progress:0,claimed:false},p=missionProgress(def,state),done=p>=def.target,claimed=!!item.claimed;
- return '<div class="missionCard '+(done?'done ':'')+(claimed?'claimed':'')+'"><div class="missionTitleRow"><span class="missionTitle">'+def.title+'</span><span class="missionReward">'+missionRewardText(def)+'</span></div><div class="missionDesc">'+def.desc+'</div><div class="missionProgress"><i style="width:'+Math.max(0,Math.min(100,p/def.target*100))+'%"></i></div><div class="missionMeta"><span>'+p.toLocaleString()+' / '+def.target.toLocaleString()+'</span><span>'+ (claimed?'✅ 受取済み':done?'🎁 受取可能':'進行中') +'</span></div><button class="missionClaim" data-mission-type="'+type+'" data-mission-id="'+def.id+'" '+(done&&!claimed?'':'disabled')+'>'+ (claimed?'受取済み':done?'🎁 報酬を受け取る':'未達成') +'</button></div>';
-}
-let missionAchievementTab='daily';
-function renderMissionAchievement(){
- missionEnsurePeriods();missionCheckAchievements();
- const body=document.getElementById('missionAchievementBody');if(!body)return;
- const dailyDone=DAILY_MISSION_DEFS.filter(d=>missionSystem.daily.items?.[d.id]?.claimed).length;
- const weeklyDone=WEEKLY_MISSION_DEFS.filter(d=>missionSystem.weekly.items?.[d.id]?.claimed).length;
- const achDone=ACHIEVEMENT_DEFS.filter(d=>unlockedTitles.has(d.id)).length;
- const tab=missionAchievementTab;
- let content='';
- if(tab==='daily')content='<div class="missionSection"><div class="missionNotice">📅 '+missionDateKey()+'　｜　'+dailyDone+' / '+DAILY_MISSION_DEFS.length+'件受取済み</div>'+DAILY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.daily,'daily')).join('')+'</div>';
- else if(tab==='weekly')content='<div class="missionSection"><div class="missionNotice">🗓️ 週：'+missionSystem.weekly.key+'　｜　'+weeklyDone+' / '+WEEKLY_MISSION_DEFS.length+'件受取済み</div>'+WEEKLY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.weekly,'weekly')).join('')+'</div>';
- else if(tab==='achievements')content='<div class="missionSection"><div class="missionNotice">🏅 実績 '+achDone+' / '+ACHIEVEMENT_DEFS.length+'　｜　達成すると称号を獲得できます。</div><div class="achievementGrid">'+ACHIEVEMENT_DEFS.map(d=>{const ok=unlockedTitles.has(d.id);return '<div class="achievementCard '+(ok?'unlocked':'')+'"><span class="achievementIcon">'+d.icon+'</span><div class="achievementName">'+(ok?'🏅 ':'🔒 ')+d.name+'</div><div class="achievementDesc">'+d.desc+'</div><div class="achievementProg">'+missionAchievementProgressText(d)+(ok&&d.title?'　【'+d.title+'】':'')+'</div></div>'}).join('')+'</div></div>';
- else {
-  const titles=ACHIEVEMENT_DEFS.filter(d=>unlockedTitles.has(d.id)&&d.title);
-  content='<div class="titleEquipBox"><b>現在の称号</b><div style="font-size:22px;margin-top:4px">🏅 '+escapeRankText(equippedTitle)+'</div><div style="font-size:10px;color:#dbeafe;margin-top:3px">プロフィールやメニューで表示される称号です。</div></div><div class="titleGrid">'+(titles.length?titles.map(d=>'<button class="titleChoice '+(equippedTitle===d.title?'active':'')+'" data-title-id="'+d.id+'">'+d.icon+' '+escapeRankText(d.title)+(equippedTitle===d.title?'　✓':'')+'</button>').join(''):'<div class="missionNotice">まだ獲得した称号はありません。</div>')+'</div>';
- }
- body.innerHTML='<div class="missionHero"><b>🎯 やり込みセンター</b><small>デイリー・週間ミッションをこなし、実績を解除して称号を集めよう！</small></div><div class="missionTabs"><button class="missionTab '+(tab==='daily'?'active':'')+'" data-mission-tab="daily">📅 デイリー</button><button class="missionTab '+(tab==='weekly'?'active':'')+'" data-mission-tab="weekly">🗓️ 週間</button><button class="missionTab '+(tab==='achievements'?'active':'')+'" data-mission-tab="achievements">🏅 実績・称号</button></div>'+content;
- body.querySelectorAll('[data-mission-tab]').forEach(b=>b.onclick=()=>{missionAchievementTab=b.dataset.missionTab;renderMissionAchievement()});
- body.querySelectorAll('[data-mission-type]').forEach(b=>b.onclick=()=>claimMission(b.dataset.missionType,b.dataset.missionId));
- body.querySelectorAll('[data-title-id]').forEach(b=>b.onclick=()=>{const d=ACHIEVEMENT_DEFS.find(x=>x.id===b.dataset.titleId);if(d?.title&&unlockedTitles.has(d.id)){equippedTitle=d.title;saveMissionSystem();renderMissionAchievement();renderOwnedStart()}});
-}
-function openMissionAchievement(){document.getElementById('start').style.display='none';document.getElementById('missionAchievement').style.display='flex';renderMissionAchievement()}
-function closeMissionAchievement(){document.getElementById('missionAchievement').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()}
-missionEnsurePeriods();missionCheckAchievements();
 
-const _missionOriginalShowResult=showResult;
-showResult=function(win){
- const wasPvp=!!pvpMode;
- if(win&&wasPvp)missionTrack('pvpWins',1);
- if(win&&!wasPvp&&!rankMode)missionTrack('stageWins',1);
- return _missionOriginalShowResult(win);
-};
-const _missionOriginalFinishRank=finishRank;
-finishRank=function(win){
- if(win)missionTrack('rankWins',1);
- return _missionOriginalFinishRank(win);
-};
-const _missionOriginalDeploy=deploy;
-deploy=function(i){
- const before=money;
- const result=_missionOriginalDeploy(i);
- if(money<before)missionTrack('deploys',1);
- return result;
-};
-const _missionOriginalWorkerUpgrade=workerUpgrade;
-workerUpgrade=function(){
- const before=level;
- const result=_missionOriginalWorkerUpgrade();
- if(level>before)missionTrack('workerUpgrades',1);
- return result;
-};
-const _missionOriginalLevelUpCharacter=levelUpCharacter;
-levelUpCharacter=function(i){
- const before=Number(charLevel[i]||1);
- const result=_missionOriginalLevelUpCharacter(i);
- if(Number(charLevel[i]||1)>before)missionTrack('levelUps',1);
- return result;
-};
-const _missionOriginalEvolveNormalCharacter=evolveNormalCharacter;
-evolveNormalCharacter=function(i){
- const before=!!normalEvolved[i];
- const result=_missionOriginalEvolveNormalCharacter(i);
- if(!before&&normalEvolved[i])missionTrack('evolutions',1);
- return result;
-};
-const _missionOriginalBuyGachaCharacter=buyGachaCharacter;
-buyGachaCharacter=function(i){
- const before=!!ownedFlags[i];
- const result=_missionOriginalBuyGachaCharacter(i);
- if(!before&&ownedFlags[i])missionTrack('gachaBuys',1);
- return result;
-};
-const _missionOriginalRemoveEnemy=removeEnemy;
-removeEnemy=function(e,noReward){
- const already=!!e?.__missionDeathCounted;
- const result=_missionOriginalRemoveEnemy(e,noReward);
- if(e&&!already&&e.hp<=0){e.__missionDeathCounted=true;missionTrack('enemyKills',1)}
- return result;
-};
-const _missionOriginalRenderOwnedStart=renderOwnedStart;
-renderOwnedStart=function(){
- const r=_missionOriginalRenderOwnedStart();
- const el=document.getElementById('ownedStart');
- if(el){el.textContent='👤 '+playerName+'　｜🏅 '+equippedTitle+'　｜所持キャラ：'+owned+'/'+cards.length+'体　🪙 木下コイン：'+gachaCoins+'枚';}
- return r;
-};
-document.getElementById('missionAchievementBtn')?.addEventListener('click',openMissionAchievement);
-document.getElementById('missionAchievementClose')?.addEventListener('click',closeMissionAchievement);
-setInterval(()=>{try{missionEnsurePeriods();missionCheckAchievements();if(document.getElementById('missionAchievement')?.style.display!=='none')renderMissionAchievement();}catch(e){}},60000);
-
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-  });
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
- const b=document.getElementById('updateLogBtn'),x=document.getElementById('updateLogClose');
- if(b)b.onclick=openUpdateLog;
- if(x)x.onclick=closeUpdateLog;
-});
-
-
-</script>
-<script>
-/* ===== 真髄・キャラクター固有衣装/携帯品 ===== */
 const SHINJU_INVENTORY_KEY='kinoshitaShinjuInventory';
 const SHINJU_MIGRATION_KEY='kinoshitaShinjuCosmeticMigrationV1';
 const CHARACTER_COSMETIC_STORAGE_KEY='kinoshitaCharacterCosmeticsV3';
