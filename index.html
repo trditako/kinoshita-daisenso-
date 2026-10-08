@@ -2770,6 +2770,23 @@ function spawnYabayabaClone(deadUnit,level,asAlly=false){
 let lastBattleStatusAt=0;
 
 function mythicPopup(text,e){const x=Math.max(60,Math.min(worldWidth-100,Number(e?.x||worldWidth/2)));popup(text,x,Math.max(35,field.clientHeight-175));}
+function mythicNewAbilityOnHit(e,t,now2){
+ const a=e?.ability||{},m=a.mythicNew;
+ if(!e||!t||!m||isAbilitySealed(e))return;
+ if(m==='counter'&&t.hp>0&&Math.random()<Number(a.newChance??.35)){
+  const d=Math.max(1,Math.round(Number(e.atk||1)*Number(a.counterFactor||.35)));
+  hit(e,d,t,{mythicNew:true});mythicPopup('↩️ 反撃',e);
+ }
+ if(m==='lifestealHit'&&Math.random()<Number(a.newChance??.35)){
+  const h=Math.max(1,Math.round(Number(e.atk||1)*Number(a.healFactor||.18)));
+  e.hp=Math.min(e.maxhp,e.hp+h);
+ }
+ if(m==='multiShot'&&Math.random()<Number(a.newChance??.3)){
+  const d=Math.max(1,Math.round(Number(e.atk||1)*Number(a.extraFactor||.4)));
+  const list=units.filter(u=>u&&u.hp>0&&u!==t&&u.x>=e.x&&Math.abs(u.x-e.x)<=Number(a.extraRange||120));
+  for(const u of list.slice(0,Number(a.extraTargets||1))){hit(u,d,e);if(u.hp<=0)removeUnit(u);}
+ }
+}
 function mythicApplyAttackAbility(e,t,now2){
  const a=e?.ability||{},m=a.mythic;if(!e||!t||t.hp<=0||!m||isAbilitySealed(e))return;
  const chance=a.chance==null?0.35:Number(a.chance);
