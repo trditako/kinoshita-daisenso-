@@ -1585,7 +1585,7 @@ function mythologyV2AbilityDetail(key,a,e){
  rune:'攻撃を受けた対象に神紋を蓄積。'+Number(a.runeStacks||0)+'回で攻撃力を '+Math.round((1-Number(a.runeAttackDown||1))*100)+'%低下させ、'+Number(a.runeDuration||0)+'秒持続。',
  summon:'約 '+Number(a.summonCooldown||0)+'秒ごとに「'+(a.summon||'専用兵')+'」を召喚。召喚体の倍率は約 '+Math.round(Number(a.summonScale||1)*100)+'%。',
  split:'撃破時に「'+(a.splitInto||'分裂体')+'」を '+Number(a.splitCount||0)+'体生成。生成体は本体の約 '+Math.round(Number(a.splitScale||1)*100)+'%の強さ。',
- timeSurge:'一定間隔で '+Number(a.timeSurgeDuration||0)+'秒間、攻撃力×'+Number(a.timeSurgeAtk||1).toFixed(2)+'・速度×'+Number(a.timeSurgeSpd||1).toFixed(2)。周期 '+Number(a.timeSurgeCooldown||0)+'秒。',
+ timeSurge:'一定間隔で '+Number(a.timeSurgeDuration||0)+'秒間、攻撃力×'+Number(a.timeSurgeAtk||1).toFixed(2)+'・速度×'+Number(a.timeSurgeSpd||1).toFixed(2)+'。周期 '+Number(a.timeSurgeCooldown||0)+'秒。',
  causality:'致命傷を受けても死亡を回避し、HPを最大HPの約 '+Math.round(Number(a.causalityHeal||0)*100)+'%まで回復。クールダウン '+Number(a.causalityCooldown||0)+'秒。',
  absorb:'受けたダメージの約 '+Math.round(Number(a.absorbFactor||0)*100)+'%を吸収・蓄積し、クールダウン '+Number(a.absorbCooldown||0)+'秒で周囲へ約 '+Math.round(Number(a.absorbRelease||0)*100)+'%を放出。',
  domain:'周囲 '+Number(a.domainRange||0)+' の神域。味方の攻撃力を×'+Number(a.domainAtk||1).toFixed(2)+'、射程を×'+Number(a.domainRangeFactor||1).toFixed(2)+'に低下。',
