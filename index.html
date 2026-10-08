@@ -3767,8 +3767,6 @@ function spawnCosmeticEffect(u,kind){
  if(!['attack','move','spawn'].includes(kind))return;
  const d=document.createElement('div');d.className='cosmeticTrail';d.textContent=kind==='attack'?accessory.emoji:kind==='spawn'?'✨':'•';d.style.color=getCharacterEquippedCosmetic(i,'costume')?.color||'#f59e0b';u.el.appendChild(d);setTimeout(()=>d.remove(),500);
 }
-document.getElementById('gachaBtn')?.addEventListener('click',openGacha);
-document.getElementById('gachaClose')?.addEventListener('click',()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()});
 document.getElementById('shinjuSingleBtn')?.addEventListener('click',()=>performShinjuDraw(1));
 document.getElementById('shinjuElevenBtn')?.addEventListener('click',()=>performShinjuDraw(11));
 renderShinju();
