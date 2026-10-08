@@ -2778,7 +2778,7 @@ function mythicPopup(text,e){const x=Math.max(60,Math.min(worldWidth-100,Number(
 function mythicNewAbilityOnHit(e,t,now2){
  const a=e?.ability||{},m=a.mythicNew;
  if(!e||!t||!m||isAbilitySealed(e))return;
- if(m==='stacking'){e.mythicStackCount=Math.min(Number(a.maxStacks||5),Number(e.mythicStackCount||0)+1);
+ if(m==='stacking'){e.mythicStackCount=Math.min(Number(a.maxStacks||5),Number(e.mythicStackCount||0)+1);}
  if(m==='counter'&&t.hp>0&&Math.random()<Number(a.newChance??.35)){
   const d=Math.max(1,Math.round(Number(e.atk||1)*Number(a.counterFactor||.35)));
   hit(e,d,t,{mythicNew:true});mythicPopup('↩️ 反撃',e);
