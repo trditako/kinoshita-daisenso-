@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.4';
+const GAME_VERSION='v1.5.5';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.5',title:'✨ 真髄を大幅アップデート',items:['UR重複時に15万コインへ変換','衣装・携帯品を自由に装備・取り外し可能に変更','真髄の開封演出を追加','真髄ポイント交換所を追加（限定UR 400pt／SSR衣装 80pt）']},
  {date:'2026-10-09',version:'v1.5.4',title:'✨ 真髄を独立化・SSR衣装を追加',items:['真髄を木下交換所から分離し、専用ボタンと独立画面へ変更','SSR限定衣装を3キャラクター分追加','真髄の提供割合をSSR追加後の100%構成へ更新']},
  {date:'2026-10-09',version:'v1.5.3',title:'✨ 真髄システムを追加',items:['既存の衣装・携帯品を全キャラクターから回収し、真髄から衣装・携帯品を獲得する方式へ変更','1連1,000コイン／11連10,000コインを追加','普通の木下専用の限定UR衣装・限定UR携帯品を追加','限定アイテム各0.2%、色のパワー45%、ノーマルキャラの金15%、XP20%、コイン19.6%の排出率を設定']},
   {date:'2026-10-09',version:'v1.5.0',title:'🎯 ミッション・実績・称号アップデート',items:['デイリーミッションと週間ミッションを追加','実績を20種類追加し、条件達成で称号を獲得可能に変更','称号の装備・変更画面を追加','ミッション報酬として木下コイン・XPを獲得可能に変更']},
@@ -342,7 +343,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <button id="pvpClose" class="backbtn">戻る</button>
 </div></div>
 <div id="gacha" class="overlay" style="display:none"><div class="panel gachaPanel"><h1>🎟️ 木下交換</h1><div class="gachaCoin" id="gachaCoinText"></div><p>木下コインでキャラクターを確定交換できます。</p><div class="gachaTabs" id="gachaTabs"></div><div id="gachaBanner"></div><div id="gachaResult"></div><button id="gachaClose" class="backbtn">戻る</button></div></div>
-<div id="shinju" class="overlay" style="display:none;z-index:225"><div class="panel gachaPanel"><h1>✨ 真髄</h1><div class="gachaCoin" id="shinjuCoinText"></div><div id="shinjuBanner"></div><div id="shinjuResult"></div><button id="shinjuClose" class="backbtn">戻る</button></div></div>
+<div id="shinju" class="overlay" style="display:none;z-index:225"><div class="panel gachaPanel"><h1>✨ 真髄</h1><div class="gachaCoin" id="shinjuCoinText"></div><div id="shinjuBanner"></div><div id="shinjuResult"></div><div id="shinjuExchange"></div><button id="shinjuClose" class="backbtn">戻る</button></div></div>
 
 <div id="missionAchievement" class="overlay" style="display:none;z-index:230">
  <div class="panel missionPanel">
@@ -3690,6 +3691,7 @@ const SHINJU_POWER_COLORS=['赤','青','黄','緑','紫'];
 let shinjuInventory={};
 try{shinjuInventory=JSON.parse(storage.getItem(SHINJU_INVENTORY_KEY)||'{}')||{}}catch(e){shinjuInventory={}}
 let shinjuDrawCount=Math.max(0,Number(storage.getItem('kinoshitaShinjuDrawCount')||0));
+let shinjuPoints=Math.max(0,Number(storage.getItem('kinoshitaShinjuPoints')||0));
 /* v1.5.3への移行時に、v1.5.2までの全衣装・携帯品を没収。 */
 if(storage.getItem(SHINJU_MIGRATION_KEY)!=='v1'){
  storage.removeItem('kinoshitaCharacterCosmeticsV2');
@@ -3703,6 +3705,7 @@ for(const item of SHINJU_ITEMS)shinjuInventory[item.id]=Math.max(0,Number(shinju
 function saveShinjuState(){
  storage.setItem(SHINJU_INVENTORY_KEY,JSON.stringify(shinjuInventory));
  storage.setItem('kinoshitaShinjuDrawCount',String(shinjuDrawCount));
+ storage.setItem('kinoshitaShinjuPoints',String(shinjuPoints));
  if(typeof save==='function')save();
 }
 function shinjuOwned(id){return Number(shinjuInventory[id]||0)>0}
@@ -3721,8 +3724,8 @@ function shinjuRandomGold(){
 function shinjuDrawOne(){
  const r=Math.random()*100;
  let reward;
- if(r<0.2){const item=SHINJU_UR_COSTUME;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};
- }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};
+ if(r<0.2){const item=SHINJU_UR_COSTUME;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR衣装が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};}
+ }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR携帯品が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};}
  }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
  }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
  }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
@@ -3741,12 +3744,29 @@ function shinjuRewardHTML(reward,index){
 }
 function renderShinju(){
  const coin=document.getElementById('shinjuCoinText'),result=document.getElementById('shinjuResult'),banner=document.getElementById('shinjuBanner');
- if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';
+ if(coin)coin.innerHTML='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚　｜　✨ 真髄ポイント：'+shinjuPoints.toLocaleString()+'pt';
  if(banner)banner.innerHTML='<div class="gachaBanner"><h2>✨ 今シーズン真髄</h2><p>普通の木下の第二形態実装記念シーズン。</p><div class="shinjuBannerItems"><span>👕 UR：'+SHINJU_UR_COSTUME.name+'</span><span>🎒 UR：'+SHINJU_UR_ACCESSORY.name+'</span><span>✨ SSR：'+SHINJU_SSR_COSTUME_A.name+'／'+SHINJU_SSR_COSTUME_B.name+'／'+SHINJU_SSR_COSTUME_C.name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装 0.2%　｜ 限定UR携帯品 0.2%<br>限定SSR衣装 1.0%×3種　｜ 色のパワー 45%<br>ノーマルキャラの金 15%　｜ XP 20%　｜ コイン 16.6%</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
+ renderShinjuExchangeShop();
  const one=document.getElementById('shinjuSingleBtn'),eleven=document.getElementById('shinjuElevenBtn');
  if(one)one.onclick=()=>performShinjuDraw(1);
  if(eleven)eleven.onclick=()=>performShinjuDraw(11);
+}
+function shinjuExchangeItem(item,cost){
+ const owned=shinjuOwned(item.id), can=shinjuPoints>=cost&&!owned;
+ return '<div class="gachaChar"><div class="face">'+item.emoji+'</div><b>'+item.name+'</b><div class="rarity-'+item.rarity+'">'+item.rarity+' '+(item.type==='costume'?'衣装':'携帯品')+'</div><div style="font-weight:900;margin:4px 0">✨ '+cost+'pt</div><small>'+item.desc+'</small><button type="button" class="gachaGetBtn" data-shinju-exchange="'+item.id+'" data-cost="'+cost+'" '+(can?'':'disabled')+'>'+(owned?'交換済み':can?'交換する':'ポイント不足')+'</button></div>';
+}
+function renderShinjuExchangeShop(){
+ const el=document.getElementById('shinjuExchange');
+ if(!el)return;
+ el.innerHTML='<div class="gachaBanner"><h3>✨ 真髄ポイント交換所</h3><p>真髄を1回引くごとに1pt獲得。11連なら11ptです。</p><p><b>限定UR衣装・携帯品：各400pt</b>　｜　<b>SSR衣装：各80pt</b></p><div class="gachaChars">'+shinjuExchangeItem(SHINJU_UR_COSTUME,400)+shinjuExchangeItem(SHINJU_UR_ACCESSORY,400)+shinjuExchangeItem(SHINJU_SSR_COSTUME_A,80)+shinjuExchangeItem(SHINJU_SSR_COSTUME_B,80)+shinjuExchangeItem(SHINJU_SSR_COSTUME_C,80)+'</div></div>';
+ el.querySelectorAll('[data-shinju-exchange]').forEach(btn=>btn.onclick=()=>buyShinjuExchange(btn.dataset.shinjuExchange,Number(btn.dataset.cost)));
+}
+function buyShinjuExchange(id,cost){
+ const item=shinjuItem(id);
+ if(!item||shinjuOwned(id)||shinjuPoints<cost)return;
+ shinjuPoints-=cost;shinjuInventory[id]=1;saveShinjuState();syncCharacterCosmeticInventory();renderShinju();
+ showShinjuReveal([{type:'costume',item,label:'✨ ポイント交換：'+item.name}]);
 }
 function performShinjuDraw(count){
  const n=count===11?11:1,cost=n===11?10000:1000;
@@ -3754,19 +3774,33 @@ function performShinjuDraw(count){
  gachaCoins-=cost;
  const rewards=[];
  for(let i=0;i<n;i++)rewards.push(shinjuDrawOne());
+ shinjuPoints+=n;
  saveShinjuState();
  if(typeof missionTrack==='function')missionTrack('gachaBuys',n);
  renderShinju();renderOwnedStart?.();renderCards?.();renderKinoshitaBook?.();
+ showShinjuReveal(rewards);
  const result=document.getElementById('shinjuResult');
  if(result){
   const ur=rewards.filter(x=>x.type==='costume'||x.type==='accessory').length;
   result.innerHTML='<div class="shinjuResultHeader">'+(n===11?'✨ 11連結果':'✨ 真髄結果')+(ur?'　🎉 UR '+ur+'個':'')+'</div><div class="shinjuResults">'+rewards.map(shinjuRewardHTML).join('')+'</div>';
  }
 }
+function showShinjuReveal(rewards){
+ const old=document.getElementById('shinjuRevealOverlay');if(old)old.remove();
+ const ov=document.createElement('div');ov.id='shinjuRevealOverlay';ov.innerHTML='<div class="shinjuRevealBox"><div class="shinjuRevealTitle">✨ 真髄</div><div class="shinjuRevealOrb">✨</div><div class="shinjuRevealText">開封中…</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
+ Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'9999',background:'rgba(2,6,23,.88)',display:'flex',alignItems:'center',justifyContent:'center',padding:'18px'});
+ document.body.appendChild(ov);
+ const box=ov.querySelector('.shinjuRevealBox');Object.assign(box.style,{width:'min(92vw,520px)',maxHeight:'86vh',overflow:'auto',background:'#111827',border:'3px solid #a855f7',borderRadius:'18px',padding:'20px',textAlign:'center',color:'#fff',boxShadow:'0 0 40px rgba(168,85,247,.7)'});
+ const orb=ov.querySelector('.shinjuRevealOrb');Object.assign(orb.style,{fontSize:'72px',margin:'18px',animation:'shinjuPulse .65s ease-in-out infinite alternate'});
+ const list=ov.querySelector('.shinjuRevealList'),txt=ov.querySelector('.shinjuRevealText');
+ rewards.forEach((reward,i)=>setTimeout(()=>{const d=document.createElement('div');d.className='shinjuRevealReward';d.textContent=(i+1)+'. '+reward.label;Object.assign(d.style,{padding:'10px',margin:'7px 0',borderRadius:'10px',background:reward.type==='costume'||reward.type==='accessory'?'linear-gradient(90deg,#fef3c7,#c084fc)':'#1f2937',color:'#111',fontWeight:'900',animation:'shinjuPop .35s ease-out'});list.appendChild(d);txt.textContent=i===rewards.length-1?'✨ 全ての報酬を獲得しました！':'次の真髄が開きます…';},650+i*220));
+ const close=ov.querySelector('#shinjuRevealClose');setTimeout(()=>close.style.display='block',650+rewards.length*220+250);close.onclick=()=>ov.remove();
+}
 function equipCharacterCosmetic(i,type,id){
  const item=shinjuItem(id);if(!item||item.characterIndex!==i||item.type!==type||!shinjuOwned(id))return;
  const state=getCharacterCosmeticState(i);state[type]=id;saveCharacterCosmetics();showCharacterDetail(i);
 }
+function unequipCharacterCosmetic(i,type){const state=getCharacterCosmeticState(i);state[type]=null;saveCharacterCosmetics();showCharacterDetail(i);}
 let characterCosmeticState={};
 try{characterCosmeticState=JSON.parse(storage.getItem(CHARACTER_COSMETIC_STORAGE_KEY)||'{}')||{}}catch(e){characterCosmeticState={}}
 function getCharacterCosmeticState(i){
@@ -3800,7 +3834,7 @@ function renderCharacterCosmeticSection(i){
  const accessories=state.accessories.map(shinjuItem).filter(Boolean);
  const card=(x,type)=>{
   const equipped=state[type]===x.id;
-  return '<div class="characterCosmeticCard shinjuOwnedCosmetic '+(equipped?'equipped':'')+'"><div class="cosmeticPreview shinjuCosmeticPreview '+(x.rarity==='UR'?'ur':'')+'" style="'+(x.color?'background:'+x.color+'22;border:2px solid '+x.color+';color:'+x.color:'background:#e2e8f0;border:2px solid #94a3b8;color:#334155')+'">'+x.emoji+'</div><div class="shinjuRarity">'+x.rarity+'</div><b>'+x.name+'</b><small>'+x.desc+'</small><button type="button" onclick="equipCharacterCosmetic('+i+',\''+type+'\',\''+x.id+'\')">'+(equipped?'装備中 ✓':'この'+(type==='costume'?'衣装':'携帯品')+'を装備')+'</button></div>';
+  return '<div class="characterCosmeticCard shinjuOwnedCosmetic '+(equipped?'equipped':'')+'"><div class="cosmeticPreview shinjuCosmeticPreview '+(x.rarity==='UR'?'ur':'')+'" style="'+(x.color?'background:'+x.color+'22;border:2px solid '+x.color+';color:'+x.color:'background:#e2e8f0;border:2px solid #94a3b8;color:#334155')+'">'+x.emoji+'</div><div class="shinjuRarity">'+x.rarity+'</div><b>'+x.name+'</b><small>'+x.desc+'</small><button type="button" onclick="equipCharacterCosmetic('+i+',\''+type+'\',\''+x.id+'\')">'+(equipped?'装備中 ✓':'この'+(type==='costume'?'衣装':'携帯品')+'を装備')+'</button>'+(equipped?'<button type="button" onclick="unequipCharacterCosmetic('+i+',\''+type+'\')">取り外す</button>':'')+'</div>';
  };
  return '<div class="characterCosmeticSection"><div class="characterCosmeticTitle">✨ 衣装 / 携帯品</div><div class="characterCosmeticNote">真髄で獲得した、このキャラクター専用の装備です。性能は変化しません。</div><div class="characterCosmeticBlock"><strong>👕 衣装</strong><div class="characterCosmeticGrid">'+(costumes.length?costumes.map(x=>card(x,'costume')).join(''):'<div class="shinjuEmptyCosmetic">未所持の衣装はありません。</div>')+'</div></div><div class="characterCosmeticBlock"><strong>🎒 携帯品</strong><div class="characterCosmeticGrid">'+(accessories.length?accessories.map(x=>card(x,'accessory')).join(''):'<div class="shinjuEmptyCosmetic">未所持の携帯品はありません。</div>')+'</div></div></div>';
 }
@@ -3821,5 +3855,6 @@ function spawnCosmeticEffect(u,kind){
 }
 document.getElementById('shinjuBtn')?.addEventListener('click',()=>{document.getElementById('start').style.display='none';document.getElementById('shinju').style.display='flex';renderShinju();});
 document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.getElementById('shinju').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();});
-</script></script>
+</script>
+<style>@keyframes shinjuPulse{from{transform:scale(.92) rotate(-3deg);opacity:.75}to{transform:scale(1.08) rotate(3deg);opacity:1}}@keyframes shinjuPop{from{transform:scale(.75);opacity:0}to{transform:scale(1);opacity:1}}</style>
 </body></html>
