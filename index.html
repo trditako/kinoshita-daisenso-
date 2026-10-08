@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.1';
+const GAME_VERSION='v1.5.2';
 const UPDATE_LOG=[
  {date:'2026-10-09',version:'v1.5.0',title:'🎯 ミッション・実績・称号アップデート',items:['デイリーミッションと週間ミッションを追加','実績を20種類追加し、条件達成で称号を獲得可能に変更','称号の装備・変更画面を追加','ミッション報酬として木下コイン・XPを獲得可能に変更']},
  {date:'2026-10-09',version:'v1.4.2',title:'📚 図鑑UIリワーク',items:['敵キャラ図鑑に神話編15能力の詳細説明・数値・発動条件を追加','敵キャラ図鑑に検索・章フィルター・遭遇済みフィルター・能力フィルターを追加','木下図鑑に検索・レア度フィルター・並び替えを追加','図鑑カードの情報密度とスマホ表示を改善']},{date:'2026-10-08',version:'v1.4.1',title:'🔧 神話編の敵出現・敵図鑑を修正',items:['神話編の新敵が敵キャラ図鑑に専用枠で表示されるよう修正','神話編ステージで新敵を確実に敵データへ登録してから出現させるよう修正','神話編の新敵が「❔」になって出現しない問題を修正']},
@@ -77,7 +77,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .enemybase{left:14px;background:#555}.playerbase{right:14px}
 .lane{position:absolute;left:0;right:0;bottom:35px;height:5px;background:#6b492d;z-index:1}
 #units{position:absolute;inset:0;z-index:5;pointer-events:none}
-.unit{position:absolute;bottom:40px;width:64px;height:76px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;z-index:5;filter:drop-shadow(2px 3px 1px #333);will-change:left,transform;animation:walkBob .42s ease-in-out infinite alternate}.unitNameLabel{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);max-width:150px;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:20;text-shadow:0 1px 1px #000}.enemy .unitNameLabel{background:rgba(110,0,0,.84)}.unit.attacking{animation:attackAnim .22s ease-in-out}.unit.hit{animation:hitAnim .16s ease-out}.base.attacking{animation:baseAttack .22s ease-in-out}.unit>div:last-child{will-change:transform}
+.unit{position:absolute;bottom:40px;width:64px;height:76px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;z-index:5;filter:drop-shadow(2px 3px 1px #333);will-change:left,transform;animation:walkBob .42s ease-in-out infinite alternate}.cosmeticBadge{position:absolute;right:-10px;top:-8px;font-size:16px;z-index:25;pointer-events:none;filter:drop-shadow(0 1px 1px #000)}.cosmeticAura{position:absolute;inset:-8px;border:2px solid currentColor;border-radius:50%;opacity:.55;pointer-events:none;animation:cosmeticPulse .9s ease-in-out infinite alternate}.cosmeticTrail{position:absolute;left:50%;bottom:12px;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.65;pointer-events:none;animation:cosmeticTrail .45s linear forwards}@keyframes cosmeticPulse{from{transform:scale(.9);opacity:.3}to{transform:scale(1.08);opacity:.7}}@keyframes cosmeticTrail{from{transform:translate(-50%,0) scale(1);opacity:.65}to{transform:translate(-50%,14px) scale(.1);opacity:0}}.cosmeticPanel{position:fixed;inset:8%;z-index:300;background:#fff;border:3px solid #334155;border-radius:14px;padding:12px;display:none;flex-direction:column;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.35)}.cosmeticPanel h2{margin:0 0 8px}.cosmeticGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cosmeticCard{border:2px solid #cbd5e1;border-radius:10px;padding:8px;text-align:left;background:#f8fafc}.cosmeticCard.equipped{border-color:#2563eb;background:#eff6ff}.cosmeticCard button{width:100%;margin-top:5px}.cosmeticClose{margin-top:8px;width:100%}.cosmeticSection{font-weight:900;margin:10px 0 5px}.unitNameLabel{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);max-width:150px;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:20;text-shadow:0 1px 1px #000}.enemy .unitNameLabel{background:rgba(110,0,0,.84)}.unit.attacking{animation:attackAnim .22s ease-in-out}.unit.hit{animation:hitAnim .16s ease-out}.base.attacking{animation:baseAttack .22s ease-in-out}.unit>div:last-child{will-change:transform}
 @keyframes walkBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
 @keyframes attackAnim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-5px) scale(1.08)}100%{transform:translateX(2px) scale(.98)}}
 @keyframes hitAnim{0%{filter:drop-shadow(2px 3px 1px #333)}50%{filter:brightness(2) drop-shadow(2px 3px 1px #333)}100%{filter:drop-shadow(2px 3px 1px #333)}}
@@ -281,7 +281,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .missionNotice{background:#ecfeff;border:2px solid #06b6d4;color:#164e63;border-radius:9px;padding:8px;font-size:11px;font-weight:900;text-align:left}
 @media(max-width:600px){.achievementGrid,.titleGrid{grid-template-columns:1fr}.missionTabs{grid-template-columns:1fr 1fr 1fr}.missionTitle{font-size:13px}}
 </style></head>
-<body>
+<body><div id="cosmeticPanel" class="cosmeticPanel"><h2>✨ 衣装・携帯品</h2><div class="cosmeticSection">衣装</div><div id="costumeGrid" class="cosmeticGrid"></div><div class="cosmeticSection">携帯品</div><div id="accessoryGrid" class="cosmeticGrid"></div><button onclick="openCosmeticPanel()" style="margin:4px">✨ 衣装・携帯品</button><button class="cosmeticClose" onclick="closeCosmeticPanel()">閉じる</button></div>
 <div id="game">
  <div class="top"><div class="title">木下大戦争</div><div style="display:flex;align-items:center;gap:10px"><button id="audioToggle" type="button" style="font-size:20px;background:#fff;border:2px solid #222;border-radius:9px;padding:4px 8px;cursor:pointer">🔊</button><div class="money">💰 <span id="money">1500</span>/<span id="moneyMax">6000</span>円</div></div></div>
  <div class="field" id="field">
@@ -3632,5 +3632,31 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(b)b.onclick=openUpdateLog;
  if(x)x.onclick=closeUpdateLog;
 });
+
+<script>
+const COSMETIC_STORAGE_KEY='kinoshitaCosmeticsV1';
+const COSMETIC_COSTUMES=[
+{id:'c_flame',name:'🔥 炎装',desc:'炎のオーラ',effect:'flame',emoji:'🔥'},
+{id:'c_starlight',name:'✨ 星光装',desc:'星のオーラ',effect:'star',emoji:'✨'},
+{id:'c_aurora',name:'🌈 極光装',desc:'虹色のオーラ',effect:'aurora',emoji:'🌈'},
+{id:'c_shadow',name:'🌑 影装',desc:'影のオーラ',effect:'shadow',emoji:'🌑'}
+];
+const COSMETIC_ACCESSORIES=[
+{id:'a_crown',name:'👑 王冠',desc:'攻撃時に王冠エフェクト',effect:'crown',emoji:'👑'},
+{id:'a_orb',name:'🔮 魔導球',desc:'攻撃時に光球エフェクト',effect:'orb',emoji:'🔮'},
+{id:'a_feather',name:'🪶 風羽',desc:'移動時に羽エフェクト',effect:'feather',emoji:'🪶'},
+{id:'a_moon',name:'🌙 月飾り',desc:'出撃時に月エフェクト',effect:'moon',emoji:'🌙'}
+];
+let cosmeticState=(()=>{try{return {...{costume:null,accessory:null},...JSON.parse(localStorage.getItem(COSMETIC_STORAGE_KEY)||'{}')}}catch(e){return {costume:null,accessory:null}}})();
+function saveCosmetics(){try{localStorage.setItem(COSMETIC_STORAGE_KEY,JSON.stringify(cosmeticState))}catch(e){}}
+function getEquippedCosmetic(type){const list=type==='costume'?COSMETIC_COSTUMES:COSMETIC_ACCESSORIES;const id=cosmeticState[type];return list.find(x=>x.id===id)||null}
+function equipCosmetic(type,id){cosmeticState[type]=cosmeticState[type]===id?null:id;saveCosmetics();renderCosmeticPanel();}
+function renderCosmeticPanel(){const cg=document.getElementById('costumeGrid'),ag=document.getElementById('accessoryGrid');if(!cg||!ag)return;cg.innerHTML=COSMETIC_COSTUMES.map(x=>'<div class="cosmeticCard '+(cosmeticState.costume===x.id?'equipped':'')+'"><b>'+x.emoji+' '+x.name+'</b><div>'+x.desc+'</div><button onclick="equipCosmetic(\'costume\',\''+x.id+'\')">'+(cosmeticState.costume===x.id?'装備中':'装備')+'</button></div>').join('');ag.innerHTML=COSMETIC_ACCESSORIES.map(x=>'<div class="cosmeticCard '+(cosmeticState.accessory===x.id?'equipped':'')+'"><b>'+x.emoji+' '+x.name+'</b><div>'+x.desc+'</div><button onclick="equipCosmetic(\'accessory\',\''+x.id+'\')">'+(cosmeticState.accessory===x.id?'装備中':'装備')+'</button></div>').join('')}
+function openCosmeticPanel(){const p=document.getElementById('cosmeticPanel');if(!p)return;renderCosmeticPanel();p.style.display='flex'}
+function closeCosmeticPanel(){const p=document.getElementById('cosmeticPanel');if(p)p.style.display='none'}
+function cosmeticColor(effect){return effect==='flame'?'#ff5722':effect==='star'?'#ffd54f':effect==='aurora'?'#7c4dff':effect==='shadow'?'#374151':'#38bdf8'}
+function applyCosmeticToElement(u){if(!u?.el)return;u.el.querySelectorAll('.cosmeticBadge,.cosmeticAura').forEach(x=>x.remove());const costume=getEquippedCosmetic('costume'),accessory=getEquippedCosmetic('accessory');if(costume){const aura=document.createElement('div');aura.className='cosmeticAura';aura.style.color=cosmeticColor(costume.effect);u.el.appendChild(aura)}if(accessory){const badge=document.createElement('div');badge.className='cosmeticBadge';badge.textContent=accessory.emoji;u.el.appendChild(badge)}}
+function spawnCosmeticEffect(u,kind){if(!u?.el)return;const a=getEquippedCosmetic('accessory');if(!a)return;if(kind==='move'&&a.effect!=='feather')return;if(kind==='attack'&&a.effect!=='crown'&&a.effect!=='orb')return;if(kind==='spawn'&&a.effect!=='moon')return;const d=document.createElement('div');d.className='cosmeticTrail';d.textContent=kind==='attack'?(a.effect==='crown'?'👑':'🔮'):kind==='spawn'?'🌙':'🪶';d.style.color=cosmeticColor(getEquippedCosmetic('costume')?.effect||'none');u.el.appendChild(d);setTimeout(()=>d.remove(),500)}
+</script>
 </script>
 </body></html>
