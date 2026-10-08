@@ -3737,7 +3737,9 @@ function shinjuDrawOne(){
  return reward;
 }
 function shinjuRarityClass(reward){
- return reward.type==='costume'||reward.type==='accessory'?'shinjuUR':reward.type==='power'?'shinjuPower':reward.type==='normalGold'?'shinjuGold':'shinjuCommon';
+ if(reward.item?.rarity==='UR')return 'shinjuUR';
+ if(reward.item?.rarity==='SSR')return 'shinjuSSR';
+ return reward.type==='power'?'shinjuPower':reward.type==='normalGold'?'shinjuGold':'shinjuCommon';
 }
 function shinjuRewardHTML(reward,index){
  return '<div class="shinjuReward '+shinjuRarityClass(reward)+'"><span class="shinjuRewardNo">'+(index+1)+'</span><span>'+reward.label+'</span>'+(reward.item?'<small>普通の木下専用</small>':'')+'</div>';
