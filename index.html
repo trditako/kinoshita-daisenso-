@@ -3243,7 +3243,7 @@ function openGacha(){
  g.style.display='flex';
  renderGacha();
 }
-function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
+function rarityLabel(r){if(r==='R')return 'レア';if(r==='SR')return '激レア';if(r==='SSR'||r==='UR')return '超激レア';if(r==='LR')return '伝説レア';if(!r||r==='基本'||r==='N'||r==='NORMAL')return 'ノーマル';return r;}
 let gachaShopMode='normal';
 function renderGacha(){
  const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
