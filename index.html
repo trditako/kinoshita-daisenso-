@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.6';
+const GAME_VERSION='v1.7.7';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.7.7',title:'⚡ 突撃ハーランド木下に第二形態を追加',items:['赤・青・黄・緑・紫のパワーを各15個消費して進化','高HP・高火力・高速移動・長射程に加え、波動と複数妨害・耐性を追加','進化後も詳細画面から第一形態へ切り替え可能']},
  {date:'2026-10-09',version:'v1.7.6',title:'📱 iPhone倍速ボタンのタッチ操作を追加修正',items:['Pointer Eventsだけに依存せず、touchstart/touchendでも倍速を切り替え可能に変更','倍速操作中に戦場スワイプが開始しないようイベント伝播を遮断','倍速ボタンのタップ領域と重なり順を強化']},
  {date:'2026-10-09',version:'v1.7.5',title:'🔧 レベル保存・金集め難易度・iPhone倍速を修正',items:['Lv21～30のキャラクターレベルが再起動後も保持されるよう修正','超激レア・伝説レアの金集めステージを遊びやすい難易度へ調整','戦場スワイプ処理が倍速ボタンのタップを奪わないよう修正']},
  {date:'2026-10-09',version:'v1.7.2',title:'🎃 ハロウィン交換所をボタン式に刷新',items:['番号入力を廃止し、カテゴリ別の交換ボタンと所持キャンディ表示を追加','限定衣装・SSR携帯品・真髄・コイン・XP・育成素材を追加','交換回数の保存、所持済み判定、連打防止を追加']},
@@ -413,7 +414,8 @@ function chapterRewardIndex(chapter){
  const name=CHAPTER_REWARD_NAMES[chapter-1];
  return name?cards.findIndex(c=>c.name===name):-1;
 }
-cards.push(...CHAPTER_REWARD_CARDS);\nCHAPTER_REWARD_CARDS[0].secondForm=HARLAND_SECOND_FORM;
+cards.push(...CHAPTER_REWARD_CARDS);
+CHAPTER_REWARD_CARDS[0].secondForm=HARLAND_SECOND_FORM;
 
 // 日本・未来編攻略特化キャラクター20体（木下コイン交換専用）
 const 攻略特化キャラ=[
