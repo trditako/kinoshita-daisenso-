@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.0';
+const GAME_VERSION='v1.7.1';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.7.1',title:'🎃 ハロウィン交換所とランキング報酬を改善',items:['ハロウィンSSR携帯品・真髄1回分をキャンディ交換に追加','ランキング1～10位の報酬を順位順に調整','ランキング報酬計算で古い公開RPを優先してしまう重複判定を修正']},
  {date:'2026-10-09',version:'v1.7.0',title:'🎃 ハロウィンイベントを追加',items:['ハロウィン限定ステージ3種とボス「ジャック・オー・木下」を追加','イベントステージクリアでハロウィンキャンディを獲得','限定キャラ「パンプキン木下」とコインを交換所に追加','イベント期間：2026年11月15日まで']},
  {date:'2026-10-09',version:'v1.6.1',title:'🎭 真髄2の衣装・携帯品対象を味方キャラに修正',items:['敵専用の速木下・鬼木下・木下戦車を対象から除外','真髄2のUR衣装・UR携帯品・SSR衣装3種を味方キャラクター専用に変更']},
  {date:'2026-10-09',version:'v1.6.0',title:'🏆 真髄をランクシーズンに連動',items:['真髄のシーズン番号・開催内容・更新時刻をランク戦シーズン基準に統一','ランクシーズンが切り替わると真髄の追加・リセット判定も同時に更新']},
@@ -1545,14 +1546,22 @@ function openHalloweenShop(){
  if(!halloweenEventActive()){alert('ハロウィンイベントは終了しました。');return;}
  const ownedIndex=cards.findIndex(c=>c.name==='パンプキン木下');
  const alreadyOwned=ownedIndex>=0&&hasCharacter(ownedIndex);
- const choice=prompt('🎃 ハロウィン交換所\n所持キャンディ：'+halloweenCandy+'個\n\n1：パンプキン木下（25個）'+(alreadyOwned?'【入手済み】':'')+'\n2：木下コイン10,000枚（10個）\n\n交換する番号を入力してください。');
+ const accessoryOwned=typeof shinjuOwned==='function'&&shinjuOwned('halloween_ssr_pumpkin_lantern');
+ const choice=prompt('🎃 ハロウィン交換所\\n所持キャンディ：'+halloweenCandy+'個\\n\\n1：パンプキン木下（25個）'+(alreadyOwned?'【入手済み】':'')+'\\n2：木下コイン10,000枚（10個）\\n3：ハロウィンSSR携帯品「パンプキンランタン」（35個）'+(accessoryOwned?'【交換済み】':'')+'\\n4：真髄1回分（15個・選択中の真髄から1回）\\n\\n交換する番号を入力してください。');
  if(choice==='1'){
   if(alreadyOwned){alert('パンプキン木下は入手済みです。');return;}
   if(halloweenCandy<25){alert('キャンディが足りません。イベントステージをクリアして集めましょう。');return;}
   halloweenCandy-=25;ownedFlags[ownedIndex]=true;syncOwnedCount();if(!formation.length)formation=[ownedIndex];saveHalloweenCandy();save();renderStageSelect();renderCards();alert('🎉 パンプキン木下を獲得しました！');
  }else if(choice==='2'){
   if(halloweenCandy<10){alert('キャンディが足りません。');return;}
-  halloweenCandy-=10;gachaCoins+=10000;saveHalloweenCandy();save();renderStageSelect();alert('🪙 木下コイン10,000枚を獲得しました！');
+  halloweenCandy-=10;gachaCoins+=10000;saveHalloweenCandy();save();renderStageSelect();renderOwnedStart();alert('🪙 木下コイン10,000枚を獲得しました！');
+ }else if(choice==='3'){
+  if(accessoryOwned){alert('ハロウィンSSR携帯品は交換済みです。');return;}
+  if(halloweenCandy<35){alert('キャンディが足りません。');return;}
+  halloweenCandy-=35;shinjuInventory[HALLOWEEN_SSR_ACCESSORY.id]=1;saveHalloweenCandy();saveShinjuState();syncCharacterCosmeticInventory();renderShinju();renderCards();showShinjuReveal([{type:'accessory',item:HALLOWEEN_SSR_ACCESSORY,label:'🎃 ハロウィンSSR携帯品：'+HALLOWEEN_SSR_ACCESSORY.name}]);alert('🎉 パンプキンランタンを獲得しました！キャラクター詳細から装備できます。');
+ }else if(choice==='4'){
+  if(halloweenCandy<15){alert('キャンディが足りません。');return;}
+  const reward=shinjuDrawOne(shinjuSelectedEssence);halloweenCandy-=15;shinjuPoints+=1;saveHalloweenCandy();saveShinjuState();renderShinju();renderOwnedStart();renderCards();showShinjuReveal([reward]);alert('✨ 真髄1回分を交換しました！選択中の真髄から1回分を獲得しました。');
  }
 }
 let legendClears;try{legendClears=JSON.parse(storage.getItem('kinoshitaLegendClears')||'[]')}catch(e){legendClears=[]}if(!Array.isArray(legendClears))legendClears=[];while(legendClears.length<10)legendClears.push(0);legendClears=legendClears.map(x=>Math.max(0,Number(x)||0));
@@ -2395,16 +2404,16 @@ function rankRewardRulesHTML(){
  const rewards=[1000,1500,2000,2500,3000,4000,5000,6500,8000,10000,15000];
  const bands=rankDefs.map((d,i)=>{const n=rankDefs[i+1]?.need;return '<b>'+d.name+'</b>：'+(n===undefined?d.need+' RP以上':d.need+'～'+(n-1)+' RP')+' ／ '+rewards[i].toLocaleString()+'コイン + '+rewards[i].toLocaleString()+' XP'}).join('<br>');
  const top10=[
-  ['1位',150000,150000,'1位の証','木下&吉田'],
-  ['2位',100000,100000,'2位の証',''],
-  ['3位',750000,75000,'3位の証',''],
-  ['4位',500000,50000,'4位の証',''],
-  ['5位',500000,50000,'5位の証',''],
-  ['6位',500000,50000,'6位の証',''],
-  ['7位',500000,50000,'7位の証',''],
-  ['8位',500000,50000,'8位の証',''],
-  ['9位',500000,50000,'9位の証',''],
-  ['10位',500000,50000,'10位の証',''],
+  ['1位',1000000,500000,'1位の証','木下&吉田'],
+  ['2位',750000,300000,'2位の証',''],
+  ['3位',500000,200000,'3位の証',''],
+  ['4位',200000,75000,'4位の証',''],
+  ['5位',200000,75000,'5位の証',''],
+  ['6位',200000,75000,'6位の証',''],
+  ['7位',200000,75000,'7位の証',''],
+  ['8位',200000,75000,'8位の証',''],
+  ['9位',200000,75000,'9位の証',''],
+  ['10位',200000,75000,'10位の証',''],
  ];
  return '<h3>🏆 シーズン1～10位報酬</h3><div class="rankNotice" style="text-align:left">'+top10.map(x=>'<b>'+x[0]+'</b>：🪙 '+x[1].toLocaleString()+'コイン + ⭐ '+x[2].toLocaleString()+' XP + 🏅 '+x[3]+(x[4]?' + 🎁 '+x[4]:'')).join('<br>')+'<br><small>11位以下はシーズン終了時のRPランク帯報酬です。報酬はプレゼントBOXに送られます。</small></div><h3>🏆 RP別ランク帯・報酬</h3><div class="rankNotice" style="text-align:left">'+bands+'</div><h3>📈 RPでランク帯が変わる仕組み</h3><div class="rankNotice">現在RPが各ランクの必要RP範囲に入ると、そのランク帯になります。勝利は基本+100 RP、敗北は基本-60 RPで、相手とのランク差により増減します。</div><h3>⚠️ 現在の弱体化対象</h3><div class="rankNotice" style="text-align:left">'+seasonWeakText()+'<br><small>表示されているキャラはランク戦で弱体化中です。前シーズンTOP5は25%低下、今シーズンTOP5は60%低下。両方に入ったキャラはデバフを乗算し、0.75×0.4＝0.30倍（合計70%低下）になります。前シーズンTOP5は今シーズン中ずっと、今シーズンTOP5はTOP5である間、弱体化されます。使用率と勝率の両方が高いキャラを、使用率×勝率の複合値で選定します。使用率だけが高いキャラは、それだけでは弱体化対象になりません。</small></div>';
 }
@@ -3449,7 +3458,8 @@ const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
 function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
 function rankTierReward(rp){const t=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];let x=t[0];for(const v of t)if(rp>=rankDefs.find(d=>d.name===v[0]).need)x=v;return x}
 function rankRewardSnapshotRank(){
- const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];
+ // 公開ランキングに自分の古いRPが残っていても、端末の最新RPを優先する。
+ const arr=[...publicPlayerRankings.filter(x=>String(x.player_id)!==String(playerRankingId)).map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];
  const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});
  for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,rp:Number(a.rp||0)});
  hum.sort((a,b)=>b.rp-a.rp);
@@ -3469,10 +3479,10 @@ function addRankRewardGift(){
  const reachedTop10=storage.getItem(rankSeasonTop10Key(cycle))==='1';
  const eligibleForKinoshitaYoshida=reachedTop10||pos<=10;
  let coins=0,xp=0,badge='',char=eligibleForKinoshitaYoshida,label='';
- if(pos===1){coins=150000;xp=150000;badge='1位の証';label='ランク1位報酬'}
- else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
- else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
- else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
+ if(pos===1){coins=1000000;xp=500000;badge='1位の証';label='ランク1位報酬'}
+ else if(pos===2){coins=750000;xp=300000;badge='2位の証';label='ランク2位報酬'}
+ else if(pos===3){coins=500000;xp=200000;badge='3位の証';label='ランク3位報酬'}
+ else if(pos<=10){coins=200000;xp=75000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
  else if(reachedTop10){const t=rankTierReward(rp);coins=t[1];xp=t[2];label='シーズンTop10到達報酬'}
  else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
  pendingRankGifts.push({cycle,label,coins,xp,badge,char,kinoshitaYoshida:eligibleForKinoshitaYoshida});
@@ -3762,6 +3772,8 @@ const SHINJU_ESSENCES=[
  {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
+const HALLOWEEN_SSR_ACCESSORY={id:'halloween_ssr_pumpkin_lantern',type:'accessory',rarity:'SSR',characterIndex:-1,targetName:'パンプキン木下',name:'パンプキン木下・パンプキンランタン',emoji:'🎃',desc:'ハロウィンイベント限定SSR携帯品。パンプキン木下専用の光るランタン。'};
+SHINJU_ITEMS.push(HALLOWEEN_SSR_ACCESSORY);
 let shinjuSelectedEssence=1;
 const SHINJU_CYCLE_CACHE={1:SHINJU_ESSENCES};
 const SHINJU_CYCLE_THEMES=[
