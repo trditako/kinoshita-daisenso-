@@ -1226,8 +1226,9 @@ async function syncPlayerRanking(){
         const cycle=Number(p.reward_cycle??rankRewardCycle());
         if(!pendingRankGifts.some(g=>g.server===true&&Number(g.cycle)===cycle)){
           const pos=Number(p.reward_rank||0);
+          const corrected=rankRewardAmountsForPosition(pos,coins,xp);
           const label=pos>=1&&pos<=10?'ランク'+pos+'位報酬':'ランク報酬';
-          pendingRankGifts.push({cycle,label,coins,xp,badge:pos>=1&&pos<=10?pos+'位の証':'',char:!!p.limited_character_owned,server:true});
+          pendingRankGifts.push({cycle,label,coins:corrected.coins,xp:corrected.xp,badge:pos>=1&&pos<=10?pos+'位の証':'',char:!!p.limited_character_owned,server:true});
           saveRankGifts();
         }
         // 同じ報酬を何度も取り込まないよう、取得後にサーバーの未受取分を0へ戻す。
@@ -3456,6 +3457,14 @@ function closeLoginBonus(){document.getElementById('loginBonus').style.display='
 
 const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
 function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
+function rankRewardAmountsForPosition(pos,fallbackCoins=0,fallbackXP=0){
+ const p=Number(pos)||0;
+ if(p===1)return {coins:1000000,xp:500000};
+ if(p===2)return {coins:750000,xp:300000};
+ if(p===3)return {coins:500000,xp:200000};
+ if(p>=4&&p<=10)return {coins:200000,xp:75000};
+ return {coins:Math.max(0,Number(fallbackCoins)||0),xp:Math.max(0,Number(fallbackXP)||0)};
+}
 function rankTierReward(rp){const t=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];let x=t[0];for(const v of t)if(rp>=rankDefs.find(d=>d.name===v[0]).need)x=v;return x}
 function rankRewardSnapshotRank(){
  // 公開ランキングに自分の古いRPが残っていても、端末の最新RPを優先する。
