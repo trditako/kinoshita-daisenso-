@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.2';
+const GAME_VERSION='v1.8.3';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.3',title:'🎯 ステージ開始ボタンの表示位置を修正',items:['スクロール領域の影響でズレていた開始ボタンを画面下部に固定','スマートフォンの安全領域とボタンの重なりを考慮']},
  {date:'2026-10-10',version:'v1.8.2',title:'🎮 ステージ選択と開始ボタンを改善',items:['敵キャラ図鑑・木下交換・真髄を章選択より上へ移動','ステージ開始ボタンをスクロール中も画面下部に表示']},
  {date:'2026-10-10',version:'v1.8.1',title:'📢 お知らせ・ホーム画面UIを改善',items:['ホーム画面の余白・ボタン配置・文字サイズを整理（既存ボタンは削除せず維持）','イベント詳細を確認できるお知らせ画面を追加','未読のお知らせと真髄に❗️マークを表示']},
  {date:'2026-10-10',version:'v1.8.0',title:'📝 プレイヤーアンケートを追加',items:['7項目のアンケートを追加','回答をSupabaseに保存してほかのプレイヤーにも公開','アンケート1回の回答につき10,000コインを付与']},
@@ -83,13 +84,13 @@ function closeUpdateLog(){
 .updateClose{width:100%;margin-top:8px;background:#334155!important;color:#fff!important}
 </style>
 <style id="stageStartAccessibility">
-/* Keep stage launch control reachable while scrolling the stage list. */
-#start>.panel{position:relative;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-#startBtn{position:sticky;bottom:calc(5px + env(safe-area-inset-bottom));z-index:15;display:block;width:100%;min-height:54px;margin-top:10px;padding:12px 14px;border:3px solid #111;border-radius:13px;background:#16a34a;color:#fff;font-size:clamp(17px,4.5vw,22px);font-weight:1000;box-shadow:0 -5px 14px #0002,0 3px 0 #14532d;cursor:pointer;flex-shrink:0}
-#startBtn:active{transform:translateY(1px);box-shadow:0 1px 0 #14532d}
+/* Fix the launch button to the viewport: sticky was offset by the nested scrolling panel. */
+#start>.panel{position:relative;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+#startBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));z-index:105;display:block;width:min(calc(100vw - 24px),736px);min-height:56px;margin:0;padding:12px 14px;border:3px solid #111;border-radius:13px;background:#16a34a;color:#fff;font-size:clamp(17px,4.5vw,22px);font-weight:1000;box-shadow:0 -5px 14px #0002,0 3px 0 #14532d;cursor:pointer;flex-shrink:0}
+#startBtn:active{transform:translateX(-50%) translateY(1px);box-shadow:0 1px 0 #14532d}
 #start .chapterTabs{margin-top:8px}
 #start #enemyBookBtn,#start #gachaBtn,#start #shinjuBtn{margin-top:2px;margin-bottom:2px}
-@media(min-width:620px){#startBtn{max-width:100%;margin-left:auto;margin-right:auto}}
+@media(min-width:620px){#startBtn{width:min(calc(100vw - 36px),736px)}}
 </style><style id="homeReadabilityStyles">
 /* Home screen readability pass: preserve every existing control, reduce visual clutter. */
 #start{padding:clamp(6px,2vw,14px);align-items:center}
