@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.6.0';
+const GAME_VERSION='v1.6.1';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.6.1',title:'🎭 真髄2の衣装・携帯品対象を味方キャラに修正',items:['敵専用の速木下・鬼木下・木下戦車を対象から除外','真髄2のUR衣装・UR携帯品・SSR衣装3種を味方キャラクター専用に変更']},
  {date:'2026-10-09',version:'v1.6.0',title:'🏆 真髄をランクシーズンに連動',items:['真髄のシーズン番号・開催内容・更新時刻をランク戦シーズン基準に統一','ランクシーズンが切り替わると真髄の追加・リセット判定も同時に更新']},
  {date:'2026-10-09',version:'v1.5.9',title:'📅 真髄シーズン期間を修正',items:['木下大戦争の1シーズンを2日間に統一','真髄の追加・リセット周期と次回更新表示を2日単位に修正']},
  {date:'2026-10-09',version:'v1.5.8',title:'✨ 真髄シーズン周期と限定内容を改善',items:['シーズン10で真髄1、11で真髄2追加、13で真髄3追加','シーズン15で真髄1へリセットし、5シーズン周期を繰り返す','開催中の真髄タブを選んで個別にガチャ・ポイント交換できる','周期ごとに限定衣装・携帯品の名前・テーマ・見た目を更新']},
@@ -3714,11 +3715,11 @@ const SHINJU_UR_ACCESSORY={id:'shinju_s1_ur_accessory_kino',type:'accessory',rar
 const SHINJU_SSR_COSTUME_A={id:'shinju_s1_ssr_costume_moriking',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・翠嵐の王衣',emoji:'🌳',color:'#16a34a',desc:'森王木下専用のSSR限定衣装。深い森の力をまとった王衣。'};
 const SHINJU_SSR_COSTUME_B={id:'shinju_s1_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・演算機装',emoji:'🧠',color:'#38bdf8',desc:'木下（AI）専用のSSR限定衣装。高度な演算機構を思わせる装束。'};
 const SHINJU_SSR_COSTUME_C={id:'shinju_s1_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・星冠の王装',emoji:'🌟',color:'#c084fc',desc:'星王木下専用のSSR限定衣装。星々を束ねる王のための装束。'};
-const SHINJU_S2_UR_COSTUME={id:'shinju_s2_ur_costume_speed',type:'costume',rarity:'UR',characterIndex:-1,targetName:'速木下',name:'速木下・閃光の疾装',emoji:'⚡',color:'#38bdf8',desc:'速木下専用の第2真髄限定UR衣装。閃光のような速度をまとう。'};
-const SHINJU_S2_UR_ACCESSORY={id:'shinju_s2_ur_accessory_oni',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'鬼木下',name:'鬼木下・鬼火の護符',emoji:'👹',desc:'鬼木下専用の第2真髄限定UR携帯品。'};
-const SHINJU_S2_SSR_A={id:'shinju_s2_ssr_costume_tank',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下戦車',name:'木下戦車・鋼鉄の重装',emoji:'🛡️',color:'#64748b',desc:'木下戦車専用の第2真髄限定SSR衣装。'};
-const SHINJU_S2_SSR_B={id:'shinju_s2_ssr_costume_rampage',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'狂乱の木下',name:'狂乱の木下・紅蓮の狂装',emoji:'🔥',color:'#ef4444',desc:'狂乱の木下専用の第2真髄限定SSR衣装。'};
-const SHINJU_S2_SSR_C={id:'shinju_s2_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・量子演算衣',emoji:'💠',color:'#06b6d4',desc:'木下（AI）専用の第2真髄限定SSR衣装。'};
+const SHINJU_S2_UR_COSTUME={id:'shinju_s2_ur_costume_speed',type:'costume',rarity:'UR',characterIndex:-1,targetName:'流星木下',name:'流星木下・閃光の疾装',emoji:'⚡',color:'#38bdf8',desc:'流星木下専用の第2真髄限定UR衣装。流星の閃光をまとった疾走感のある装束。'};
+const SHINJU_S2_UR_ACCESSORY={id:'shinju_s2_ur_accessory_oni',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・鬼火の護符',emoji:'🔥',desc:'木下（覚醒）専用の第2真髄限定UR携帯品。覚醒の炎を封じた護符。'};
+const SHINJU_S2_SSR_A={id:'shinju_s2_ssr_costume_tank',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・鋼鉄の重装',emoji:'🛡️',color:'#64748b',desc:'木下（野球）専用の第2真髄限定SSR衣装。鋼鉄の防具をまとった特別ユニフォーム。'};
+const SHINJU_S2_SSR_B={id:'shinju_s2_ssr_costume_rampage',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'狂乱の木下',name:'狂乱の木下・紅蓮の狂装',emoji:'🔥',color:'#ef4444',desc:'味方の狂乱の木下専用の第2真髄限定SSR衣装。紅蓮の炎をまとった狂戦士の装束。'};
+const SHINJU_S2_SSR_C={id:'shinju_s2_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・量子演算衣',emoji:'💠',color:'#06b6d4',desc:'味方の木下（AI）専用の第2真髄限定SSR衣装。量子演算をイメージした未来型の装束。'};
 const SHINJU_S3_UR_COSTUME={id:'shinju_s3_ur_costume_phoenix',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・不死鳥の焔衣',emoji:'🐦‍🔥',color:'#fb7185',desc:'フェニックス専用の第3真髄限定UR衣装。'};
 const SHINJU_S3_UR_ACCESSORY={id:'shinju_s3_ur_accessory_zocrates',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'哲学の賢者ゾクラテス',name:'ゾクラテス・賢者の星盤',emoji:'🔮',desc:'哲学の賢者ゾクラテス専用の第3真髄限定UR携帯品。'};
 const SHINJU_S3_SSR_A={id:'shinju_s3_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・銀河の星装',emoji:'🌌',color:'#a78bfa',desc:'星王木下専用の第3真髄限定SSR衣装。'};
