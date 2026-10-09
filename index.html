@@ -1597,6 +1597,7 @@ function buyHalloweenShopItem(id){
  if(halloweenShopPurchaseCount(id)>=item.limit){alert('このアイテムは交換上限に達しています。');renderHalloweenShop();return;}
  if(halloweenCandy<item.cost){alert('キャンディが足りません。イベントステージをクリアして集めましょう。');return;}
  halloweenShopBusy=true;
+ let committed=false,revealRewards=null;
  try{
   let message='';
   if(item.reward==='character'){
@@ -1604,9 +1605,10 @@ function buyHalloweenShopItem(id){
    ownedFlags[i]=true;syncOwnedCount();if(!formation.length)formation=[i];message='🎉 パンプキン木下を獲得しました！';
   }else if(item.reward==='accessory'||item.reward==='costume'){
    const cosmetic=item.reward==='accessory'?HALLOWEEN_SSR_ACCESSORY:HALLOWEEN_SSR_COSTUME;
-   shinjuInventory[cosmetic.id]=1;syncCharacterCosmeticInventory();saveShinjuState();showShinjuReveal([{type:cosmetic.type,item:cosmetic,label:(cosmetic.type==='costume'?'👕 ハロウィン限定SSR衣装：':'🎒 ハロウィン限定SSR携帯品：')+cosmetic.name}]);message=cosmetic.name+'を獲得しました！キャラクター詳細から装備できます。';
+   shinjuInventory[cosmetic.id]=1;syncCharacterCosmeticInventory();message=cosmetic.name+'を獲得しました！キャラクター詳細から装備できます。';
+   revealRewards=[{type:cosmetic.type,item:cosmetic,label:(cosmetic.type==='costume'?'👕 ハロウィン限定SSR衣装：':'🎒 ハロウィン限定SSR携帯品：')+cosmetic.name}];
   }else if(item.reward==='draw'){
-   const reward=shinjuDrawOne(shinjuSelectedEssence);shinjuDrawCount=Math.max(0,Number(shinjuDrawCount||0)+1);saveShinjuState();showShinjuReveal([reward]);message='選択中の真髄を1回引きました！';
+   const reward=shinjuDrawOne(shinjuSelectedEssence);shinjuDrawCount=Math.max(0,Number(shinjuDrawCount||0)+1);message='選択中の真髄を1回引きました！';revealRewards=[reward];
   }else if(item.reward==='coins'){gachaCoins+=item.amount;message='木下コインを'+item.amount.toLocaleString()+'枚獲得しました！';}
   else if(item.reward==='xp'){playerXP+=item.amount;message='プレイヤーXPを'+item.amount.toLocaleString()+'獲得しました！';}
   else if(item.reward==='normalGold'){normalGold+=item.amount;message='ノーマルキャラの金を'+item.amount+'個獲得しました！';}
@@ -1614,10 +1616,11 @@ function buyHalloweenShopItem(id){
   else throw new Error('未対応の交換報酬です。');
   halloweenCandy-=item.cost;
   storage.setItem('kinoshitaHalloweenShopBought_'+id,String(halloweenShopPurchaseCount(id)+1));
-  saveHalloweenCandy();save();saveShinjuState();
+  saveHalloweenCandy();save();saveShinjuState();committed=true;
+  if(revealRewards)showShinjuReveal(revealRewards);
   renderHalloweenShop();renderStageSelect();renderOwnedStart();renderCards();renderShinju();renderNormalGrowthInventory();
-  alert('🎃 交換成功！\n'+message+'\n残りキャンディ：'+halloweenCandy.toLocaleString()+'個');
- }catch(e){console.error('Halloween shop exchange failed',e);alert('交換に失敗しました。キャンディは消費していません。');}
+  alert('🎃 交換成功！\\n'+message+'\\n残りキャンディ：'+halloweenCandy.toLocaleString()+'個');
+ }catch(e){console.error('Halloween shop exchange failed',e);alert(committed?'交換は完了しました。画面更新の一部でエラーが発生しました。再読み込みして所持品をご確認ください。':'交換に失敗しました。キャンディは消費していません。');}
  finally{halloweenShopBusy=false;renderHalloweenShop();}
 }
 let legendClears;try{legendClears=JSON.parse(storage.getItem('kinoshitaLegendClears')||'[]')}catch(e){legendClears=[]}if(!Array.isArray(legendClears))legendClears=[];while(legendClears.length<10)legendClears.push(0);legendClears=legendClears.map(x=>Math.max(0,Number(x)||0));
