@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.0';
+const GAME_VERSION='v1.7.1';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.7.1',title:'🎃 ハロウィン交換所・ランク報酬を改善',items:['ハロウィンキャンディ交換所に限定SSR携帯品・真髄1回券・コイン交換を追加','交換所を選択式の画面に変更し、交換済み・所持数・不足キャンディを表示','ランク順位判定で古い公開ランキング値が優先される問題を修正','ランク3位報酬のコイン額を75,000枚に統一']},
  {date:'2026-10-09',version:'v1.7.0',title:'🎃 ハロウィンイベントを追加',items:['ハロウィン限定ステージ3種とボス「ジャック・オー・木下」を追加','イベントステージクリアでハロウィンキャンディを獲得','限定キャラ「パンプキン木下」とコインを交換所に追加','イベント期間：2026年11月15日まで']},
  {date:'2026-10-09',version:'v1.6.1',title:'🎭 真髄2の衣装・携帯品対象を味方キャラに修正',items:['敵専用の速木下・鬼木下・木下戦車を対象から除外','真髄2のUR衣装・UR携帯品・SSR衣装3種を味方キャラクター専用に変更']},
  {date:'2026-10-09',version:'v1.6.0',title:'🏆 真髄をランクシーズンに連動',items:['真髄のシーズン番号・開催内容・更新時刻をランク戦シーズン基準に統一','ランクシーズンが切り替わると真髄の追加・リセット判定も同時に更新']},
@@ -1541,19 +1542,51 @@ let halloweenCandy=Math.max(0,Number(storage.getItem('kinoshitaHalloweenCandy')|
 function halloweenEventActive(){return Date.now()<new Date('2026-11-16T00:00:00+09:00').getTime();}
 function eventStagePool(){return eventStages.filter(st=>!st.itemReward&&(!st.halloweenEvent||halloweenEventActive()));}
 function saveHalloweenCandy(){storage.setItem('kinoshitaHalloweenCandy',String(halloweenCandy));}
+function renderHalloweenShop(){
+ const old=document.getElementById('halloweenShopOverlay');if(old)old.remove();
+ const pumpkinIndex=cards.findIndex(c=>c.name==='パンプキン木下');
+ const pumpkinOwned=pumpkinIndex>=0&&hasCharacter(pumpkinIndex);
+ const accessoryId='halloween_ssr_accessory_pumpkin_kino';
+ const accessoryOwned=typeof shinjuOwned==='function'&&shinjuOwned(accessoryId);
+ const ticketCount=Math.max(0,Number(storage.getItem('kinoshitaShinjuFreeDrawTickets')||0));
+ const offers=[
+  {id:'pumpkin',emoji:'🎃',name:'パンプキン木下',rarity:'超激レア',cost:25,desc:'ハロウィン限定キャラクター。',owned:pumpkinOwned},
+  {id:'accessory',emoji:'🧳',name:'パンプキンランタン',rarity:'SSR携帯品',cost:30,desc:'普通の木下専用。獲得後、キャラ詳細から装備できます。',owned:accessoryOwned},
+  {id:'ticket',emoji:'🎟️',name:'真髄1回券',rarity:'ガチャ券',cost:15,desc:'真髄画面で1回、木下コインを使わずに引けます。',owned:false},
+  {id:'coins',emoji:'🪙',name:'木下コイン10,000枚',rarity:'通貨',cost:10,desc:'交換後すぐに所持コインへ加算。',owned:false}
+ ];
+ const ov=document.createElement('div');ov.id='halloweenShopOverlay';
+ Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'9998',background:'rgba(15,23,42,.88)',display:'flex',alignItems:'center',justifyContent:'center',padding:'12px'});
+ ov.innerHTML='<div style="width:min(94vw,650px);max-height:90vh;overflow:auto;background:#fff7ed;color:#431407;border:4px solid #f97316;border-radius:18px;padding:16px;box-shadow:0 0 40px rgba(249,115,22,.35)"><h2 style="margin:0 0 6px">🎃 ハロウィンキャンディ交換所</h2><div style="font-weight:900;background:#4c1d95;color:#fff;padding:10px;border-radius:10px;margin-bottom:12px">🍬 所持キャンディ：<span id="halloweenShopCandyCount">'+halloweenCandy.toLocaleString()+'</span>個　｜　🎟️ 真髄1回券：'+ticketCount+'枚</div><div id="halloweenShopOffers" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px"></div><p style="font-size:12px;margin:12px 0 0">イベント期間中に交換できます。SSR携帯品は性能に影響しません。</p><button id="halloweenShopClose" type="button" style="width:100%;margin-top:12px;padding:11px;border:0;border-radius:10px;background:#7c2d12;color:#fff;font-weight:900">閉じる</button></div>';
+ document.body.appendChild(ov);
+ const offerEl=ov.querySelector('#halloweenShopOffers');
+ offerEl.innerHTML=offers.map(o=>'<div style="background:#fff;border:2px solid '+(o.owned?'#94a3b8':'#fdba74')+';border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px"><div style="font-size:30px">'+o.emoji+'</div><b>'+o.name+'</b><div style="font-size:12px;font-weight:900;color:#7c3aed">'+o.rarity+'</div><div style="font-size:13px">'+o.desc+'</div><div style="font-weight:900;margin-top:auto">🍬 '+o.cost+'個</div><button type="button" data-halloween-buy="'+o.id+'" '+(o.owned||halloweenCandy<o.cost?'disabled':'')+' style="padding:10px;border:0;border-radius:9px;background:'+(o.owned||halloweenCandy<o.cost?'#cbd5e1':'#f97316')+';color:'+(o.owned||halloweenCandy<o.cost?'#475569':'#fff')+';font-weight:900">'+(o.owned?'交換済み':halloweenCandy<o.cost?'キャンディ不足':'交換する')+'</button></div>').join('');
+ offerEl.querySelectorAll('[data-halloween-buy]').forEach(btn=>btn.addEventListener('click',()=>buyHalloweenReward(btn.dataset.halloweenBuy)));
+ ov.querySelector('#halloweenShopClose').addEventListener('click',()=>ov.remove());
+}
 function openHalloweenShop(){
  if(!halloweenEventActive()){alert('ハロウィンイベントは終了しました。');return;}
- const ownedIndex=cards.findIndex(c=>c.name==='パンプキン木下');
- const alreadyOwned=ownedIndex>=0&&hasCharacter(ownedIndex);
- const choice=prompt('🎃 ハロウィン交換所\n所持キャンディ：'+halloweenCandy+'個\n\n1：パンプキン木下（25個）'+(alreadyOwned?'【入手済み】':'')+'\n2：木下コイン10,000枚（10個）\n\n交換する番号を入力してください。');
- if(choice==='1'){
-  if(alreadyOwned){alert('パンプキン木下は入手済みです。');return;}
-  if(halloweenCandy<25){alert('キャンディが足りません。イベントステージをクリアして集めましょう。');return;}
-  halloweenCandy-=25;ownedFlags[ownedIndex]=true;syncOwnedCount();if(!formation.length)formation=[ownedIndex];saveHalloweenCandy();save();renderStageSelect();renderCards();alert('🎉 パンプキン木下を獲得しました！');
- }else if(choice==='2'){
-  if(halloweenCandy<10){alert('キャンディが足りません。');return;}
-  halloweenCandy-=10;gachaCoins+=10000;saveHalloweenCandy();save();renderStageSelect();alert('🪙 木下コイン10,000枚を獲得しました！');
+ renderHalloweenShop();
+}
+function buyHalloweenReward(id){
+ if(!halloweenEventActive())return;
+ const prices={pumpkin:25,accessory:30,ticket:15,coins:10};
+ const cost=prices[id];if(!cost||halloweenCandy<cost){alert('ハロウィンキャンディが足りません。');return;}
+ if(id==='pumpkin'){
+  const i=cards.findIndex(c=>c.name==='パンプキン木下');
+  if(i<0||hasCharacter(i)){alert('パンプキン木下は交換済みです。');renderHalloweenShop();return;}
+  halloweenCandy-=cost;ownedFlags[i]=true;syncOwnedCount();if(!formation.length)formation=[i];saveHalloweenCandy();save();renderStageSelect();renderCards();
+ }else if(id==='accessory'){
+  const item=typeof shinjuItem==='function'?shinjuItem('halloween_ssr_accessory_pumpkin_kino'):null;
+  if(!item||shinjuOwned(item.id)){alert('SSR携帯品は交換済みです。');renderHalloweenShop();return;}
+  halloweenCandy-=cost;shinjuInventory[item.id]=1;saveHalloweenCandy();saveShinjuState();syncCharacterCosmeticInventory();
+ }else if(id==='ticket'){
+  const key='kinoshitaShinjuFreeDrawTickets';const count=Math.max(0,Number(storage.getItem(key)||0));
+  halloweenCandy-=cost;storage.setItem(key,String(count+1));saveHalloweenCandy();
+ }else if(id==='coins'){
+  halloweenCandy-=cost;gachaCoins+=10000;saveHalloweenCandy();save();
  }
+ renderStageSelect();renderCards();renderHalloweenShop();
 }
 let legendClears;try{legendClears=JSON.parse(storage.getItem('kinoshitaLegendClears')||'[]')}catch(e){legendClears=[]}if(!Array.isArray(legendClears))legendClears=[];while(legendClears.length<10)legendClears.push(0);legendClears=legendClears.map(x=>Math.max(0,Number(x)||0));
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
@@ -2397,7 +2430,7 @@ function rankRewardRulesHTML(){
  const top10=[
   ['1位',150000,150000,'1位の証','木下&吉田'],
   ['2位',100000,100000,'2位の証',''],
-  ['3位',750000,75000,'3位の証',''],
+  ['3位',75000,75000,'3位の証',''],
   ['4位',500000,50000,'4位の証',''],
   ['5位',500000,50000,'5位の証',''],
   ['6位',500000,50000,'6位の証',''],
@@ -2411,7 +2444,7 @@ function rankRewardRulesHTML(){
 function loadAIHighMap(){try{return JSON.parse(storage.getItem('kinoshitaAIHighRecords')||'{}')}catch(e){return {}}}
 function loadAIHighRecord(id){const m=loadAIHighMap(),v=m[String(id)]||{};return {maxRP:Number(v.maxRP||0),bestRank:Number(v.bestRank||0)}}
 function updateAIHighRecord(ai){if(!ai)return;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)return;const old=m[id]||{};const previousMax=Number(old.maxRP||0);const maxRP=Math.max(previousMax,Number(ai.maxRP||0),Number(ai.rp||0));const bestRank=Math.max(0,Number(old.bestRank||0),Number(ai.bestRank||0));ai.maxRP=maxRP;ai.bestRank=bestRank;m[id]={maxRP,bestRank};storage.setItem('kinoshitaAIHighRecords',JSON.stringify(m));}
-function rankSeasonFinalEntries(){const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,ai:a,rp:Number(a.rp||0)});return hum.sort((a,b)=>b.rp-a.rp||String(a.id).localeCompare(String(b.id)));}
+function rankSeasonFinalEntries(){const arr=[{id:playerRankingId,rp:Number(rankPoints||0)},...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)}))];const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,ai:a,rp:Number(a.rp||0)});return hum.sort((a,b)=>b.rp-a.rp||String(a.id).localeCompare(String(b.id)));}
 function finalizeAISeasonRecords(){const ranking=rankSeasonFinalEntries();for(const ai of aiProfiles){const row=ranking.find(x=>x.ai===ai);if(!row)continue;const m=loadAIHighMap(),id=String(ai.accountId||'');if(!id)continue;const old=m[id]||{};const bestRank=Math.min(Number(old.bestRank||0)||Infinity,ranking.indexOf(row)+1);ai.bestRank=Number.isFinite(bestRank)?bestRank:0;m[id]={maxRP:Number(old.maxRP||ai.maxRP||ai.rp||0),bestRank:ai.bestRank};}storage.setItem('kinoshitaAIHighRecords',JSON.stringify(loadAIHighMap()));}
 function saveRank(){
  const high=loadAIHighMap();
@@ -3449,7 +3482,7 @@ const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
 function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
 function rankTierReward(rp){const t=[['木の芽 I',1000,1000],['木の芽 II',1500,1500],['若葉 I',2000,2000],['若葉 II',2500,2500],['若木 I',3000,3000],['若木 II',4000,4000],['大樹 I',5000,5000],['大樹 II',6500,6500],['巨木 I',8000,8000],['巨木 II',10000,10000],['木下王',15000,15000]];let x=t[0];for(const v of t)if(rp>=rankDefs.find(d=>d.name===v[0]).need)x=v;return x}
 function rankRewardSnapshotRank(){
- const arr=[...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)})),{id:playerRankingId,rp:Number(rankPoints||0)}];
+ const arr=[{id:playerRankingId,rp:Number(rankPoints||0)},...publicPlayerRankings.map(x=>({id:String(x.player_id),rp:Number(x.rp||0)}))];
  const seen=new Set(),hum=arr.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true});
  for(const a of aiProfiles||[])hum.push({id:'AI-'+a.accountId,rp:Number(a.rp||0)});
  hum.sort((a,b)=>b.rp-a.rp);
@@ -3471,7 +3504,7 @@ function addRankRewardGift(){
  let coins=0,xp=0,badge='',char=eligibleForKinoshitaYoshida,label='';
  if(pos===1){coins=150000;xp=150000;badge='1位の証';label='ランク1位報酬'}
  else if(pos===2){coins=100000;xp=100000;badge='2位の証';label='ランク2位報酬'}
- else if(pos===3){coins=750000;xp=75000;badge='3位の証';label='ランク3位報酬'}
+ else if(pos===3){coins=75000;xp=75000;badge='3位の証';label='ランク3位報酬'}
  else if(pos<=10){coins=500000;xp=50000;badge=pos+'位の証';label='ランク'+pos+'位報酬'}
  else if(reachedTop10){const t=rankTierReward(rp);coins=t[1];xp=t[2];label='シーズンTop10到達報酬'}
  else {const t=rankTierReward(rp);coins=t[1];xp=t[2];label='段位報酬（'+t[0]+'）'}
@@ -3743,6 +3776,7 @@ const SHINJU_MIGRATION_KEY='kinoshitaShinjuCosmeticMigrationV1';
 const CHARACTER_COSMETIC_STORAGE_KEY='kinoshitaCharacterCosmeticsV3';
 const SHINJU_UR_COSTUME={id:'shinju_s1_ur_costume_kino',type:'costume',rarity:'UR',characterIndex:0,name:'普通の木下・覚醒の装束',emoji:'🔥',color:'#f59e0b',desc:'第二形態を得た普通の木下のための限定UR衣装。'};
 const SHINJU_UR_ACCESSORY={id:'shinju_s1_ur_accessory_kino',type:'accessory',rarity:'UR',characterIndex:0,name:'普通の木下・天命の木札',emoji:'🪬',desc:'覚醒の力を宿した普通の木下専用・限定UR携帯品。'};
+const HALLOWEEN_SSR_ACCESSORY={id:'halloween_ssr_accessory_pumpkin_kino',type:'accessory',rarity:'SSR',characterIndex:0,name:'パンプキンランタン',emoji:'🎃',desc:'普通の木下専用のハロウィン限定SSR携帯品。かぼちゃランタンを携えて戦う。'};
 const SHINJU_SSR_COSTUME_A={id:'shinju_s1_ssr_costume_moriking',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・翠嵐の王衣',emoji:'🌳',color:'#16a34a',desc:'森王木下専用のSSR限定衣装。深い森の力をまとった王衣。'};
 const SHINJU_SSR_COSTUME_B={id:'shinju_s1_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・演算機装',emoji:'🧠',color:'#38bdf8',desc:'木下（AI）専用のSSR限定衣装。高度な演算機構を思わせる装束。'};
 const SHINJU_SSR_COSTUME_C={id:'shinju_s1_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・星冠の王装',emoji:'🌟',color:'#c084fc',desc:'星王木下専用のSSR限定衣装。星々を束ねる王のための装束。'};
@@ -3761,7 +3795,7 @@ const SHINJU_ESSENCES=[
  {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
  {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]}
 ];
-let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
+let SHINJU_ITEMS=[...SHINJU_ESSENCES.flatMap(x=>x.items),HALLOWEEN_SSR_ACCESSORY];
 let shinjuSelectedEssence=1;
 const SHINJU_CYCLE_CACHE={1:SHINJU_ESSENCES};
 const SHINJU_CYCLE_THEMES=[
@@ -3823,6 +3857,7 @@ const SHINJU_POWER_COLORS=['赤','青','黄','緑','紫'];
 let shinjuInventory={};
 try{shinjuInventory=JSON.parse(storage.getItem(SHINJU_INVENTORY_KEY)||'{}')||{}}catch(e){shinjuInventory={}}
 let shinjuDrawCount=Math.max(0,Number(storage.getItem('kinoshitaShinjuDrawCount')||0));
+let shinjuFreeDrawTickets=Math.max(0,Number(storage.getItem('kinoshitaShinjuFreeDrawTickets')||0));
 let shinjuPoints=Math.max(0,Number(storage.getItem('kinoshitaShinjuPoints')||0));
 /* v1.5.3への移行時に、v1.5.2までの全衣装・携帯品を没収。 */
 if(storage.getItem(SHINJU_MIGRATION_KEY)!=='v1'){
@@ -3888,7 +3923,7 @@ function renderShinju(){
  const state=getShinjuSeasonState();
  if(!state.active.some(x=>x.id===shinjuSelectedEssence))shinjuSelectedEssence=1;
  const essence=state.active.find(x=>x.id===shinjuSelectedEssence)||state.active[0]||SHINJU_ESSENCES[0];
- if(coin)coin.innerHTML='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚　｜　✨ 真髄ポイント：'+shinjuPoints.toLocaleString()+'pt';
+ if(coin)coin.innerHTML='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚　｜　🎟️ 真髄1回券：'+shinjuFreeDrawTickets.toLocaleString()+'枚　｜　✨ 真髄ポイント：'+shinjuPoints.toLocaleString()+'pt';
  if(banner){
   const tabs=state.active.map(x=>'<button type="button" class="shinjuEssenceTab" data-shinju-essence="'+x.id+'" style="flex:1;min-width:90px;padding:9px 6px;border:2px solid '+(x.id===essence.id?'#facc15':'#cbd5e1')+';border-radius:9px;background:'+(x.id===essence.id?'#6d28d9':'#f8fafc')+';color:'+(x.id===essence.id?'#fff':'#1e293b')+';font-weight:900">'+x.name+'</button>').join('');
   const items=essence.items;
@@ -3898,6 +3933,7 @@ function renderShinju(){
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
  renderShinjuExchangeShop();
  const one=document.getElementById('shinjuSingleBtn'),eleven=document.getElementById('shinjuElevenBtn');
+ if(one)one.textContent=shinjuFreeDrawTickets>0?'1連　🎟️無料券を使用（'+shinjuFreeDrawTickets+'枚）':'1連　🪙1,000';
  if(one)one.onclick=()=>performShinjuDraw(1);
  if(eleven)eleven.onclick=()=>performShinjuDraw(11);
 }
@@ -3921,8 +3957,11 @@ function buyShinjuExchange(id,cost){
  showShinjuReveal([{type:'costume',item,label:'✨ ポイント交換：'+item.name}]);
 }
 function performShinjuDraw(count){
- const n=count===11?11:1,cost=n===11?10000:1000;
+ const n=count===11?11:1;
+ const useTicket=n===1&&shinjuFreeDrawTickets>0;
+ const cost=n===11?10000:(useTicket?0:1000);
  if(gachaCoins<cost){alert('木下コインが足りません。');return}
+ if(useTicket){shinjuFreeDrawTickets--;storage.setItem('kinoshitaShinjuFreeDrawTickets',String(shinjuFreeDrawTickets));}
  gachaCoins-=cost;
  const rewards=[];
  for(let i=0;i<n;i++)rewards.push(shinjuDrawOne(shinjuSelectedEssence));
