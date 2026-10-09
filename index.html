@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.6';
+const GAME_VERSION='v1.5.7';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.7',title:'✨ 真髄のシーズン制を追加',items:['シーズンごとに真髄が1種類ずつ増加し、最大3種類を開催','3シーズン終了後は真髄1から新サイクルを開始','真髄ごとに限定衣装・携帯品・SSR衣装を分離','所持済み衣装・携帯品とポイントはシーズン切替後も保持']},
  {date:'2026-10-09',version:'v1.5.6',title:'✨ 真髄演出・レアリティ・図鑑改善',items:['限定UR演出を大幅強化','SSR衣装の重複を20,000コインに変換','フェニックスを超激レアに変更','図鑑の絞り込みを最適化']},
  {date:'2026-10-09',version:'v1.5.5',title:'✨ 真髄を大幅アップデート',items:['UR重複時に15万コインへ変換','衣装・携帯品を自由に装備・取り外し可能に変更','真髄の開封演出を追加','真髄ポイント交換所を追加（限定UR 400pt／SSR衣装 80pt）']},
  {date:'2026-10-09',version:'v1.5.4',title:'✨ 真髄を独立化・SSR衣装を追加',items:['真髄を木下交換所から分離し、専用ボタンと独立画面へ変更','SSR限定衣装を3キャラクター分追加','真髄の提供割合をSSR追加後の100%構成へ更新']},
@@ -3705,24 +3706,39 @@ document.addEventListener('DOMContentLoaded',()=>{
 const SHINJU_INVENTORY_KEY='kinoshitaShinjuInventory';
 const SHINJU_MIGRATION_KEY='kinoshitaShinjuCosmeticMigrationV1';
 const CHARACTER_COSMETIC_STORAGE_KEY='kinoshitaCharacterCosmeticsV3';
-const SHINJU_UR_COSTUME={
- id:'shinju_s1_ur_costume_kino',type:'costume',rarity:'UR',characterIndex:0,
- name:'普通の木下・覚醒の装束',emoji:'🔥',color:'#f59e0b',
- desc:'第二形態を得た普通の木下のための限定UR衣装。'
-};
-const SHINJU_UR_ACCESSORY={
- id:'shinju_s1_ur_accessory_kino',type:'accessory',rarity:'UR',characterIndex:0,
- name:'普通の木下・天命の木札',emoji:'🪬',
- desc:'覚醒の力を宿した普通の木下専用・限定UR携帯品。'
-};
-const SHINJU_SSR_COSTUME_A={id:'shinju_s1_ssr_costume_moriking',type:'costume',rarity:'SSR',characterIndex:-1,name:'森王木下・翠嵐の王衣',emoji:'🌳',color:'#16a34a',desc:'森王木下専用のSSR限定衣装。深い森の力をまとった王衣。'};
-const SHINJU_SSR_COSTUME_B={id:'shinju_s1_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,name:'木下（AI）・演算機装',emoji:'🧠',color:'#38bdf8',desc:'木下（AI）専用のSSR限定衣装。高度な演算機構を思わせる装束。'};
-const SHINJU_SSR_COSTUME_C={id:'shinju_s1_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,name:'星王木下・星冠の王装',emoji:'🌟',color:'#c084fc',desc:'星王木下専用のSSR限定衣装。星々を束ねる王のための装束。'};
-const SHINJU_ITEMS=[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C];
+const SHINJU_UR_COSTUME={id:'shinju_s1_ur_costume_kino',type:'costume',rarity:'UR',characterIndex:0,name:'普通の木下・覚醒の装束',emoji:'🔥',color:'#f59e0b',desc:'第二形態を得た普通の木下のための限定UR衣装。'};
+const SHINJU_UR_ACCESSORY={id:'shinju_s1_ur_accessory_kino',type:'accessory',rarity:'UR',characterIndex:0,name:'普通の木下・天命の木札',emoji:'🪬',desc:'覚醒の力を宿した普通の木下専用・限定UR携帯品。'};
+const SHINJU_SSR_COSTUME_A={id:'shinju_s1_ssr_costume_moriking',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・翠嵐の王衣',emoji:'🌳',color:'#16a34a',desc:'森王木下専用のSSR限定衣装。深い森の力をまとった王衣。'};
+const SHINJU_SSR_COSTUME_B={id:'shinju_s1_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・演算機装',emoji:'🧠',color:'#38bdf8',desc:'木下（AI）専用のSSR限定衣装。高度な演算機構を思わせる装束。'};
+const SHINJU_SSR_COSTUME_C={id:'shinju_s1_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・星冠の王装',emoji:'🌟',color:'#c084fc',desc:'星王木下専用のSSR限定衣装。星々を束ねる王のための装束。'};
+const SHINJU_S2_UR_COSTUME={id:'shinju_s2_ur_costume_speed',type:'costume',rarity:'UR',characterIndex:-1,targetName:'速木下',name:'速木下・閃光の疾装',emoji:'⚡',color:'#38bdf8',desc:'速木下専用の第2真髄限定UR衣装。閃光のような速度をまとう。'};
+const SHINJU_S2_UR_ACCESSORY={id:'shinju_s2_ur_accessory_oni',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'鬼木下',name:'鬼木下・鬼火の護符',emoji:'👹',desc:'鬼木下専用の第2真髄限定UR携帯品。'};
+const SHINJU_S2_SSR_A={id:'shinju_s2_ssr_costume_tank',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下戦車',name:'木下戦車・鋼鉄の重装',emoji:'🛡️',color:'#64748b',desc:'木下戦車専用の第2真髄限定SSR衣装。'};
+const SHINJU_S2_SSR_B={id:'shinju_s2_ssr_costume_rampage',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'狂乱の木下',name:'狂乱の木下・紅蓮の狂装',emoji:'🔥',color:'#ef4444',desc:'狂乱の木下専用の第2真髄限定SSR衣装。'};
+const SHINJU_S2_SSR_C={id:'shinju_s2_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・量子演算衣',emoji:'💠',color:'#06b6d4',desc:'木下（AI）専用の第2真髄限定SSR衣装。'};
+const SHINJU_S3_UR_COSTUME={id:'shinju_s3_ur_costume_phoenix',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・不死鳥の焔衣',emoji:'🐦‍🔥',color:'#fb7185',desc:'フェニックス専用の第3真髄限定UR衣装。'};
+const SHINJU_S3_UR_ACCESSORY={id:'shinju_s3_ur_accessory_zocrates',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'哲学の賢者ゾクラテス',name:'ゾクラテス・賢者の星盤',emoji:'🔮',desc:'哲学の賢者ゾクラテス専用の第3真髄限定UR携帯品。'};
+const SHINJU_S3_SSR_A={id:'shinju_s3_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・銀河の星装',emoji:'🌌',color:'#a78bfa',desc:'星王木下専用の第3真髄限定SSR衣装。'};
+const SHINJU_S3_SSR_B={id:'shinju_s3_ssr_costume_forest',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・深緑の神衣',emoji:'🍃',color:'#22c55e',desc:'森王木下専用の第3真髄限定SSR衣装。'};
+const SHINJU_S3_SSR_C={id:'shinju_s3_ssr_costume_oni',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'鬼木下',name:'鬼木下・夜叉の戦装',emoji:'🌑',color:'#a855f7',desc:'鬼木下専用の第3真髄限定SSR衣装。'};
+const SHINJU_ESSENCES=[
+ {id:1,name:'真髄1：覚醒の火',desc:'普通の木下の第二形態実装記念真髄。',items:[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C]},
+ {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
+ {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]}
+];
+const SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
+const SHINJU_SEASON_START=Date.UTC(2026,9,9);
+const SHINJU_SEASON_DAYS=60;
+let shinjuSelectedEssence=1;
+function getShinjuSeasonState(){
+ const day=86400000,duration=SHINJU_SEASON_DAYS*day;
+ const elapsed=Math.max(0,Math.floor((Date.now()-SHINJU_SEASON_START)/duration));
+ const phase=elapsed%3+1,cycle=Math.floor(elapsed/3)+1;
+ return {seasonNumber:elapsed+1,phase,cycle,active:SHINJU_ESSENCES.slice(0,phase),daysRemaining:Math.max(0,Math.ceil((SHINJU_SEASON_START+(elapsed+1)*duration-Date.now())/day))};
+}
+function shinjuEssenceItems(id){return SHINJU_ESSENCES.find(x=>x.id===Number(id))?.items||SHINJU_ESSENCES[0].items}
 function initShinjuCostumeTargets(){
- SHINJU_SSR_COSTUME_A.characterIndex=cards.findIndex(c=>c.name==='森王木下');
- SHINJU_SSR_COSTUME_B.characterIndex=cards.findIndex(c=>c.name==='木下（AI）');
- SHINJU_SSR_COSTUME_C.characterIndex=cards.findIndex(c=>c.name==='星王木下');
+ for(const item of SHINJU_ITEMS){if(item.targetName){const index=cards.findIndex(c=>c.name===item.targetName);if(index>=0)item.characterIndex=index;}}
 }
 initShinjuCostumeTargets();
 const SHINJU_POWER_COLORS=['赤','青','黄','緑','紫'];
@@ -3759,20 +3775,26 @@ function shinjuRandomGold(){
  normalGold=Math.max(0,Number(normalGold||0)+1);
  return {type:'normalGold',label:'🪙 ノーマルキャラの金 ×1'};
 }
-function shinjuDrawOne(){
- const r=Math.random()*100;
- let reward;
- if(r<0.2){const item=SHINJU_UR_COSTUME;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR衣装が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};}
- }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR携帯品が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};}
- }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
- }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
- }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
- }else if(r<48.4){reward=shinjuRandomPower();
- }else if(r<63.4){reward=shinjuRandomGold();
- }else if(r<83.4){const xp=shinjuRandomInt(100,10000);playerXP+=xp;reward={type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};
- }else{const coins=shinjuRandomInt(100,1500);gachaCoins+=coins;reward={type:'coins',label:'💰 木下コイン ×'+coins.toLocaleString()};}
- shinjuDrawCount++;
- return reward;
+function shinjuDrawOne(essenceId=shinjuSelectedEssence){
+ const pool=shinjuEssenceItems(essenceId),r=Math.random()*100;
+ const getItemReward=item=>{
+  if(shinjuOwned(item.id)){
+   const isUR=item.rarity==='UR',coins=isUR?150000:20000;
+   gachaCoins+=coins;
+   return {type:isUR?'duplicateUR':'duplicateSSR',item,label:'🔁 '+(isUR?'限定UR':'限定SSR')+(item.type==='costume'?'衣装':'携帯品')+'が重複 → 🪙 '+coins.toLocaleString()+'コイン'};
+  }
+  shinjuInventory[item.id]=1;
+  return {type:item.type,item,label:(item.type==='costume'?'👕 ':'🎒 ')+(item.rarity==='UR'?'限定UR':'限定SSR')+(item.type==='costume'?'衣装：':'携帯品：')+item.name};
+ };
+ if(r<0.2)return getItemReward(pool[0]);
+ if(r<0.4)return getItemReward(pool[1]);
+ if(r<1.4)return getItemReward(pool[2]);
+ if(r<2.4)return getItemReward(pool[3]);
+ if(r<3.4)return getItemReward(pool[4]);
+ if(r<48.4)return shinjuRandomPower();
+ if(r<63.4)return shinjuRandomGold();
+ if(r<83.4){const xp=shinjuRandomInt(100,10000);playerXP+=xp;return {type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};}
+ const coins=shinjuRandomInt(100,1500);gachaCoins+=coins;return {type:'coins',label:'💰 木下コイン ×'+coins.toLocaleString()};
 }
 function shinjuRarityClass(reward){
  if(reward.item?.rarity==='UR')return 'shinjuUR';
@@ -3780,12 +3802,21 @@ function shinjuRarityClass(reward){
  return reward.type==='power'?'shinjuPower':reward.type==='normalGold'?'shinjuGold':'shinjuCommon';
 }
 function shinjuRewardHTML(reward,index){
- return '<div class="shinjuReward '+shinjuRarityClass(reward)+'"><span class="shinjuRewardNo">'+(index+1)+'</span><span>'+reward.label+'</span>'+(reward.item?'<small>普通の木下専用</small>':'')+'</div>';
+ const target=reward.item?cards[reward.item.characterIndex]?.name||'キャラクター専用':'';
+ return '<div class="shinjuReward '+shinjuRarityClass(reward)+'"><span class="shinjuRewardNo">'+(index+1)+'</span><span>'+reward.label+'</span>'+(reward.item?'<small>'+target+'</small>':'')+'</div>';
 }
 function renderShinju(){
  const coin=document.getElementById('shinjuCoinText'),result=document.getElementById('shinjuResult'),banner=document.getElementById('shinjuBanner');
+ const state=getShinjuSeasonState();
+ if(!state.active.some(x=>x.id===shinjuSelectedEssence))shinjuSelectedEssence=1;
+ const essence=SHINJU_ESSENCES.find(x=>x.id===shinjuSelectedEssence)||SHINJU_ESSENCES[0];
  if(coin)coin.innerHTML='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚　｜　✨ 真髄ポイント：'+shinjuPoints.toLocaleString()+'pt';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>✨ 今シーズン真髄</h2><p>普通の木下の第二形態実装記念シーズン。</p><div class="shinjuBannerItems"><span>👕 UR：'+SHINJU_UR_COSTUME.name+'</span><span>🎒 UR：'+SHINJU_UR_ACCESSORY.name+'</span><span>✨ SSR：'+SHINJU_SSR_COSTUME_A.name+'／'+SHINJU_SSR_COSTUME_B.name+'／'+SHINJU_SSR_COSTUME_C.name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装 0.2%　｜ 限定UR携帯品 0.2%<br>限定SSR衣装 1.0%×3種　｜ 色のパワー 45%<br>ノーマルキャラの金 15%　｜ XP 20%　｜ コイン 16.6%</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
+ if(banner){
+  const tabs=state.active.map(x=>'<button type="button" class="shinjuEssenceTab" data-shinju-essence="'+x.id+'" style="flex:1;min-width:90px;padding:9px 6px;border:2px solid '+(x.id===essence.id?'#facc15':'#cbd5e1')+';border-radius:9px;background:'+(x.id===essence.id?'#6d28d9':'#f8fafc')+';color:'+(x.id===essence.id?'#fff':'#1e293b')+';font-weight:900">'+x.name+'</button>').join('');
+  const items=essence.items;
+  banner.innerHTML='<div class="gachaBanner"><h2>✨ '+essence.name+'</h2><p>'+essence.desc+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+tabs+'</div><div style="background:#ede9fe;border:1px solid #a78bfa;border-radius:9px;padding:8px;margin:8px 0;color:#3b0764;font-weight:900">📅 サイクル '+state.cycle+'・シーズン '+state.phase+'　｜　開催中 '+state.active.length+'種類　｜　次の更新まで約'+state.daysRemaining+'日</div><div class="shinjuBannerItems"><span>👕 UR：'+items[0].name+'</span><span>🎒 UR：'+items[1].name+'</span><span>✨ SSR：'+items[2].name+'／'+items[3].name+'／'+items[4].name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装 0.2%　｜ 限定UR携帯品 0.2%<br>限定SSR衣装 1.0%×3種　｜ 色のパワー 45%<br>ノーマルキャラの金 15%　｜ XP 20%　｜ コイン 16.6%</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
+  banner.querySelectorAll('[data-shinju-essence]').forEach(btn=>btn.onclick=()=>{shinjuSelectedEssence=Number(btn.dataset.shinjuEssence);renderShinju();});
+ }
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
  renderShinjuExchangeShop();
  const one=document.getElementById('shinjuSingleBtn'),eleven=document.getElementById('shinjuElevenBtn');
@@ -3799,7 +3830,8 @@ function shinjuExchangeItem(item,cost){
 function renderShinjuExchangeShop(){
  const el=document.getElementById('shinjuExchange');
  if(!el)return;
- el.innerHTML='<div class="gachaBanner"><h3>✨ 真髄ポイント交換所</h3><p>真髄を1回引くごとに1pt獲得。11連なら11ptです。</p><p><b>限定UR衣装・携帯品：各400pt</b>　｜　<b>SSR衣装：各80pt</b></p><div class="gachaChars">'+shinjuExchangeItem(SHINJU_UR_COSTUME,400)+shinjuExchangeItem(SHINJU_UR_ACCESSORY,400)+shinjuExchangeItem(SHINJU_SSR_COSTUME_A,80)+shinjuExchangeItem(SHINJU_SSR_COSTUME_B,80)+shinjuExchangeItem(SHINJU_SSR_COSTUME_C,80)+'</div></div>';
+ const items=shinjuEssenceItems(shinjuSelectedEssence);
+ el.innerHTML='<div class="gachaBanner"><h3>✨ '+(SHINJU_ESSENCES.find(x=>x.id===shinjuSelectedEssence)?.name||'真髄')+'ポイント交換所</h3><p>真髄を1回引くごとに1pt獲得。11連なら11ptです。ポイントと所持アイテムはシーズン切替後も保持されます。</p><p><b>限定UR衣装・携帯品：各400pt</b>　｜　<b>SSR衣装：各80pt</b></p><div class="gachaChars">'+items.map(item=>shinjuExchangeItem(item,item.rarity==='UR'?400:80)).join('')+'</div></div>';
  el.querySelectorAll('[data-shinju-exchange]').forEach(btn=>btn.onclick=()=>buyShinjuExchange(btn.dataset.shinjuExchange,Number(btn.dataset.cost)));
 }
 function buyShinjuExchange(id,cost){
@@ -3813,7 +3845,7 @@ function performShinjuDraw(count){
  if(gachaCoins<cost){alert('木下コインが足りません。');return}
  gachaCoins-=cost;
  const rewards=[];
- for(let i=0;i<n;i++)rewards.push(shinjuDrawOne());
+ for(let i=0;i<n;i++)rewards.push(shinjuDrawOne(shinjuSelectedEssence));
  shinjuPoints+=n;
  saveShinjuState();
  if(typeof missionTrack==='function')missionTrack('gachaBuys',n);
@@ -3829,7 +3861,7 @@ function showShinjuReveal(rewards){
  const old=document.getElementById('shinjuRevealOverlay');if(old)old.remove();
  const hasUR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
  const hasSSR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='SSR');
- const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&(r.item?.id===SHINJU_UR_COSTUME.id||r.item?.id===SHINJU_UR_ACCESSORY.id));
+ const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
  const tier=hasLimited?'UR':hasUR?'UR':hasSSR?'SSR':'NORMAL';
  const ov=document.createElement('div');ov.id='shinjuRevealOverlay';
  ov.innerHTML='<div class="shinjuRevealBox tier-'+tier+'"><div class="shinjuRevealTitle">'+(tier==='UR'?'🔥🌟✨ 限定UR確定！ ✨🌟🔥':tier==='SSR'?'💜💎 SSR衣装確定！ 💎💜':'✨ 真髄')+'</div><div class="shinjuRevealRays">✦　✧　✦　✧　✦</div><div class="shinjuRevealOrb">'+(tier==='UR'?'👑':tier==='SSR'?'💎':'✨')+'</div><div class="shinjuRevealText">'+(tier==='UR'?'限定UR報酬を獲得！':tier==='SSR'?'SSR衣装を獲得！':'開封中…')+'</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
@@ -3840,7 +3872,7 @@ function showShinjuReveal(rewards){
  const list=ov.querySelector('.shinjuRevealList'),txt=ov.querySelector('.shinjuRevealText');
  if(tier!=='NORMAL'){txt.style.fontWeight='900';txt.style.fontSize='1.15em';txt.style.textShadow=tier==='UR'?'0 0 18px #facc15':'0 0 12px #c084fc';}
  rewards.forEach((reward,i)=>setTimeout(()=>{const d=document.createElement('div');d.className='shinjuRevealReward';d.textContent=(i+1)+'. '+reward.label;
- const rarity=reward.item?.rarity||'NORMAL';const limited=reward.item?.id===SHINJU_UR_COSTUME.id||reward.item?.id===SHINJU_UR_ACCESSORY.id;
+ const rarity=reward.item?.rarity||'NORMAL';const limited=reward.item?.rarity==='UR';
  Object.assign(d.style,{padding:limited?'16px':'12px',margin:'8px 0',borderRadius:'12px',background:limited?'linear-gradient(100deg,#fef08a,#facc15,#c084fc,#fef08a)':rarity==='UR'?'linear-gradient(90deg,#fef3c7,#d8b4fe)':rarity==='SSR'?'linear-gradient(90deg,#e9d5ff,#c4b5fd)':'#334155',color:'#111827',fontWeight:'900',fontSize:limited?'1.1em':'1em',border:limited?'3px solid #fef08a':rarity==='SSR'||rarity==='UR'?'2px solid #e9d5ff':'1px solid #475569',boxShadow:limited?'0 0 30px #facc15,0 0 55px rgba(192,132,252,.8)':rarity==='SSR'?'0 0 18px rgba(192,132,252,.7)':rarity==='UR'?'0 0 22px rgba(250,204,21,.7)':'none',animation:limited?'shinjuLimitedPop .55s ease-out':rarity==='SSR'||rarity==='UR'?'shinjuRarePop .45s ease-out':'shinjuPop .35s ease-out'});list.appendChild(d);
  txt.textContent=i===rewards.length-1?'✨ 全ての報酬を獲得しました！':(tier==='UR'?'🌟 特別な報酬を開封中…':tier==='SSR'?'⭐ レア報酬を開封中…':'次の真髄が開きます…');},650+i*220));
  const close=ov.querySelector('#shinjuRevealClose');setTimeout(()=>close.style.display='block',650+rewards.length*220+250);close.onclick=()=>ov.remove();
