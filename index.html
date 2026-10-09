@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.5';
+const GAME_VERSION='v1.5.6';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.6',title:'✨ 真髄演出・レアリティ・図鑑改善',items:['限定UR演出を大幅強化','SSR衣装の重複を20,000コインに変換','フェニックスを超激レアに変更','図鑑の絞り込みを最適化']},
  {date:'2026-10-09',version:'v1.5.5',title:'✨ 真髄を大幅アップデート',items:['UR重複時に15万コインへ変換','衣装・携帯品を自由に装備・取り外し可能に変更','真髄の開封演出を追加','真髄ポイント交換所を追加（限定UR 400pt／SSR衣装 80pt）']},
  {date:'2026-10-09',version:'v1.5.4',title:'✨ 真髄を独立化・SSR衣装を追加',items:['真髄を木下交換所から分離し、専用ボタンと独立画面へ変更','SSR限定衣装を3キャラクター分追加','真髄の提供割合をSSR追加後の100%構成へ更新']},
  {date:'2026-10-09',version:'v1.5.3',title:'✨ 真髄システムを追加',items:['既存の衣装・携帯品を全キャラクターから回収し、真髄から衣装・携帯品を獲得する方式へ変更','1連1,000コイン／11連10,000コインを追加','普通の木下専用の限定UR衣装・限定UR携帯品を追加','限定アイテム各0.2%、色のパワー45%、ノーマルキャラの金15%、XP20%、コイン19.6%の排出率を設定']},
@@ -80,7 +81,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .enemybase{left:14px;background:#555}.playerbase{right:14px}
 .lane{position:absolute;left:0;right:0;bottom:35px;height:5px;background:#6b492d;z-index:1}
 #units{position:absolute;inset:0;z-index:5;pointer-events:none}
-.unit{position:absolute;bottom:40px;width:64px;height:76px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;z-index:5;filter:drop-shadow(2px 3px 1px #333);will-change:left,transform;animation:walkBob .42s ease-in-out infinite alternate}.cosmeticBadge{position:absolute;right:-10px;top:-8px;font-size:16px;z-index:25;pointer-events:none;filter:drop-shadow(0 1px 1px #000)}.cosmeticAura{position:absolute;inset:-8px;border:2px solid var(--character-cosmetic-color,currentColor);border-radius:50%;opacity:.55;pointer-events:none;animation:cosmeticPulse .9s ease-in-out infinite alternate}.cosmeticTrail{position:absolute;left:50%;bottom:12px;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.65;pointer-events:none;animation:cosmeticTrail .45s linear forwards}.cosmeticMoveTrail{position:absolute;left:50%;bottom:8px;width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.45;pointer-events:none;animation:cosmeticMoveTrail .7s ease-out infinite}@keyframes cosmeticMoveTrail{from{transform:translate(-50%,0) scale(1);opacity:.5}to{transform:translate(-50%,18px) scale(.15);opacity:0}}@keyframes cosmeticPulse{from{transform:scale(.9);opacity:.3}to{transform:scale(1.08);opacity:.7}}@keyframes cosmeticTrail{from{transform:translate(-50%,0) scale(1);opacity:.65}to{transform:translate(-50%,14px) scale(.1);opacity:0}}.cosmeticPanel{position:fixed;inset:8%;z-index:300;background:#fff;border:3px solid #334155;border-radius:14px;padding:12px;display:none;flex-direction:column;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.35)}.cosmeticPanel h2{margin:0 0 8px}.cosmeticGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cosmeticCard{border:2px solid #cbd5e1;border-radius:10px;padding:8px;text-align:left;background:#f8fafc}.cosmeticCard.equipped{border-color:#2563eb;background:#eff6ff}.cosmeticCard button{width:100%;margin-top:5px}.cosmeticClose{margin-top:8px;width:100%}.cosmeticSection{font-weight:900;margin:10px 0 5px}.unitNameLabel{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);max-width:150px;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:20;text-shadow:0 1px 1px #000}.enemy .unitNameLabel{background:rgba(110,0,0,.84)}.unit.attacking{animation:attackAnim .22s ease-in-out}.unit.hit{animation:hitAnim .16s ease-out}.base.attacking{animation:baseAttack .22s ease-in-out}.unit>div:last-child{will-change:transform}
+.unit{position:absolute;bottom:40px;width:64px;height:76px;display:flex;align-items:flex-end;justify-content:center;font-size:46px;z-index:5;filter:drop-shadow(2px 3px 1px #333);will-change:left,transform;animation:walkBob .42s ease-in-out infinite alternate}.cosmeticBadge{position:absolute;right:-10px;top:-8px;font-size:16px;z-index:25;pointer-events:none;filter:drop-shadow(0 1px 1px #000)}.cosmeticAura{position:absolute;inset:-15px;border:3px solid var(--character-cosmetic-color,currentColor);border-radius:50%;opacity:.85;pointer-events:none;animation:cosmeticPulse .65s ease-in-out infinite alternate;box-shadow:0 0 12px var(--character-cosmetic-color,currentColor),inset 0 0 10px var(--character-cosmetic-color,currentColor)}.cosmeticAura:before,.cosmeticAura:after{content:'✦';position:absolute;color:var(--character-cosmetic-color,currentColor);font-size:17px;text-shadow:0 0 8px currentColor;animation:cosmeticSpark .7s ease-in-out infinite alternate}.cosmeticAura:before{left:-8px;top:0}.cosmeticAura:after{right:-8px;bottom:0}.cosmeticBadge{font-size:23px!important;right:-13px!important;top:-14px!important;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px var(--character-cosmetic-color,#f59e0b))!important;animation:cosmeticBadgeGlow .7s ease-in-out infinite alternate}.cosmeticTrail{width:16px;height:16px;background:transparent!important;font-size:19px;line-height:1;text-shadow:0 0 8px currentColor;animation:cosmeticTrail .65s ease-out forwards}@keyframes cosmeticSpark{from{transform:scale(.6) rotate(0);opacity:.4}to{transform:scale(1.35) rotate(30deg);opacity:1}}@keyframes cosmeticBadgeGlow{from{transform:scale(.9) rotate(-8deg)}to{transform:scale(1.2) rotate(8deg);filter:drop-shadow(0 0 12px #facc15)}}.cosmeticTrail{position:absolute;left:50%;bottom:12px;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.65;pointer-events:none;animation:cosmeticTrail .45s linear forwards}.cosmeticMoveTrail{position:absolute;left:50%;bottom:8px;width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.45;pointer-events:none;animation:cosmeticMoveTrail .7s ease-out infinite}@keyframes cosmeticMoveTrail{from{transform:translate(-50%,0) scale(1);opacity:.5}to{transform:translate(-50%,18px) scale(.15);opacity:0}}@keyframes cosmeticPulse{from{transform:scale(.9);opacity:.3}to{transform:scale(1.08);opacity:.7}}@keyframes cosmeticTrail{from{transform:translate(-50%,0) scale(1);opacity:.65}to{transform:translate(-50%,14px) scale(.1);opacity:0}}.cosmeticPanel{position:fixed;inset:8%;z-index:300;background:#fff;border:3px solid #334155;border-radius:14px;padding:12px;display:none;flex-direction:column;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.35)}.cosmeticPanel h2{margin:0 0 8px}.cosmeticGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cosmeticCard{border:2px solid #cbd5e1;border-radius:10px;padding:8px;text-align:left;background:#f8fafc}.cosmeticCard.equipped{border-color:#2563eb;background:#eff6ff}.cosmeticCard button{width:100%;margin-top:5px}.cosmeticClose{margin-top:8px;width:100%}.cosmeticSection{font-weight:900;margin:10px 0 5px}.unitNameLabel{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);max-width:150px;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:20;text-shadow:0 1px 1px #000}.enemy .unitNameLabel{background:rgba(110,0,0,.84)}.unit.attacking{animation:attackAnim .22s ease-in-out}.unit.hit{animation:hitAnim .16s ease-out}.base.attacking{animation:baseAttack .22s ease-in-out}.unit>div:last-child{will-change:transform}
 @keyframes walkBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
 @keyframes attackAnim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-5px) scale(1.08)}100%{transform:translateX(2px) scale(.98)}}
 @keyframes hitAnim{0%{filter:drop-shadow(2px 3px 1px #333)}50%{filter:brightness(2) drop-shadow(2px 3px 1px #333)}100%{filter:drop-shadow(2px 3px 1px #333)}}
@@ -302,6 +303,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 @keyframes shinjuRarePulse{0%{transform:scale(1) rotate(-2deg);filter:drop-shadow(0 0 12px currentColor)}100%{transform:scale(1.12) rotate(2deg);filter:drop-shadow(0 0 32px currentColor)}}
 @keyframes shinjuRarePop{0%{transform:scale(.55);opacity:0}65%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 @keyframes shinjuLimitedPop{0%{transform:scale(.25) rotate(-8deg);opacity:0;filter:brightness(2)}55%{transform:scale(1.15) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);filter:brightness(1)}}
+.shinjuRevealRays{font-size:24px;letter-spacing:8px;color:#fde68a;text-shadow:0 0 18px #facc15;animation:shinjuRays .7s ease-in-out infinite alternate}.tier-UR .shinjuRevealTitle{color:#fde68a;font-size:clamp(22px,5vw,32px);text-shadow:0 0 10px #facc15,0 0 24px #c084fc;animation:shinjuRarePulse .55s ease-in-out infinite alternate}.tier-SSR .shinjuRevealTitle{color:#e9d5ff;font-size:clamp(20px,4.5vw,29px);text-shadow:0 0 14px #c084fc}.tier-UR .shinjuRevealOrb{animation:shinjuRarePulse .42s ease-in-out infinite alternate,shinjuOrbGlow 1.1s ease-in-out infinite alternate!important}.tier-SSR .shinjuRevealOrb{animation:shinjuRarePulse .5s ease-in-out infinite alternate!important}@keyframes shinjuRays{from{transform:scale(.92);opacity:.6}to{transform:scale(1.12);opacity:1}}@keyframes shinjuOrbGlow{from{filter:drop-shadow(0 0 15px #facc15) drop-shadow(0 0 30px #c084fc)}to{filter:drop-shadow(0 0 35px #facc15) drop-shadow(0 0 55px #c084fc)}}
 </style></head>
 <body><div id="game">
  <div class="top"><div class="title">木下大戦争</div><div style="display:flex;align-items:center;gap:10px"><button id="audioToggle" type="button" style="font-size:20px;background:#fff;border:2px solid #222;border-radius:9px;padding:4px 8px;cursor:pointer">🔊</button><div class="money">💰 <span id="money">1500</span>/<span id="moneyMax">6000</span>円</div></div></div>
@@ -386,7 +388,7 @@ const cards=[
 
 
 ];
-const PHOENIX_REWARD_CARD={name:"フェニックス",cost:3500,hp:16000,atk:1150,range:100,spd:1.1,interval:1.6,recharge:45,icon:"🐦‍🔥",motion:"super",attackType:"allrange",kb:1,minRange:-70,maxRange:100,trait:"赤・黒",specialReward:true,ability:{name:"不死鳥の炎",desc:"攻撃時、命中した敵の数だけLv1烈波を発生。烈波は射程1〜200で、生成元の攻撃力と能力を引き継ぐ。古代・宇宙・天使に50%で3秒呪い。33%で2秒停止。鈍足・波動・烈波を無効化。",phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowImmune:true,waveImmune:true,surgeImmune:true,curseTargets:["古代","宇宙","天使"]}};
+const PHOENIX_REWARD_CARD={name:"フェニックス",rarity:"超激レア",cost:3500,hp:16000,atk:1150,range:100,spd:1.1,interval:1.6,recharge:45,icon:"🐦‍🔥",motion:"super",attackType:"allrange",kb:1,minRange:-70,maxRange:100,trait:"赤・黒",specialReward:true,ability:{name:"不死鳥の炎",desc:"攻撃時、命中した敵の数だけLv1烈波を発生。烈波は射程1〜200で、生成元の攻撃力と能力を引き継ぐ。古代・宇宙・天使に50%で3秒呪い。33%で2秒停止。鈍足・波動・烈波を無効化。",phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowImmune:true,waveImmune:true,surgeImmune:true,curseTargets:["古代","宇宙","天使"]}};
 // フェニックスは全カード登録後に末尾へ追加します。既存キャラの配列IDずれを防止します。
 
 // 日本編クリア報酬キャラクター（3体ともここで新規定義）
@@ -1702,22 +1704,50 @@ function closeKinoshitaBook(){
 let kinoshitaBookFilter='all',kinoshitaBookQuery='',kinoshitaBookRarity='all',kinoshitaBookSort='number';
 function openKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(!el)return;document.getElementById('start').style.display='none';el.style.display='flex';renderKinoshitaBook()}
 function closeKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(el)el.style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()}
+function displayCharacterRarity(c){
+ const r=String(c?.rarity||'ノーマル');
+ if(['基本','N','NORMAL','ノーマル'].includes(r))return 'ノーマル';
+ if(['R','レア'].includes(r))return 'レア';
+ if(['SR','激レア'].includes(r))return '激レア';
+ if(['SSR','UR','超激レア'].includes(r))return '超激レア';
+ if(['LR','伝説レア'].includes(r))return '伝説レア';
+ return r;
+}
 function renderKinoshitaBook(){
- const count=document.getElementById('kinoshitaBookCount'),grid=document.getElementById('kinoshitaBookGrid');if(!grid)return;
- const ownedCount=ownedFlags.filter(Boolean).length;
+ const count=document.getElementById('kinoshitaBookCount'),grid=document.getElementById('kinoshitaBookGrid');
+ if(!grid)return;
+ const ownedCount=cards.reduce((n,c,i)=>n+(hasCharacter(i)?1:0),0);
  if(count)count.textContent=ownedCount+' / '+cards.length+'体';
- const q=kinoshitaBookQuery.trim().toLowerCase();
- const indexes=cards.map((c,i)=>i).filter(i=>{
-  const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',text=[c.name,c.trait||'無',c.series||'通常木下',rarity,c.ability?.name||'',c.ability?.desc||''].join(' ').toLowerCase();
-  return (kinoshitaBookFilter==='all'||(kinoshitaBookFilter==='owned'&&have)||(kinoshitaBookFilter==='locked'&&!have))&&(kinoshitaBookRarity==='all'||rarity===kinoshitaBookRarity)&&(!q||text.includes(q));
- });
- indexes.sort((a,b)=>kinoshitaBookSort==='name'?cards[a].name.localeCompare(cards[b].name,'ja'):kinoshitaBookSort==='rarity'?(String(cards[a].rarity||'').localeCompare(String(cards[b].rarity||''))):a-b);
+ const q=String(kinoshitaBookQuery||'').trim().toLocaleLowerCase('ja');
+ const indexes=[];
+ for(let i=0;i<cards.length;i++){
+  const c=cards[i];if(!c)continue;
+  const have=hasCharacter(i),rarity=displayCharacterRarity(c);
+  const text=[c.name,c.trait||'無',c.series||'通常木下',rarity,c.rarity||'',c.ability?.name||'',c.ability?.desc||''].join(' ').toLocaleLowerCase('ja');
+  if(kinoshitaBookFilter==='owned'&&!have)continue;
+  if(kinoshitaBookFilter==='locked'&&have)continue;
+  if(kinoshitaBookRarity!=='all'&&rarity!==kinoshitaBookRarity)continue;
+  if(q&&!text.includes(q))continue;
+  indexes.push(i);
+ }
+ const order={'ノーマル':0,'レア':1,'激レア':2,'超激レア':3,'伝説レア':4};
+ indexes.sort((a,b)=>kinoshitaBookSort==='name'?String(cards[a].name||'').localeCompare(String(cards[b].name||''),'ja'):kinoshitaBookSort==='rarity'?(order[displayCharacterRarity(cards[a])]??99)-(order[displayCharacterRarity(cards[b])]??99)||a-b:a-b);
  document.querySelectorAll('[data-book-filter]').forEach(b=>b.classList.toggle('active',b.dataset.bookFilter===kinoshitaBookFilter));
- const rarities=[...new Set(cards.map(c=>c.rarity||'基本'))];
- const toolbar=document.getElementById('kinoshitaBookToolbar');if(toolbar&&!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option>'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option></select>';toolbar.dataset.ready='1';const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');s.oninput=()=>{kinoshitaBookQuery=s.value;renderKinoshitaBook()};r.onchange=()=>{kinoshitaBookRarity=r.value;renderKinoshitaBook()};o.onchange=()=>{kinoshitaBookSort=o.value;renderKinoshitaBook()}}
- const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');if(s)s.value=kinoshitaBookQuery;if(r)r.value=kinoshitaBookRarity;if(o)o.value=kinoshitaBookSort;
- if(!indexes.length){grid.innerHTML='<div class="bookEmpty">条件に一致する木下はいません。</div>';return}
- grid.innerHTML=indexes.map(i=>{const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');if(!have)return '<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div><div class="bookLockedHint">入手すると詳細性能を閲覧できます</div></div>';return '<button type="button" class="kinoshitaBookCard owned" data-book-char="'+i+'"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">'+rarity+'</span><div class="bookIcon">'+c.icon+'</div><div class="bookName">'+c.name+'</div><div class="bookSeries">'+(c.series||'通常木下')+'</div><div class="bookMiniStats"><span>HP <b>'+Number(statAt(i,'hp')).toLocaleString()+'</b></span><span>攻撃 <b>'+Number(statAt(i,'atk')).toLocaleString()+'</b></span><span>射程 <b>'+statAt(i,'range')+'</b></span><span>コスト <b>'+c.cost+'円</b></span></div><div class="bookAbility">⭐ '+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</div></button>'}).join('');
+ const rarities=['ノーマル','レア','激レア','超激レア','伝説レア'];
+ const toolbar=document.getElementById('kinoshitaBookToolbar');
+ if(toolbar){
+  if(!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" autocomplete="off" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option></select>';toolbar.dataset.ready='1';}
+  const qel=document.getElementById('kinoshitaBookSearch'),rel=document.getElementById('kinoshitaBookRarity'),sel=document.getElementById('kinoshitaBookSort');
+  if(qel){qel.value=kinoshitaBookQuery;qel.oninput=()=>{kinoshitaBookQuery=qel.value;renderKinoshitaBook()};}
+  if(rel){rel.value=kinoshitaBookRarity;rel.onchange=()=>{kinoshitaBookRarity=rel.value;renderKinoshitaBook()};}
+  if(sel){sel.value=kinoshitaBookSort;sel.onchange=()=>{kinoshitaBookSort=sel.value;renderKinoshitaBook()};}
+ }
+ if(!indexes.length){grid.innerHTML='<div class="bookEmpty">条件に一致する木下はいません。検索語や絞り込み条件を変更してください。</div>';return;}
+ grid.innerHTML=indexes.map(i=>{
+  const c=cards[i],have=hasCharacter(i),rarity=displayCharacterRarity(c),bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');
+  if(!have)return '<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div><div class="bookLockedHint">入手すると詳細性能を閲覧できます</div></div>';
+  return '<button type="button" class="kinoshitaBookCard owned" data-book-char="'+i+'"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">'+rarity+'</span><div class="bookIcon">'+c.icon+'</div><div class="bookName">'+c.name+'</div><div class="bookSeries">'+(c.series||'通常木下')+'</div><div class="bookMiniStats"><span>HP <b>'+Number(statAt(i,'hp')).toLocaleString()+'</b></span><span>攻撃 <b>'+Number(statAt(i,'atk')).toLocaleString()+'</b></span><span>射程 <b>'+statAt(i,'range')+'</b></span><span>コスト <b>'+c.cost+'円</b></span></div><div class="bookAbility">⭐ '+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</div></button>';
+ }).join('');
  grid.querySelectorAll('[data-book-char]').forEach(b=>b.onclick=()=>showCharacterDetail(Number(b.dataset.bookChar)));
 }
 function renderFormation(){
@@ -3213,7 +3243,7 @@ function openGacha(){
  g.style.display='flex';
  renderGacha();
 }
-function rarityLabel(r){return r==='R'?'レア':r==='SR'?'激レア':r==='SSR'?'超激レア':r==='LR'?'伝説レア':(r||'基本');}
+function rarityLabel(r){if(r==='R')return 'レア';if(r==='SR')return '激レア';if(r==='SSR'||r==='UR')return '超激レア';if(r==='LR')return '伝説レア';if(!r||r==='基本'||r==='N'||r==='NORMAL')return 'ノーマル';return r;}
 let gachaShopMode='normal';
 function renderGacha(){
  const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
@@ -3730,9 +3760,9 @@ function shinjuDrawOne(){
  let reward;
  if(r<0.2){const item=SHINJU_UR_COSTUME;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR衣装が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};}
  }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR携帯品が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};}
- }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
- }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
- }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
+ }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
+ }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
+ }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
  }else if(r<48.4){reward=shinjuRandomPower();
  }else if(r<63.4){reward=shinjuRandomGold();
  }else if(r<83.4){const xp=shinjuRandomInt(100,10000);playerXP+=xp;reward={type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};
@@ -3793,13 +3823,13 @@ function performShinjuDraw(count){
 }
 function showShinjuReveal(rewards){
  const old=document.getElementById('shinjuRevealOverlay');if(old)old.remove();
- const hasUR=rewards.some(r=>r.item?.rarity==='UR');
- const hasSSR=rewards.some(r=>r.item?.rarity==='SSR');
- const hasLimited=rewards.some(r=>r.item?.id===SHINJU_UR_COSTUME.id||r.item?.id===SHINJU_UR_ACCESSORY.id);
+ const hasUR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
+ const hasSSR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='SSR');
+ const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&(r.item?.id===SHINJU_UR_COSTUME.id||r.item?.id===SHINJU_UR_ACCESSORY.id));
  const tier=hasLimited?'UR':hasUR?'UR':hasSSR?'SSR':'NORMAL';
  const ov=document.createElement('div');ov.id='shinjuRevealOverlay';
- ov.innerHTML='<div class="shinjuRevealBox tier-'+tier+'"><div class="shinjuRevealTitle">'+(tier==='UR'?'🌟🌟🌟 UR確定！':tier==='SSR'?'⭐ SSR以上確定！':'✨ 真髄')+'</div><div class="shinjuRevealOrb">'+(tier==='UR'?'👑':tier==='SSR'?'⭐':'✨')+'</div><div class="shinjuRevealText">'+(tier==='UR'?'超激レア報酬を確認！':tier==='SSR'?'SSR以上の報酬を確認！':'開封中…')+'</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
- Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'9999',background:tier==='UR'?'radial-gradient(circle,rgba(250,204,21,.28),rgba(2,6,23,.96) 55%)':tier==='SSR'?'radial-gradient(circle,rgba(168,85,247,.25),rgba(2,6,23,.96) 55%)':'rgba(2,6,23,.92)',display:'flex',alignItems:'center',justifyContent:'center',padding:'18px'});
+ ov.innerHTML='<div class="shinjuRevealBox tier-'+tier+'"><div class="shinjuRevealTitle">'+(tier==='UR'?'🔥🌟✨ 限定UR確定！ ✨🌟🔥':tier==='SSR'?'💜💎 SSR衣装確定！ 💎💜':'✨ 真髄')+'</div><div class="shinjuRevealRays">✦　✧　✦　✧　✦</div><div class="shinjuRevealOrb">'+(tier==='UR'?'👑':tier==='SSR'?'💎':'✨')+'</div><div class="shinjuRevealText">'+(tier==='UR'?'限定UR報酬を獲得！':tier==='SSR'?'SSR衣装を獲得！':'開封中…')+'</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
+ Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'9999',background:tier==='UR'?'radial-gradient(circle at center,rgba(250,204,21,.48),rgba(168,85,247,.25) 35%,rgba(2,6,23,.97) 72%)':tier==='SSR'?'radial-gradient(circle at center,rgba(192,132,252,.42),rgba(59,7,100,.4) 35%,rgba(2,6,23,.97) 72%)':'rgba(2,6,23,.92)',display:'flex',alignItems:'center',justifyContent:'center',padding:'18px'});
  document.body.appendChild(ov);
  const box=ov.querySelector('.shinjuRevealBox');Object.assign(box.style,{width:'min(92vw,560px)',maxHeight:'86vh',overflow:'auto',background:'#111827',border:tier==='UR'?'5px solid #facc15':tier==='SSR'?'4px solid #c084fc':'3px solid #60a5fa',borderRadius:'20px',padding:'22px',textAlign:'center',color:'#fff',boxShadow:tier==='UR'?'0 0 90px #facc15,0 0 180px rgba(250,204,21,.6)':tier==='SSR'?'0 0 65px #c084fc':'0 0 40px rgba(96,165,250,.45)'});
  const orb=ov.querySelector('.shinjuRevealOrb');Object.assign(orb.style,{fontSize:tier==='UR'?'100px':'82px',margin:'18px',filter:tier==='UR'?'drop-shadow(0 0 24px #facc15)':tier==='SSR'?'drop-shadow(0 0 18px #c084fc)':'none',animation:tier==='NORMAL'?'shinjuPulse .65s ease-in-out infinite alternate':'shinjuRarePulse .55s ease-in-out infinite alternate'});
