@@ -1703,22 +1703,50 @@ function closeKinoshitaBook(){
 let kinoshitaBookFilter='all',kinoshitaBookQuery='',kinoshitaBookRarity='all',kinoshitaBookSort='number';
 function openKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(!el)return;document.getElementById('start').style.display='none';el.style.display='flex';renderKinoshitaBook()}
 function closeKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(el)el.style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()}
+function displayCharacterRarity(c){
+ const r=String(c?.rarity||'ノーマル');
+ if(['基本','N','NORMAL','ノーマル'].includes(r))return 'ノーマル';
+ if(['R','レア'].includes(r))return 'レア';
+ if(['SR','激レア'].includes(r))return '激レア';
+ if(['SSR','UR','超激レア'].includes(r))return '超激レア';
+ if(['LR','伝説レア'].includes(r))return '伝説レア';
+ return r;
+}
 function renderKinoshitaBook(){
- const count=document.getElementById('kinoshitaBookCount'),grid=document.getElementById('kinoshitaBookGrid');if(!grid)return;
- const ownedCount=ownedFlags.filter(Boolean).length;
+ const count=document.getElementById('kinoshitaBookCount'),grid=document.getElementById('kinoshitaBookGrid');
+ if(!grid)return;
+ const ownedCount=cards.reduce((n,c,i)=>n+(hasCharacter(i)?1:0),0);
  if(count)count.textContent=ownedCount+' / '+cards.length+'体';
- const q=kinoshitaBookQuery.trim().toLowerCase();
- const indexes=cards.map((c,i)=>i).filter(i=>{
-  const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',text=[c.name,c.trait||'無',c.series||'通常木下',rarity,c.ability?.name||'',c.ability?.desc||''].join(' ').toLowerCase();
-  return (kinoshitaBookFilter==='all'||(kinoshitaBookFilter==='owned'&&have)||(kinoshitaBookFilter==='locked'&&!have))&&(kinoshitaBookRarity==='all'||rarity===kinoshitaBookRarity)&&(!q||text.includes(q));
- });
- indexes.sort((a,b)=>kinoshitaBookSort==='name'?cards[a].name.localeCompare(cards[b].name,'ja'):kinoshitaBookSort==='rarity'?(String(cards[a].rarity||'').localeCompare(String(cards[b].rarity||''))):a-b);
+ const q=String(kinoshitaBookQuery||'').trim().toLocaleLowerCase('ja');
+ const indexes=[];
+ for(let i=0;i<cards.length;i++){
+  const c=cards[i];if(!c)continue;
+  const have=hasCharacter(i),rarity=displayCharacterRarity(c);
+  const text=[c.name,c.trait||'無',c.series||'通常木下',rarity,c.rarity||'',c.ability?.name||'',c.ability?.desc||''].join(' ').toLocaleLowerCase('ja');
+  if(kinoshitaBookFilter==='owned'&&!have)continue;
+  if(kinoshitaBookFilter==='locked'&&have)continue;
+  if(kinoshitaBookRarity!=='all'&&rarity!==kinoshitaBookRarity)continue;
+  if(q&&!text.includes(q))continue;
+  indexes.push(i);
+ }
+ const order={'ノーマル':0,'レア':1,'激レア':2,'超激レア':3,'伝説レア':4};
+ indexes.sort((a,b)=>kinoshitaBookSort==='name'?String(cards[a].name||'').localeCompare(String(cards[b].name||''),'ja'):kinoshitaBookSort==='rarity'?(order[displayCharacterRarity(cards[a])]??99)-(order[displayCharacterRarity(cards[b])]??99)||a-b:a-b);
  document.querySelectorAll('[data-book-filter]').forEach(b=>b.classList.toggle('active',b.dataset.bookFilter===kinoshitaBookFilter));
- const rarities=[...new Set(cards.map(c=>c.rarity||'基本'))];
- const toolbar=document.getElementById('kinoshitaBookToolbar');if(toolbar&&!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option>'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option></select>';toolbar.dataset.ready='1';const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');s.oninput=()=>{kinoshitaBookQuery=s.value;renderKinoshitaBook()};r.onchange=()=>{kinoshitaBookRarity=r.value;renderKinoshitaBook()};o.onchange=()=>{kinoshitaBookSort=o.value;renderKinoshitaBook()}}
- const s=document.getElementById('kinoshitaBookSearch'),r=document.getElementById('kinoshitaBookRarity'),o=document.getElementById('kinoshitaBookSort');if(s)s.value=kinoshitaBookQuery;if(r)r.value=kinoshitaBookRarity;if(o)o.value=kinoshitaBookSort;
- if(!indexes.length){grid.innerHTML='<div class="bookEmpty">条件に一致する木下はいません。</div>';return}
- grid.innerHTML=indexes.map(i=>{const c=cards[i],have=hasCharacter(i),rarity=c.rarity||'基本',bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');if(!have)return '<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div><div class="bookLockedHint">入手すると詳細性能を閲覧できます</div></div>';return '<button type="button" class="kinoshitaBookCard owned" data-book-char="'+i+'"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">'+rarity+'</span><div class="bookIcon">'+c.icon+'</div><div class="bookName">'+c.name+'</div><div class="bookSeries">'+(c.series||'通常木下')+'</div><div class="bookMiniStats"><span>HP <b>'+Number(statAt(i,'hp')).toLocaleString()+'</b></span><span>攻撃 <b>'+Number(statAt(i,'atk')).toLocaleString()+'</b></span><span>射程 <b>'+statAt(i,'range')+'</b></span><span>コスト <b>'+c.cost+'円</b></span></div><div class="bookAbility">⭐ '+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</div></button>'}).join('');
+ const rarities=['ノーマル','レア','激レア','超激レア','伝説レア'];
+ const toolbar=document.getElementById('kinoshitaBookToolbar');
+ if(toolbar){
+  if(!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" autocomplete="off" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option></select>';toolbar.dataset.ready='1';}
+  const qel=document.getElementById('kinoshitaBookSearch'),rel=document.getElementById('kinoshitaBookRarity'),sel=document.getElementById('kinoshitaBookSort');
+  if(qel){qel.value=kinoshitaBookQuery;qel.oninput=()=>{kinoshitaBookQuery=qel.value;renderKinoshitaBook()};}
+  if(rel){rel.value=kinoshitaBookRarity;rel.onchange=()=>{kinoshitaBookRarity=rel.value;renderKinoshitaBook()};}
+  if(sel){sel.value=kinoshitaBookSort;sel.onchange=()=>{kinoshitaBookSort=sel.value;renderKinoshitaBook()};}
+ }
+ if(!indexes.length){grid.innerHTML='<div class="bookEmpty">条件に一致する木下はいません。検索語や絞り込み条件を変更してください。</div>';return;}
+ grid.innerHTML=indexes.map(i=>{
+  const c=cards[i],have=hasCharacter(i),rarity=displayCharacterRarity(c),bookNo=String(c===PHOENIX_REWARD_CARD?cards.length:Number(c.id??i+1)).padStart(3,'0');
+  if(!have)return '<div class="kinoshitaBookCard locked"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">？？？</span><div class="bookIcon">❔</div><div class="bookName">？？？？？？</div><div class="bookSeries">未入手</div><div class="bookLockedHint">入手すると詳細性能を閲覧できます</div></div>';
+  return '<button type="button" class="kinoshitaBookCard owned" data-book-char="'+i+'"><span class="bookNo">図鑑No.'+bookNo+'</span><span class="bookRarity">'+rarity+'</span><div class="bookIcon">'+c.icon+'</div><div class="bookName">'+c.name+'</div><div class="bookSeries">'+(c.series||'通常木下')+'</div><div class="bookMiniStats"><span>HP <b>'+Number(statAt(i,'hp')).toLocaleString()+'</b></span><span>攻撃 <b>'+Number(statAt(i,'atk')).toLocaleString()+'</b></span><span>射程 <b>'+statAt(i,'range')+'</b></span><span>コスト <b>'+c.cost+'円</b></span></div><div class="bookAbility">⭐ '+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</div></button>';
+ }).join('');
  grid.querySelectorAll('[data-book-char]').forEach(b=>b.onclick=()=>showCharacterDetail(Number(b.dataset.bookChar)));
 }
 function renderFormation(){
