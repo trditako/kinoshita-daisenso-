@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.9';
+const GAME_VERSION='v1.8.0';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.0',title:'📝 プレイヤーアンケートを追加',items:['7項目のアンケートを追加','回答をSupabaseに保存してほかのプレイヤーにも公開','アンケート1回の回答につき10,000コインを付与']},
  {date:'2026-10-09',version:'v1.7.9',title:'⚡ ハーランドの金ボタンと第二形態の性能を調整',items:['キャラクター詳細にレアリティ別の金を使うボタンを追加','第二形態の戦闘ステータスを大幅に引き下げ']},
  {date:'2026-10-09',version:'v1.7.8',title:'🔒 突撃ハーランド木下の進化条件を修正',items:['第二形態への進化にLv30と最大Lv30を必須化','詳細画面にレベル条件と素材条件を表示']},
  {date:'2026-10-09',version:'v1.7.7',title:'⚡ 突撃ハーランド木下に第二形態を追加',items:['赤・青・黄・緑・紫のパワーを各15個消費して進化','高HP・高火力・高速移動・長射程に加え、波動と複数妨害・耐性を追加','進化後も詳細画面から第一形態へ切り替え可能']},
@@ -327,7 +328,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下交換</button><button id="shinjuBtn" class="formationBtn" style="background:#a855f7!important;color:#fff!important">✨ 真髄</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px;background:#fff7ed;border-color:#f97316;color:#7c2d12">🎃 ハロウィンナイト2026：2026年11月15日まで開催。イベントステージでキャンディを集めて限定報酬と交換！</div><div class="owned" id="halloweenCandyBanner" style="margin-top:6px;background:#4c1d95;border-color:#c084fc;color:#fff">🍬 ハロウィンキャンディ：<span id="halloweenCandyCount">0</span>個 <button type="button" onclick="openHalloweenShop()" style="margin-left:8px;background:#facc15;color:#422006;border:0;border-radius:8px;padding:8px;font-weight:900">🎁 交換所</button></div><div class="owned" style="margin-top:4px">特別ステージ・強化素材ステージもここに表示されます。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="surveyBtn" class="formationBtn" style="background:#0f766e!important;color:#fff!important">📝 プレイヤーアンケート（回答で10,000コイン）</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="kinoshitaBookBtn" class="formationBtn" style="background:#dbeafe!important;color:#102a43!important">📖 木下図鑑</button><h2 style="margin:12px 0 4px;color:#135a9e">🇯🇵 日本編</h2><div class="chapterTabs"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><button id="enemyBookBtn" class="formationBtn" style="background:#c4f1d0!important;color:#10251b!important">📚 敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下交換</button><button id="shinjuBtn" class="formationBtn" style="background:#a855f7!important;color:#fff!important">✨ 真髄</button><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px;background:#fff7ed;border-color:#f97316;color:#7c2d12">🎃 ハロウィンナイト2026：2026年11月15日まで開催。イベントステージでキャンディを集めて限定報酬と交換！</div><div class="owned" id="halloweenCandyBanner" style="margin-top:6px;background:#4c1d95;border-color:#c084fc;color:#fff">🍬 ハロウィンキャンディ：<span id="halloweenCandyCount">0</span>個 <button type="button" onclick="openHalloweenShop()" style="margin-left:8px;background:#facc15;color:#422006;border:0;border-radius:8px;padding:8px;font-weight:900">🎁 交換所</button></div><div class="owned" style="margin-top:4px">特別ステージ・強化素材ステージもここに表示されます。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="updateLog" class="overlay" style="display:none;z-index:220"><div class="panel"><h2 style="margin:0 0 10px;color:#135a9e">📝 バージョン・アップデートログ</h2><div id="updateLogBody"></div><button id="updateLogClose" class="updateClose">閉じる</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
@@ -4147,4 +4148,57 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
 .hwShopEmpty{grid-column:1/-1;text-align:center;padding:24px;color:#ddd6fe}
 @media(max-width:600px){.hwShopOverlay{padding:5px}.hwShopPanel{max-height:98dvh;padding:10px;border-radius:14px}.hwShopGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.hwShopCard{padding:8px}.hwShopIcon{height:46px;font-size:30px}.hwShopCard h3{font-size:13px}.hwShopCard p{font-size:10px}.hwShopCard button{font-size:12px;padding:10px 4px}.hwShopBalance{font-size:13px}.hwShopBalance strong{font-size:21px}.hwShopFooter{align-items:flex-start}.hwShopFooter span{max-width:65%}}
 </style>
-</body></html>
+<div id="playerSurveyModal" class="overlay" style="display:none;z-index:10050"><div class="panel" style="max-width:720px;max-height:92vh;overflow:auto;text-align:left"><h1>📝 プレイヤーアンケート</h1><p>回答を送信すると10,000コインを獲得できます。各アンケートにつき1回のみ回答できます。現在は端末内に保存されます。Supabase復旧後に全プレイヤー共有を有効化します。</p><div id="surveyStatus" class="owned">回答状況を確認しています…</div><form id="playerSurveyForm"><label>質問1：現在のゲームの面白さ <select name="q1" required><option value="">選択してください</option><option>とても面白い</option><option>面白い</option><option>普通</option><option>少しつまらない</option><option>つまらない</option></select></label><label>質問2：追加して欲しい要素 <textarea name="q2" maxlength="1000" rows="3" placeholder="追加してほしい機能・ステージなど"></textarea></label><label>質問3：弱体化して欲しいキャラ <input name="q3" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問4：強化して欲しいキャラ <input name="q4" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問5：変更して欲しいUIや最適化して欲しいもの <textarea name="q5" maxlength="1000" rows="3" placeholder="見づらい画面、重い処理、操作など"></textarea></label><label>質問6：ゲームに対する思い <textarea name="q6" maxlength="1500" rows="3" placeholder="自由に書いてください"></textarea></label><label>質問7：その他 <textarea name="q7" maxlength="1000" rows="3" placeholder="その他の意見（任意）"></textarea></label><button id="surveySubmitBtn" type="submit" class="formationBtn" style="background:#0f766e!important;color:#fff!important">回答を送信して10,000コインを受け取る</button></form><h2>📊 みんなの回答</h2><div id="surveyPublicResults" class="owned">回答を読み込み中…</div><button id="surveyCloseBtn" type="button" class="backbtn">閉じる</button></div></div><script>
+(function(){
+ const SURVEY_ID='player-feedback-2026-10-v1';
+ const STORAGE_KEY='kinoshitaSurveyResponsesV1';
+ const ANSWERED_KEY='kinoshitaSurveyAnsweredV1';
+ const el=id=>document.getElementById(id);
+ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ const readRows=()=>{try{const rows=JSON.parse(storage.getItem(STORAGE_KEY)||'[]');return Array.isArray(rows)?rows:[]}catch(e){return[]}};
+ const readAnswered=()=>{try{return JSON.parse(storage.getItem(ANSWERED_KEY)||'{}')||{}}catch(e){return{}}};
+ const saveRows=rows=>storage.setItem(STORAGE_KEY,JSON.stringify(rows));
+ function renderResults(){
+  const rows=readRows();
+  el('surveyPublicResults').innerHTML=rows.length?rows.slice().reverse().map((r,i)=>'<div style="padding:10px;margin:8px 0;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc"><b>回答 '+(rows.length-i)+' ・ '+esc(new Date(r.created_at).toLocaleDateString('ja-JP'))+'</b>'+[['面白さ','q1'],['追加要素','q2'],['弱体化希望','q3'],['強化希望','q4'],['UI・最適化','q5'],['ゲームへの思い','q6'],['その他','q7']].map(([label,key])=>r.answers?.[key]?'<p style="white-space:pre-wrap;margin:6px 0"><b>'+label+'：</b>'+esc(r.answers[key])+'</p>':'').join('')+'</div>').join(''):'まだ回答はありません。';
+  el('surveyStatus').dataset.mode='local';
+ }
+ function open(){
+  el('playerSurveyModal').style.display='flex';
+  el('playerSurveyForm').style.display='block';
+  el('surveySubmitBtn').disabled=false;
+  const answered=readAnswered();
+  if(answered[SURVEY_ID]){
+   el('surveyStatus').textContent='このアンケートには回答済みです。報酬も受け取り済みです。';
+   el('playerSurveyForm').style.display='none';
+  }else{
+   el('surveyStatus').textContent='未回答です。送信すると、この端末に回答が保存され、10,000コインを獲得できます。現在はSupabaseの利用制限中のため、回答はこの端末内だけに保存されます。他のプレイヤーとは共有されません。';
+  }
+  renderResults();
+ }
+ el('surveyBtn')?.addEventListener('click',open);
+ el('surveyCloseBtn')?.addEventListener('click',()=>el('playerSurveyModal').style.display='none');
+ el('playerSurveyForm')?.addEventListener('submit',ev=>{
+  ev.preventDefault();const btn=el('surveySubmitBtn');if(btn.disabled)return;
+  const answered=readAnswered();
+  if(answered[SURVEY_ID]){el('surveyStatus').textContent='このアンケートには回答済みです。';el('playerSurveyForm').style.display='none';return;}
+  btn.disabled=true;btn.textContent='保存中…';
+  const fd=new FormData(ev.currentTarget),answers={};for(let i=1;i<=7;i++)answers['q'+i]=String(fd.get('q'+i)||'').trim();
+  if(!answers.q1){alert('質問1に回答してください。');btn.disabled=false;btn.textContent='回答を送信して10,000コインを受け取る';return;}
+  try{
+   const rows=readRows();
+   rows.push({survey_id:SURVEY_ID,player_id:playerRankingId,answers,created_at:new Date().toISOString()});
+   saveRows(rows);
+   answered[SURVEY_ID]=true;storage.setItem(ANSWERED_KEY,JSON.stringify(answered));
+   gachaCoins+=10000;save();
+   if(typeof renderOwnedStart==='function')renderOwnedStart();
+   if(typeof renderGacha==='function')renderGacha();
+   el('surveyStatus').textContent='回答をこの端末に保存しました。10,000コインを付与しました！';
+   el('playerSurveyForm').style.display='none';renderResults();
+   alert('アンケート回答ありがとうございます！10,000コインを獲得しました。');
+  }catch(e){
+   el('surveyStatus').textContent='保存できませんでした。端末の空き容量やブラウザ設定を確認してください。';
+   btn.disabled=false;btn.textContent='回答を送信して10,000コインを受け取る';
+  }
+ });
+})();</script></body></html>
