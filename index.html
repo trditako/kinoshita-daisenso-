@@ -4148,44 +4148,57 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
 .hwShopEmpty{grid-column:1/-1;text-align:center;padding:24px;color:#ddd6fe}
 @media(max-width:600px){.hwShopOverlay{padding:5px}.hwShopPanel{max-height:98dvh;padding:10px;border-radius:14px}.hwShopGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.hwShopCard{padding:8px}.hwShopIcon{height:46px;font-size:30px}.hwShopCard h3{font-size:13px}.hwShopCard p{font-size:10px}.hwShopCard button{font-size:12px;padding:10px 4px}.hwShopBalance{font-size:13px}.hwShopBalance strong{font-size:21px}.hwShopFooter{align-items:flex-start}.hwShopFooter span{max-width:65%}}
 </style>
-<div id="playerSurveyModal" class="overlay" style="display:none;z-index:10050"><div class="panel" style="max-width:720px;max-height:92vh;overflow:auto;text-align:left"><h1>📝 プレイヤーアンケート</h1><p>回答を送信すると10,000コインを獲得できます。各アンケートにつき1回のみ回答できます。回答内容はほかのプレイヤーにも公開されます。</p><div id="surveyStatus" class="owned">回答状況を確認しています…</div><form id="playerSurveyForm"><label>質問1：現在のゲームの面白さ <select name="q1" required><option value="">選択してください</option><option>とても面白い</option><option>面白い</option><option>普通</option><option>少しつまらない</option><option>つまらない</option></select></label><label>質問2：追加して欲しい要素 <textarea name="q2" maxlength="1000" rows="3" placeholder="追加してほしい機能・ステージなど"></textarea></label><label>質問3：弱体化して欲しいキャラ <input name="q3" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問4：強化して欲しいキャラ <input name="q4" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問5：変更して欲しいUIや最適化して欲しいもの <textarea name="q5" maxlength="1000" rows="3" placeholder="見づらい画面、重い処理、操作など"></textarea></label><label>質問6：ゲームに対する思い <textarea name="q6" maxlength="1500" rows="3" placeholder="自由に書いてください"></textarea></label><label>質問7：その他 <textarea name="q7" maxlength="1000" rows="3" placeholder="その他の意見（任意）"></textarea></label><button id="surveySubmitBtn" type="submit" class="formationBtn" style="background:#0f766e!important;color:#fff!important">回答を送信して10,000コインを受け取る</button></form><h2>📊 みんなの回答</h2><div id="surveyPublicResults" class="owned">回答を読み込み中…</div><button id="surveyCloseBtn" type="button" class="backbtn">閉じる</button></div></div><script>
+<div id="playerSurveyModal" class="overlay" style="display:none;z-index:10050"><div class="panel" style="max-width:720px;max-height:92vh;overflow:auto;text-align:left"><h1>📝 プレイヤーアンケート</h1><p>回答を送信すると10,000コインを獲得できます。各アンケートにつき1回のみ回答できます。現在は端末内に保存されます。Supabase復旧後に全プレイヤー共有を有効化します。</p><div id="surveyStatus" class="owned">回答状況を確認しています…</div><form id="playerSurveyForm"><label>質問1：現在のゲームの面白さ <select name="q1" required><option value="">選択してください</option><option>とても面白い</option><option>面白い</option><option>普通</option><option>少しつまらない</option><option>つまらない</option></select></label><label>質問2：追加して欲しい要素 <textarea name="q2" maxlength="1000" rows="3" placeholder="追加してほしい機能・ステージなど"></textarea></label><label>質問3：弱体化して欲しいキャラ <input name="q3" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問4：強化して欲しいキャラ <input name="q4" maxlength="200" placeholder="キャラ名・理由（任意）"></label><label>質問5：変更して欲しいUIや最適化して欲しいもの <textarea name="q5" maxlength="1000" rows="3" placeholder="見づらい画面、重い処理、操作など"></textarea></label><label>質問6：ゲームに対する思い <textarea name="q6" maxlength="1500" rows="3" placeholder="自由に書いてください"></textarea></label><label>質問7：その他 <textarea name="q7" maxlength="1000" rows="3" placeholder="その他の意見（任意）"></textarea></label><button id="surveySubmitBtn" type="submit" class="formationBtn" style="background:#0f766e!important;color:#fff!important">回答を送信して10,000コインを受け取る</button></form><h2>📊 みんなの回答</h2><div id="surveyPublicResults" class="owned">回答を読み込み中…</div><button id="surveyCloseBtn" type="button" class="backbtn">閉じる</button></div></div><script>
 (function(){
  const SURVEY_ID='player-feedback-2026-10-v1';
- const endpoint=SUPABASE_REST_URL+'/game_surveys';
+ const STORAGE_KEY='kinoshitaSurveyResponsesV1';
+ const ANSWERED_KEY='kinoshitaSurveyAnsweredV1';
  const el=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
- async function req(url,opts={}){const r=await fetch(url,{...opts,headers:supabaseHeaders(opts.headers||{}),cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return (r.status===204||(r.status===201&&opts.headers?.Prefer==='return=minimal'))?null:r.json();}
- async function loadResults(){
-  try{
-   const rows=await req(endpoint+'?select=answers,created_at&survey_id=eq.'+encodeURIComponent(SURVEY_ID)+'&order=created_at.desc&limit=100');
-   el('surveyPublicResults').innerHTML=rows.length?rows.map((r,i)=>'<div style="padding:10px;margin:8px 0;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc"><b>回答 '+(rows.length-i)+' ・ '+esc(new Date(r.created_at).toLocaleDateString('ja-JP'))+'</b>'+[['面白さ','q1'],['追加要素','q2'],['弱体化希望','q3'],['強化希望','q4'],['UI・最適化','q5'],['ゲームへの思い','q6'],['その他','q7']].map(([label,key])=>r.answers?.[key]?'<p style="white-space:pre-wrap;margin:6px 0"><b>'+label+'：</b>'+esc(r.answers[key])+'</p>':'').join('')+'</div>').join(''):'まだ回答はありません。';
-   return true;
-  }catch(e){el('surveyPublicResults').textContent='回答一覧を取得できません（'+e.message+'）。Supabaseの利用制限中は表示できません。';return false;}
+ const readRows=()=>{try{const rows=JSON.parse(storage.getItem(STORAGE_KEY)||'[]');return Array.isArray(rows)?rows:[]}catch(e){return[]}};
+ const readAnswered=()=>{try{return JSON.parse(storage.getItem(ANSWERED_KEY)||'{}')||{}}catch(e){return{}}};
+ const saveRows=rows=>storage.setItem(STORAGE_KEY,JSON.stringify(rows));
+ function renderResults(){
+  const rows=readRows();
+  el('surveyPublicResults').innerHTML=rows.length?rows.slice().reverse().map((r,i)=>'<div style="padding:10px;margin:8px 0;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc"><b>回答 '+(rows.length-i)+' ・ '+esc(new Date(r.created_at).toLocaleDateString('ja-JP'))+'</b>'+[['面白さ','q1'],['追加要素','q2'],['弱体化希望','q3'],['強化希望','q4'],['UI・最適化','q5'],['ゲームへの思い','q6'],['その他','q7']].map(([label,key])=>r.answers?.[key]?'<p style="white-space:pre-wrap;margin:6px 0"><b>'+label+'：</b>'+esc(r.answers[key])+'</p>':'').join('')+'</div>').join(''):'まだ回答はありません。';
+  el('surveyStatus').dataset.mode='local';
  }
- async function open(){
-  el('playerSurveyModal').style.display='flex';el('surveyStatus').textContent='回答状況を確認しています…';
-  el('playerSurveyForm').style.display='block';el('surveySubmitBtn').disabled=false;
-  try{
-   const rows=await req(endpoint+'?select=id&survey_id=eq.'+encodeURIComponent(SURVEY_ID)+'&player_id=eq.'+encodeURIComponent(playerRankingId)+'&limit=1');
-   if(rows.length){el('surveyStatus').textContent='このアンケートには回答済みです。報酬も受け取り済みです。';el('playerSurveyForm').style.display='none';}
-   else el('surveyStatus').textContent='未回答です。すべての質問に回答して送信してください。送信成功後に10,000コインを付与します。';
-  }catch(e){el('surveyStatus').textContent='回答状況を確認できません（'+e.message+'）。Supabaseの利用制限解除後に再度お試しください。';el('surveySubmitBtn').disabled=true;}
-  await loadResults();
+ function open(){
+  el('playerSurveyModal').style.display='flex';
+  el('playerSurveyForm').style.display='block';
+  el('surveySubmitBtn').disabled=false;
+  const answered=readAnswered();
+  if(answered[SURVEY_ID]){
+   el('surveyStatus').textContent='このアンケートには回答済みです。報酬も受け取り済みです。';
+   el('playerSurveyForm').style.display='none';
+  }else{
+   el('surveyStatus').textContent='未回答です。送信すると、この端末に回答が保存され、10,000コインを獲得できます。現在はSupabaseの利用制限中のため、回答はこの端末内だけに保存されます。他のプレイヤーとは共有されません。';
+  }
+  renderResults();
  }
  el('surveyBtn')?.addEventListener('click',open);
  el('surveyCloseBtn')?.addEventListener('click',()=>el('playerSurveyModal').style.display='none');
- el('playerSurveyForm')?.addEventListener('submit',async ev=>{
-  ev.preventDefault();const btn=el('surveySubmitBtn');if(btn.disabled)return;btn.disabled=true;btn.textContent='送信中…';
+ el('playerSurveyForm')?.addEventListener('submit',ev=>{
+  ev.preventDefault();const btn=el('surveySubmitBtn');if(btn.disabled)return;
+  const answered=readAnswered();
+  if(answered[SURVEY_ID]){el('surveyStatus').textContent='このアンケートには回答済みです。';el('playerSurveyForm').style.display='none';return;}
+  btn.disabled=true;btn.textContent='保存中…';
   const fd=new FormData(ev.currentTarget),answers={};for(let i=1;i<=7;i++)answers['q'+i]=String(fd.get('q'+i)||'').trim();
   if(!answers.q1){alert('質問1に回答してください。');btn.disabled=false;btn.textContent='回答を送信して10,000コインを受け取る';return;}
   try{
-   await req(endpoint,{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({survey_id:SURVEY_ID,player_id:playerRankingId,answers})});
-   gachaCoins+=10000;save();if(typeof renderOwnedStart==='function')renderOwnedStart();if(typeof renderGacha==='function')renderGacha();
-   el('surveyStatus').textContent='回答を保存しました。10,000コインを付与しました！';el('playerSurveyForm').style.display='none';await loadResults();alert('アンケート回答ありがとうございます！10,000コインを獲得しました。');
+   const rows=readRows();
+   rows.push({survey_id:SURVEY_ID,player_id:playerRankingId,answers,created_at:new Date().toISOString()});
+   saveRows(rows);
+   answered[SURVEY_ID]=true;storage.setItem(ANSWERED_KEY,JSON.stringify(answered));
+   gachaCoins+=10000;save();
+   if(typeof renderOwnedStart==='function')renderOwnedStart();
+   if(typeof renderGacha==='function')renderGacha();
+   el('surveyStatus').textContent='回答をこの端末に保存しました。10,000コインを付与しました！';
+   el('playerSurveyForm').style.display='none';renderResults();
+   alert('アンケート回答ありがとうございます！10,000コインを獲得しました。');
   }catch(e){
-   el('surveyStatus').textContent=e.message==='HTTP 409'||e.message==='HTTP 400'?'すでに回答済みか、送信内容に問題があります。回答一覧を再確認してください。':'送信できませんでした（'+e.message+'）。利用制限中は回答を保存できません。';
+   el('surveyStatus').textContent='保存できませんでした。端末の空き容量やブラウザ設定を確認してください。';
    btn.disabled=false;btn.textContent='回答を送信して10,000コインを受け取る';
   }
  });
-})();
-</script></body></html>
+})();</script></body></html>
