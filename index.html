@@ -3823,9 +3823,9 @@ function performShinjuDraw(count){
 }
 function showShinjuReveal(rewards){
  const old=document.getElementById('shinjuRevealOverlay');if(old)old.remove();
- const hasUR=rewards.some(r=>r.item?.rarity==='UR');
- const hasSSR=rewards.some(r=>r.item?.rarity==='SSR');
- const hasLimited=rewards.some(r=>r.item?.id===SHINJU_UR_COSTUME.id||r.item?.id===SHINJU_UR_ACCESSORY.id);
+ const hasUR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
+ const hasSSR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='SSR');
+ const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&(r.item?.id===SHINJU_UR_COSTUME.id||r.item?.id===SHINJU_UR_ACCESSORY.id));
  const tier=hasLimited?'UR':hasUR?'UR':hasSSR?'SSR':'NORMAL';
  const ov=document.createElement('div');ov.id='shinjuRevealOverlay';
  ov.innerHTML='<div class="shinjuRevealBox tier-'+tier+'"><div class="shinjuRevealTitle">'+(tier==='UR'?'🔥🌟✨ 限定UR確定！ ✨🌟🔥':tier==='SSR'?'💜💎 SSR衣装確定！ 💎💜':'✨ 真髄')+'</div><div class="shinjuRevealRays">✦　✧　✦　✧　✦</div><div class="shinjuRevealOrb">'+(tier==='UR'?'👑':tier==='SSR'?'💎':'✨')+'</div><div class="shinjuRevealText">'+(tier==='UR'?'限定UR報酬を獲得！':tier==='SSR'?'SSR衣装を獲得！':'開封中…')+'</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
