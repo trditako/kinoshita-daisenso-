@@ -4089,7 +4089,7 @@ function shinjuRewardHTML(reward,index){
 function renderShinju(){
  const coin=document.getElementById('shinjuCoinText'),result=document.getElementById('shinjuResult'),banner=document.getElementById('shinjuBanner');
  const state=getShinjuSeasonState();
- if(!state.active.some(x=>x.id===shinjuSelectedEssence))shinjuSelectedEssence=1;
+ if(!state.active.some(x=>x.id===shinjuSelectedEssence))shinjuSelectedEssence=state.active[0]?.id||1;
  const essence=state.active.find(x=>x.id===shinjuSelectedEssence)||state.active[0]||SHINJU_ESSENCES[0];
  if(coin)coin.innerHTML='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚　｜　✨ 真髄ポイント：'+shinjuPoints.toLocaleString()+'pt';
  if(banner){
@@ -4239,7 +4239,7 @@ function spawnCosmeticEffect(u,kind){
   const d=document.createElement('div');
   d.className='cosmeticTrail '+(rarity==='UR'?'cosmeticTrailUR':'cosmeticTrailSSR')+' '+(kind==='attack'?'trailAttack':kind==='spawn'?'trailSpawn':'trailMove');
   d.textContent=symbols[n%symbols.length];d.style.color=color;
-  d.style.setProperty('--trail-index',String(n));u.el.appendChild(d);
+  d.style.setProperty('--trail-index',String(n));d.style.setProperty('--trail-offset',(n*8)+'px');if(kind==='attack')d.style.left='calc(50% + '+(n*12)+'px)';u.el.appendChild(d);
   setTimeout(()=>d.remove(),rarity==='UR'?780:520);
  }
 }
@@ -4387,7 +4387,7 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
 @keyframes cosmeticBadgeSSR{from{transform:scale(.95)}to{transform:scale(1.08)}}
 @keyframes cosmeticBadgeUR{from{transform:scale(.9) rotate(-9deg)}to{transform:scale(1.22) rotate(9deg)}}
 @keyframes cosmeticTrailRise{from{transform:translate(-50%,0) scale(.8);opacity:.9}to{transform:translate(-50%,-22px) scale(.45);opacity:0}}
-@keyframes cosmeticTrailBurst{0%{transform:translate(-50%,0) scale(.5) rotate(0);opacity:0}20%{opacity:1}100%{transform:translate(calc(-50% + (var(--trail-index,0) * 8px)),-34px) scale(1.1) rotate(35deg);opacity:0}}
+@keyframes cosmeticTrailBurst{0%{transform:translate(-50%,0) scale(.5) rotate(0);opacity:0}20%{opacity:1}100%{transform:translate(calc(-50% + var(--trail-offset,0px)),-34px) scale(1.1) rotate(35deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){.cosmeticAura,.cosmeticOrbit,.cosmeticBadge,.cosmeticTrail{animation-duration:2s!important;animation-iteration-count:1!important}}
 </style>
 </body></html>
