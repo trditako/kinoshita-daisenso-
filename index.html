@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.10';
+const GAME_VERSION='v1.8.11';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.11',title:'✨ 真髄4～6とUR/SSRエフェクト差を追加',items:['真髄3の敵専用キャラを味方の木下（超覚醒）へ変更','味方キャラクターのみを対象にした真髄4～6を追加し、シーズン周期で順番に開催','SSRは控えめな光輪と単発エフェクト、URは複数光輪・軌跡・粒子を伴う演出へ強化','装備エフェクトをCSS中心で実装し、短時間で消える粒子数を制限']},
  {date:'2026-10-10',version:'v1.8.10',title:'🌌 神話編の能力処理と結界表示を修正',items:['結界専用ゲージと残量表示を追加','神域の射程低下を攻撃判定へ反映','距離装甲・召喚・神域の発動通知を追加','結界と因果転換の処理順、および魂喰い・時間加速・終端化の強化計算を修正','烈波など攻撃元情報のないダメージにも結界・因果転換・吸収を適用']},
  {date:'2026-10-10',version:'v1.8.9',title:'⏳ 開催中イベントの終了カウントダウンを追加',items:['イベントステージ画面とハロウィン交換所に終了までの日数・時間・分数を表示','日本時間を基準に毎分自動更新し、終了後はイベント終了と表示']},
  {date:'2026-10-10',version:'v1.8.8',title:'🎃 真髄の金確率・金集め難易度・ハロウィン交換所を調整',items:['真髄の伝説レアの金を0.3%、超激レアの金を3%に変更','超激レア・伝説レアの金集めステージを大幅に遊びやすく調整','ハロウィン交換所で全レアリティの金を交換可能に変更']},
@@ -3937,11 +3938,30 @@ const SHINJU_S3_UR_COSTUME={id:'shinju_s3_ur_costume_phoenix',type:'costume',rar
 const SHINJU_S3_UR_ACCESSORY={id:'shinju_s3_ur_accessory_zocrates',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'哲学の賢者ゾクラテス',name:'ゾクラテス・賢者の星盤',emoji:'🔮',desc:'哲学の賢者ゾクラテス専用の第3真髄限定UR携帯品。'};
 const SHINJU_S3_SSR_A={id:'shinju_s3_ssr_costume_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・銀河の星装',emoji:'🌌',color:'#a78bfa',desc:'星王木下専用の第3真髄限定SSR衣装。'};
 const SHINJU_S3_SSR_B={id:'shinju_s3_ssr_costume_forest',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・深緑の神衣',emoji:'🍃',color:'#22c55e',desc:'森王木下専用の第3真髄限定SSR衣装。'};
-const SHINJU_S3_SSR_C={id:'shinju_s3_ssr_costume_oni',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'鬼木下',name:'鬼木下・夜叉の戦装',emoji:'🌑',color:'#a855f7',desc:'鬼木下専用の第3真髄限定SSR衣装。'};
+const SHINJU_S3_SSR_C={id:'shinju_s3_ssr_costume_oni',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（超覚醒）',name:'木下（超覚醒）・星蝕の覚醒装',emoji:'🌑',color:'#a855f7',desc:'味方の木下（超覚醒）専用の第3真髄限定SSR衣装。星蝕の力をまとう覚醒装束。'};
+const SHINJU_S4_UR_COSTUME={id:'shinju_s4_ur_costume_robot',type:'costume',rarity:'UR',characterIndex:-1,targetName:'木下（ロボ）',name:'木下（ロボ）・機巧都市の支配者',emoji:'🤖',color:'#22d3ee',desc:'味方の木下（ロボ）専用の第4真髄限定UR衣装。機巧都市の光を放つ機械装甲。'};
+const SHINJU_S4_UR_ACCESSORY={id:'shinju_s4_ur_accessory_drone',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（ドローン）',name:'木下（ドローン）・天空監視システム',emoji:'🛰️',desc:'味方の木下（ドローン）専用の第4真髄限定UR携帯品。周囲にホログラムを展開する監視装置。'};
+const SHINJU_S4_SSR_A={id:'shinju_s4_ssr_costume_baseball',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・蒼鋼のホームラン王',emoji:'⚾',color:'#60a5fa',desc:'味方の木下（野球）専用の第4真髄限定SSR衣装。蒼鋼のラインが輝くユニフォーム。'};
+const SHINJU_S4_SSR_B={id:'shinju_s4_ssr_costume_cyber',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（電脳）',name:'木下（電脳）・電脳都市の演算衣',emoji:'💠',color:'#06b6d4',desc:'味方の木下（電脳）専用の第4真髄限定SSR衣装。電脳の光が走る装束。'};
+const SHINJU_S4_SSR_C={id:'shinju_s4_ssr_costume_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・自律機械の管理者',emoji:'🧠',color:'#38bdf8',desc:'味方の木下（AI）専用の第4真髄限定SSR衣装。自律演算を象徴する装束。'};
+const SHINJU_S5_UR_COSTUME={id:'shinju_s5_ur_costume_rampage',type:'costume',rarity:'UR',characterIndex:-1,targetName:'狂乱の木下',name:'狂乱の木下・百鬼夜行の大将',emoji:'👹',color:'#f43f5e',desc:'味方の狂乱の木下専用の第5真髄限定UR衣装。紅蓮の鬼火をまとう大将装束。'};
+const SHINJU_S5_UR_ACCESSORY={id:'shinju_s5_ur_accessory_awakened',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・鬼火の守護装',emoji:'🔥',desc:'味方の木下（覚醒）専用の第5真髄限定UR携帯品。複数の鬼火が追従する守護具。'};
+const SHINJU_S5_SSR_A={id:'shinju_s5_ssr_costume_ninja',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（忍者）',name:'木下（忍者）・幽世渡りの忍装',emoji:'🥷',color:'#818cf8',desc:'味方の木下（忍者）専用の第5真髄限定SSR衣装。紫の残光を残す忍装束。'};
+const SHINJU_S5_SSR_B={id:'shinju_s5_ssr_costume_king',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・祭祀の王衣',emoji:'👑',color:'#fbbf24',desc:'味方の木下（王）専用の第5真髄限定SSR衣装。祭祀の紋様が浮かぶ王衣。'};
+const SHINJU_S5_SSR_C={id:'shinju_s5_ssr_costume_super',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（超覚醒）',name:'木下（超覚醒）・夜叉封じの装束',emoji:'☯️',color:'#c084fc',desc:'味方の木下（超覚醒）専用の第5真髄限定SSR衣装。夜叉の力を封じる紋章付き装束。'};
+const SHINJU_S6_UR_COSTUME={id:'shinju_s6_ur_costume_phoenix',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・極光海域の守護鳥',emoji:'🐦‍🔥',color:'#fb7185',desc:'味方のフェニックス専用の第6真髄限定UR衣装。極光と炎が交差する不死鳥の衣。'};
+const SHINJU_S6_UR_ACCESSORY={id:'shinju_s6_ur_accessory_star',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'星王木下',name:'星王木下・深海星冠',emoji:'🪐',desc:'味方の星王木下専用の第6真髄限定UR携帯品。星々を巡る小さな環が浮かぶ星冠。'};
+const SHINJU_S6_SSR_A={id:'shinju_s6_ssr_costume_robot',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（ロボ）',name:'木下（ロボ）・海底探査装',emoji:'🤿',color:'#38bdf8',desc:'味方の木下（ロボ）専用の第6真髄限定SSR衣装。深海探査用の装甲をまとった衣装。'};
+const SHINJU_S6_SSR_B={id:'shinju_s6_ssr_costume_speed',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'流星木下',name:'流星木下・極光の航海者',emoji:'🌠',color:'#67e8f9',desc:'味方の流星木下専用の第6真髄限定SSR衣装。極光の航跡を引く航海装束。'};
+const SHINJU_S6_SSR_C={id:'shinju_s6_ssr_costume_forest',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・深海樹海の王衣',emoji:'🌿',color:'#34d399',desc:'味方の森王木下専用の第6真髄限定SSR衣装。深海に広がる樹海を模した王衣。'};
+
 const SHINJU_ESSENCES=[
  {id:1,name:'真髄1：覚醒の火',desc:'普通の木下の第二形態実装記念真髄。',items:[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C]},
  {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
- {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]}
+ {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]},
+ {id:4,name:'真髄4：機巧都市',desc:'機械と電脳の力をテーマにした限定真髄。',items:[SHINJU_S4_UR_COSTUME,SHINJU_S4_UR_ACCESSORY,SHINJU_S4_SSR_A,SHINJU_S4_SSR_B,SHINJU_S4_SSR_C]},
+ {id:5,name:'真髄5：百鬼夜行',desc:'鬼火と幽世の力をテーマにした限定真髄。',items:[SHINJU_S5_UR_COSTUME,SHINJU_S5_UR_ACCESSORY,SHINJU_S5_SSR_A,SHINJU_S5_SSR_B,SHINJU_S5_SSR_C]},
+ {id:6,name:'真髄6：深海と極光',desc:'深海と極光をテーマにした限定真髄。',items:[SHINJU_S6_UR_COSTUME,SHINJU_S6_UR_ACCESSORY,SHINJU_S6_SSR_A,SHINJU_S6_SSR_B,SHINJU_S6_SSR_C]}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
 const HALLOWEEN_PUMPKIN_INDEX=cards.findIndex(c=>c.name==='パンプキン木下');
@@ -3993,7 +4013,9 @@ function getShinjuSeasonState(){
  const cycle=Math.floor(elapsed/5)+1,slot=elapsed%5;
  const phase=slot===0?1:slot<=2?2:3;
  for(let c=2;c<=cycle;c++)getShinjuCycleEssences(c);
- const active=getShinjuCycleEssences(cycle).slice(0,phase);
+ const cycleEssences=getShinjuCycleEssences(cycle);
+ const groupStart=((cycle-1)%2)*3;
+ const active=cycleEssences.slice(groupStart,groupStart+3).slice(0,phase);
  const nextReset=rankSeasonResetAt();
  return {seasonNumber,phase,cycle,active,daysRemaining:Math.max(0,Math.ceil((nextReset-Date.now())/day))};
 }
@@ -4182,18 +4204,44 @@ function renderCharacterCosmeticSection(i){
 }
 function applyCosmeticToElement(u){
  if(!u?.el||u.isEnemy)return;
- u.el.querySelectorAll('.cosmeticBadge,.cosmeticAura').forEach(x=>x.remove());
+ u.el.querySelectorAll('.cosmeticBadge,.cosmeticAura,.cosmeticOrbit').forEach(x=>x.remove());
  const i=Number(u.cardIndex);if(!Number.isInteger(i)||!cards[i])return;
  const costume=getCharacterEquippedCosmetic(i,'costume'),accessory=getCharacterEquippedCosmetic(i,'accessory');
- if(costume){const aura=document.createElement('div');aura.className='cosmeticAura';aura.style.color=costume.color||'#f59e0b';u.el.appendChild(aura);u.el.style.setProperty('--character-cosmetic-color',costume.color||'#f59e0b');}
- if(accessory){const badge=document.createElement('div');badge.className='cosmeticBadge';badge.textContent=accessory.emoji;u.el.appendChild(badge);}
+ const color=costume?.color||'#f59e0b';
+ u.el.style.setProperty('--character-cosmetic-color',color);
+ if(costume){
+  const aura=document.createElement('div');
+  aura.className='cosmeticAura '+(costume.rarity==='UR'?'cosmeticUR':'cosmeticSSR');
+  aura.dataset.rarity=costume.rarity||'SSR';aura.style.color=color;u.el.appendChild(aura);
+  if(costume.rarity==='UR'){
+   for(let n=0;n<2;n++){const orbit=document.createElement('div');orbit.className='cosmeticOrbit cosmeticUROrbit orbit'+n;orbit.style.color=color;u.el.appendChild(orbit);}
+  }
+ }
+ if(accessory){
+  const badge=document.createElement('div');badge.className='cosmeticBadge '+(accessory.rarity==='UR'?'cosmeticBadgeUR':'cosmeticBadgeSSR');
+  badge.textContent=accessory.emoji;badge.style.color=color;badge.dataset.rarity=accessory.rarity||'SSR';u.el.appendChild(badge);
+ }
 }
 function spawnCosmeticEffect(u,kind){
- if(!u?.el||u.isEnemy)return;
+ if(!u?.el||u.isEnemy||!['attack','move','spawn'].includes(kind))return;
  const i=Number(u.cardIndex);if(!Number.isInteger(i)||!cards[i])return;
- const accessory=getCharacterEquippedCosmetic(i,'accessory');if(!accessory)return;
- if(!['attack','move','spawn'].includes(kind))return;
- const d=document.createElement('div');d.className='cosmeticTrail';d.textContent=kind==='attack'?accessory.emoji:kind==='spawn'?'✨':'•';d.style.color=getCharacterEquippedCosmetic(i,'costume')?.color||'#f59e0b';u.el.appendChild(d);setTimeout(()=>d.remove(),500);
+ const costume=getCharacterEquippedCosmetic(i,'costume'),accessory=getCharacterEquippedCosmetic(i,'accessory');
+ if(!costume&&!accessory)return;
+ const rarity=accessory?.rarity||costume?.rarity||'SSR';
+ const now=Date.now(),cooldown=kind==='move'?650:kind==='attack'?240:500;
+ u._cosmeticEffectAt=u._cosmeticEffectAt||{};
+ if(now-(u._cosmeticEffectAt[kind]||0)<cooldown)return;
+ u._cosmeticEffectAt[kind]=now;
+ const color=costume?.color||'#f59e0b';
+ const symbols=kind==='attack'?(accessory?[accessory.emoji]:['✦']):kind==='spawn'?['✧','✦']:['✧'];
+ const count=rarity==='UR'?(kind==='attack'?3:2):1;
+ for(let n=0;n<count;n++){
+  const d=document.createElement('div');
+  d.className='cosmeticTrail '+(rarity==='UR'?'cosmeticTrailUR':'cosmeticTrailSSR')+' '+(kind==='attack'?'trailAttack':kind==='spawn'?'trailSpawn':'trailMove');
+  d.textContent=symbols[n%symbols.length];d.style.color=color;
+  d.style.setProperty('--trail-index',String(n));u.el.appendChild(d);
+  setTimeout(()=>d.remove(),rarity==='UR'?780:520);
+ }
 }
 document.getElementById('shinjuBtn')?.addEventListener('click',()=>{document.getElementById('start').style.display='none';document.getElementById('shinju').style.display='flex';renderShinju();});
 document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.getElementById('shinju').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();});
@@ -4312,4 +4360,34 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
  shinju?.addEventListener('click',()=>{localStorage.setItem(SHINJU_READ_KEY,'1');paintBadge();});
  paintBadge();
 })();
-</script></body></html>
+</script>
+<style id="cosmeticRarityEffects">
+/* SSRとURを明確に差別化。演出は短命な要素＋transform/opacity中心で描画負荷を抑える */
+.cosmeticAura{inset:-12px;border:2px solid currentColor;border-radius:50%;opacity:.72;pointer-events:none;animation:cosmeticSSRPulse 1.25s ease-in-out infinite alternate;box-shadow:0 0 8px currentColor}
+.cosmeticAura:before,.cosmeticAura:after{content:'✦';position:absolute;color:currentColor;font-size:14px;text-shadow:0 0 7px currentColor;animation:cosmeticSSRSpark 1.2s ease-in-out infinite alternate}
+.cosmeticAura:before{left:-5px;top:0}.cosmeticAura:after{right:-5px;bottom:0}
+.cosmeticAura.cosmeticUR{inset:-20px;border:3px solid currentColor;opacity:.9;box-shadow:0 0 12px currentColor,0 0 24px currentColor,inset 0 0 12px currentColor;animation:cosmeticURAura .9s ease-in-out infinite alternate}
+.cosmeticAura.cosmeticUR:before,.cosmeticAura.cosmeticUR:after{font-size:22px;text-shadow:0 0 8px currentColor,0 0 16px currentColor}
+.cosmeticOrbit{position:absolute;inset:-25px;border:2px dashed currentColor;border-radius:50%;pointer-events:none;opacity:.8}
+.cosmeticUROrbit.orbit0{animation:cosmeticOrbitSpin 4s linear infinite}
+.cosmeticUROrbit.orbit1{inset:-31px;border-style:dotted;opacity:.6;animation:cosmeticOrbitSpin 6s linear infinite reverse}
+.cosmeticBadge{z-index:25;font-size:22px!important;right:-13px!important;top:-14px!important;filter:drop-shadow(0 0 5px currentColor)!important}
+.cosmeticBadgeSSR{animation:cosmeticBadgeSSR 1.4s ease-in-out infinite alternate}
+.cosmeticBadgeUR{font-size:28px!important;right:-17px!important;top:-19px!important;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 13px currentColor)!important;animation:cosmeticBadgeUR .65s ease-in-out infinite alternate}
+.cosmeticTrail{position:absolute;left:50%;bottom:10px;z-index:24;width:auto;height:auto;background:transparent!important;border-radius:0;opacity:1;pointer-events:none;text-shadow:0 0 8px currentColor;animation:cosmeticTrailRise .52s ease-out forwards;transform:translate(-50%,0)}
+.cosmeticTrailUR{font-size:23px;filter:drop-shadow(0 0 5px currentColor);animation:cosmeticTrailBurst .78s ease-out forwards}
+.cosmeticTrailSSR{font-size:17px;animation:cosmeticTrailRise .52s ease-out forwards}
+.cosmeticTrail.trailAttack{left:calc(50% + (var(--trail-index,0) * 12px));bottom:24px}
+.cosmeticTrail.trailSpawn{bottom:28px}
+.cosmeticTrail.trailMove{bottom:5px}
+@keyframes cosmeticSSRPulse{from{transform:scale(.94);opacity:.3}to{transform:scale(1.04);opacity:.72}}
+@keyframes cosmeticSSRSpark{from{transform:scale(.7) rotate(-10deg);opacity:.4}to{transform:scale(1.1) rotate(18deg);opacity:1}}
+@keyframes cosmeticURAura{from{transform:scale(.94) rotate(-2deg);opacity:.55}to{transform:scale(1.1) rotate(2deg);opacity:1}}
+@keyframes cosmeticOrbitSpin{from{transform:rotate(0) scale(.98)}to{transform:rotate(360deg) scale(1.02)}}
+@keyframes cosmeticBadgeSSR{from{transform:scale(.95)}to{transform:scale(1.08)}}
+@keyframes cosmeticBadgeUR{from{transform:scale(.9) rotate(-9deg)}to{transform:scale(1.22) rotate(9deg)}}
+@keyframes cosmeticTrailRise{from{transform:translate(-50%,0) scale(.8);opacity:.9}to{transform:translate(-50%,-22px) scale(.45);opacity:0}}
+@keyframes cosmeticTrailBurst{0%{transform:translate(-50%,0) scale(.5) rotate(0);opacity:0}20%{opacity:1}100%{transform:translate(calc(-50% + (var(--trail-index,0) * 8px)),-34px) scale(1.1) rotate(35deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.cosmeticAura,.cosmeticOrbit,.cosmeticBadge,.cosmeticTrail{animation-duration:2s!important;animation-iteration-count:1!important}}
+</style>
+</body></html>
