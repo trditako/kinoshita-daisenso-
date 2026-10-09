@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.8';
+const GAME_VERSION='v1.5.9';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.9',title:'📅 真髄シーズン期間を修正',items:['木下大戦争の1シーズンを2日間に統一','真髄の追加・リセット周期と次回更新表示を2日単位に修正']},
  {date:'2026-10-09',version:'v1.5.8',title:'✨ 真髄シーズン周期と限定内容を改善',items:['シーズン10で真髄1、11で真髄2追加、13で真髄3追加','シーズン15で真髄1へリセットし、5シーズン周期を繰り返す','開催中の真髄タブを選んで個別にガチャ・ポイント交換できる','周期ごとに限定衣装・携帯品の名前・テーマ・見た目を更新']},
  {date:'2026-10-09',version:'v1.5.7',title:'✨ 真髄のシーズン制を追加',items:['シーズンごとに真髄が1種類ずつ増加し、最大3種類を開催','3シーズン終了後は真髄1から新サイクルを開始','真髄ごとに限定衣装・携帯品・SSR衣装を分離','所持済み衣装・携帯品とポイントはシーズン切替後も保持']},
  {date:'2026-10-09',version:'v1.5.6',title:'✨ 真髄演出・レアリティ・図鑑改善',items:['限定UR演出を大幅強化','SSR衣装の重複を20,000コインに変換','フェニックスを超激レアに変更','図鑑の絞り込みを最適化']},
@@ -3729,7 +3730,7 @@ const SHINJU_ESSENCES=[
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
 const SHINJU_SEASON_START=Date.UTC(2026,9,9);
-const SHINJU_SEASON_DAYS=60;
+const SHINJU_SEASON_DAYS=2;
 let shinjuSelectedEssence=1;
 const SHINJU_CYCLE_CACHE={1:SHINJU_ESSENCES};
 const SHINJU_CYCLE_THEMES=[
