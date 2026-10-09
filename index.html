@@ -1582,7 +1582,7 @@ function buyHalloweenReward(id){
   halloweenCandy-=cost;shinjuInventory[item.id]=1;saveHalloweenCandy();saveShinjuState();syncCharacterCosmeticInventory();
  }else if(id==='ticket'){
   const key='kinoshitaShinjuFreeDrawTickets';const count=Math.max(0,Number(storage.getItem(key)||0));
-  halloweenCandy-=cost;storage.setItem(key,String(count+1));saveHalloweenCandy();
+  halloweenCandy-=cost;shinjuFreeDrawTickets=count+1;storage.setItem(key,String(shinjuFreeDrawTickets));saveHalloweenCandy();
  }else if(id==='coins'){
   halloweenCandy-=cost;gachaCoins+=10000;saveHalloweenCandy();save();
  }
