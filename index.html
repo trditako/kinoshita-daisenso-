@@ -3143,7 +3143,7 @@ function mythologyV2PreHit(target,damage,source){
  return {damage:Math.max(0,dealt)};
 }
 function mythologyV2OnEnemyAttack(e,t){
- if(!e||!t||e.isEnemy!==true||t.isEnemy)return;
+ if(!e||!t||e.isEnemy!==true||t.isEnemy||isAbilitySealed(e))return;
  const a=e.ability||{},now=performance.now()/1000;
  if(mythologyV2Has(e,'rune')){
   let n=Number(t.mythRuneCount||0)+1;t.mythRuneCount=n;
@@ -3152,10 +3152,10 @@ function mythologyV2OnEnemyAttack(e,t){
 }
 function mythologyV2OnUnitDeath(u){
  if(!u||u.isEnemy)return;
- for(const e of enemies){if(!e||e.hp<=0||!mythologyV2Has(e,'soulFeast'))continue;const a=e.ability||{};e.mythBaseAtk=e.mythBaseAtk||e.atk;e.mythSoulStacks=(e.mythSoulStacks||0)+1;e.mythSoulAtkFactor=1+Number(e.mythSoulStacks)*Number(a.soulAtk||.08);e.atk=Math.round(e.mythBaseAtk*e.mythSoulAtkFactor*(e.mythTimeSurgeActive?Number(a.timeSurgeAtk||1.4):1)*(e.mythFinalPhase?Number(e.ability?.finalAtk||1.7):1));e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(a.soulHeal||.03)));mythicPopup('👻 魂喰い',e);}
+ for(const e of enemies){if(!e||e.hp<=0||isAbilitySealed(e)||!mythologyV2Has(e,'soulFeast'))continue;const a=e.ability||{};e.mythBaseAtk=e.mythBaseAtk||e.atk;e.mythSoulStacks=(e.mythSoulStacks||0)+1;e.mythSoulAtkFactor=1+Number(e.mythSoulStacks)*Number(a.soulAtk||.08);e.atk=Math.round(e.mythBaseAtk*e.mythSoulAtkFactor*(e.mythTimeSurgeActive?Number(a.timeSurgeAtk||1.4):1)*(e.mythFinalPhase?Number(e.ability?.finalAtk||1.7):1));e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(a.soulHeal||.03)));mythicPopup('👻 魂喰い',e);}
 }
 function mythologyV2OnDeath(e){
- if(!e||e.mythDeathHandled)return false;const a=e.ability||{};
+ if(!e||e.mythDeathHandled||isAbilitySealed(e))return false;const a=e.ability||{};
  if(mythologyV2Has(e,'split')){e.mythDeathHandled=true;const key=a.splitInto;if(enemyTypes[key])for(let i=0;i<Number(a.splitCount||2);i++)spawnEnemy(key,'normal',Math.max(.35,Number(e.stageMultiplier||1)*Number(a.splitScale||.3)),true,Math.max(135,e.x-45-i*20));mythicPopup('🧬 核分裂',e);return false;}
  if(mythologyV2Has(e,'reincarnate')){e.mythDeathHandled=true;e.hp=Math.max(1,Math.round(e.maxhp*Number(a.reincarnateHp||.4)));e.x=Math.max(135,e.x-80);e.cd=.5;e.kbRemaining=e.kb;updateStatusMark(e);mythicPopup('🌅 再臨',e);return true;}
  return false;
