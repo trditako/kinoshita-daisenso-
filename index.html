@@ -3772,6 +3772,7 @@ function getShinjuSeasonState(){
  const elapsed=Math.max(0,Math.floor((Date.now()-SHINJU_SEASON_START)/duration));
  const cycle=Math.floor(elapsed/5)+1,slot=elapsed%5;
  const phase=slot===0?1:slot<=2?2:3;
+ for(let c=2;c<=cycle;c++)getShinjuCycleEssences(c);
  const active=getShinjuCycleEssences(cycle).slice(0,phase);
  return {seasonNumber:10+elapsed,phase,cycle,active,daysRemaining:Math.max(0,Math.ceil((SHINJU_SEASON_START+(elapsed+1)*duration-Date.now())/day))};
 }
