@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.4';
+const GAME_VERSION='v1.7.5';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.7.5',title:'🔧 レベル保存・金集め難易度・iPhone倍速を修正',items:['Lv21～30のキャラクターレベルが再起動後も保持されるよう修正','超激レア・伝説レアの金集めステージを遊びやすい難易度へ調整','戦場スワイプ処理が倍速ボタンのタップを奪わないよう修正']},
  {date:'2026-10-09',version:'v1.7.2',title:'🎃 ハロウィン交換所をボタン式に刷新',items:['番号入力を廃止し、カテゴリ別の交換ボタンと所持キャンディ表示を追加','限定衣装・SSR携帯品・真髄・コイン・XP・育成素材を追加','交換回数の保存、所持済み判定、連打防止を追加']},
   {date:'2026-10-09',version:'v1.7.1',title:'🎃 ハロウィン交換所とランキング報酬を改善',items:['ハロウィンSSR携帯品・真髄1回分をキャンディ交換に追加','ランキング1～10位の報酬を順位順に調整','ランキング報酬計算で古い公開RPを優先してしまう重複判定を修正']},
  {date:'2026-10-09',version:'v1.7.0',title:'🎃 ハロウィンイベントを追加',items:['ハロウィン限定ステージ3種とボス「ジャック・オー・木下」を追加','イベントステージクリアでハロウィンキャンディを獲得','限定キャラ「パンプキン木下」とコインを交換所に追加','イベント期間：2026年11月15日まで']},
@@ -1419,8 +1420,8 @@ let charMaxLevel;try{charMaxLevel=JSON.parse(storage.getItem('kinoshitaCharMaxLe
 let charForm;try{charForm=JSON.parse(storage.getItem('kinoshitaCharForm')||'[]')}catch(e){charForm=[]}
 let normalEvolved;try{normalEvolved=JSON.parse(storage.getItem('kinoshitaNormalEvolved')||'[]')}catch(e){normalEvolved=[]}
 for(let i=0;i<cards.length;i++){
- charLevel[i]=Math.max(1,Math.min(20,Number(charLevel[i]||1)));
  charMaxLevel[i]=Math.max(20,Math.min(30,Number(charMaxLevel[i]||20)));
+ charLevel[i]=Math.max(1,Math.min(charMaxLevel[i],Number(charLevel[i]||1)));
  charForm[i]=Number(charForm[i])===2?2:1;
  normalEvolved[i]=!!normalEvolved[i];
 }
@@ -1544,7 +1545,7 @@ let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventCle
 let halloweenCandy=Math.max(0,Number(storage.getItem('kinoshitaHalloweenCandy')||0));
 function halloweenEventActive(){return Date.now()<new Date('2026-11-16T00:00:00+09:00').getTime();}
 for(const rarity of GOLD_RARITIES.filter(r=>r!=='ノーマル'))eventStages.push({name:rarity+'の金集め',width:1150,baseHp:26000,xp:1100,itemReward:{type:'rarityGold',rarity,amount:1},enemies:['鬼木下','巨木下','赤い強化木下','木下大将'],schedule:[{t:2,enemy:'鬼木下',mult:6,fixedMultiplier:true},{t:6,enemy:'巨木下',mult:4,fixedMultiplier:true},{t:11,enemy:'赤い強化木下',mult:5,fixedMultiplier:true},{t:17,enemy:'木下大将',mult:2,fixedMultiplier:true},{t:24,enemy:'木下大将',mult:3,fixedMultiplier:true}]});
-const superRareGoldStage=eventStages.find(st=>st.name==='超激レアの金集め');if(superRareGoldStage){superRareGoldStage.width=2600;superRareGoldStage.baseHp=2500000;superRareGoldStage.xp=18000;superRareGoldStage.enemies=['パーフェクト木下','狂乱の木下','古代井上','黒王木下'];superRareGoldStage.schedule=[{t:1,enemy:'パーフェクト木下',mult:8,fixedMultiplier:true},{t:3,enemy:'狂乱の木下',mult:12,fixedMultiplier:true},{t:6,enemy:'古代井上',mult:8,fixedMultiplier:true},{t:9,enemy:'パーフェクト木下',mult:12,fixedMultiplier:true},{t:12,enemy:'黒王木下',mult:20,fixedMultiplier:true},{t:15,enemy:'狂乱の木下',mult:18,fixedMultiplier:true},{t:18,enemy:'古代井上',mult:15,fixedMultiplier:true},{t:22,enemy:'パーフェクト木下',mult:18,fixedMultiplier:true},{t:26,enemy:'狂乱の木下',mult:22,fixedMultiplier:true}];superRareGoldStage.repeatSpawns=[{enemy:'黒王木下',start:20,interval:8,mult:12,fixedMultiplier:true}];}const legendGoldStage=eventStages.find(st=>st.name==='伝説レアの金集め');if(legendGoldStage){legendGoldStage.width=4200;legendGoldStage.baseHp=25000000;legendGoldStage.xp=50000;legendGoldStage.enemies=['パーフェクト木下','古代井上','狂乱の木下','黒王木下'];legendGoldStage.schedule=[{t:1,enemy:'パーフェクト木下',mult:25,fixedMultiplier:true},{t:2,enemy:'古代井上',mult:20,fixedMultiplier:true},{t:4,enemy:'狂乱の木下',mult:35,fixedMultiplier:true},{t:7,enemy:'パーフェクト木下',mult:35,fixedMultiplier:true},{t:10,enemy:'古代井上',mult:30,fixedMultiplier:true},{t:13,enemy:'狂乱の木下',mult:45,fixedMultiplier:true},{t:16,enemy:'黒王木下',mult:55,fixedMultiplier:true},{t:19,enemy:'パーフェクト木下',mult:50,fixedMultiplier:true},{t:22,enemy:'古代井上',mult:45,fixedMultiplier:true},{t:25,enemy:'狂乱の木下',mult:60,fixedMultiplier:true},{t:28,enemy:'パーフェクト木下',mult:70,fixedMultiplier:true}];legendGoldStage.repeatSpawns=[{enemy:'黒王木下',start:12,interval:5,mult:40,fixedMultiplier:true},{enemy:'古代井上',start:18,interval:7,mult:35,fixedMultiplier:true}];}
+const superRareGoldStage=eventStages.find(st=>st.name==='超激レアの金集め');if(superRareGoldStage){superRareGoldStage.width=2200;superRareGoldStage.baseHp=1200000;superRareGoldStage.xp=18000;superRareGoldStage.enemies=['パーフェクト木下','狂乱の木下','古代井上','黒王木下'];superRareGoldStage.schedule=[{t:2,enemy:'パーフェクト木下',mult:3,fixedMultiplier:true},{t:5,enemy:'狂乱の木下',mult:4,fixedMultiplier:true},{t:9,enemy:'古代井上',mult:3,fixedMultiplier:true},{t:13,enemy:'パーフェクト木下',mult:5,fixedMultiplier:true},{t:17,enemy:'黒王木下',mult:7,fixedMultiplier:true},{t:22,enemy:'狂乱の木下',mult:6,fixedMultiplier:true},{t:27,enemy:'古代井上',mult:5,fixedMultiplier:true},{t:33,enemy:'パーフェクト木下',mult:7,fixedMultiplier:true},{t:39,enemy:'狂乱の木下',mult:8,fixedMultiplier:true}];superRareGoldStage.repeatSpawns=[{enemy:'黒王木下',start:25,interval:12,mult:5,fixedMultiplier:true}];}const legendGoldStage=eventStages.find(st=>st.name==='伝説レアの金集め');if(legendGoldStage){legendGoldStage.width=3000;legendGoldStage.baseHp=8000000;legendGoldStage.xp=50000;legendGoldStage.enemies=['パーフェクト木下','古代井上','狂乱の木下','黒王木下'];legendGoldStage.schedule=[{t:2,enemy:'パーフェクト木下',mult:8,fixedMultiplier:true},{t:4,enemy:'古代井上',mult:7,fixedMultiplier:true},{t:7,enemy:'狂乱の木下',mult:12,fixedMultiplier:true},{t:11,enemy:'パーフェクト木下',mult:12,fixedMultiplier:true},{t:15,enemy:'古代井上',mult:10,fixedMultiplier:true},{t:19,enemy:'狂乱の木下',mult:15,fixedMultiplier:true},{t:24,enemy:'黒王木下',mult:18,fixedMultiplier:true},{t:29,enemy:'パーフェクト木下',mult:17,fixedMultiplier:true},{t:34,enemy:'古代井上',mult:15,fixedMultiplier:true},{t:39,enemy:'狂乱の木下',mult:20,fixedMultiplier:true},{t:45,enemy:'パーフェクト木下',mult:22,fixedMultiplier:true}];legendGoldStage.repeatSpawns=[{enemy:'黒王木下',start:20,interval:10,mult:14,fixedMultiplier:true},{enemy:'古代井上',start:28,interval:12,mult:12,fixedMultiplier:true}];}
 function eventStagePool(){return eventStages.filter(st=>!st.itemReward&&(!st.halloweenEvent||halloweenEventActive()));}
 function saveHalloweenCandy(){storage.setItem('kinoshitaHalloweenCandy',String(halloweenCandy));}
 function openHalloweenShop(){
@@ -1943,7 +1944,7 @@ function stageBgmKey(){return stageVisualInfo().bgm||'menu';}
 function setupWorld(){const s=currentStage();worldWidth=Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
-field.addEventListener('pointerdown',e=>{if(!running)return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
+field.addEventListener('pointerdown',e=>{if(!running)return;if(e.target?.closest?.('button,[role="button"],input,select,textarea,a,[data-game-speed]'))return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
 field.addEventListener('pointermove',e=>{if(!draggingCamera)return;const dx=e.clientX-dragStartX;if(Math.abs(dx)>5)dragMoved=true;cameraX=clampCamera(dragStartCamera-dx);applyCamera();});
 field.addEventListener('pointerup',e=>{draggingCamera=false;field.releasePointerCapture?.(e.pointerId);});
 field.addEventListener('pointercancel',()=>{draggingCamera=false;});
