@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.5.5';
+const GAME_VERSION='v1.5.6';
 const UPDATE_LOG=[
+ {date:'2026-10-09',version:'v1.5.6',title:'✨ 真髄演出・レアリティ・図鑑改善',items:['限定UR演出を大幅強化','SSR衣装の重複を20,000コインに変換','フェニックスを超激レアに変更','図鑑の絞り込みを最適化']},
  {date:'2026-10-09',version:'v1.5.5',title:'✨ 真髄を大幅アップデート',items:['UR重複時に15万コインへ変換','衣装・携帯品を自由に装備・取り外し可能に変更','真髄の開封演出を追加','真髄ポイント交換所を追加（限定UR 400pt／SSR衣装 80pt）']},
  {date:'2026-10-09',version:'v1.5.4',title:'✨ 真髄を独立化・SSR衣装を追加',items:['真髄を木下交換所から分離し、専用ボタンと独立画面へ変更','SSR限定衣装を3キャラクター分追加','真髄の提供割合をSSR追加後の100%構成へ更新']},
  {date:'2026-10-09',version:'v1.5.3',title:'✨ 真髄システムを追加',items:['既存の衣装・携帯品を全キャラクターから回収し、真髄から衣装・携帯品を獲得する方式へ変更','1連1,000コイン／11連10,000コインを追加','普通の木下専用の限定UR衣装・限定UR携帯品を追加','限定アイテム各0.2%、色のパワー45%、ノーマルキャラの金15%、XP20%、コイン19.6%の排出率を設定']},
@@ -386,7 +387,7 @@ const cards=[
 
 
 ];
-const PHOENIX_REWARD_CARD={name:"フェニックス",cost:3500,hp:16000,atk:1150,range:100,spd:1.1,interval:1.6,recharge:45,icon:"🐦‍🔥",motion:"super",attackType:"allrange",kb:1,minRange:-70,maxRange:100,trait:"赤・黒",specialReward:true,ability:{name:"不死鳥の炎",desc:"攻撃時、命中した敵の数だけLv1烈波を発生。烈波は射程1〜200で、生成元の攻撃力と能力を引き継ぐ。古代・宇宙・天使に50%で3秒呪い。33%で2秒停止。鈍足・波動・烈波を無効化。",phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowImmune:true,waveImmune:true,surgeImmune:true,curseTargets:["古代","宇宙","天使"]}};
+const PHOENIX_REWARD_CARD={name:"フェニックス",rarity:"超激レア",cost:3500,hp:16000,atk:1150,range:100,spd:1.1,interval:1.6,recharge:45,icon:"🐦‍🔥",motion:"super",attackType:"allrange",kb:1,minRange:-70,maxRange:100,trait:"赤・黒",specialReward:true,ability:{name:"不死鳥の炎",desc:"攻撃時、命中した敵の数だけLv1烈波を発生。烈波は射程1〜200で、生成元の攻撃力と能力を引き継ぐ。古代・宇宙・天使に50%で3秒呪い。33%で2秒停止。鈍足・波動・烈波を無効化。",phoenixSurgeLevel:1,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:.5,curseDuration:3,stopChance:.33,stopDuration:2,slowImmune:true,waveImmune:true,surgeImmune:true,curseTargets:["古代","宇宙","天使"]}};
 // フェニックスは全カード登録後に末尾へ追加します。既存キャラの配列IDずれを防止します。
 
 // 日本編クリア報酬キャラクター（3体ともここで新規定義）
@@ -3730,9 +3731,9 @@ function shinjuDrawOne(){
  let reward;
  if(r<0.2){const item=SHINJU_UR_COSTUME;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR衣装が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定UR衣装：'+item.name};}
  }else if(r<0.4){const item=SHINJU_UR_ACCESSORY;if(shinjuOwned(item.id)){gachaCoins+=150000;reward={type:'duplicateUR',item,label:'🔁 限定UR携帯品が重複 → 🪙 150,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'accessory',item,label:'🎒 限定UR携帯品：'+item.name};}
- }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
- }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
- }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;shinjuInventory[item.id]=(Number(shinjuInventory[item.id]||0)+1);reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};
+ }else if(r<1.4){const item=SHINJU_SSR_COSTUME_A;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
+ }else if(r<2.4){const item=SHINJU_SSR_COSTUME_B;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
+ }else if(r<3.4){const item=SHINJU_SSR_COSTUME_C;if(shinjuOwned(item.id)){gachaCoins+=20000;reward={type:'duplicateSSR',item,label:'🔁 限定SSR衣装が重複 → 🪙 20,000コイン'};}else{shinjuInventory[item.id]=1;reward={type:'costume',item,label:'👕 限定SSR衣装：'+item.name};}
  }else if(r<48.4){reward=shinjuRandomPower();
  }else if(r<63.4){reward=shinjuRandomGold();
  }else if(r<83.4){const xp=shinjuRandomInt(100,10000);playerXP+=xp;reward={type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};
