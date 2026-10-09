@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.6';
+const GAME_VERSION='v1.8.7';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.7',title:'🔧 木下交換・真髄と敵キャラ図鑑の戻り動作を修正',items:['木下交換・真髄を誤って非表示にしていたCSSを削除','ホーム画面から敵キャラ図鑑を開いた場合、閉じるとホーム画面へ戻るよう修正']},
  {date:'2026-10-10',version:'v1.8.6',title:'🔧 画面下に表示される不要な「\\n」を修正',items:['キャラ図鑑メニュー直後のHTMLに残っていた文字列を削除','画面下に「\\n」と表示される原因を修正']},
  {date:'2026-10-10',version:'v1.8.5',title:'🧭 ホーム画面メニューを整理',items:['ステージ開始ボタンをステージ一覧の一番下に配置','キャラ図鑑メニューに木下図鑑と敵キャラ図鑑をまとめた','日本編・未来編などをカテゴリ選択式にし、章選択をコンパクト化']},
  {date:'2026-10-10',version:'v1.8.4',title:'📱 ステージ選択UIの配置を再修正',items:['敵キャラ図鑑・木下交換・真髄を章選択前の共通メニューへ移動','開始ボタンを画面下部に固定し、ステージ一覧のスクロール領域と分離','スマートフォンで開始ボタンとステージ一覧が重なりにくいよう表示領域を調整']},
@@ -99,7 +100,6 @@ function closeUpdateLog(){
 #start .chapterTabs.compactShown{display:grid!important}
 #start .chapterTabs .chapterTab{min-height:40px}
 #start #characterBookBtn{background:#0f766e!important;color:#fff!important}
-#start #gachaBtn,#start #shinjuBtn{display:none!important}
 #start .chapterTabs{margin-top:8px}
 #start #enemyBookBtn,#start #gachaBtn,#start #shinjuBtn{margin-top:2px;margin-bottom:2px}
 @media(min-width:620px){#startBtn{width:min(calc(100vw - 36px),736px)}}
@@ -1786,6 +1786,7 @@ function traitClass(trait){
  const map={赤:'red',青:'blue',黒:'black',浮:'float',天使:'angel',宇宙:'space'};
  return map[trait]||'';
 }
+let enemyBookReturnToHome=false;
 function showEnemyBook(){
  const detail=document.getElementById('detail'),title=document.getElementById('detailTitle'),body=document.getElementById('detailBody');
  if(!detail||!title||!body)return;
@@ -3519,7 +3520,7 @@ document.querySelectorAll('.stageCategoryBtn').forEach(b=>b.addEventListener('cl
 document.getElementById('characterBookBtn').addEventListener('click',()=>{document.getElementById('start').style.display='none';document.getElementById('characterBookMenu').style.display='flex';});
 document.getElementById('characterBookMenuClose').addEventListener('click',()=>{document.getElementById('characterBookMenu').style.display='none';document.getElementById('start').style.display='flex';});
 document.getElementById('openKinoshitaBookFromMenu').addEventListener('click',()=>{document.getElementById('characterBookMenu').style.display='none';openKinoshitaBook();});
-document.getElementById('openEnemyBookFromMenu').addEventListener('click',()=>{document.getElementById('characterBookMenu').style.display='none';showEnemyBook();});
+document.getElementById('openEnemyBookFromMenu').addEventListener('click',()=>{document.getElementById('characterBookMenu').style.display='none';enemyBookReturnToHome=true;showEnemyBook();});
 setStageCategory('japan');
 function selectChapterTab(t){const v=t.dataset.chapter;if(v==='legend'){selectedMode='legend';selectedLegendChapter=Math.max(1,Math.min(10,selectedLegendChapter||1));selectedStage=1;document.getElementById('startBtn').textContent=legendPool()[0].name+'を開始';}else if(v==='event'){selectedMode='event';selectedStage=1;const pool=eventStages.filter(st=>!st.itemReward);document.getElementById('startBtn').textContent=(pool[0]?.name||'イベントステージ')+'を開始';}else if(v==='growth'){selectedMode='growth';selectedStage=1;const pool=eventStages.filter(st=>st.itemReward);document.getElementById('startBtn').textContent=(pool[0]?.name||'強化素材ステージ')+'を開始';}else{const ch=Number(v);if(!Number.isInteger(ch)||ch<1||ch>7)return;selectedMode='japan';selectedChapter=ch;selectedStage=1;if(ch===5)selectedMode='space';const pool=chapterPool();document.getElementById('startBtn').textContent=pool[0].name+(chapterUnlocked(ch)?'を開始':'（未解放）')}renderStageSelect()}
 document.querySelectorAll('.chapterTab').forEach(t=>{
@@ -3542,8 +3543,8 @@ if(mythologyChapterButton){
  mythologyChapterButton.addEventListener('click',openMythologyChapter,{capture:true});
 }
 document.querySelectorAll('[data-game-speed]').forEach(b=>{let lastTouchAt=0;const activateSpeed=e=>{if(e){e.preventDefault();e.stopPropagation();}lastTouchAt=Date.now();setGameSpeed(Number(b.dataset.gameSpeed));};b.style.pointerEvents='auto';b.style.touchAction='manipulation';b.addEventListener('pointerdown',e=>{e.stopPropagation();},{passive:true});b.addEventListener('touchstart',e=>{e.stopPropagation();},{passive:true});b.addEventListener('touchend',activateSpeed,{passive:false});b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();e.stopPropagation();activateSpeed(e);}},{passive:false});b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(Date.now()-lastTouchAt<700)return;setGameSpeed(Number(b.dataset.gameSpeed));});});
-const pauseButton=document.getElementById('battlePauseBtn');pauseButton.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();pauseBattle();});pauseButton.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();e.stopPropagation();pauseBattle();}});document.getElementById('pauseResume').onclick=resumeBattle;document.getElementById('pauseQuit').onclick=quitBattle;document.getElementById('detailClose').onclick=()=>document.getElementById('detail').style.display='none';
-const battleDetailBtn=document.getElementById('battleDetailBtn');battleDetailBtn.addEventListener('pointerdown',e=>{e.stopPropagation();},{passive:true});battleDetailBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showBattleCharacterList();});document.getElementById('battleEnemyBookBtn').onclick=showEnemyBook;document.getElementById('enemyBookBtn').onclick=showEnemyBook;
+const pauseButton=document.getElementById('battlePauseBtn');pauseButton.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();pauseBattle();});pauseButton.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();e.stopPropagation();pauseBattle();}});document.getElementById('pauseResume').onclick=resumeBattle;document.getElementById('pauseQuit').onclick=quitBattle;document.getElementById('detailClose').onclick=()=>{document.getElementById('detail').style.display='none';if(enemyBookReturnToHome){enemyBookReturnToHome=false;document.getElementById('characterBookMenu').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}};
+const battleDetailBtn=document.getElementById('battleDetailBtn');battleDetailBtn.addEventListener('pointerdown',e=>{e.stopPropagation();},{passive:true});battleDetailBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showBattleCharacterList();});document.getElementById('battleEnemyBookBtn').onclick=()=>{enemyBookReturnToHome=false;showEnemyBook();};document.getElementById('enemyBookBtn').onclick=()=>{enemyBookReturnToHome=false;showEnemyBook();};
 document.getElementById('nextBtn').onclick=()=>{const r=document.getElementById('result');r.style.setProperty('display','none','important');if(document.getElementById('nextBtn').textContent==='ランク戦に戻る'){document.getElementById('start').style.display='none';openRank();return;}if(document.getElementById('nextBtn').textContent==='もう一度挑戦'||document.getElementById('nextBtn').textContent==='もう一度遊ぶ'){startStage(selectedStage);return;}if(selectedMode==='legend'&&selectedStage<6){selectedStage++;const pool=legendPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}if((selectedMode==='japan'||selectedMode==='future'||selectedMode==='space')&&selectedStage<48){selectedStage++;const pool=chapterPool();const nextStage=pool[selectedStage-1];document.getElementById('startBtn').textContent=nextStage.name+'を開始';startStage(selectedStage);return;}document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('stageBack').onclick=()=>{document.getElementById('result').style.setProperty('display','none','important');document.getElementById('start').style.display='flex';renderStageSelect()};
 document.getElementById('giftBoxBtn').onclick=openGiftBox;document.getElementById('giftClose').onclick=closeGiftBox;document.getElementById('giftClaimAll').onclick=claimAllGifts;document.getElementById('loginBonusBtn').onclick=()=>claimDailyLoginBonus(true);document.getElementById('loginBonusClose').onclick=closeLoginBonus;document.getElementById('formationBtn').onclick=()=>{document.getElementById('start').style.display='none';document.getElementById('formation').style.display='flex';renderFormation()};document.getElementById('kinoshitaBookBtn').onclick=openKinoshitaBook;document.getElementById('kinoshitaBookClose').onclick=closeKinoshitaBook;document.querySelectorAll('[data-book-filter]').forEach(b=>b.onclick=()=>{kinoshitaBookFilter=b.dataset.bookFilter;renderKinoshitaBook()});
