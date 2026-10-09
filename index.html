@@ -8,9 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.7.1';
+const GAME_VERSION='v1.7.2';
 const UPDATE_LOG=[
- {date:'2026-10-09',version:'v1.7.1',title:'🎃 ハロウィン交換所とランキング報酬を改善',items:['ハロウィンSSR携帯品・真髄1回分をキャンディ交換に追加','ランキング1～10位の報酬を順位順に調整','ランキング報酬計算で古い公開RPを優先してしまう重複判定を修正']},
+ {date:'2026-10-09',version:'v1.7.2',title:'🎃 ハロウィン交換所をボタン式に刷新',items:['番号入力を廃止し、カテゴリ別の交換ボタンと所持キャンディ表示を追加','限定衣装・SSR携帯品・真髄・コイン・XP・育成素材を追加','交換回数の保存、所持済み判定、連打防止を追加']},
+  {date:'2026-10-09',version:'v1.7.1',title:'🎃 ハロウィン交換所とランキング報酬を改善',items:['ハロウィンSSR携帯品・真髄1回分をキャンディ交換に追加','ランキング1～10位の報酬を順位順に調整','ランキング報酬計算で古い公開RPを優先してしまう重複判定を修正']},
  {date:'2026-10-09',version:'v1.7.0',title:'🎃 ハロウィンイベントを追加',items:['ハロウィン限定ステージ3種とボス「ジャック・オー・木下」を追加','イベントステージクリアでハロウィンキャンディを獲得','限定キャラ「パンプキン木下」とコインを交換所に追加','イベント期間：2026年11月15日まで']},
  {date:'2026-10-09',version:'v1.6.1',title:'🎭 真髄2の衣装・携帯品対象を味方キャラに修正',items:['敵専用の速木下・鬼木下・木下戦車を対象から除外','真髄2のUR衣装・UR携帯品・SSR衣装3種を味方キャラクター専用に変更']},
  {date:'2026-10-09',version:'v1.6.0',title:'🏆 真髄をランクシーズンに連動',items:['真髄のシーズン番号・開催内容・更新時刻をランク戦シーズン基準に統一','ランクシーズンが切り替わると真髄の追加・リセット判定も同時に更新']},
@@ -1545,25 +1546,82 @@ function eventStagePool(){return eventStages.filter(st=>!st.itemReward&&(!st.hal
 function saveHalloweenCandy(){storage.setItem('kinoshitaHalloweenCandy',String(halloweenCandy));}
 function openHalloweenShop(){
  if(!halloweenEventActive()){alert('ハロウィンイベントは終了しました。');return;}
- const ownedIndex=cards.findIndex(c=>c.name==='パンプキン木下');
- const alreadyOwned=ownedIndex>=0&&hasCharacter(ownedIndex);
- const accessoryOwned=typeof shinjuOwned==='function'&&shinjuOwned('halloween_ssr_pumpkin_lantern');
- const choice=prompt('🎃 ハロウィン交換所\\n所持キャンディ：'+halloweenCandy+'個\\n\\n1：パンプキン木下（25個）'+(alreadyOwned?'【入手済み】':'')+'\\n2：木下コイン10,000枚（10個）\\n3：ハロウィンSSR携帯品「パンプキンランタン」（35個）'+(accessoryOwned?'【交換済み】':'')+'\\n4：真髄1回分（15個・選択中の真髄から1回）\\n\\n交換する番号を入力してください。');
- if(choice==='1'){
-  if(alreadyOwned){alert('パンプキン木下は入手済みです。');return;}
-  if(halloweenCandy<25){alert('キャンディが足りません。イベントステージをクリアして集めましょう。');return;}
-  halloweenCandy-=25;ownedFlags[ownedIndex]=true;syncOwnedCount();if(!formation.length)formation=[ownedIndex];saveHalloweenCandy();save();renderStageSelect();renderCards();alert('🎉 パンプキン木下を獲得しました！');
- }else if(choice==='2'){
-  if(halloweenCandy<10){alert('キャンディが足りません。');return;}
-  halloweenCandy-=10;gachaCoins+=10000;saveHalloweenCandy();save();renderStageSelect();renderOwnedStart();alert('🪙 木下コイン10,000枚を獲得しました！');
- }else if(choice==='3'){
-  if(accessoryOwned){alert('ハロウィンSSR携帯品は交換済みです。');return;}
-  if(halloweenCandy<35){alert('キャンディが足りません。');return;}
-  halloweenCandy-=35;shinjuInventory[HALLOWEEN_SSR_ACCESSORY.id]=1;saveHalloweenCandy();saveShinjuState();syncCharacterCosmeticInventory();renderShinju();renderCards();showShinjuReveal([{type:'accessory',item:HALLOWEEN_SSR_ACCESSORY,label:'🎃 ハロウィンSSR携帯品：'+HALLOWEEN_SSR_ACCESSORY.name}]);alert('🎉 パンプキンランタンを獲得しました！キャラクター詳細から装備できます。');
- }else if(choice==='4'){
-  if(halloweenCandy<15){alert('キャンディが足りません。');return;}
-  const reward=shinjuDrawOne(shinjuSelectedEssence);halloweenCandy-=15;shinjuPoints+=1;saveHalloweenCandy();saveShinjuState();renderShinju();renderOwnedStart();renderCards();showShinjuReveal([reward]);alert('✨ 真髄1回分を交換しました！選択中の真髄から1回分を獲得しました。');
- }
+ const modal=document.getElementById('halloweenShopModal');
+ if(!modal)return;
+ modal.style.display='flex';
+ renderHalloweenShop();
+}
+let halloweenShopCategory='all',halloweenShopBusy=false;
+function halloweenShopPurchaseCount(id){return Math.max(0,Number(storage.getItem('kinoshitaHalloweenShopBought_'+id)||0));}
+function halloweenShopCatalog(){
+ const pumpkinIndex=cards.findIndex(c=>c.name==='パンプキン木下');
+ return [
+  {id:'pumpkin_character',name:'パンプキン木下',emoji:'🎃',category:'character',categoryLabel:'限定キャラクター',cost:25,limit:1,desc:'ハロウィン限定キャラクターを仲間にする。',owned:()=>pumpkinIndex>=0&&hasCharacter(pumpkinIndex),reward:'character'},
+  {id:'pumpkin_lantern',name:'パンプキンランタン',emoji:'🏮',rarity:'SSR',category:'limited',categoryLabel:'限定アイテム',cost:35,limit:1,desc:'パンプキン木下専用のハロウィン限定SSR携帯品。',owned:()=>shinjuOwned(HALLOWEEN_SSR_ACCESSORY.id),reward:'accessory'},
+  {id:'pumpkin_costume',name:'月夜の魔装',emoji:'🧙',rarity:'SSR',category:'limited',categoryLabel:'限定アイテム',cost:45,limit:1,desc:'パンプキン木下専用のハロウィン限定SSR衣装。',owned:()=>shinjuOwned(HALLOWEEN_SSR_COSTUME.id),reward:'costume'},
+  {id:'shinju_draw',name:'真髄1回分',emoji:'✨',category:'gacha',categoryLabel:'ガチャ関連',cost:15,limit:10,desc:'現在選択中の真髄を1回引く。結果は通常の真髄所持品に保存される。',reward:'draw'},
+  {id:'coins_10000',name:'木下コイン 10,000枚',emoji:'🪙',category:'gacha',categoryLabel:'ガチャ・通貨',cost:10,limit:10,desc:'木下コイン10,000枚を獲得する。',reward:'coins',amount:10000},
+  {id:'coins_100000',name:'木下コイン 100,000枚',emoji:'💰',category:'gacha',categoryLabel:'ガチャ・通貨',cost:80,limit:3,desc:'まとめて使える木下コイン100,000枚。',reward:'coins',amount:100000},
+  {id:'player_xp',name:'プレイヤーXP 5,000',emoji:'⭐',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'プレイヤー経験値を5,000獲得する。',reward:'xp',amount:5000},
+  {id:'normal_gold',name:'ノーマルキャラの金 ×1',emoji:'🪙',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'ノーマルキャラの育成に使う金を1個獲得する。',reward:'normalGold',amount:1},
+  {id:'color_power',name:'ランダム属性パワー ×1',emoji:'🌈',category:'growth',categoryLabel:'育成素材',cost:8,limit:10,desc:'赤・青・黄・緑・紫のいずれかの属性パワーを1個獲得する。',reward:'power',amount:1}
+ ];
+}
+function halloweenShopCanBuy(item){
+ const count=halloweenShopPurchaseCount(item.id);
+ if(item.owned&&item.owned())return false;
+ return count<item.limit&&halloweenCandy>=item.cost;
+}
+function renderHalloweenShop(){
+ const modal=document.getElementById('halloweenShopModal');if(!modal||modal.style.display==='none')return;
+ const candy=document.getElementById('halloweenShopCandy');if(candy)candy.textContent=halloweenCandy.toLocaleString();
+ const catalog=halloweenShopCatalog();
+ const filtered=catalog.filter(item=>halloweenShopCategory==='all'||item.category===halloweenShopCategory);
+ const grid=document.getElementById('halloweenShopItems');if(!grid)return;
+ grid.innerHTML=filtered.map(item=>{
+  const count=halloweenShopPurchaseCount(item.id),owned=!!(item.owned&&item.owned()),can=halloweenShopCanBuy(item);
+  const countText=owned?'所持済み':('交換 '+count+'/'+item.limit);
+  return '<article class="hwShopCard '+(can?'':'hwShopDisabled')+'"><div class="hwShopIcon">'+item.emoji+'</div><div class="hwShopType">'+(item.rarity?item.rarity+' ・ ':'')+item.categoryLabel+'</div><h3>'+item.name+'</h3><p>'+item.desc+'</p><div class="hwShopCount">'+countText+'</div><div class="hwShopPrice">🍬 '+item.cost+'個</div><button type="button" '+(can?'':'disabled')+' onclick="buyHalloweenShopItem(\''+item.id+'\')">'+(owned?'入手済み':count>=item.limit?'交換上限':halloweenCandy<item.cost?'キャンディ不足':'交換する')+'</button></article>';
+ }).join('');
+ if(!filtered.length)grid.innerHTML='<div class="hwShopEmpty">このカテゴリの交換先はありません。</div>';
+}
+function setHalloweenShopCategory(category){
+ halloweenShopCategory=category;document.querySelectorAll('[data-hw-category]').forEach(b=>{const active=b.dataset.hwCategory===category;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false')});renderHalloweenShop();
+}
+function closeHalloweenShop(){const modal=document.getElementById('halloweenShopModal');if(modal)modal.style.display='none';halloweenShopBusy=false;renderStageSelect();}
+function buyHalloweenShopItem(id){
+ if(halloweenShopBusy)return;
+ const item=halloweenShopCatalog().find(x=>x.id===id);if(!item)return;
+ if(!halloweenEventActive()){alert('ハロウィンイベントは終了しました。');closeHalloweenShop();return;}
+ if(item.owned&&item.owned()){alert('このアイテムはすでに所持しています。');renderHalloweenShop();return;}
+ if(halloweenShopPurchaseCount(id)>=item.limit){alert('このアイテムは交換上限に達しています。');renderHalloweenShop();return;}
+ if(halloweenCandy<item.cost){alert('キャンディが足りません。イベントステージをクリアして集めましょう。');return;}
+ halloweenShopBusy=true;
+ let committed=false,revealRewards=null;
+ try{
+  let message='';
+  if(item.reward==='character'){
+   const i=cards.findIndex(c=>c.name==='パンプキン木下');if(i<0)throw new Error('交換対象キャラクターが見つかりません。');
+   ownedFlags[i]=true;syncOwnedCount();if(!formation.length)formation=[i];message='🎉 パンプキン木下を獲得しました！';
+  }else if(item.reward==='accessory'||item.reward==='costume'){
+   const cosmetic=item.reward==='accessory'?HALLOWEEN_SSR_ACCESSORY:HALLOWEEN_SSR_COSTUME;
+   shinjuInventory[cosmetic.id]=1;syncCharacterCosmeticInventory();message=cosmetic.name+'を獲得しました！キャラクター詳細から装備できます。';
+   revealRewards=[{type:cosmetic.type,item:cosmetic,label:(cosmetic.type==='costume'?'👕 ハロウィン限定SSR衣装：':'🎒 ハロウィン限定SSR携帯品：')+cosmetic.name}];
+  }else if(item.reward==='draw'){
+   const reward=shinjuDrawOne(shinjuSelectedEssence);shinjuDrawCount=Math.max(0,Number(shinjuDrawCount||0)+1);message='選択中の真髄を1回引きました！';revealRewards=[reward];
+  }else if(item.reward==='coins'){gachaCoins+=item.amount;message='木下コインを'+item.amount.toLocaleString()+'枚獲得しました！';}
+  else if(item.reward==='xp'){playerXP+=item.amount;message='プレイヤーXPを'+item.amount.toLocaleString()+'獲得しました！';}
+  else if(item.reward==='normalGold'){normalGold+=item.amount;message='ノーマルキャラの金を'+item.amount+'個獲得しました！';}
+  else if(item.reward==='power'){const colors=['赤','青','黄','緑','紫'];const color=colors[Math.floor(Math.random()*colors.length)];colorPowers[color]=Math.max(0,Number(colorPowers[color]||0))+item.amount;message=color+'の属性パワーを'+item.amount+'個獲得しました！';}
+  else throw new Error('未対応の交換報酬です。');
+  halloweenCandy-=item.cost;
+  storage.setItem('kinoshitaHalloweenShopBought_'+id,String(halloweenShopPurchaseCount(id)+1));
+  saveHalloweenCandy();save();saveShinjuState();committed=true;
+  if(revealRewards)showShinjuReveal(revealRewards);
+  renderHalloweenShop();renderStageSelect();renderOwnedStart();renderCards();renderShinju();renderNormalGrowthInventory();
+  alert('🎃 交換成功！\\n'+message+'\\n残りキャンディ：'+halloweenCandy.toLocaleString()+'個');
+ }catch(e){console.error('Halloween shop exchange failed',e);alert(committed?'交換は完了しました。画面更新の一部でエラーが発生しました。再読み込みして所持品をご確認ください。':'交換に失敗しました。キャンディは消費していません。');}
+ finally{halloweenShopBusy=false;renderHalloweenShop();}
 }
 let legendClears;try{legendClears=JSON.parse(storage.getItem('kinoshitaLegendClears')||'[]')}catch(e){legendClears=[]}if(!Array.isArray(legendClears))legendClears=[];while(legendClears.length<10)legendClears.push(0);legendClears=legendClears.map(x=>Math.max(0,Number(x)||0));
 /* ===== キャラクター配列変更時の既存セーブデータ修復 =====
@@ -3781,8 +3839,10 @@ const SHINJU_ESSENCES=[
  {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
-const HALLOWEEN_SSR_ACCESSORY={id:'halloween_ssr_pumpkin_lantern',type:'accessory',rarity:'SSR',characterIndex:-1,targetName:'パンプキン木下',name:'パンプキン木下・パンプキンランタン',emoji:'🎃',desc:'ハロウィンイベント限定SSR携帯品。パンプキン木下専用の光るランタン。'};
-SHINJU_ITEMS.push(HALLOWEEN_SSR_ACCESSORY);
+const HALLOWEEN_PUMPKIN_INDEX=cards.findIndex(c=>c.name==='パンプキン木下');
+const HALLOWEEN_SSR_ACCESSORY={id:'halloween_ssr_pumpkin_lantern',type:'accessory',rarity:'SSR',characterIndex:HALLOWEEN_PUMPKIN_INDEX,targetName:'パンプキン木下',name:'パンプキン木下・パンプキンランタン',emoji:'🎃',desc:'ハロウィンイベント限定SSR携帯品。パンプキン木下専用の光るランタン。'};
+const HALLOWEEN_SSR_COSTUME={id:'halloween_ssr_pumpkin_costume',type:'costume',rarity:'SSR',characterIndex:HALLOWEEN_PUMPKIN_INDEX,targetName:'パンプキン木下',name:'パンプキン木下・月夜の魔装',emoji:'🧙',color:'#a855f7',desc:'ハロウィン限定SSR衣装。月夜をイメージしたパンプキン木下専用衣装。'};
+SHINJU_ITEMS.push(HALLOWEEN_SSR_ACCESSORY,HALLOWEEN_SSR_COSTUME);
 let shinjuSelectedEssence=1;
 const SHINJU_CYCLE_CACHE={1:SHINJU_ESSENCES};
 const SHINJU_CYCLE_THEMES=[
@@ -4039,4 +4099,48 @@ document.getElementById('shinjuBtn')?.addEventListener('click',()=>{document.get
 document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.getElementById('shinju').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();});
 </script>
 <style>@keyframes shinjuPulse{from{transform:scale(.92) rotate(-3deg);opacity:.75}to{transform:scale(1.08) rotate(3deg);opacity:1}}@keyframes shinjuPop{from{transform:scale(.75);opacity:0}to{transform:scale(1);opacity:1}}</style>
+<div id="halloweenShopModal" class="hwShopOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="hwShopTitle">
+ <div class="hwShopPanel">
+  <header class="hwShopHeader"><div><div class="hwShopEyebrow">🎃 KINOSHITA HALLOWEEN NIGHT</div><h2 id="hwShopTitle">ハロウィン交換ショップ</h2><p>キャンディを使って限定アイテムを手に入れよう！</p></div><button type="button" class="hwShopClose" onclick="closeHalloweenShop()" aria-label="交換所を閉じる">✕</button></header>
+  <div class="hwShopBalance">🍬 所持ハロウィンキャンディ <strong id="halloweenShopCandy">0</strong> 個</div>
+  <nav class="hwShopCategories" aria-label="交換アイテムのカテゴリ">
+   <button type="button" data-hw-category="all" class="active" aria-pressed="true" onclick="setHalloweenShopCategory('all')">すべて</button>
+   <button type="button" data-hw-category="limited" aria-pressed="false" onclick="setHalloweenShopCategory('limited')">限定アイテム</button>
+   <button type="button" data-hw-category="character" aria-pressed="false" onclick="setHalloweenShopCategory('character')">キャラクター</button>
+   <button type="button" data-hw-category="gacha" aria-pressed="false" onclick="setHalloweenShopCategory('gacha')">ガチャ・コイン</button>
+   <button type="button" data-hw-category="growth" aria-pressed="false" onclick="setHalloweenShopCategory('growth')">育成素材</button>
+  </nav>
+  <div id="halloweenShopItems" class="hwShopGrid"></div>
+  <footer class="hwShopFooter"><span>交換した報酬は所持品・ゲームデータに保存されます。</span><button type="button" onclick="closeHalloweenShop()">閉じる</button></footer>
+ </div>
+</div>
+<style>
+.hwShopOverlay{position:fixed;inset:0;z-index:10000;background:rgba(10,5,25,.86);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:12px;color:#fff}
+.hwShopPanel{width:min(100%,980px);max-height:94dvh;overflow:auto;background:linear-gradient(150deg,#1b1238,#261448 55%,#100d26);border:2px solid #fbbf24;border-radius:20px;box-shadow:0 0 35px #a855f766;padding:clamp(12px,3vw,24px)}
+.hwShopHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #7555a5}
+.hwShopEyebrow{font-size:11px;font-weight:900;letter-spacing:1.4px;color:#fbbf24}
+.hwShopHeader h2{font-size:clamp(22px,5vw,34px);line-height:1.15;margin:5px 0;color:#fcd34d;text-shadow:0 2px #713f12}
+.hwShopHeader p{font-size:13px;color:#ddd6fe;margin:0}
+.hwShopClose{flex:0 0 42px;width:42px;height:42px;border:1px solid #a78bfa;border-radius:12px;background:#39235f;color:#fff;font-size:22px;font-weight:900}
+.hwShopBalance{margin:13px 0;padding:12px;border-radius:12px;background:#3b1764;border:1px solid #c084fc;font-weight:800}
+.hwShopBalance strong{font-size:24px;color:#fcd34d;margin-left:8px}
+.hwShopCategories{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px}
+.hwShopCategories button{flex:0 0 auto;border:1px solid #77619e;border-radius:999px;background:#20143c;color:#e9d5ff;padding:9px 13px;font-weight:800;font-size:12px}
+.hwShopCategories button.active{background:#f59e0b;color:#32134a;border-color:#fde68a}
+.hwShopGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.hwShopCard{min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:12px;border:1px solid #68508e;border-radius:14px;background:linear-gradient(160deg,#31204f,#19132e);box-shadow:inset 0 1px #ffffff10}
+.hwShopCard.hwShopDisabled{opacity:.78}
+.hwShopIcon{height:56px;display:grid;place-items:center;font-size:36px;background:#100b25;border:1px solid #6d4a9c;border-radius:10px;margin-bottom:8px}
+.hwShopType{font-size:10px;color:#c4b5fd;font-weight:900}
+.hwShopCard h3{font-size:15px;line-height:1.3;margin:5px 0;color:#fff}
+.hwShopCard p{font-size:11px;line-height:1.5;color:#ddd6fe;margin:0 0 9px;flex:1}
+.hwShopCount{font-size:11px;color:#cbd5e1;margin:3px 0}
+.hwShopPrice{font-size:14px;font-weight:1000;color:#fcd34d;margin:3px 0 9px}
+.hwShopCard button,.hwShopFooter button{width:100%;border:0;border-radius:10px;padding:11px 8px;font-weight:1000;background:linear-gradient(#fcd34d,#f59e0b);color:#351342}
+.hwShopCard button:disabled{background:#4b4560;color:#d6d3e2}
+.hwShopFooter{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:14px;color:#c4b5fd;font-size:11px}
+.hwShopFooter button{width:auto;min-width:90px;background:#3b2a57;color:#fff;border:1px solid #8067a9}
+.hwShopEmpty{grid-column:1/-1;text-align:center;padding:24px;color:#ddd6fe}
+@media(max-width:600px){.hwShopOverlay{padding:5px}.hwShopPanel{max-height:98dvh;padding:10px;border-radius:14px}.hwShopGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.hwShopCard{padding:8px}.hwShopIcon{height:46px;font-size:30px}.hwShopCard h3{font-size:13px}.hwShopCard p{font-size:10px}.hwShopCard button{font-size:12px;padding:10px 4px}.hwShopBalance{font-size:13px}.hwShopBalance strong{font-size:21px}.hwShopFooter{align-items:flex-start}.hwShopFooter span{max-width:65%}}
+</style>
 </body></html>
