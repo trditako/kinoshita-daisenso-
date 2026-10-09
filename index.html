@@ -3133,10 +3133,10 @@ function mythicPopup(text,e){const x=Math.max(60,Math.min(worldWidth-100,Number(
 function mythologyV2Abilities(e){return Array.isArray(e?.ability?.mythologyV2)?e.ability.mythologyV2:[];}
 function mythologyV2Has(e,key){return mythologyV2Abilities(e).includes(key);}
 function mythologyV2PreHit(target,damage,source){
- if(!target?.isEnemy||!source||source.isEnemy)return {damage};
+ if(!target?.isEnemy||source?.isEnemy)return {damage};
  const a=target.ability||{},now=performance.now()/1000;let dealt=Math.max(0,Number(damage)||0);
- if(mythologyV2Has(target,'distanceArmor')&&Math.abs(Number(target.x)-Number(source.x))>=Number(a.distanceThreshold||180)){dealt*=Number(a.distanceArmor||.5);if(now>=Number(target.mythDistanceArmorPopupReady||0)){target.mythDistanceArmorPopupReady=now+1.2;mythicPopup('🛡️ 距離装甲',target);}}
- if(mythologyV2Has(target,'longReflect')&&Math.abs(Number(target.x)-Number(source.x))>=Number(a.reflectRange||220)&&now>=Number(target.mythReflectReady||0)){target.mythReflectReady=now+Number(a.reflectCooldown||2);hit(source,Math.max(1,Math.round(dealt*Number(a.reflectFactor||.28))),target,{mythologyV2Reflect:true});mythicPopup('↩️ 遠隔反射',target);}
+ if(source&&mythologyV2Has(target,'distanceArmor')&&Math.abs(Number(target.x)-Number(source.x))>=Number(a.distanceThreshold||180)){dealt*=Number(a.distanceArmor||.5);if(now>=Number(target.mythDistanceArmorPopupReady||0)){target.mythDistanceArmorPopupReady=now+1.2;mythicPopup('🛡️ 距離装甲',target);}}
+ if(source&&mythologyV2Has(target,'longReflect')&&Math.abs(Number(target.x)-Number(source.x))>=Number(a.reflectRange||220)&&now>=Number(target.mythReflectReady||0)){target.mythReflectReady=now+Number(a.reflectCooldown||2);hit(source,Math.max(1,Math.round(dealt*Number(a.reflectFactor||.28))),target,{mythologyV2Reflect:true});mythicPopup('↩️ 遠隔反射',target);}
  if(mythologyV2Has(target,'barrier')){if(!target.mythBarrierMax)target.mythBarrierMax=Number(a.barrier||10000);if(target.mythBarrier==null)target.mythBarrier=target.mythBarrierMax;const absorbed=Math.min(target.mythBarrier,dealt);target.mythBarrier-=absorbed;dealt-=absorbed;updateBarrierDisplay(target);if(absorbed>0)mythicPopup('🛡️ 結界 -'+Math.round(absorbed),target);}
  if(mythologyV2Has(target,'causality')&&dealt>=target.hp&&now>=Number(target.mythCausalityReady||0)){target.mythCausalityReady=now+Number(a.causalityCooldown||12);target.hp=Math.max(1,Math.round(target.maxhp*Number(a.causalityHeal||.18)));mythologyV2Flash(target,'⏳ 因果転換');return {damage:0,handled:true};}
  if(mythologyV2Has(target,'absorb')){target.mythAbsorbed=(Number(target.mythAbsorbed)||0)+dealt*Number(a.absorbFactor||.2);dealt*=1-Number(a.absorbFactor||.2);}
