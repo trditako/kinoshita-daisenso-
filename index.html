@@ -3873,8 +3873,10 @@ function shinjuExchangeItem(item,cost){
 function renderShinjuExchangeShop(){
  const el=document.getElementById('shinjuExchange');
  if(!el)return;
- const items=shinjuEssenceItems(shinjuSelectedEssence);
- el.innerHTML='<div class="gachaBanner"><h3>✨ '+(SHINJU_ESSENCES.find(x=>x.id===shinjuSelectedEssence)?.name||'真髄')+'ポイント交換所</h3><p>真髄を1回引くごとに1pt獲得。11連なら11ptです。ポイントと所持アイテムはシーズン切替後も保持されます。</p><p><b>限定UR衣装・携帯品：各400pt</b>　｜　<b>SSR衣装：各80pt</b></p><div class="gachaChars">'+items.map(item=>shinjuExchangeItem(item,item.rarity==='UR'?400:80)).join('')+'</div></div>';
+ const state=getShinjuSeasonState();
+ const selected=state.active.find(x=>x.id===shinjuSelectedEssence)||state.active[0];
+ const items=selected?.items||[];
+ el.innerHTML='<div class="gachaBanner"><h3>✨ '+(selected?.name||'真髄')+'ポイント交換所</h3><p>真髄を1回引くごとに1pt獲得。11連なら11ptです。ポイントと所持アイテムはシーズン切替後も保持されます。</p><p><b>限定UR衣装・携帯品：各400pt</b>　｜　<b>SSR衣装：各80pt</b></p><div class="gachaChars">'+items.map(item=>shinjuExchangeItem(item,item.rarity==='UR'?400:80)).join('')+'</div></div>';
  el.querySelectorAll('[data-shinju-exchange]').forEach(btn=>btn.onclick=()=>buyShinjuExchange(btn.dataset.shinjuExchange,Number(btn.dataset.cost)));
 }
 function buyShinjuExchange(id,cost){
