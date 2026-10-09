@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.7';
+const GAME_VERSION='v1.8.8';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.8',title:'🎃 真髄の金確率・金集め難易度・ハロウィン交換所を調整',items:['真髄の伝説レアの金を0.3%、超激レアの金を3%に変更','超激レア・伝説レアの金集めステージを大幅に遊びやすく調整','ハロウィン交換所で全レアリティの金を交換可能に変更']},
  {date:'2026-10-10',version:'v1.8.7',title:'🔧 木下交換・真髄と敵キャラ図鑑の戻り動作を修正',items:['木下交換・真髄を誤って非表示にしていたCSSを削除','ホーム画面から敵キャラ図鑑を開いた場合、閉じるとホーム画面へ戻るよう修正']},
  {date:'2026-10-10',version:'v1.8.6',title:'🔧 画面下に表示される不要な「\\n」を修正',items:['キャラ図鑑メニュー直後のHTMLに残っていた文字列を削除','画面下に「\\n」と表示される原因を修正']},
  {date:'2026-10-10',version:'v1.8.5',title:'🧭 ホーム画面メニューを整理',items:['ステージ開始ボタンをステージ一覧の一番下に配置','キャラ図鑑メニューに木下図鑑と敵キャラ図鑑をまとめた','日本編・未来編などをカテゴリ選択式にし、章選択をコンパクト化']},
@@ -1604,7 +1605,7 @@ let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventCle
 let halloweenCandy=Math.max(0,Number(storage.getItem('kinoshitaHalloweenCandy')||0));
 function halloweenEventActive(){return Date.now()<new Date('2026-11-16T00:00:00+09:00').getTime();}
 for(const rarity of GOLD_RARITIES.filter(r=>r!=='ノーマル'))eventStages.push({name:rarity+'の金集め',width:1150,baseHp:26000,xp:1100,itemReward:{type:'rarityGold',rarity,amount:1},enemies:['鬼木下','巨木下','赤い強化木下','木下大将'],schedule:[{t:2,enemy:'鬼木下',mult:6,fixedMultiplier:true},{t:6,enemy:'巨木下',mult:4,fixedMultiplier:true},{t:11,enemy:'赤い強化木下',mult:5,fixedMultiplier:true},{t:17,enemy:'木下大将',mult:2,fixedMultiplier:true},{t:24,enemy:'木下大将',mult:3,fixedMultiplier:true}]});
-const superRareGoldStage=eventStages.find(st=>st.name==='超激レアの金集め');if(superRareGoldStage){superRareGoldStage.width=2200;superRareGoldStage.baseHp=1200000;superRareGoldStage.xp=18000;superRareGoldStage.enemies=['パーフェクト木下','狂乱の木下','古代井上','黒王木下'];superRareGoldStage.schedule=[{t:2,enemy:'パーフェクト木下',mult:3,fixedMultiplier:true},{t:5,enemy:'狂乱の木下',mult:4,fixedMultiplier:true},{t:9,enemy:'古代井上',mult:3,fixedMultiplier:true},{t:13,enemy:'パーフェクト木下',mult:5,fixedMultiplier:true},{t:17,enemy:'黒王木下',mult:7,fixedMultiplier:true},{t:22,enemy:'狂乱の木下',mult:6,fixedMultiplier:true},{t:27,enemy:'古代井上',mult:5,fixedMultiplier:true},{t:33,enemy:'パーフェクト木下',mult:7,fixedMultiplier:true},{t:39,enemy:'狂乱の木下',mult:8,fixedMultiplier:true}];superRareGoldStage.repeatSpawns=[{enemy:'黒王木下',start:25,interval:12,mult:5,fixedMultiplier:true}];}const legendGoldStage=eventStages.find(st=>st.name==='伝説レアの金集め');if(legendGoldStage){legendGoldStage.width=3000;legendGoldStage.baseHp=8000000;legendGoldStage.xp=50000;legendGoldStage.enemies=['パーフェクト木下','古代井上','狂乱の木下','黒王木下'];legendGoldStage.schedule=[{t:2,enemy:'パーフェクト木下',mult:8,fixedMultiplier:true},{t:4,enemy:'古代井上',mult:7,fixedMultiplier:true},{t:7,enemy:'狂乱の木下',mult:12,fixedMultiplier:true},{t:11,enemy:'パーフェクト木下',mult:12,fixedMultiplier:true},{t:15,enemy:'古代井上',mult:10,fixedMultiplier:true},{t:19,enemy:'狂乱の木下',mult:15,fixedMultiplier:true},{t:24,enemy:'黒王木下',mult:18,fixedMultiplier:true},{t:29,enemy:'パーフェクト木下',mult:17,fixedMultiplier:true},{t:34,enemy:'古代井上',mult:15,fixedMultiplier:true},{t:39,enemy:'狂乱の木下',mult:20,fixedMultiplier:true},{t:45,enemy:'パーフェクト木下',mult:22,fixedMultiplier:true}];legendGoldStage.repeatSpawns=[{enemy:'黒王木下',start:20,interval:10,mult:14,fixedMultiplier:true},{enemy:'古代井上',start:28,interval:12,mult:12,fixedMultiplier:true}];}
+const superRareGoldStage=eventStages.find(st=>st.name==='超激レアの金集め');if(superRareGoldStage){superRareGoldStage.width=1500;superRareGoldStage.baseHp=350000;superRareGoldStage.xp=12000;superRareGoldStage.enemies=['パーフェクト木下','狂乱の木下','古代井上'];superRareGoldStage.schedule=[{t:3,enemy:'パーフェクト木下',mult:1.5,fixedMultiplier:true},{t:9,enemy:'狂乱の木下',mult:2,fixedMultiplier:true},{t:16,enemy:'古代井上',mult:2,fixedMultiplier:true},{t:24,enemy:'パーフェクト木下',mult:2.5,fixedMultiplier:true},{t:33,enemy:'狂乱の木下',mult:3,fixedMultiplier:true}];superRareGoldStage.repeatSpawns=[];}const legendGoldStage=eventStages.find(st=>st.name==='伝説レアの金集め');if(legendGoldStage){legendGoldStage.width=1900;legendGoldStage.baseHp=900000;legendGoldStage.xp=30000;legendGoldStage.enemies=['パーフェクト木下','古代井上','狂乱の木下','黒王木下'];legendGoldStage.schedule=[{t:3,enemy:'パーフェクト木下',mult:2,fixedMultiplier:true},{t:8,enemy:'古代井上',mult:2.5,fixedMultiplier:true},{t:14,enemy:'狂乱の木下',mult:3.5,fixedMultiplier:true},{t:21,enemy:'黒王木下',mult:4,fixedMultiplier:true},{t:29,enemy:'パーフェクト木下',mult:4.5,fixedMultiplier:true},{t:38,enemy:'狂乱の木下',mult:5,fixedMultiplier:true}];legendGoldStage.repeatSpawns=[{enemy:'黒王木下',start:35,interval:18,mult:4,fixedMultiplier:true}];}
 function eventStagePool(){return eventStages.filter(st=>!st.itemReward&&(!st.halloweenEvent||halloweenEventActive()));}
 function saveHalloweenCandy(){storage.setItem('kinoshitaHalloweenCandy',String(halloweenCandy));}
 function openHalloweenShop(){
@@ -1627,6 +1628,10 @@ function halloweenShopCatalog(){
   {id:'coins_100000',name:'木下コイン 100,000枚',emoji:'💰',category:'gacha',categoryLabel:'ガチャ・通貨',cost:80,limit:3,desc:'まとめて使える木下コイン100,000枚。',reward:'coins',amount:100000},
   {id:'player_xp',name:'プレイヤーXP 5,000',emoji:'⭐',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'プレイヤー経験値を5,000獲得する。',reward:'xp',amount:5000},
   {id:'normal_gold',name:'ノーマルキャラの金 ×1',emoji:'🪙',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'ノーマルキャラの育成に使う金を1個獲得する。',reward:'normalGold',amount:1},
+  {id:'rare_gold',name:'レアキャラの金 ×1',emoji:'🪙',rarity:'レア',category:'growth',categoryLabel:'育成素材',cost:15,limit:10,desc:'レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'レア',amount:1},
+  {id:'super_rare_gold',name:'激レアキャラの金 ×1',emoji:'🪙',rarity:'激レア',category:'growth',categoryLabel:'育成素材',cost:20,limit:10,desc:'激レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'激レア',amount:1},
+  {id:'super_super_rare_gold',name:'超激レアキャラの金 ×1',emoji:'🪙',rarity:'超激レア',category:'growth',categoryLabel:'育成素材',cost:30,limit:10,desc:'超激レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'超激レア',amount:1},
+  {id:'legend_rare_gold',name:'伝説レアキャラの金 ×1',emoji:'🪙',rarity:'伝説レア',category:'growth',categoryLabel:'育成素材',cost:50,limit:10,desc:'伝説レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'伝説レア',amount:1},
   {id:'color_power',name:'ランダム属性パワー ×1',emoji:'🌈',category:'growth',categoryLabel:'育成素材',cost:8,limit:10,desc:'赤・青・黄・緑・紫のいずれかの属性パワーを1個獲得する。',reward:'power',amount:1}
  ];
 }
@@ -1675,6 +1680,7 @@ function buyHalloweenShopItem(id){
   }else if(item.reward==='coins'){gachaCoins+=item.amount;message='木下コインを'+item.amount.toLocaleString()+'枚獲得しました！';}
   else if(item.reward==='xp'){playerXP+=item.amount;message='プレイヤーXPを'+item.amount.toLocaleString()+'獲得しました！';}
   else if(item.reward==='normalGold'){normalGold+=item.amount;message='ノーマルキャラの金を'+item.amount+'個獲得しました！';}
+  else if(item.reward==='rarityGold'){addRarityGold(item.rarityName,item.amount);message=item.rarityName+'キャラの金を'+item.amount+'個獲得しました！';}
   else if(item.reward==='power'){const colors=['赤','青','黄','緑','紫'];const color=colors[Math.floor(Math.random()*colors.length)];colorPowers[color]=Math.max(0,Number(colorPowers[color]||0))+item.amount;message=color+'の属性パワーを'+item.amount+'個獲得しました！';}
   else throw new Error('未対応の交換報酬です。');
   halloweenCandy-=item.cost;
@@ -4010,7 +4016,14 @@ function shinjuRandomPower(){
  colorPowers[color]=Math.max(0,Number(colorPowers[color]||0)+1);
  return {type:'power',label:'🌈 '+color+'のパワー ×1'};
 }
-function shinjuRandomGold(){const rarity=GOLD_RARITIES[Math.floor(Math.random()*GOLD_RARITIES.length)];addRarityGold(rarity,1);return {type:'gold',rarity,label:'🪙 '+rarity+'の金 ×1'};}
+function shinjuRandomGold(){
+ // 真髄全体で金は15%。その内訳を伝説レア0.3%、超激レア3%に固定する。
+ // 金抽選枠15%の中で、ノーマル・レア・激レア各26%、超激レア20%、伝説レア2%。
+ const roll=Math.random()*100;
+ const rarity=roll<26?'ノーマル':roll<52?'レア':roll<78?'激レア':roll<98?'超激レア':'伝説レア';
+ addRarityGold(rarity,1);
+ return {type:'gold',rarity,label:'🪙 '+rarity+'の金 ×1'};
+}
 function shinjuDrawOne(essenceId=shinjuSelectedEssence){
  const pool=shinjuEssenceItems(essenceId),itemChance=Math.min(20,3.4+shinjuPityMisses*0.25),r=Math.random()*100,itemThresholds=[0.2,0.4,1.4,2.4,3.4].map(v=>v/3.4*itemChance);
  const getItemReward=item=>{
@@ -4042,7 +4055,7 @@ function renderShinju(){
  if(banner){
   const tabs=state.active.map(x=>'<button type="button" class="shinjuEssenceTab" data-shinju-essence="'+x.id+'" style="flex:1;min-width:90px;padding:9px 6px;border:2px solid '+(x.id===essence.id?'#facc15':'#cbd5e1')+';border-radius:9px;background:'+(x.id===essence.id?'#6d28d9':'#f8fafc')+';color:'+(x.id===essence.id?'#fff':'#1e293b')+';font-weight:900">'+x.name+'</button>').join('');
   const items=essence.items;
-  banner.innerHTML='<div class="gachaBanner"><h2>✨ '+essence.name+'</h2><p>'+essence.desc+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+tabs+'</div><div style="background:#ede9fe;border:1px solid #a78bfa;border-radius:9px;padding:8px;margin:8px 0;color:#3b0764;font-weight:900">📅 サイクル '+state.cycle+'・シーズン '+state.seasonNumber+'（段階 '+state.phase+'/3）　｜　開催中 '+state.active.length+'種類　｜　次の更新まで約'+state.daysRemaining+'日</div><div class="shinjuBannerItems"><span>👕 UR：'+items[0].name+'</span><span>🎒 UR：'+items[1].name+'</span><span>✨ SSR：'+items[2].name+'／'+items[3].name+'／'+items[4].name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装・携帯品 各0.2%（救済で上昇）<br>限定SSR衣装 各1.0%（救済で上昇）　｜ 色のパワー 45%<br>全レアリティの金 15%　｜ XP 20%　｜ コイン 16.6%（救済で変動）</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
+  banner.innerHTML='<div class="gachaBanner"><h2>✨ '+essence.name+'</h2><p>'+essence.desc+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+tabs+'</div><div style="background:#ede9fe;border:1px solid #a78bfa;border-radius:9px;padding:8px;margin:8px 0;color:#3b0764;font-weight:900">📅 サイクル '+state.cycle+'・シーズン '+state.seasonNumber+'（段階 '+state.phase+'/3）　｜　開催中 '+state.active.length+'種類　｜　次の更新まで約'+state.daysRemaining+'日</div><div class="shinjuBannerItems"><span>👕 UR：'+items[0].name+'</span><span>🎒 UR：'+items[1].name+'</span><span>✨ SSR：'+items[2].name+'／'+items[3].name+'／'+items[4].name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装・携帯品 各0.2%（救済で上昇）<br>限定SSR衣装 各1.0%（救済で上昇）<br>色のパワー 45%<br>金：ノーマル・レア・激レア 各3.9%　｜ 超激レア 3%　｜ 伝説レア 0.3%（金合計15%）<br>XP 20%　｜ コイン 16.6%（救済で変動）</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
   banner.querySelectorAll('[data-shinju-essence]').forEach(btn=>btn.onclick=()=>{shinjuSelectedEssence=Number(btn.dataset.shinjuEssence);renderShinju();});
  }
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
