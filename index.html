@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.14';
+const GAME_VERSION='v1.8.15';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.15',title:'📊 図鑑のレベル1基準ソートと能力数順を修正',items:['木下図鑑のHP・攻撃力・合計・移動速度・射程順はキャラのレベル1基本性能を参照','敵キャラ図鑑の能力数順でエラーにならないよう能力数計算を安全化','未遭遇の神話編敵も図鑑の並び替え対象へ統合']},
  {date:'2026-10-10',version:'v1.8.14',title:'📊 未入手・未遭遇キャラもステータス順に並び替え',items:['木下図鑑では未所持キャラも、設定されたHP・攻撃力・速度・射程・能力数に従って全キャラと一緒に並び替え','敵キャラ図鑑では未遭遇の敵も、設定データを基に遭遇済みの敵と一緒に並び替え','ロック表示や性能非公開の仕様は維持し、並び順だけをステータス基準に統一']},
  {date:'2026-10-10',version:'v1.8.13',title:'📊 図鑑のステータス並び替えを拡張',items:['木下図鑑・敵キャラ図鑑に移動速度順・射程順・能力数順を追加','HP順・攻撃力順・HP＋攻撃力合計順も継続','未入手・未遭遇のキャラクターをステータス順の末尾に配置']},
  {date:'2026-10-10',version:'v1.8.12',title:'📊 木下図鑑・敵キャラ図鑑にステータス順を追加',items:['HPが高い順・攻撃力が高い順・HP＋攻撃力合計が高い順で並び替え可能に変更','既存の図鑑No.順・名前順・レア度順・検索・フィルターを維持','未入手・未遭遇のキャラクターはステータス順の最後に配置し、隠し性能の並び順からの推測を抑制']},
@@ -1814,16 +1815,16 @@ function traitClass(trait){
  return map[trait]||'';
 }
 let enemyBookReturnToHome=false;
-function dexAbilityCount(e){const a=e?.ability||{},keys=Object.keys(a).filter(k=>!['name','desc','mythologyV2'].includes(k)&&a[k]!=null&&a[k]!==false&&a[k]!==0);const myth=Array.isArray(a.mythologyV2)?a.mythologyV2.length:0;const top=['barrier','metal','healAura','waveLevel','stopChance','warpChance','sealChance','attackDownChance','damageReduce','guaranteeKnockback','yabayaba','phoenixSurgeLevel','revive','phoenixAura','phoenixLowHpMultiplier','strong','resist','slow','freeze','knockback','wave','surge'];const extra=top.filter(k=>e&&e[k]!=null&&e[k]!==false&&e[k]!==0).length;return myth+keys.length+extra||((a.name&&a.name!=='基本攻撃'&&a.name!=='なし')?1:0)}
+function dexAbilityCount(e){if(!e||typeof e!=='object')return 0;const a=e.ability&&typeof e.ability==='object'?e.ability:{};const keys=Object.keys(a).filter(k=>!['name','desc','mythologyV2'].includes(k)&&a[k]!=null&&a[k]!==false&&a[k]!==0);const myth=Array.isArray(a.mythologyV2)?a.mythologyV2.length:0;const top=['barrier','metal','healAura','waveLevel','stopChance','warpChance','sealChance','attackDownChance','damageReduce','guaranteeKnockback','yabayaba','phoenixSurgeLevel','revive','phoenixAura','phoenixLowHpMultiplier','strong','resist','slow','freeze','knockback','wave','surge'];const extra=top.filter(k=>e[k]!=null&&e[k]!==false&&e[k]!==0&&!Object.prototype.hasOwnProperty.call(a,k)).length;const count=myth+keys.length+extra;return count||((a.name&&a.name!=='基本攻撃'&&a.name!=='なし')?1:0)}
 function showEnemyBook(){
  const detail=document.getElementById('detail'),title=document.getElementById('detailTitle'),body=document.getElementById('detailBody');
  if(!detail||!title||!body)return;
  title.textContent='📚 敵キャラ図鑑';
  const mythKeys=Array.isArray(MYTHOLOGY_ENEMY_SPECS)?MYTHOLOGY_ENEMY_SPECS.map(e=>e.name).filter(Boolean):[];
- const mythSet=new Set(mythKeys),keys=Object.keys(enemyTypes),met=keys.filter(k=>enemyEncountered[k]);
+ const mythSet=new Set(mythKeys),keys=[...new Set([...Object.keys(enemyTypes),...mythKeys])],met=keys.filter(k=>enemyEncountered[k]);
  const q=(window.enemyBookQuery||'').trim().toLowerCase(),mode=window.enemyBookMode||'all',af=window.enemyBookAbility||'all',sort=window.enemyBookSort||'number';
- const allAbilities=[...new Set(keys.flatMap(k=>{const e=enemyTypes[k];const a=Array.isArray(e?.ability?.mythologyV2)?e.ability.mythologyV2:[];return a.length?a:(e?.ability?.name?[e.ability.name]:[])}))];
- const matches=k=>{const e=enemyTypes[k];if(!e)return false;if(mode==='myth'&&!mythSet.has(k))return false;if(mode==='encountered'&&!enemyEncountered[k])return false;if(af!=='all'&&!((e.ability?.mythologyV2||[]).includes(af)||e.ability?.name===af))return false;return !q||[k,e.trait,e.ability?.name,...(e.ability?.mythologyV2||[])].join(' ').toLowerCase().includes(q)};
+ const allAbilities=[...new Set(keys.flatMap(k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);const a=Array.isArray(e?.ability?.mythologyV2)?e.ability.mythologyV2:[];return a.length?a:(e?.ability?.name?[e.ability.name]:[])}))];
+ const matches=k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);if(!e)return false;if(mode==='myth'&&!mythSet.has(k))return false;if(mode==='encountered'&&!enemyEncountered[k])return false;if(af!=='all'&&!((e.ability?.mythologyV2||[]).includes(af)||e.ability?.name===af))return false;return !q||[k,e.trait,e.ability?.name,...(e.ability?.mythologyV2||[])].join(' ').toLowerCase().includes(q)};
  const filtered=keys.filter(matches);
  const statSort=['hp','atk','total','spd','range','abilityCount'].includes(sort);
  filtered.sort((ka,kb)=>{
@@ -1942,7 +1943,7 @@ function renderKinoshitaBook(){
   indexes.push(i);
  }
  const order={'ノーマル':0,'レア':1,'激レア':2,'超激レア':3,'伝説レア':4};
- const bookStat=(i,key)=>Number(statAt(i,key))||0;
+ const bookStat=(i,key)=>Number(cards[i]?.[key])||0; // 図鑑の比較はレベル・形態・ランク補正を使わず、レベル1基本性能で行う
  const bookTotal=i=>bookStat(i,'hp')+bookStat(i,'atk');
  const bookAbilityCount=i=>{const a=cards[i]?.ability||{},keys=Object.keys(a).filter(k=>!['name','desc','mythologyV2'].includes(k)&&a[k]!=null&&a[k]!==false&&a[k]!==0);const myth=Array.isArray(a.mythologyV2)?a.mythologyV2.length:0;return myth+keys.length||((a.name&&a.name!=='基本攻撃'&&a.name!=='なし')?1:0)};
  indexes.sort((a,b)=>{
