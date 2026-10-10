@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.15';
+const GAME_VERSION='v1.8.16';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.16',title:'📖 ゲーム内用語解説を追加',items:['ステータス・戦闘・妨害・神話編能力・育成・オンライン用語をカテゴリ別に解説','検索機能付きの用語解説画面を追加']},
  {date:'2026-10-10',version:'v1.8.15',title:'📊 図鑑のレベル1基準ソートと能力数順を修正',items:['木下図鑑のHP・攻撃力・合計・移動速度・射程順はキャラのレベル1基本性能を参照','敵キャラ図鑑の能力数順でエラーにならないよう能力数計算を安全化','未遭遇の神話編敵も図鑑の並び替え対象へ統合']},
  {date:'2026-10-10',version:'v1.8.14',title:'📊 未入手・未遭遇キャラもステータス順に並び替え',items:['木下図鑑では未所持キャラも、設定されたHP・攻撃力・速度・射程・能力数に従って全キャラと一緒に並び替え','敵キャラ図鑑では未遭遇の敵も、設定データを基に遭遇済みの敵と一緒に並び替え','ロック表示や性能非公開の仕様は維持し、並び順だけをステータス基準に統一']},
  {date:'2026-10-10',version:'v1.8.13',title:'📊 図鑑のステータス並び替えを拡張',items:['木下図鑑・敵キャラ図鑑に移動速度順・射程順・能力数順を追加','HP順・攻撃力順・HP＋攻撃力合計順も継続','未入手・未遭遇のキャラクターをステータス順の末尾に配置']},
@@ -386,9 +387,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
  </div>
  <button class="worker" id="workerBtn"><div>🌳 働き木下　LEVEL <span id="level">1</span></div><small id="workerText">タップで強化：250円</small><div class="workerbar"><i id="levelbar"></i></div></button>
  <div class="bottom" id="cards"></div>
- <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="announcementsBtn" class="formationBtn noticeMenuBtn" style="background:#b91c1c!important;color:#fff!important">📢 お知らせ <span id="announcementsUnread" class="unreadBadge" style="display:none">❗️</span></button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="surveyBtn" class="formationBtn" style="background:#0f766e!important;color:#fff!important">📝 プレイヤーアンケート（回答で10,000コイン）</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="characterBookBtn" class="formationBtn" style="background:#0f766e!important;color:#fff!important">📚 キャラ図鑑</button><button id="kinoshitaBookBtn" type="button" hidden style="display:none">木下図鑑</button><button id="enemyBookBtn" type="button" hidden style="display:none">敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下交換</button><button id="shinjuBtn" class="formationBtn" style="background:#a855f7!important;color:#fff!important">✨ 真髄</button><h2 style="margin:10px 0 2px;color:#135a9e">🗺️ ステージ選択</h2><div class="stageCategoryMenu" id="stageCategoryMenu"><button type="button" class="stageCategoryBtn active" data-stage-category="japan">🇯🇵 日本編</button><button type="button" class="stageCategoryBtn" data-stage-category="future">🚀 未来編</button><button type="button" class="stageCategoryBtn" data-stage-category="space">🌌 宇宙編</button><button type="button" class="stageCategoryBtn" data-stage-category="ancient">🏺 古代編</button><button type="button" class="stageCategoryBtn" data-stage-category="mythology">✨ 神話編</button><button type="button" class="stageCategoryBtn" data-stage-category="legend">🌟 レジェンド</button><button type="button" class="stageCategoryBtn" data-stage-category="event">🎪 イベント</button><button type="button" class="stageCategoryBtn" data-stage-category="growth">🔧 強化素材</button></div><div class="chapterTabs compactShown"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px;background:#fff7ed;border-color:#f97316;color:#7c2d12">🎃 ハロウィンナイト2026：2026年11月15日まで開催。イベントステージでキャンディを集めて限定報酬と交換！<br>⏳ 終了まで：<strong data-halloween-countdown>残り時間を計算中...</strong>（日本時間）</div><div class="owned" id="halloweenCandyBanner" style="margin-top:6px;background:#4c1d95;border-color:#c084fc;color:#fff">🍬 ハロウィンキャンディ：<span id="halloweenCandyCount">0</span>個 <button type="button" onclick="openHalloweenShop()" style="margin-left:8px;background:#facc15;color:#422006;border:0;border-radius:8px;padding:8px;font-weight:900">🎁 交換所</button></div><div class="owned" style="margin-top:4px">特別ステージ・強化素材ステージもここに表示されます。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
+ <div id="start" class="overlay"><div class="panel"><h1>木下大戦争</h1><p>ステージをクリアすると、新しい木下が順番に入手できます。</p><div class="owned" id="ownedStart"></div><div style="font-size:12px;font-weight:800;color:#555;margin-top:5px">戦闘中はフィールドを左右にスワイプして自由に視点を移動できます</div><button id="formationBtn" class="formationBtn">編成を変更</button><button id="announcementsBtn" class="formationBtn noticeMenuBtn" style="background:#b91c1c!important;color:#fff!important">📢 お知らせ <span id="announcementsUnread" class="unreadBadge" style="display:none">❗️</span></button><button id="glossaryBtn" class="formationBtn" style="background:#0e7490!important;color:#fff!important">📖 用語解説・能力の説明</button><button id="updateLogBtn" class="formationBtn" style="background:#334155!important;color:#fff!important">📝 バージョン・アップデートログ</button><button id="surveyBtn" class="formationBtn" style="background:#0f766e!important;color:#fff!important">📝 プレイヤーアンケート（回答で10,000コイン）</button><button id="pvpBtn" class="formationBtn pvpBtn">⚔️ プレイヤー対戦</button><button id="friendsOpen" class="formationBtn" style="background:#0ea5e9!important;color:#fff!important">👥 フレンド</button><button id="rankBtn" class="formationBtn" style="background:#7c3aed!important;color:#fff!important">🏆 ランク戦</button><button id="allianceBtn" class="formationBtn" style="background:#16a34a!important;color:#fff!important">🤝 同盟</button><button id="giftBoxBtn" class="formationBtn" style="background:#f59e0b!important;color:#111!important">🎁 プレゼントBOX</button><button id="loginBonusBtn" class="formationBtn" style="background:#06b6d4!important;color:#fff!important">📅 ログインボーナス</button><button id="missionAchievementBtn" class="formationBtn missionTopBtn">🎯 ミッション・実績・称号</button><button id="characterBookBtn" class="formationBtn" style="background:#0f766e!important;color:#fff!important">📚 キャラ図鑑</button><button id="kinoshitaBookBtn" type="button" hidden style="display:none">木下図鑑</button><button id="enemyBookBtn" type="button" hidden style="display:none">敵キャラ図鑑</button><button id="gachaBtn" class="formationBtn" style="background:#f8d76a!important;color:#241b00!important">🎟️ 木下交換</button><button id="shinjuBtn" class="formationBtn" style="background:#a855f7!important;color:#fff!important">✨ 真髄</button><h2 style="margin:10px 0 2px;color:#135a9e">🗺️ ステージ選択</h2><div class="stageCategoryMenu" id="stageCategoryMenu"><button type="button" class="stageCategoryBtn active" data-stage-category="japan">🇯🇵 日本編</button><button type="button" class="stageCategoryBtn" data-stage-category="future">🚀 未来編</button><button type="button" class="stageCategoryBtn" data-stage-category="space">🌌 宇宙編</button><button type="button" class="stageCategoryBtn" data-stage-category="ancient">🏺 古代編</button><button type="button" class="stageCategoryBtn" data-stage-category="mythology">✨ 神話編</button><button type="button" class="stageCategoryBtn" data-stage-category="legend">🌟 レジェンド</button><button type="button" class="stageCategoryBtn" data-stage-category="event">🎪 イベント</button><button type="button" class="stageCategoryBtn" data-stage-category="growth">🔧 強化素材</button></div><div class="chapterTabs compactShown"><button class="chapterTab active" data-chapter="1">日本編 第1章</button><button class="chapterTab" data-chapter="2">日本編 第2章</button><button class="chapterTab" data-chapter="3">日本編 第3章</button><button class="chapterTab futureTab" data-chapter="4">未来編 第1章</button><button class="chapterTab" style="background:#ede9fe!important;color:#4c1d95!important" data-chapter="5">宇宙編 第1章</button><button class="chapterTab" style="background:#7c2d12!important;color:#fff!important" data-chapter="6">古代編 第1章</button><button type="button" id="mythologyChapterBtn" class="chapterTab mythologyChapterTab" style="background:#111827!important;color:#f5d0fe!important;border-color:#7e22ce!important" data-chapter="7" aria-label="神話編 第1章を開く">🌌 神話編 第1章</button><button class="chapterTab legendTab" data-chapter="legend">🌟 レジェンド</button><button class="chapterTab eventTab" data-chapter="event">イベント</button><button class="chapterTab" data-chapter="growth">🔧 強化素材</button></div><div class="owned" id="chapterInfo" style="margin-top:6px">日本全国をめぐる木下大戦争</div><div class="stages" id="stages"></div><div id="eventArea" style="display:none"><div class="owned" style="margin-top:4px;background:#fff7ed;border-color:#f97316;color:#7c2d12">🎃 ハロウィンナイト2026：2026年11月15日まで開催。イベントステージでキャンディを集めて限定報酬と交換！<br>⏳ 終了まで：<strong data-halloween-countdown>残り時間を計算中...</strong>（日本時間）</div><div class="owned" id="halloweenCandyBanner" style="margin-top:6px;background:#4c1d95;border-color:#c084fc;color:#fff">🍬 ハロウィンキャンディ：<span id="halloweenCandyCount">0</span>個 <button type="button" onclick="openHalloweenShop()" style="margin-left:8px;background:#facc15;color:#422006;border:0;border-radius:8px;padding:8px;font-weight:900">🎁 交換所</button></div><div class="owned" style="margin-top:4px">特別ステージ・強化素材ステージもここに表示されます。</div><div class="owned" style="margin-top:6px;background:#fff7ed;border-color:#ea580c;color:#7c2d12">🪙 ノーマルキャラの金：<span id="normalGoldCount">0</span>　🌈 赤 <span id="powerRedCount">0</span> / 青 <span id="powerBlueCount">0</span> / 黄 <span id="powerYellowCount">0</span> / 緑 <span id="powerGreenCount">0</span> / 紫 <span id="powerPurpleCount">0</span></div><div class="stages" id="eventStages"></div></div><div id="growthArea" style="display:none"><div class="owned" style="margin-top:4px;background:#ecfdf5;border-color:#16a34a;color:#14532d">🔧 ノーマルキャラ強化用の素材ステージです。クリアすると育成素材を獲得できます。</div><div class="stages" id="growthStages"></div></div><button id="startBtn">長崎県を開始</button></div></div>
  <div id="updateLog" class="overlay" style="display:none;z-index:220"><div class="panel"><h2 style="margin:0 0 10px;color:#135a9e">📝 バージョン・アップデートログ</h2><div id="updateLogBody"></div><button id="updateLogClose" class="updateClose">閉じる</button></div></div>
- <div id="announcementsModal" class="overlay" style="display:none;z-index:10040"><div class="panel" style="max-width:700px;max-height:92dvh;text-align:left"><h1 style="font-size:clamp(25px,6vw,36px);color:#b91c1c">📢 お知らせ</h1><p style="font-size:13px">イベント情報や開催期間、報酬などを確認できます。詳細を開くと未読マークが消えます。</p><div id="announcementsList"></div><button id="announcementsClose" class="formationBtn" style="width:100%;background:#334155!important;color:white!important">閉じる</button></div></div>
+ <div id="glossaryModal" class="overlay" style="display:none;z-index:10060"><div class="panel glossaryPanel"><header class="glossaryHeader"><div><h1>📖 用語解説</h1><p>ゲーム内の用語や能力の意味を検索できます。</p></div><button id="glossaryClose" type="button">✕</button></header><input id="glossarySearch" type="search" placeholder="用語を検索（例：烈波、KB、神域）"><nav id="glossaryCategories" class="glossaryCategories"><button data-cat="all" class="active">すべて</button><button data-cat="stats">ステータス</button><button data-cat="combat">戦闘・攻撃</button><button data-cat="status">妨害・耐性</button><button data-cat="myth">神話編能力</button><button data-cat="growth">育成・収集</button><button data-cat="online">ランク・オンライン</button></nav><div id="glossaryCount"></div><div id="glossaryEntries"></div><button id="glossaryCloseBottom" class="formationBtn" type="button">閉じる</button></div></div><div id="announcementsModal" class="overlay" style="display:none;z-index:10040"><div class="panel" style="max-width:700px;max-height:92dvh;text-align:left"><h1 style="font-size:clamp(25px,6vw,36px);color:#b91c1c">📢 お知らせ</h1><p style="font-size:13px">イベント情報や開催期間、報酬などを確認できます。詳細を開くと未読マークが消えます。</p><div id="announcementsList"></div><button id="announcementsClose" class="formationBtn" style="width:100%;background:#334155!important;color:white!important">閉じる</button></div></div>
  <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
@@ -4410,5 +4411,94 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
 @keyframes cosmeticTrailRise{from{transform:translate(-50%,0) scale(.8);opacity:.9}to{transform:translate(-50%,-22px) scale(.45);opacity:0}}
 @keyframes cosmeticTrailBurst{0%{transform:translate(-50%,0) scale(.5) rotate(0);opacity:0}20%{opacity:1}100%{transform:translate(calc(-50% + var(--trail-offset,0px)),-34px) scale(1.1) rotate(35deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){.cosmeticAura,.cosmeticOrbit,.cosmeticBadge,.cosmeticTrail{animation-duration:2s!important;animation-iteration-count:1!important}}
+</style>
+
+<script id="inGameGlossary">
+(function(){
+const terms=[
+['stats','HP（体力）','耐えられるダメージ量。HPが0になると倒されます。復活能力がある場合は条件に従って再登場します。'],
+['stats','攻撃力','通常攻撃や、その攻撃を元に発生する特殊攻撃の基本ダメージ。耐性や倍率などにより実際のダメージは変わります。'],
+['stats','射程','攻撃が届く距離。数値が大きいほど遠くから攻撃できます。全方位攻撃や最小射程がある場合は攻撃範囲が変わります。'],
+['stats','移動速度','戦場を移動する速さ。停止や鈍足などの効果中は移動できない、または遅くなることがあります。'],
+['stats','攻撃間隔','攻撃後、次の攻撃を行えるまでの基本時間。時間に影響する能力で変化する場合があります。'],
+['stats','再生産時間','出撃後、同じキャラクターを再び出撃できるまでの時間。戦場での攻撃間隔とは別です。'],
+['stats','コスト','戦闘中にキャラクターを出撃させるためのお金。木下コインとは別の資源です。'],
+['stats','KB（ノックバック）','ダメージなどで後退すること。KB数は後退できる回数の目安で、後退時に攻撃や移動の流れが変わります。'],
+['stats','単体攻撃','一度の攻撃で基本的に1体を対象にする攻撃方式です。'],
+['stats','範囲攻撃','攻撃範囲内にいる複数の敵を対象にできる攻撃方式です。'],
+['stats','全方位攻撃・最小射程','前方だけでなく設定された後方にも攻撃できる方式です。最小射程は攻撃判定が後方へ伸びる距離などを示します。最小射程だけで突進型になるわけではありません。'],
+['stats','属性','赤・黒・天使・エイリアン・古代などの分類。属性に応じて特効や耐性が適用されます。'],
+['stats','レアリティ','ノーマル、レア、激レア、超激レア、伝説レアなどの希少度分類。レアリティだけで強さが決まるわけではありません。'],
+['combat','波動','攻撃をきっかけに、離れた位置へ追加の攻撃判定を発生させる能力です。波動無効の相手には対応するダメージが通りません。'],
+['combat','烈波','指定位置や範囲に一定時間、追加の攻撃判定を発生させる特殊攻撃です。位置や持続中に複数回判定する設定があります。烈波無効の相手にはダメージが通りません。'],
+['combat','クリティカル','通常と異なる特別な攻撃判定。発動確率が設定されている場合、毎回発動するわけではありません。'],
+['combat','超ダメージ','指定属性などの対象に、通常より大きなダメージを与える特性です。'],
+['combat','めっぽう強い','指定属性に対して、与えるダメージや受けるダメージが有利になる特性です。'],
+['combat','打たれ強い','指定属性から受けるダメージを減らす特性。通常は完全無効とは異なります。'],
+['combat','ふっとばす','相手を後方へ押し戻す効果。ふっとばし無効の相手には効きません。'],
+['combat','復活','倒された後、設定された条件や時間に従って再び登場する能力です。'],
+['combat','分裂・召喚','条件を満たすと複数体に分かれたり、別のユニットを出現させたりする能力です。出現後の性能は個別設定に従います。'],
+['combat','死亡爆発','倒されたときに、周囲などへ追加ダメージや効果を発生させる能力です。'],
+['combat','追加攻撃・蓄積攻撃','通常攻撃に追加の判定を加えたり、蓄積した力を使って特殊攻撃を行ったりする能力です。回数や条件は個別設定によります。'],
+['combat','反撃・反射','攻撃を受けたことなどを条件に攻撃を返す能力、または受けた攻撃や効果の一部を相手へ返す能力です。対象となる攻撃種別は設定によります。'],
+['combat','回避','条件や確率に応じて攻撃や効果を受けずに済む能力です。すべての攻撃が必ず回避できるわけではありません。'],
+['combat','攻撃時回復・吸収','攻撃時にHPを回復したり、受けたダメージなどの一部を取り込んで回復などへ変換したりする能力です。'],
+['combat','強化倍率（％）','基準性能に対する強化率。設定上100%が基準、200%が2倍を意味する場合があります。'],
+['combat','敵城HPトリガー','敵城HPが指定値以下になったことをきっかけに、増援などのイベントが発生する仕組みです。'],
+['status','停止','対象を一定時間、移動や攻撃などができない状態にする妨害です。停止無効の相手には効きません。'],
+['status','鈍足','対象の移動速度を一定時間低下させる妨害です。停止とは異なり、移動できる場合があります。'],
+['status','呪い','一定時間、対象の能力の一部を封じる妨害。このゲームでは呪い中、波動・烈波などの特殊能力が発動できない仕様です。'],
+['status','波動無効・烈波無効','それぞれ波動または烈波によるダメージや効果を受けない耐性です。通常攻撃まで一括して無効にする意味ではありません。'],
+['status','停止無効・鈍足無効・呪い無効','それぞれ対応する妨害状態にならない耐性です。他の妨害も同時に無効になるとは限りません。'],
+['status','妨害無効','指定された妨害を受けない能力の総称です。対象となる妨害は個別の耐性表示を確認してください。'],
+['status','属性耐性・ダメージ軽減','特定属性からのダメージや効果を減らす特性です。軽減は通常、完全無効とは異なります。'],
+['status','回復','減少したHPを戻す効果です。対象や回復量、最大HPを超えるかどうかは能力設定によります。'],
+['status','シールド','通常HPとは別枠でダメージを受け止める防御値です。上限や回復・破壊条件は個別設定に従います。'],
+['status','結界','専用の耐久値を持つ防御領域です。専用ゲージが残っている間、設定された保護やダメージ処理が働きます。'],
+['status','神域','神話編の特殊領域・効果。対象範囲や射程などに影響することがあり、詳細は個別能力と発動通知を確認してください。'],
+['myth','距離装甲','神話編の能力。攻撃元との距離などに応じて防御や受けるダメージを変化させます。発動距離や軽減量は固有設定によります。'],
+['myth','因果転換','神話編の能力。受けたダメージや攻撃処理を別の結果へ変換するタイプの効果です。対象や条件は能力設定によります。'],
+['myth','魂喰い','神話編の能力。対象の生命力などを奪う表現の特殊効果で、吸収や回復に関係する場合があります。'],
+['myth','時間加速','神話編の能力。行動や攻撃間隔など、時間に関係する処理へ影響します。適用対象や倍率は設定によります。'],
+['myth','終端化','神話編の能力。条件を満たした対象へ特殊な終端処理を行います。具体的な対象・効果は個別能力の説明を確認してください。'],
+['myth','神話編の能力通知','距離装甲・召喚・神域など一部の能力は発動通知が表示されます。通知に加え、対象の状態や専用ゲージも確認してください。'],
+['growth','レベル（Lv）','育成段階。HPや攻撃力などが変化する場合があります。図鑑のステータス順は比較条件をそろえるためLv1の基本性能を基準にします。'],
+['growth','XP・木下コイン','XPは育成などに使う経験値資源、木下コインはガチャや交換などに使う通貨です。戦闘中のお金とは別です。'],
+['growth','ガチャ','通貨などを使い、キャラクターやアイテムを抽選で獲得する仕組みです。提供割合は各画面の表示を確認してください。'],
+['growth','金（キャラクター強化）','対象キャラクターの性能や強化段階に関係する育成要素です。必要資源や効果は対象によって異なります。'],
+['growth','進化・第二形態','条件や素材を満たして形態を切り替える仕組み。形態によって性能や能力が変わる場合があります。'],
+['growth','育成素材','進化や強化などに使うアイテムです。素材ごとに用途が異なります。'],
+['growth','真髄','衣装・携帯品などを獲得するガチャ・交換コンテンツです。キャラクター本体のガチャとは別です。'],
+['growth','衣装・携帯品','キャラクターに装備する見た目用アイテムです。戦闘性能への効果があるかは個別のアイテム説明に従います。'],
+['growth','SSR・UR','衣装や携帯品などのアイテムに使われる希少度表記です。キャラクター本体のレアリティと混同しないでください。'],
+['online','RP','ランク戦のポイント。勝敗などに応じて増減し、ランクやランキングに関係します。'],
+['online','シーズン','ランク戦などの開催期間の区切りです。更新時にRPや報酬、真髄の内容が切り替わる場合があります。'],
+['online','PvP','プレイヤー同士が対戦するモードです。ランク戦とはルールが異なる場合があります。'],
+['online','部屋ID','対戦用の部屋を識別する番号です。参加する相手と同じ部屋情報を使用します。'],
+['online','同盟','プレイヤーがグループを作り、同盟ランキングやチャットなどを利用する仕組みです。'],
+['online','AIアカウント','対戦や育成などを行うコンピューター制御のアカウントです。'],
+['online','図鑑No.・能力数順','図鑑No.はキャラクター識別用の番号。能力数順は設定されている能力項目の数を基準に並べる機能で、強さや勝率の順位ではありません。']
+];
+let active='all';const el=id=>document.getElementById(id);
+function esc(x){return String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function render(){const q=(el('glossarySearch').value||'').trim().toLocaleLowerCase('ja');const rows=terms.filter(t=>(active==='all'||t[0]===active)&&(!q||(t[1]+' '+t[2]).toLocaleLowerCase('ja').includes(q)));el('glossaryCount').textContent=rows.length+'件を表示（全'+terms.length+'件）';el('glossaryEntries').innerHTML=rows.length?rows.map(t=>'<article class="glossaryEntry"><h3>'+esc(t[1])+'</h3><p>'+esc(t[2])+'</p></article>').join(''):'<p>一致する用語がありません。別の言葉で検索してください。</p>';}
+function close(){el('glossaryModal').style.display='none';}
+el('glossaryBtn')?.addEventListener('click',()=>{el('glossaryModal').style.display='flex';el('glossarySearch').value='';active='all';el('glossaryCategories').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.cat==='all'));render();});
+el('glossaryClose')?.addEventListener('click',close);el('glossaryCloseBottom')?.addEventListener('click',close);el('glossarySearch')?.addEventListener('input',render);
+el('glossaryCategories')?.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{active=b.dataset.cat;el('glossaryCategories').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render();}));
+el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModal'))close();});render();
+})();
+</script>
+<style id="inGameGlossaryStyles">
+.glossaryPanel{width:min(100%,900px);max-height:94dvh;overflow:auto;text-align:left!important;background:#f8fafc;color:#0f172a;border:3px solid #0e7490;border-radius:16px;padding:clamp(12px,3vw,22px)}
+.glossaryHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:2px solid #cbd5e1;padding-bottom:10px}
+.glossaryHeader h1{font-size:clamp(24px,5vw,34px);margin:0 0 5px;color:#0e7490}.glossaryHeader p{font-size:13px;line-height:1.5;margin:0;color:#334155}
+#glossaryClose{flex:0 0 42px;width:42px;height:42px;border:0;border-radius:10px;background:#0f172a;color:#fff;font-size:22px;font-weight:900}
+#glossarySearch{display:block;box-sizing:border-box;width:100%;margin:12px 0;padding:12px;border:2px solid #94a3b8;border-radius:10px;background:#fff;color:#0f172a;font-size:16px}
+.glossaryCategories{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px}.glossaryCategories button{flex:0 0 auto;padding:8px 11px;border:1px solid #94a3b8;border-radius:999px;background:#e2e8f0;color:#0f172a;font-weight:800;font-size:12px}.glossaryCategories button.active{background:#0e7490;border-color:#155e75;color:#fff}
+#glossaryCount{font-size:12px;font-weight:800;color:#475569;margin:3px 0 8px}#glossaryEntries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.glossaryEntry{min-width:0;border:1px solid #cbd5e1;border-left:4px solid #0e7490;border-radius:10px;background:#fff;padding:11px}.glossaryEntry h3{font-size:15px;line-height:1.35;margin:0 0 6px;color:#0f172a}.glossaryEntry p{font-size:13px;line-height:1.65;margin:0;color:#334155}
+#glossaryCloseBottom{width:100%;margin-top:12px;background:#334155!important;color:#fff!important}
+@media(max-width:600px){.glossaryPanel{max-height:98dvh;padding:10px}#glossaryEntries{grid-template-columns:1fr;gap:7px}.glossaryEntry{padding:10px}.glossaryEntry p{font-size:13px}}
 </style>
 </body></html>
