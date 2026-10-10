@@ -1626,7 +1626,7 @@ function normalizeFormation(){
 }
 normalizeFormation();
 let selectedStage=1,selectedMode='japan',selectedChapter=1,selectedLegendChapter=1,worldWidth=0,cameraX=0;
-const BOSS_RUSH_BOSSES=[{name:'鬼木下',mult:.5},{name:'巨木下',mult:.65},{name:'速木下',mult:.8},{name:'盾木下',mult:1},{name:'雷木下',mult:1.2},{name:'氷木下',mult:1.5},{name:'火山木下',mult:1.8},{name:'鋼木下',mult:2.2},{name:'木下戦車',mult:2.8},{name:'超巨大木下',mult:3.5},{name:'狂乱の木下',mult:4.5},{name:'パーフェクト木下',mult:5.5},{name:'ヤバすぎ木下',mult:7},{name:'覇王木下',mult:9},{name:'ワイバーン',mult:12},{name:'フェニックス',mult:16},{name:'天照大神',mult:22},{name:'須佐之男',mult:30},{name:'高天原の王',mult:42},{name:'終焉神・八百万',mult:60}];
+const BOSS_RUSH_BOSSES=[{name:'鬼木下',mult:.5},{name:'巨木下',mult:.65},{name:'速木下',mult:.8},{name:'盾木下',mult:1},{name:'雷木下',mult:1.2},{name:'氷木下',mult:1.5},{name:'火山木下',mult:1.8},{name:'鋼木下',mult:2.2},{name:'木下戦車',mult:2.8},{name:'超巨大木下',mult:3.5},{name:'狂乱の木下',mult:4.5},{name:'巨大木下将軍',mult:5.5},{name:'阿修羅王',mult:7},{name:'覇王木下',mult:9},{name:'ワイバーン',mult:12},{name:'帝釈天',mult:16},{name:'天照大神',mult:22},{name:'須佐之男',mult:30},{name:'高天原の王',mult:42},{name:'終焉神・八百万',mult:60}];
 let bossRushIndex=0,bossRushKills=0,bossRushBossSpawned=false;
 function bossRushStage(){const b=BOSS_RUSH_BOSSES[Math.max(0,Math.min(BOSS_RUSH_BOSSES.length-1,bossRushIndex))];return {name:'ボスラッシュ '+(bossRushIndex+1)+'/'+BOSS_RUSH_BOSSES.length+'：'+b.name,width:1900,baseHp:5000,xp:0,schedule:[{t:0,enemy:b.name,role:'boss',mult:b.mult,fixedMultiplier:true}],repeatSpawns:[],enemies:[b.name],bossRush:true};}
 let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
