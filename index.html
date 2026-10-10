@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.28';
+const GAME_VERSION='v1.8.29';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.29',title:'🌊 波動の発生位置・ダメージ判定を共通修正',items:['味方・敵の波動を通常攻撃の命中位置から進行方向へ伸ばすよう修正','波動Lvより通常攻撃射程が長いキャラでも波動が届くよう修正','味方波動にも属性相性・特効を反映し、波動無効判定と空中攻撃条件を維持']},
  {date:'2026-10-11',version:'v1.8.28',title:'🐉 ワイバーンの魂喰い調整と攻撃力上昇マークを追加',items:['ワイバーンの魂喰いによる攻撃力上昇を撃破ごと+10%に調整し、HP回復を削除','魂喰い・時間加速・終端化などで攻撃力が上昇している間、⚔️マークと強化内容を表示']},
  {date:'2026-10-11',version:'v1.8.27',title:'🦴 異常木下の第二形態と古代のパワー集めを追加',items:['異常木下の第二形態を追加','進化素材に各色パワー10個ずつと古代のパワー5個を設定','古代のパワーは専用強化素材ステージからのみ獲得','空中攻撃、古代/浮/宇宙特効、波動・烈波・妨害耐性を追加']},
  {date:'2026-10-11',version:'v1.8.26',title:'✨ 衣装・携帯品の重複所持に対応',items:['真髄で重複したUR・SSR衣装／携帯品も所持数に加算','重複時のコイン報酬は維持し、重複アイテムも獲得済み判定・UR／SSR演出の対象に反映','所持アイテムバッグに同じ衣装・携帯品の合計所持数を表示']},
@@ -2268,18 +2269,27 @@ function triggerSocratesSurge(source,origin){
    surge.remove();
  },duration*1000+50);
 }
-function allyWaveAttack(u){
+function allyWaveAttack(u,hitTargets=[]){
  const level=Math.max(1,Number(u.waveLevel??u.ability?.waveLevel??0));
- if(!level)return;
+ if(!level||!u)return;
  const waveRange=90*level;
- // 味方は右側から左側の敵へ波動を飛ばす。
- const targets=enemies.filter(e=>e.x<=u.x&&Math.abs(e.x-u.x)<=waveRange);
- for(const e of targets){if(isWaveImmuneEntity(e))continue;if(e.waveReflect&&!isAbilitySealed(e)){reflectAllyWave(u,e);continue;}const dealt=Math.max(1,Math.round(u.atk));hit(e,dealt,(u.waveCarriesEffects||u.ability?.waveCarriesEffects)?u:null,null);if(e.hp<=0)removeEnemy(e);}
+ // 波動は通常攻撃の命中位置から敵城側（左方向）へ伸びる。長射程キャラでも波動Lvの距離だけ攻撃元から測らない。
+ const origins=(Array.isArray(hitTargets)?hitTargets:[]).filter(e=>e&&Number.isFinite(Number(e.x)));
+ const origin=origins.length?Math.min(...origins.map(e=>Number(e.x))):Number(u.x);
+ if(!Number.isFinite(origin))return;
+ const left=Math.max(0,origin-waveRange);
+ const affected=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&!isWaveImmuneEntity(e)&&e.x>=left&&e.x<=origin);
+ for(const e of affected){
+   if(e.waveReflect&&!isAbilitySealed(e)){reflectAllyWave(u,e);continue;}
+   const dealt=Math.max(1,Math.round(Number(damageAgainst(u,e))||Number(u.atk)||1));
+   hit(e,dealt,(u.waveCarriesEffects||u.ability?.waveCarriesEffects)?u:null,null);
+   if(e.hp<=0)removeEnemy(e);
+ }
  const wave=document.createElement('div');
  wave.className='enemyWaveEffect allyWaveEffect';
- wave.style.left=Math.max(0,u.x-waveRange)+'px';
+ wave.style.left=left+'px';
  wave.style.bottom='105px';
- wave.style.setProperty('--wave-width',Math.max(1,Math.min(waveRange,u.x))+'px');
+ wave.style.setProperty('--wave-width',Math.max(1,origin-left)+'px');
  effects.appendChild(wave);
  for(let i=0;i<Math.min(8,level);i++){
    const crest=document.createElement('span');
@@ -3272,7 +3282,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
      u.target=target;
    }
    if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
-   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u))applyAbility(u,t,dealt);if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true)}else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}else removeEnemy(t)}}if(!isAbilitySealed(u)&&u.ability?.phoenixSurgeLevel)triggerPhoenixSurge(u,u.x,targets);const waveLevel=Number(u.waveLevel??u.ability?.waveLevel??0),waveChance=u.waveChance??u.ability?.waveChance;if(waveLevel>0&&!isAbilitySealed(u)&&(waveChance==null||Math.random()<Number(waveChance)))allyWaveAttack(u);u.cd=u.interval}}
+   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u))applyAbility(u,t,dealt);if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true)}else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}else removeEnemy(t)}}if(!isAbilitySealed(u)&&u.ability?.phoenixSurgeLevel)triggerPhoenixSurge(u,u.x,targets);const waveLevel=Number(u.waveLevel??u.ability?.waveLevel??0),waveChance=u.waveChance??u.ability?.waveChance;if(waveLevel>0&&!isAbilitySealed(u)&&(waveChance==null||Math.random()<Number(waveChance)))allyWaveAttack(u,targets);u.cd=u.interval}}
    else if(u.x<=enemyBaseStop&&selectedMode==='bossrush'){u.state='idle';}else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const cursedNow=nowMove<(u.cursedUntil||0);const curseSf=cursedNow?(Number(u.cursedSpeedFactor)||1):1;if(!isThousandStep&&!stopNow)u.x-=u.spd*curseSf*60*dt}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';updateBarrierDisplay(u);
@@ -3289,7 +3299,7 @@ function applyYabayabaCloneAbility(e,target){
  if(a.slow?.all&&Math.random()<Number(a.slow.chance||0)){
    for(const u of units){if(!u||u.hp<=0)continue;target=u;target.slowUntil=now+Number(a.slow.duration||2);target.slowFactor=Number(a.slow.factor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slow.duration||2),'slow');}
  }
- if(a.waveChance&&Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel||a.waveLevel||3));enemyWaveAttack(e);}
+ if(a.waveChance&&Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel||a.waveLevel||3));enemyWaveAttack(e,targets);}
  else if(a.wave===true&&e.waveLevel>0)enemyWaveAttack(e);
 }
 function reflectEnemyWave(sourceWave,reflector){
@@ -3383,15 +3393,19 @@ function enemyAttackTarget(e,t,ea,now2,sourceSealed){
 function shouldReflectWave(target,source){
  return !!(target&&source&&target.waveReflect&&!isAbilitySealed(target));
 }
-function enemyWaveAttack(e,allowReflect=true){
+function enemyWaveAttack(e,hitTargets=[],allowReflect=true){
  if(!e||isAbilitySealed(e))return;
- const level=Math.max(1,Number(e.waveLevel||0));
+ const level=Math.max(1,Number(e.waveLevel??e.ability?.waveLevel??0));
  if(!level)return;
  const waveRange=90*level;
- const targets=units.filter(u=>u.x>=e.x&&!isWaveImmuneEntity(u)&&Math.abs(u.x-e.x)<=waveRange);
+ // 敵側の波動は通常攻撃の命中位置からプレイヤー城側（右方向）へ伸びる。
+ const origins=(Array.isArray(hitTargets)?hitTargets:[]).filter(u=>u&&Number.isFinite(Number(u.x)));
+ const origin=origins.length?Math.max(...origins.map(u=>Number(u.x))):Number(e.x);
+ if(!Number.isFinite(origin))return;
+ const right=Math.min(worldWidth-120,origin+waveRange);
+ const targets=units.filter(u=>u&&u.hp>0&&!isWaveImmuneEntity(u)&&u.x>=origin&&u.x<=right);
  for(const u of targets){
    if(allowReflect&&shouldReflectWave(u,e)){reflectEnemyWave(e,u);continue;}
-   const before=u.hp;
    const dealt=Math.max(1,Number(damageTakenBy(u,e))||1);
    hit(u,dealt,(e.waveCarriesEffects||e.ability?.waveCarriesEffects)?e:null,null);
    if(e.ability?.curseOnWave&&!e.ability?.waveCarriesEffects&&!isAbilitySealed(u)&&e.ability?.curseChance&&Math.random()<Number(e.ability.curseChance))applyCurseStatus(e,u);
@@ -3399,20 +3413,21 @@ function enemyWaveAttack(e,allowReflect=true){
  }
  const wave=document.createElement('div');
  wave.className='enemyWaveEffect';
- wave.style.left=e.x+'px';
+ wave.style.left=origin+'px';
  wave.style.bottom='105px';
- wave.style.setProperty('--wave-width',Math.min(worldWidth-120,e.x+waveRange)-e.x+'px');
+ wave.style.setProperty('--wave-width',Math.max(1,right-origin)+'px');
  wave.style.setProperty('--wave-level',level);
  effects.appendChild(wave);
  for(let i=0;i<Math.min(10,level);i++){
    const crest=document.createElement('span');
    crest.className='waveCrest';
-   crest.style.left=(i/(Math.max(1,Math.min(10,level)-1))*Math.min(100,waveRange*.11))+'%';
+   crest.style.left=(i/Math.max(1,Math.min(10,level)-1)*Math.min(100,waveRange*.11))+'%';
    crest.style.animationDelay=(i*18)+'ms';
    wave.appendChild(crest);
  }
  setTimeout(()=>wave.remove(),520);
 }
+
  for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed&&ea.phoenixSurgeLevel)triggerPhoenixSurge(e,e.x);
      const enemyWaveLevel=Number(e.waveLevel??ea.waveLevel??0),enemyWaveChance=e.waveChance??ea.waveChance;if(!sourceSealed&&enemyWaveLevel>0&&(enemyWaveChance==null||Math.random()<Number(enemyWaveChance)))enemyWaveAttack(e);
      if(!sourceSealed&&ea.curseChance&&Math.random()<Number(ea.curseChance)){
