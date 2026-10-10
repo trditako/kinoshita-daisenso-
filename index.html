@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.23';
+const GAME_VERSION='v1.8.24';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.24',title:'🏆 ボスラッシュの倍率を大幅調整',items:['元ステータスが低いボスの倍率を引き上げ','高ステータスのボスは倍率を約×1.1〜×2.0に抑え、終盤の極端な高倍率を撤廃']},
  {date:'2026-10-11',version:'v1.8.23',title:'🏆 ボスラッシュのボスと報酬を調整',items:['ワイバーンを黒王木下へ置き換え','撃破したステージ数に応じて木下コイン・プレイヤーXPの報酬が1ステージごとに増加','ステージ別の報酬増加を結果画面の合計報酬に反映']},
  {date:'2026-10-11',version:'v1.8.22',title:'🏆 ボスラッシュモードを追加',items:['20体のボスが順番に出現し、撃破するほど倍率が上昇','撃破数に応じて木下コイン・プレイヤーXP・育成用の金を獲得','途中敗北でも撃破数に応じた報酬を獲得できる']},
  {date:'2026-10-11',version:'v1.8.20',title:'📚 敵キャラ図鑑に通常能力と神話能力を併記',items:['神話編の敵とワイバーンの詳細に、烈波・妨害・各種無効などの通常能力欄を追加','通常能力と神話能力を別々に表示し、神話能力がある敵でも通常能力が隠れないよう修正']},
@@ -1627,7 +1628,7 @@ function normalizeFormation(){
 }
 normalizeFormation();
 let selectedStage=1,selectedMode='japan',selectedChapter=1,selectedLegendChapter=1,worldWidth=0,cameraX=0;
-const BOSS_RUSH_BOSSES=[{name:'鬼木下',mult:.5},{name:'巨木下',mult:.65},{name:'速木下',mult:.8},{name:'盾木下',mult:1},{name:'雷木下',mult:1.2},{name:'氷木下',mult:1.5},{name:'火山木下',mult:1.8},{name:'鋼木下',mult:2.2},{name:'木下戦車',mult:2.8},{name:'超巨大木下',mult:3.5},{name:'狂乱の木下',mult:4.5},{name:'巨大木下将軍',mult:5.5},{name:'阿修羅王',mult:7},{name:'覇王木下',mult:9},{name:'黒王木下',mult:12},{name:'帝釈天',mult:16},{name:'天照大神',mult:22},{name:'須佐之男',mult:30},{name:'高天原の王',mult:42},{name:'終焉神・八百万',mult:60}];
+const BOSS_RUSH_BOSSES=[{name:'鬼木下',mult:2.5},{name:'巨木下',mult:1.5},{name:'速木下',mult:3},{name:'盾木下',mult:2},{name:'雷木下',mult:2},{name:'氷木下',mult:2},{name:'火山木下',mult:1.8},{name:'鋼木下',mult:1.5},{name:'木下戦車',mult:2},{name:'超巨大木下',mult:1.5},{name:'狂乱の木下',mult:1.1},{name:'巨大木下将軍',mult:1.8},{name:'阿修羅王',mult:1.6},{name:'覇王木下',mult:1.5},{name:'黒王木下',mult:1.5},{name:'帝釈天',mult:1.5},{name:'天照大神',mult:1.5},{name:'須佐之男',mult:1.6},{name:'高天原の王',mult:1.8},{name:'終焉神・八百万',mult:2}];
 let bossRushIndex=0,bossRushKills=0,bossRushBossSpawned=false;
 function bossRushStage(){const b=BOSS_RUSH_BOSSES[Math.max(0,Math.min(BOSS_RUSH_BOSSES.length-1,bossRushIndex))];return {name:'ボスラッシュ '+(bossRushIndex+1)+'/'+BOSS_RUSH_BOSSES.length+'：'+b.name,width:1900,baseHp:5000,xp:0,schedule:[{t:0,enemy:b.name,role:'boss',mult:b.mult,fixedMultiplier:true}],repeatSpawns:[],enemies:[b.name],bossRush:true};}
 let eventClears={};try{eventClears=JSON.parse(storage.getItem('kinoshitaEventClears')||'{}')}catch(e){eventClears={}}
