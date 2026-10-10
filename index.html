@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.12';
+const GAME_VERSION='v1.8.13';
 const UPDATE_LOG=[
+ {date:'2026-10-10',version:'v1.8.13',title:'📊 図鑑のステータス並び替えを拡張',items:['木下図鑑・敵キャラ図鑑に移動速度順・射程順・能力数順を追加','HP順・攻撃力順・HP＋攻撃力合計順も継続','未入手・未遭遇のキャラクターをステータス順の末尾に配置']},
  {date:'2026-10-10',version:'v1.8.12',title:'📊 木下図鑑・敵キャラ図鑑にステータス順を追加',items:['HPが高い順・攻撃力が高い順・HP＋攻撃力合計が高い順で並び替え可能に変更','既存の図鑑No.順・名前順・レア度順・検索・フィルターを維持','未入手・未遭遇のキャラクターはステータス順の最後に配置し、隠し性能の並び順からの推測を抑制']},
  {date:'2026-10-10',version:'v1.8.11',title:'✨ 真髄4～6とUR/SSRエフェクト差を追加',items:['真髄3の敵専用キャラを味方の木下（超覚醒）へ変更','味方キャラクターのみを対象にした真髄4～6を追加し、シーズン周期で順番に開催','SSRは控えめな光輪と単発エフェクト、URは複数光輪・軌跡・粒子を伴う演出へ強化','装備エフェクトをCSS中心で実装し、短時間で消える粒子数を制限']},
  {date:'2026-10-10',version:'v1.8.10',title:'🌌 神話編の能力処理と結界表示を修正',items:['結界専用ゲージと残量表示を追加','神域の射程低下を攻撃判定へ反映','距離装甲・召喚・神域の発動通知を追加','結界と因果転換の処理順、および魂喰い・時間加速・終端化の強化計算を修正','烈波など攻撃元情報のないダメージにも結界・因果転換・吸収を適用']},
@@ -1812,6 +1813,7 @@ function traitClass(trait){
  return map[trait]||'';
 }
 let enemyBookReturnToHome=false;
+function dexAbilityCount(e){const a=e?.ability||{},keys=Object.keys(a).filter(k=>!['name','desc','mythologyV2'].includes(k)&&a[k]!=null&&a[k]!==false&&a[k]!==0);const myth=Array.isArray(a.mythologyV2)?a.mythologyV2.length:0;const top=['barrier','metal','healAura','waveLevel','stopChance','warpChance','sealChance','attackDownChance','damageReduce','guaranteeKnockback','yabayaba','phoenixSurgeLevel','revive','phoenixAura','phoenixLowHpMultiplier','strong','resist','slow','freeze','knockback','wave','surge'];const extra=top.filter(k=>e&&e[k]!=null&&e[k]!==false&&e[k]!==0).length;return myth+keys.length+extra||((a.name&&a.name!=='基本攻撃'&&a.name!=='なし')?1:0)}
 function showEnemyBook(){
  const detail=document.getElementById('detail'),title=document.getElementById('detailTitle'),body=document.getElementById('detailBody');
  if(!detail||!title||!body)return;
@@ -1822,13 +1824,13 @@ function showEnemyBook(){
  const allAbilities=[...new Set(keys.flatMap(k=>{const e=enemyTypes[k];const a=Array.isArray(e?.ability?.mythologyV2)?e.ability.mythologyV2:[];return a.length?a:(e?.ability?.name?[e.ability.name]:[])}))];
  const matches=k=>{const e=enemyTypes[k];if(!e)return false;if(mode==='myth'&&!mythSet.has(k))return false;if(mode==='encountered'&&!enemyEncountered[k])return false;if(af!=='all'&&!((e.ability?.mythologyV2||[]).includes(af)||e.ability?.name===af))return false;return !q||[k,e.trait,e.ability?.name,...(e.ability?.mythologyV2||[])].join(' ').toLowerCase().includes(q)};
  const filtered=keys.filter(matches);
- const statSort=['hp','atk','total'].includes(sort);
+ const statSort=['hp','atk','total','spd','range','abilityCount'].includes(sort);
  filtered.sort((ka,kb)=>{
-  if(statSort){const ea=enemyTypes[ka]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===ka),eb=enemyTypes[kb]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===kb);const oa=!!enemyEncountered[ka],ob=!!enemyEncountered[kb];if(oa!==ob)return oa?-1:1;const score=e=>sort==='hp'?Number(e?.hp)||0:sort==='atk'?Number(e?.atk)||0:(Number(e?.hp)||0)+(Number(e?.atk)||0);return score(eb)-score(ea)||ka.localeCompare(kb,'ja');}
+  if(statSort){const ea=enemyTypes[ka]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===ka),eb=enemyTypes[kb]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===kb);const oa=!!enemyEncountered[ka],ob=!!enemyEncountered[kb];if(oa!==ob)return oa?-1:1;const score=e=>sort==='hp'?Number(e?.hp)||0:sort==='atk'?Number(e?.atk)||0:sort==='total'?(Number(e?.hp)||0)+(Number(e?.atk)||0):sort==='spd'?Number(e?.spd)||0:sort==='range'?Number(e?.range)||0:dexAbilityCount(e);return score(eb)-score(ea)||ka.localeCompare(kb,'ja');}
   return sort==='name'?ka.localeCompare(kb,'ja'):keys.indexOf(ka)-keys.indexOf(kb);
  });
  const buttonHTML=k=>{const e=enemyTypes[k]||MYTHOLOGY_ENEMY_SPECS.find(x=>x.name===k);if(!e)return '';const locked=!enemyEncountered[k];return locked?'<button class="enemyBookPick locked" disabled><div class="bookFace">❔</div><b>？？？？</b><span class="enemyTrait">'+(e.trait||'未遭遇')+'</span></button>':'<button class="enemyBookPick" data-enemy-book="'+k+'"><div class="bookFace">'+e.icon+'</div><b>'+e.name+'</b><span class="enemyTrait">'+(e.trait||'無')+'属性</span>'+(e.ability?.mythologyV2?.length?'<span class="enemyBookAbilityCount">⭐ 特殊能力 '+e.ability.mythologyV2.length+'種</span>':'')+'</button>'};
- body.innerHTML='<div class="bookToolbar"><input id="enemyBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索" value="'+(window.enemyBookQuery||'')+'"><select id="enemyBookMode" aria-label="章・登録状態で絞り込み"><option value="all">章・登録：すべて</option><option value="myth">神話編のみ</option><option value="encountered">遭遇済みのみ</option></select><select id="enemyBookAbility" aria-label="能力で絞り込み"><option value="all">能力：すべて</option>'+allAbilities.map(a=>'<option value="'+a+'">'+mythologyV2AbilityName(a)+'</option>').join('')+'</select><select id="enemyBookSort" aria-label="ステータス順で並び替え"><option value="number">登録順</option><option value="name">名前順</option><option value="hp">HPが高い順</option><option value="atk">攻撃力が高い順</option><option value="total">合計ステータス順（HP＋攻撃力）</option></select><button type="button" id="enemyBookClear" class="backbtn">絞り込みをすべて解除</button></div><div class="bookSearchCount">表示 '+filtered.length+'体 / 全'+keys.length+'体　｜遭遇済み '+met.length+'体</div><div class="bookSection"><h3>🌌 神話編</h3><div class="enemyBookGrid">'+filtered.filter(k=>mythSet.has(k)).map(buttonHTML).join('')+'</div></div><div class="bookSection"><h3>📚 その他の敵</h3><div class="enemyBookGrid">'+filtered.filter(k=>!mythSet.has(k)).map(buttonHTML).join('')+'</div></div>';
+ body.innerHTML='<div class="bookToolbar"><input id="enemyBookSearch" type="search" placeholder="🔎 名前・属性・能力で検索" value="'+(window.enemyBookQuery||'')+'"><select id="enemyBookMode" aria-label="章・登録状態で絞り込み"><option value="all">章・登録：すべて</option><option value="myth">神話編のみ</option><option value="encountered">遭遇済みのみ</option></select><select id="enemyBookAbility" aria-label="能力で絞り込み"><option value="all">能力：すべて</option>'+allAbilities.map(a=>'<option value="'+a+'">'+mythologyV2AbilityName(a)+'</option>').join('')+'</select><select id="enemyBookSort" aria-label="ステータス順で並び替え"><option value="number">登録順</option><option value="name">名前順</option><option value="hp">HPが高い順</option><option value="atk">攻撃力が高い順</option><option value="total">合計ステータス順（HP＋攻撃力）</option><option value="spd">移動速度が速い順</option><option value="range">射程が長い順</option><option value="abilityCount">能力数が多い順</option></select><button type="button" id="enemyBookClear" class="backbtn">絞り込みをすべて解除</button></div><div class="bookSearchCount">表示 '+filtered.length+'体 / 全'+keys.length+'体　｜遭遇済み '+met.length+'体</div>'+(statSort?'<div class="bookSection"><h3>📊 ステータス順</h3><div class="enemyBookGrid">'+filtered.map(buttonHTML).join('')+'</div></div>':'<div class="bookSection"><h3>🌌 神話編</h3><div class="enemyBookGrid">'+filtered.filter(k=>mythSet.has(k)).map(buttonHTML).join('')+'</div></div><div class="bookSection"><h3>📚 その他の敵</h3><div class="enemyBookGrid">'+filtered.filter(k=>!mythSet.has(k)).map(buttonHTML).join('')+'</div></div>');
  const s=document.getElementById('enemyBookSearch'),m=document.getElementById('enemyBookMode'),a=document.getElementById('enemyBookAbility'),so=document.getElementById('enemyBookSort');
  // 再描画後も選択中の値を明示的に復元し、表示と実際の絞り込み条件を一致させる
  if(s){s.value=window.enemyBookQuery||'';s.oninput=()=>{window.enemyBookQuery=s.value;showEnemyBook()};s.onkeydown=e=>e.stopPropagation()}
@@ -1941,12 +1943,12 @@ function renderKinoshitaBook(){
  const order={'ノーマル':0,'レア':1,'激レア':2,'超激レア':3,'伝説レア':4};
  const bookStat=(i,key)=>Number(statAt(i,key))||0;
  const bookTotal=i=>bookStat(i,'hp')+bookStat(i,'atk');
+ const bookAbilityCount=i=>{const a=cards[i]?.ability||{},keys=Object.keys(a).filter(k=>!['name','desc','mythologyV2'].includes(k)&&a[k]!=null&&a[k]!==false&&a[k]!==0);const myth=Array.isArray(a.mythologyV2)?a.mythologyV2.length:0;return myth+keys.length||((a.name&&a.name!=='基本攻撃'&&a.name!=='なし')?1:0)};
  indexes.sort((a,b)=>{
-  if(['hp','atk','total'].includes(kinoshitaBookSort)){
+  if(['hp','atk','total','spd','range','abilityCount'].includes(kinoshitaBookSort)){
    const ah=hasCharacter(a),bh=hasCharacter(b);if(ah!==bh)return ah?-1:1;
-   const av=kinoshitaBookSort==='hp'?bookStat(a,'hp'):kinoshitaBookSort==='atk'?bookStat(a,'atk'):bookTotal(a);
-   const bv=kinoshitaBookSort==='hp'?bookStat(b,'hp'):kinoshitaBookSort==='atk'?bookStat(b,'atk'):bookTotal(b);
-   return bv-av||a-b;
+   const score=i=>kinoshitaBookSort==='hp'?bookStat(i,'hp'):kinoshitaBookSort==='atk'?bookStat(i,'atk'):kinoshitaBookSort==='total'?bookTotal(i):kinoshitaBookSort==='spd'?bookStat(i,'spd'):kinoshitaBookSort==='range'?bookStat(i,'range'):bookAbilityCount(i);
+   return score(b)-score(a)||a-b;
   }
   return kinoshitaBookSort==='name'?String(cards[a].name||'').localeCompare(String(cards[b].name||''),'ja'):kinoshitaBookSort==='rarity'?(order[displayCharacterRarity(cards[a])]??99)-(order[displayCharacterRarity(cards[b])]??99)||a-b:a-b;
  });
@@ -1954,7 +1956,7 @@ function renderKinoshitaBook(){
  const rarities=['ノーマル','レア','激レア','超激レア','伝説レア'];
  const toolbar=document.getElementById('kinoshitaBookToolbar');
  if(toolbar){
-  if(!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" autocomplete="off" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort" aria-label="並び替え"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option><option value="hp">HPが高い順</option><option value="atk">攻撃力が高い順</option><option value="total">合計ステータス順（HP＋攻撃力）</option></select>';toolbar.dataset.ready='1';}
+  if(!toolbar.dataset.ready){toolbar.innerHTML='<input id="kinoshitaBookSearch" type="search" autocomplete="off" placeholder="🔎 名前・属性・能力で検索"><select id="kinoshitaBookRarity"><option value="all">レア度：すべて</option>'+rarities.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select><select id="kinoshitaBookSort" aria-label="並び替え"><option value="number">図鑑No.順</option><option value="name">名前順</option><option value="rarity">レア度順</option><option value="hp">HPが高い順</option><option value="atk">攻撃力が高い順</option><option value="total">合計ステータス順（HP＋攻撃力）</option><option value="spd">移動速度が速い順</option><option value="range">射程が長い順</option><option value="abilityCount">能力数が多い順</option></select>';toolbar.dataset.ready='1';}
   const qel=document.getElementById('kinoshitaBookSearch'),rel=document.getElementById('kinoshitaBookRarity'),sel=document.getElementById('kinoshitaBookSort');
   if(qel){qel.value=kinoshitaBookQuery;qel.oninput=()=>{kinoshitaBookQuery=qel.value;renderKinoshitaBook()};}
   if(rel){rel.value=kinoshitaBookRarity;rel.onchange=()=>{kinoshitaBookRarity=rel.value;renderKinoshitaBook()};}
