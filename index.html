@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.25';
+const GAME_VERSION='v1.8.26';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.26',title:'✨ 衣装・携帯品の重複所持に対応',items:['真髄で重複したUR・SSR衣装／携帯品も所持数に加算','重複時のコイン報酬は維持し、重複アイテムも獲得済み判定・UR／SSR演出の対象に反映','所持アイテムバッグに同じ衣装・携帯品の合計所持数を表示']},
  {date:'2026-10-11',version:'v1.8.25',title:'🎒 所持アイテムバッグを追加',items:['ホーム画面から所持アイテムを一覧で確認できるバッグ画面を追加','木下コイン・XP・育成素材・イベント通貨・真髄ポイント・所持済み衣装と携帯品をカテゴリ別に表示','将来の宝箱などの追加に備え、アイテム個数を保存・増減する共通インベントリ基盤を追加']},
  {date:'2026-10-11',version:'v1.8.24',title:'🏆 ボスラッシュの倍率を大幅調整',items:['元ステータスが低いボスの倍率を引き上げ','高ステータスのボスは倍率を約×1.1〜×2.0に抑え、終盤の極端な高倍率を撤廃']},
  {date:'2026-10-11',version:'v1.8.23',title:'🏆 ボスラッシュのボスと報酬を調整',items:['ワイバーンを黒王木下へ置き換え','撃破したステージ数に応じて木下コイン・プレイヤーXPの報酬が1ステージごとに増加','ステージ別の報酬増加を結果画面の合計報酬に反映']},
@@ -4164,12 +4165,13 @@ function shinjuRandomGold(){
 function shinjuDrawOne(essenceId=shinjuSelectedEssence){
  const pool=shinjuEssenceItems(essenceId),itemChance=Math.min(20,3.4+shinjuPityMisses*0.25),r=Math.random()*100,itemThresholds=[0.2,0.4,1.4,2.4,3.4].map(v=>v/3.4*itemChance);
  const getItemReward=item=>{
-  if(shinjuOwned(item.id)){
+  const alreadyOwned=shinjuOwned(item.id);
+  shinjuInventory[item.id]=Math.max(0,Number(shinjuInventory[item.id]||0))+1;
+  if(alreadyOwned){
    const isUR=item.rarity==='UR',coins=isUR?150000:20000;
    gachaCoins+=coins;
-   return {type:isUR?'duplicateUR':'duplicateSSR',item,label:'🔁 '+(isUR?'限定UR':'限定SSR')+(item.type==='costume'?'衣装':'携帯品')+'が重複 → 🪙 '+coins.toLocaleString()+'コイン'};
+   return {type:isUR?'duplicateUR':'duplicateSSR',item,label:'🔁 '+(isUR?'限定UR':'限定SSR')+(item.type==='costume'?'衣装':'携帯品')+'を追加獲得（所持数 '+shinjuInventory[item.id]+'） → 🪙 '+coins.toLocaleString()+'コイン'};
   }
-  shinjuInventory[item.id]=1;
   return {type:item.type,item,label:(item.type==='costume'?'👕 ':'🎒 ')+(item.rarity==='UR'?'限定UR':'限定SSR')+(item.type==='costume'?'衣装：':'携帯品：')+item.name};
  };
  let reward=null;if(r<itemThresholds[0])reward=getItemReward(pool[0]);else if(r<itemThresholds[1])reward=getItemReward(pool[1]);else if(r<itemThresholds[2])reward=getItemReward(pool[2]);else if(r<itemThresholds[3])reward=getItemReward(pool[3]);else if(r<itemThresholds[4])reward=getItemReward(pool[4]);if(reward){shinjuPityMisses=0;return reward;}shinjuPityMisses++;if(r<itemChance+45)return shinjuRandomPower();if(r<itemChance+60)return shinjuRandomGold();if(r<itemChance+80){const xp=shinjuRandomInt(100,10000);playerXP+=xp;return {type:'xp',label:'⭐ プレイヤーXP ×'+xp.toLocaleString()};}const coins=shinjuRandomInt(100,1500);gachaCoins+=coins;return {type:'coins',label:'💰 木下コイン ×'+coins.toLocaleString()};
@@ -4233,15 +4235,15 @@ function performShinjuDraw(count){
  showShinjuReveal(rewards);
  const result=document.getElementById('shinjuResult');
  if(result){
-  const ur=rewards.filter(x=>x.type==='costume'||x.type==='accessory').length;
+  const ur=rewards.filter(x=>(x.type==='costume'||x.type==='accessory'||x.type==='duplicateUR')&&x.item?.rarity==='UR').length;
   result.innerHTML='<div class="shinjuResultHeader">'+(n===11?'✨ 11連結果':'✨ 真髄結果')+(ur?'　🎉 UR '+ur+'個':'')+'</div><div class="shinjuResults">'+rewards.map(shinjuRewardHTML).join('')+'</div>';
  }
 }
 function showShinjuReveal(rewards){
  const old=document.getElementById('shinjuRevealOverlay');if(old)old.remove();
- const hasUR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
- const hasSSR=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='SSR');
- const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory')&&r.item?.rarity==='UR');
+ const hasUR=rewards.some(r=>(r.type==='costume'||r.type==='accessory'||r.type==='duplicateUR'||r.type==='duplicateSSR')&&r.item?.rarity==='UR');
+ const hasSSR=rewards.some(r=>(r.type==='costume'||r.type==='accessory'||r.type==='duplicateSSR'||r.type==='duplicateUR')&&r.item?.rarity==='SSR');
+ const hasLimited=rewards.some(r=>(r.type==='costume'||r.type==='accessory'||r.type==='duplicateUR')&&r.item?.rarity==='UR');
  const tier=hasLimited?'UR':hasUR?'UR':hasSSR?'SSR':'NORMAL';
  const ov=document.createElement('div');ov.id='shinjuRevealOverlay';
  ov.innerHTML='<div class="shinjuRevealBox tier-'+tier+'"><div class="shinjuRevealTitle">'+(tier==='UR'?'🔥🌟✨ 限定UR確定！ ✨🌟🔥':tier==='SSR'?'💜💎 SSR衣装確定！ 💎💜':'✨ 真髄')+'</div><div class="shinjuRevealRays">✦　✧　✦　✧　✦</div><div class="shinjuRevealOrb">'+(tier==='UR'?'👑':tier==='SSR'?'💎':'✨')+'</div><div class="shinjuRevealText">'+(tier==='UR'?'限定UR報酬を獲得！':tier==='SSR'?'SSR衣装を獲得！':'開封中…')+'</div><div class="shinjuRevealList"></div><button type="button" class="backbtn" id="shinjuRevealClose" style="display:none">結果を見る</button></div>';
