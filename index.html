@@ -489,6 +489,8 @@ function chapterRewardIndex(chapter){
 }
 cards.push(...CHAPTER_REWARD_CARDS);
 CHAPTER_REWARD_CARDS[0].secondForm=HARLAND_SECOND_FORM;
+const ABNORMAL_SECOND_FORM={name:"異常木下・古代覚醒",icon:"👁️‍🗨️",cost:3600,hp:78000,atk:26500,range:310,spd:.48,interval:1.75,recharge:58,kb:5,attackType:"area",motion:"super",trait:"浮・古代・宇宙・黒",airAttack:true,ability:{name:"古代異常領域",desc:"空中攻撃可能。浮・古代・宇宙・黒に超ダメージ。攻撃時100%でLv3波動・Lv3烈波、100%で4秒停止・5秒鈍足・4秒呪い・攻撃力70%低下。対象属性からの被ダメージを大幅軽減。停止・鈍足・呪い・攻撃力低下・能力封印・波動・烈波・ワープ無効。",strong:{"浮":3,"古代":3,"宇宙":3,"黒":2.5},resist:{"浮":.35,"古代":.35,"宇宙":.4,"黒":.45},airAttack:true,wave:true,waveLevel:3,waveChance:1,phoenixSurgeLevel:3,phoenixSurgeMin:1,phoenixSurgeMax:240,stopChance:1,stopDuration:4,slowChance:1,slowFactor:.35,slowDuration:5,curseChance:1,curseDuration:4,attackDownChance:1,attackDownFactor:.3,attackDownDuration:4,curseImmune:true,stopImmune:true,slowImmune:true,attackDownImmune:true,sealImmune:true,waveImmune:true,surgeImmune:true,warpImmune:true}};
+CHAPTER_REWARD_CARDS[1].secondForm=ABNORMAL_SECOND_FORM;
 
 // 日本・未来編攻略特化キャラクター20体（木下コイン交換専用）
 const 攻略特化キャラ=[
