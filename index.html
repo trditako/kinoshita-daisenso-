@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.29';
+const GAME_VERSION='v1.8.30';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.30',title:'🌋 烈波の継続ダメージ判定を修正',items:['烈波の見た目だけでなく、持続時間中も0.2秒ごとに範囲内の敵へダメージを判定','烈波の生成位置・射程・烈波無効判定を維持']},
  {date:'2026-10-11',version:'v1.8.29',title:'🌊 波動の発生位置・ダメージ判定を共通修正',items:['味方・敵の波動を通常攻撃の命中位置から進行方向へ伸ばすよう修正','波動Lvより通常攻撃射程が長いキャラでも波動が届くよう修正','味方波動にも属性相性・特効を反映し、波動無効判定と空中攻撃条件を維持']},
  {date:'2026-10-11',version:'v1.8.28',title:'🐉 ワイバーンの魂喰い調整と攻撃力上昇マークを追加',items:['ワイバーンの魂喰いによる攻撃力上昇を撃破ごと+10%に調整し、HP回復を削除','魂喰い・時間加速・終端化などで攻撃力が上昇している間、⚔️マークと強化内容を表示']},
  {date:'2026-10-11',version:'v1.8.27',title:'🦴 異常木下の第二形態と古代のパワー集めを追加',items:['異常木下の第二形態を追加','進化素材に各色パワー10個ずつと古代のパワー5個を設定','古代のパワーは専用強化素材ステージからのみ獲得','空中攻撃、古代/浮/宇宙特効、波動・烈波・妨害耐性を追加']},
@@ -3338,25 +3339,37 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  const a=source.ability||{},level=Number(source.phoenixSurgeLevel??a.phoenixSurgeLevel??0);if(!level)return;
  const isAlly=units.includes(source);
  const min=Number(a.phoenixSurgeMin??source.phoenixSurgeMin??1),max=Number(a.phoenixSurgeMax??source.phoenixSurgeMax??200);
- // 味方・敵とも、実際に通常攻撃が当たった位置を烈波の起点にする。長射程攻撃でも起点から烈波が伸びる。
+ // 通常攻撃が命中した位置ごとに烈波を生成し、烈波の持続時間中は0.2秒ごとに範囲内の敵を再判定する。
  const targets=Array.isArray(hitTargets)&&hitTargets.length
    ? hitTargets.filter(t=>t)
    : (isAlly?[]:units.filter(u=>u&&u.hp>0&&u.x>=center+min&&u.x<=center+max));
- const count=targets.length;
- if(count<=0)return;
- for(let i=0;i<count;i++){
+ if(!targets.length)return;
+ for(let i=0;i<targets.length;i++){
   const origin=Number(targets[i]?.x??center);
   const lo=isAlly?origin-max:origin+min;
   const hi=isAlly?origin-min:origin+max;
-  const affected=isAlly
-   ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&e.x>=lo&&e.x<=hi)
-   : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&u.x>=lo&&u.x<=hi);
-  for(const t of affected){
-   const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
-   hit(t,dealt,source);
-   if(source.name==='フェニックス')applyPhoenixAttackAbility(source,t);
-   if(t.hp<=0)(isAlly?removeEnemy(t):removeUnit(t));
-  }
+  const applySurgeHit=()=>{
+   const affected=isAlly
+    ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&e.x>=lo&&e.x<=hi)
+    : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&u.x>=lo&&u.x<=hi);
+   for(const t of affected){
+    const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
+    hit(t,dealt,source);
+    if(source.name==='フェニックス')applyPhoenixAttackAbility(source,t);
+    if(t.hp<=0)(isAlly?removeEnemy(t):removeUnit(t));
+   }
+  };
+  // 生成直後にも判定し、継続中は定期的にダメージを与える。
+  applySurgeHit();
+  const endAt=performance.now()+level*1000;
+  const timer=setInterval(()=>{
+   if(performance.now()>=endAt||source.hp<=0||isAbilitySealed(source)){
+    clearInterval(timer);
+    return;
+   }
+   applySurgeHit();
+  },200);
+  setTimeout(()=>clearInterval(timer),level*1000+50);
   const fx=document.createElement('div');
   fx.className='socratesSurgeEffect';
   fx.style.left=origin+'px';
@@ -3365,9 +3378,8 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   fx.style.setProperty('--surge-duration',level+'s');
   effects.appendChild(fx);
   setTimeout(()=>fx.remove(),level*1000+50);
- }
 }
-function enemyAttackTarget(e,t,ea,now2,sourceSealed){
+}function enemyAttackTarget(e,t,ea,now2,sourceSealed){
  if(!e||!t||t.hp<=0)return;
  const raw=Math.max(1,Number(damageTakenBy(t,e))||1),before=t.hp;let dealt=raw;
  if(Number(t.barrier||0)>0){const absorbed=Math.min(t.barrier,dealt);t.barrier-=absorbed;dealt-=absorbed;const bi=t.el?.querySelector('.barrierBar i'),bl=t.el?.querySelector('.barrierLabel');if(bi&&t.barrierMax>0)bi.style.width=Math.max(0,t.barrier/t.barrierMax*100)+'%';if(bl&&t.barrierMax>0)bl.textContent=t.barrier>0?'🛡 バリア '+Math.ceil(t.barrier).toLocaleString()+' / '+Math.ceil(t.barrierMax).toLocaleString():'🛡 バリア破壊！';if(absorbed>0)popup('🛡️-'+absorbed,t.x,Math.max(25,field.clientHeight-145));}
