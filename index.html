@@ -1132,6 +1132,8 @@ function ensureLegendAllyEnemies(){
   e.money=Math.max(20,Math.floor((Number(c.cost)||100)*.18));
   e.ability=copyAbility(c.ability);
   e.waveLevel=Number(c.waveLevel??c.ability?.waveLevel??0);
+  e.waveChance=c.waveChance??c.ability?.waveChance;
+  e.waveCarriesEffects=!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects);
   e.waveReflect=!!(c.waveReflect??c.ability?.waveReflect);
   e.barrier=Number(c.barrier||0);e.barrierMax=Number(c.barrierMax||c.barrier||0);
   enemyTypes[c.name]=e;
@@ -3340,7 +3342,7 @@ function enemyWaveAttack(e,allowReflect=true){
    if(allowReflect&&shouldReflectWave(u,e)){reflectEnemyWave(e,u);continue;}
    const before=u.hp;
    const dealt=Math.max(1,Number(damageTakenBy(u,e))||1);
-   hit(u,dealt,e.ability?.waveCarriesEffects?e:null,null);
+   hit(u,dealt,(e.waveCarriesEffects||e.ability?.waveCarriesEffects)?e:null,null);
    if(e.ability?.curseOnWave&&!e.ability?.waveCarriesEffects&&!isAbilitySealed(u)&&e.ability?.curseChance&&Math.random()<Number(e.ability.curseChance))applyCurseStatus(e,u);
    if(u.hp<=0)removeUnit(u);
  }
