@@ -3712,7 +3712,7 @@ bindSafeClick('startBtn',()=>{
  const ok=canStageStart();
  if(ok)startStage(selectedStage);
 });
-document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=()=>{gachaShopMode='normal';openGacha;openGacha();};document.getElementById('specialShinjuBtn')?.addEventListener('click',()=>{gachaShopMode='special';openGacha();});document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
+document.getElementById('workerBtn').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();workerUpgrade();});document.getElementById('gachaBtn').onclick=openGacha;document.getElementById('specialShinjuBtn')?.addEventListener('click',()=>{gachaShopMode='special';openGacha();});document.getElementById('gachaClose').onclick=()=>{document.getElementById('gacha').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 document.getElementById('startBtn').onclick=()=>{
  if(selectedMode==='bossrush'){startStage(1);return;}
  const ok=canStageStart();
