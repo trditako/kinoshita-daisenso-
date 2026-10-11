@@ -55,7 +55,8 @@ function evaluate(source, context = {}) {
 }
 
 function getFunction(name, extra = {}) {
-  const sandbox = evaluate(functionSource(name) + '\nthis.__fn = ' + name + ';', extra);
+  const helpers = name === 'hasAbilityFlag' ? '' : functionSource('hasAbilityFlag') + '\n';
+  const sandbox = evaluate(helpers + functionSource(name) + '\nthis.__fn = ' + name + ';', extra);
   return { fn: sandbox.__fn, sandbox };
 }
 
