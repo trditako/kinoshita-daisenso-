@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.34';
+const GAME_VERSION='v1.8.35';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.35',title:'📢 期間限定交換所・真髄の更新通知を追加',items:['期間限定交換所のラインナップや交換価格が変わると、お知らせに未読通知を追加','真髄のシーズン・開催内容が更新されると、お知らせと真髄ボタンに通知を表示']},
  {date:'2026-10-11',version:'v1.8.34',title:'🤖 機械防衛隊！木下sの交換価格を調整',items:['超激レアの交換価格を30,000コイン、伝説レアを150,000コインに変更']},
  {date:'2026-10-11',version:'v1.8.33',title:'🤖 期間限定交換所を機械防衛隊！木下sに変更',items:['期間限定交換所の表示名と交換対象シリーズを機械防衛隊！木下sに統一']},
  {date:'2026-10-11',version:'v1.8.32',title:'🪙 SSR衣装重複コインを調整',items:['SSR衣装が重複した際の獲得コインを20,000から5,000に変更']},
@@ -4474,16 +4475,62 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
 (function(){
  const NEWS_KEY='kinoshitaAnnouncementsReadV1';
  const SHINJU_READ_KEY='kinoshitaShinjuSeenV1';
- const news=[{id:'halloween-2026',date:'2026-10-09',title:'🎃 ハロウィンイベント開催中',summary:'限定ステージ・キャンディ交換所',body:['開催期間：2026年11月15日まで','イベントステージをクリアするとハロウィンキャンディを獲得できます。','集めたキャンディは交換所で限定キャラクター「パンプキン木下」、衣装・携帯品、真髄、コイン、XP、育成素材などと交換できます。','イベントステージと交換所はホーム画面から確認できます。']},{id:'survey-2026',date:'2026-10-10',title:'📝 プレイヤーアンケートについて',summary:'今後のアップデートの参考にします',body:['ゲームの面白さ、追加してほしい要素、調整希望キャラクター、UI・最適化、ゲームへの思いなど7項目を募集しています。','回答後に10,000コインを獲得できます。','現在はSupabaseの利用制限中のため、回答はこの端末内に保存され、ほかのプレイヤーとの共有はまだ有効ではありません。']},{id:'shinju-cycle',date:'2026-10-09',title:'✨ 真髄シーズン更新情報',summary:'ランクシーズンに連動する限定内容',body:['真髄はランク戦シーズンを基準に開催・切り替えされます。','シーズン進行に応じて真髄1～3が追加され、限定衣装・携帯品などを獲得できます。','真髄画面で現在開催中の内容と交換・ガチャを確認してください。']}];
+ const SHOP_STATE_KEY='kinoshitaLimitedShopFingerprintV1';
+ const SHINJU_STATE_KEY='kinoshitaShinjuFingerprintV1';
+ const SHINJU_SEEN_SIGNATURE_KEY='kinoshitaShinjuSeenSignatureV1';
+ const DYNAMIC_NEWS_KEY='kinoshitaDynamicAnnouncementsV1';
+ const news=[
+  {id:'halloween-2026',date:'2026-10-09',title:'🎃 ハロウィンイベント開催中',summary:'限定ステージ・キャンディ交換所',body:['開催期間：2026年11月15日まで','イベントステージをクリアするとハロウィンキャンディを獲得できます。','集めたキャンディは交換所で限定キャラクター「パンプキン木下」、衣装・携帯品、真髄、コイン、XP、育成素材などと交換できます。','イベントステージと交換所はホーム画面から確認できます。']},
+  {id:'survey-2026',date:'2026-10-10',title:'📝 プレイヤーアンケートについて',summary:'今後のアップデートの参考にします',body:['ゲームの面白さ、追加してほしい要素、調整希望キャラクター、UI・最適化、ゲームへの思いなど7項目を募集しています。','回答後に10,000コインを獲得できます。','現在はSupabaseの利用制限中のため、回答はこの端末内に保存され、ほかのプレイヤーとの共有はまだ有効ではありません。']},
+  {id:'shinju-cycle',date:'2026-10-09',title:'✨ 真髄シーズン更新情報',summary:'ランクシーズンに連動する限定内容',body:['真髄はランク戦シーズンを基準に開催・切り替えされます。','シーズン進行に応じて真髄1～3が追加され、限定衣装・携帯品などを獲得できます。','真髄画面で現在開催中の内容と交換・ガチャを確認してください。']}
+ ];
  const el=id=>document.getElementById(id);
  const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  function read(){try{return JSON.parse(localStorage.getItem(NEWS_KEY)||'{}')||{}}catch(e){return{}}}
- function paintBadge(){const seen=read();const unread=news.some(n=>!seen[n.id]);const b=el('announcementsUnread');if(b)b.style.display=unread?'inline-flex':'none';const sb=el('shinjuUnread');if(sb)sb.style.display=localStorage.getItem(SHINJU_READ_KEY)==='1'?'none':'inline-flex';}
- function render(){const seen=read();el('announcementsList').innerHTML=news.map(n=>'<article style="background:#f8fafc;color:#111;border:2px solid '+(seen[n.id]?'#cbd5e1':'#dc2626')+';border-radius:12px;padding:12px;margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><b>'+esc(n.title)+'</b>'+(!seen[n.id]?'<span class="unreadBadge">❗️未読</span>':'')+'</div><small style="color:#64748b">'+esc(n.date)+' ・ '+esc(n.summary)+'</small><details style="margin-top:8px"><summary style="cursor:pointer;font-weight:900;color:#1d4ed8;padding:5px">詳細を確認</summary><ul style="padding-left:20px;line-height:1.6">'+n.body.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></details></article>').join('');el('announcementsList').querySelectorAll('details').forEach((d,i)=>d.addEventListener('toggle',()=>{if(d.open){const s=read();s[news[i].id]=true;localStorage.setItem(NEWS_KEY,JSON.stringify(s));const badge=d.closest('article').querySelector('.unreadBadge');if(badge)badge.remove();paintBadge();}}));}
- el('announcementsBtn')?.addEventListener('click',()=>{render();el('announcementsModal').style.display='flex';});
- el('announcementsClose')?.addEventListener('click',()=>{el('announcementsModal').style.display='none';});
+ function readDynamic(){try{const v=JSON.parse(localStorage.getItem(DYNAMIC_NEWS_KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+ function writeDynamic(items){try{localStorage.setItem(DYNAMIC_NEWS_KEY,JSON.stringify(items.slice(-30)))}catch(e){}}
+ function currentShinjuSignature(){try{if(typeof getShinjuSeasonState!=='function')return '';const state=getShinjuSeasonState();return JSON.stringify({seasonNumber:state.seasonNumber,cycle:state.cycle,phase:state.phase,active:(state.active||[]).map(x=>({id:x.id,name:x.name}))})}catch(e){return ''}}
+ function currentShopSignature(){
+  try{const list=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.limitedExchange===true&&c.limitedExchangeSeries==='機械防衛隊！木下s').map(c=>({name:c.name,rarity:c.rarity,cost:typeof limitedExchangeCost==='function'?limitedExchangeCost(c):null})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ja'));return JSON.stringify({series:'機械防衛隊！木下s',items:list})}catch(e){return ''}
+ }
+ function addDynamicNews(item){const items=readDynamic();items.push(item);writeDynamic(items)}
+ function dateToday(){return new Date().toISOString().slice(0,10)}
+ function detectUpdates(){
+  const shopSig=currentShopSignature(),oldShop=localStorage.getItem(SHOP_STATE_KEY);
+  if(shopSig){
+   if(oldShop&&oldShop!==shopSig){
+    let detail={items:[]};try{detail=JSON.parse(shopSig)}catch(e){}
+    const names=(detail.items||[]).map(x=>x.name+'（'+x.rarity+'・'+(Number(x.cost)||0).toLocaleString()+'コイン）');
+    addDynamicNews({id:'limited-shop-update-'+Date.now(),date:dateToday(),title:'🤖 期間限定交換所が更新されました',summary:'機械防衛隊！木下sのラインナップ・交換価格が変更',body:['期間限定交換所の内容が更新されました。',...(names.length?['現在の交換対象：'+names.join('、')]:['現在の交換対象や価格は期間限定交換所で確認してください。']),'ホーム画面の「機械防衛隊！木下s」から内容を確認してください。']});
+   }
+   localStorage.setItem(SHOP_STATE_KEY,shopSig);
+  }
+  const shinjuSig=currentShinjuSignature(),oldShinju=localStorage.getItem(SHINJU_STATE_KEY);
+  if(shinjuSig){
+   if(oldShinju&&oldShinju!==shinjuSig){
+    let state={};try{state=JSON.parse(shinjuSig)}catch(e){}
+    const active=(state.active||[]).map(x=>x.name||('真髄'+x.id)).join('、');
+    addDynamicNews({id:'shinju-update-'+Date.now(),date:dateToday(),title:'✨ 真髄の開催内容が更新されました',summary:'シーズン'+(state.seasonNumber||'')+'・真髄ラインナップ更新',body:['ランク戦シーズンの進行に合わせて真髄の開催内容が更新されました。','現在の開催内容：'+(active||'真髄画面で確認してください。'),'ホーム画面の「真髄」から新しい衣装・携帯品や開催内容を確認してください。']});
+   }else if(!oldShinju&&!localStorage.getItem(SHINJU_SEEN_SIGNATURE_KEY)){localStorage.setItem(SHINJU_SEEN_SIGNATURE_KEY,shinjuSig)}
+   localStorage.setItem(SHINJU_STATE_KEY,shinjuSig);
+  }
+ }
+ detectUpdates();
+ news.push(...readDynamic().sort((a,b)=>String(b.date).localeCompare(String(a.date))));
+ function paintBadge(){
+  const seen=read(),unread=news.some(n=>!seen[n.id]),b=el('announcementsUnread');if(b)b.style.display=unread?'inline-flex':'none';
+  const sb=el('shinjuUnread'),signature=currentShinjuSignature(),seenSignature=localStorage.getItem(SHINJU_SEEN_SIGNATURE_KEY);
+  if(sb)sb.style.display=signature&&seenSignature!==signature?'inline-flex':'none';
+ }
+ function render(){
+  const seen=read();
+  el('announcementsList').innerHTML=news.map(n=>'<article style="background:#f8fafc;color:#111;border:2px solid '+(seen[n.id]?'#cbd5e1':'#dc2626')+';border-radius:12px;padding:12px;margin:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><b>'+esc(n.title)+'</b>'+(!seen[n.id]?'<span class="unreadBadge">❗️未読</span>':'')+'</div><small style="color:#64748b">'+esc(n.date)+' ・ '+esc(n.summary)+'</small><details style="margin-top:8px"><summary style="cursor:pointer;font-weight:900;color:#1d4ed8;padding:5px">詳細を確認</summary><ul style="padding-left:20px;line-height:1.6">'+n.body.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></details></article>').join('');
+  el('announcementsList').querySelectorAll('details').forEach((d,i)=>d.addEventListener('toggle',()=>{if(d.open){const seenNow=read();seenNow[news[i].id]=true;localStorage.setItem(NEWS_KEY,JSON.stringify(seenNow));const badge=d.closest('article').querySelector('.unreadBadge');if(badge)badge.remove();paintBadge()}}));
+ }
+ el('announcementsBtn')?.addEventListener('click',()=>{render();el('announcementsModal').style.display='flex'});
+ el('announcementsClose')?.addEventListener('click',()=>{el('announcementsModal').style.display='none'});
  const shinju=el('shinjuBtn');if(shinju&&!el('shinjuUnread'))shinju.insertAdjacentHTML('beforeend',' <span id="shinjuUnread" class="unreadBadge">❗️</span>');
- shinju?.addEventListener('click',()=>{localStorage.setItem(SHINJU_READ_KEY,'1');paintBadge();});
+ shinju?.addEventListener('click',()=>{const signature=currentShinjuSignature();if(signature)localStorage.setItem(SHINJU_SEEN_SIGNATURE_KEY,signature);localStorage.setItem(SHINJU_READ_KEY,'1');paintBadge()});
  paintBadge();
 })();
 </script>
