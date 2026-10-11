@@ -281,4 +281,35 @@ test('curse-only status text no longer claims ability seal', () => {
   assert.match(functionSource('updateStatusMark'), /curseSealUntil/);
 });
 
+
+test('global slow rolls once and applies to the correct side', () => {
+  const body = functionSource('applyAbility');
+  assert.match(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
+  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+});
+
+test('clone global slow rolls once and checks composite traits', () => {
+  const body = functionSource('applyYabayabaCloneAbility');
+  assert.match(body, /const affected=a\.slow\.all\?units:\[target\]/);
+  assert.match(body, /entityHasTrait\(candidate,a\.slow\.trait\)/);
+  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+});
+
+test('curse chance is rolled only by the shared curse helper', () => {
+  assert.doesNotMatch(functionSource('applyPhoenixAttackAbility'), /Math\.random\(\)<Number\(a\.curseChance\)/);
+  assert.match(functionSource('enemyAttackTarget'), /if\(ea\.curseChance\)applyCurseStatus\(e,t\)/);
+  assert.doesNotMatch(functionSource('enemyAttackTarget'), /Math\.random\(\)<Number\(ea\.curseChance\).*applyCurseStatus/);
+  assert.match(functionSource('applyAbility'), /Math\.random\(\)<Number\(band\.curseChance\|\|0\)/);
+});
+
+test('splash damage follows the attacker side and can hit flying targets when allowed', () => {
+  assert.match(functionSource('applyAbility'), /const splashTargets=u\.isEnemy\?units:enemies/);
+  assert.match(functionSource('applyAbility'), /airAttack:!!u\.airAttack/);
+});
+
+test('seal duration is extended rather than shortened by a weaker reapplication', () => {
+  assert.match(functionSource('applyAbility'), /Math\.max\(Number\(target\.abilitySealedUntil\|\|0\),now\+Number\(a\.sealDuration\|\|3\)\)/);
+  assert.match(functionSource('enemyAttackTarget'), /Math\.max\(Number\(t\.abilitySealedUntil\|\|0\),now2\+Number\(ea\.sealDuration\|\|4\)\)/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
