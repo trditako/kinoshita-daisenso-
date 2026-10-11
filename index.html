@@ -4089,12 +4089,15 @@ function missionMakeState(defs,key){
  return {key,items:Object.fromEntries(defs.map(d=>[d.id,{progress:0,claimed:false}]))};
 }
 function missionEnsurePeriods(){
- const today=missionDateKey(),week=missionWeekKey();
+ const today=missionDateKey(),week=missionWeekKey(),month=today.slice(0,7);
  if(missionSystem.daily?.key!==today)missionSystem.daily=missionMakeState(DAILY_MISSION_DEFS,today);
  if(missionSystem.weekly?.key!==week)missionSystem.weekly=missionMakeState(WEEKLY_MISSION_DEFS,week);
- const month=today.slice(0,7);
  if(missionSystem.monthly?.key!==month)missionSystem.monthly=missionMakeState(MONTHLY_MISSION_DEFS,month);
  if(missionSystem.event?.key!==month)missionSystem.event=missionMakeState(EVENT_MISSION_DEFS,month);
+ for(const [type,defs] of [['daily',DAILY_MISSION_DEFS],['weekly',WEEKLY_MISSION_DEFS],['monthly',MONTHLY_MISSION_DEFS],['event',EVENT_MISSION_DEFS]]){
+  const state=missionSystem[type];if(!state.items||typeof state.items!=='object')state.items={};
+  for(const d of defs)if(!state.items[d.id])state.items[d.id]={progress:0,claimed:false};
+ }
  saveMissionSystem();
 }
 function saveMissionSystem(){
@@ -4104,11 +4107,11 @@ function saveMissionSystem(){
  storage.setItem(ACHIEVEMENT_REWARD_CLAIMS_KEY,JSON.stringify([...claimedAchievementRewards]));
 }
 function missionStatValue(stat){return Math.max(0,Number(missionSystem.stats?.[stat]||0))}
-function missionProgress(def,state){return Math.min(def.target,missionStatValue(def.stat))}
+function missionProgress(def,state){return Math.min(def.target,Math.max(0,Number(state.items?.[def.id]?.progress||0)))}
 function missionRewardText(def){return '🪙 '+Number(def.rewardCoins||0).toLocaleString()+'　⭐ '+Number(def.rewardXP||0).toLocaleString()+' XP'}
 function claimMission(type,id){
  missionEnsurePeriods();
- const defs=type==='daily'?DAILY_MISSION_DEFS:WEEKLY_MISSION_DEFS,state=missionSystem[type],def=defs.find(d=>d.id===id),item=state.items?.[id];
+ const defs=type==='daily'?DAILY_MISSION_DEFS:type==='weekly'?WEEKLY_MISSION_DEFS:type==='monthly'?MONTHLY_MISSION_DEFS:type==='event'?EVENT_MISSION_DEFS:[],state=missionSystem[type],def=defs.find(d=>d.id===id),item=state?.items?.[id];
  if(!def||!item||item.claimed)return;
  if(missionProgress(def,state)<def.target)return;
  item.claimed=true;gachaCoins+=Number(def.rewardCoins||0);playerXP+=Number(def.rewardXP||0);
@@ -4155,7 +4158,7 @@ function achievementReward(d){
  if(Number.isFinite(d.rewardCoins)&&Number.isFinite(d.rewardXP))return {coins:d.rewardCoins,xp:d.rewardXP};
  if(d.kind==='japanMaster'||d.kind==='mythMaster'||d.kind==='legendMaster')return {coins:50000,xp:15000};
  if(d.kind==='japanChapter1'||d.kind==='japanChapter2'||d.kind==='japanChapter3')return {coins:10000,xp:3000};
- const n=Math.max(1,Number(d.target)||1),factor=d.stat==='rankWins'?180:d.stat==='eventEnemyKills'?3:d.stat==='enemyKills'?2:d.stat==='stageWins'?35:d.stat==='owned'?500:20;
+ const n=Math.max(1,Number(d.target)||1),factor=d.kind==='owned'?500:d.stat==='rankWins'?180:d.stat==='eventEnemyKills'?3:d.stat==='enemyKills'?2:d.stat==='stageWins'?35:20;
  return {coins:Math.max(500,Math.min(150000,Math.round(n*factor))),xp:Math.max(200,Math.min(50000,Math.round(n*factor*.35)))};
 }
 function achievementRewardText(d){const r=achievementReward(d);return '🪙 '+r.coins.toLocaleString()+'　⭐ '+r.xp.toLocaleString()+' XP'}
