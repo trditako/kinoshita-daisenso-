@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.43';
+const GAME_VERSION='v1.8.44';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.44',title:'🎃 ハロウィンミッション報酬・交換所を改善',items:['イベントミッションの報酬をハロウィンキャンディ中心に変更','ハロウィン交換所に高額コイン・XP・育成素材の交換商品を追加','交換回数を日本時間の毎日0時にリセットし、各商品の1日上限を再調整']},
  {date:'2026-10-11',version:'v1.8.43',title:'🎯 ミッション・実績を大幅拡充',items:['デイリー・週間・月間ミッションを拡充し、イベント専用ミッションを追加','実績を追加し、達成報酬としてコイン・プレイヤーXPを受け取れるよう改善','実績報酬は一度だけ受け取れるよう保存し、既存の達成済み実績も報酬対象に対応']},
  {date:'2026-10-11',version:'v1.8.42',title:'🛒 交換所の商品を大幅追加',items:['デイリー・ウィークリーに属性パワーや各レアリティの金、追加のパワー宝箱を追加','マンスリーにパワー宝箱10個・古代のパワー10個・伝説レアの金など高額商品を追加','木・銀・金の宝箱を追加し、開封でコイン・XP・全属性パワーを獲得可能に変更','商品ごとの交換上限と購入時の通貨チェックを維持']},
  {date:'2026-10-11',version:'v1.8.41',title:'🛒 デイリー・ウィークリー・マンスリー交換所を追加',items:['木下コイン・プレイヤーXPで育成素材や宝箱を交換できる期間別交換所を追加','交換回数は日・週・月ごとに保存し、期間更新時にリセット','ノーマルキャラの金5個からレアキャラの金1個など、金の両替機能を追加']},
@@ -1675,23 +1676,27 @@ function openHalloweenShop(){
  renderHalloweenShop();
 }
 let halloweenShopCategory='all',halloweenShopBusy=false;
-function halloweenShopPurchaseCount(id){return Math.max(0,Number(storage.getItem('kinoshitaHalloweenShopBought_'+id)||0));}
+function halloweenShopPurchaseCount(id){return Math.max(0,Number(storage.getItem('kinoshitaHalloweenShopBought_'+missionDateKey()+'_'+id)||0));}
 function halloweenShopCatalog(){
  const pumpkinIndex=cards.findIndex(c=>c.name==='パンプキン木下');
  return [
   {id:'pumpkin_character',name:'パンプキン木下',emoji:'🎃',category:'character',categoryLabel:'限定キャラクター',cost:25,limit:1,desc:'ハロウィン限定キャラクターを仲間にする。',owned:()=>pumpkinIndex>=0&&hasCharacter(pumpkinIndex),reward:'character'},
   {id:'pumpkin_lantern',name:'パンプキンランタン',emoji:'🏮',rarity:'SSR',category:'limited',categoryLabel:'限定アイテム',cost:35,limit:1,desc:'パンプキン木下専用のハロウィン限定SSR携帯品。',owned:()=>shinjuOwned(HALLOWEEN_SSR_ACCESSORY.id),reward:'accessory'},
   {id:'pumpkin_costume',name:'月夜の魔装',emoji:'🧙',rarity:'SSR',category:'limited',categoryLabel:'限定アイテム',cost:45,limit:1,desc:'パンプキン木下専用のハロウィン限定SSR衣装。',owned:()=>shinjuOwned(HALLOWEEN_SSR_COSTUME.id),reward:'costume'},
-  {id:'shinju_draw',name:'真髄1回分',emoji:'✨',category:'gacha',categoryLabel:'ガチャ関連',cost:15,limit:10,desc:'現在選択中の真髄を1回引く。結果は通常の真髄所持品に保存される。',reward:'draw'},
-  {id:'coins_10000',name:'木下コイン 10,000枚',emoji:'🪙',category:'gacha',categoryLabel:'ガチャ・通貨',cost:10,limit:10,desc:'木下コイン10,000枚を獲得する。',reward:'coins',amount:10000},
-  {id:'coins_100000',name:'木下コイン 100,000枚',emoji:'💰',category:'gacha',categoryLabel:'ガチャ・通貨',cost:80,limit:3,desc:'まとめて使える木下コイン100,000枚。',reward:'coins',amount:100000},
-  {id:'player_xp',name:'プレイヤーXP 5,000',emoji:'⭐',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'プレイヤー経験値を5,000獲得する。',reward:'xp',amount:5000},
-  {id:'normal_gold',name:'ノーマルキャラの金 ×1',emoji:'🪙',category:'growth',categoryLabel:'育成素材',cost:12,limit:10,desc:'ノーマルキャラの育成に使う金を1個獲得する。',reward:'normalGold',amount:1},
-  {id:'rare_gold',name:'レアキャラの金 ×1',emoji:'🪙',rarity:'レア',category:'growth',categoryLabel:'育成素材',cost:15,limit:10,desc:'レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'レア',amount:1},
-  {id:'super_rare_gold',name:'激レアキャラの金 ×1',emoji:'🪙',rarity:'激レア',category:'growth',categoryLabel:'育成素材',cost:20,limit:10,desc:'激レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'激レア',amount:1},
-  {id:'super_super_rare_gold',name:'超激レアキャラの金 ×1',emoji:'🪙',rarity:'超激レア',category:'growth',categoryLabel:'育成素材',cost:30,limit:10,desc:'超激レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'超激レア',amount:1},
-  {id:'legend_rare_gold',name:'伝説レアキャラの金 ×1',emoji:'🪙',rarity:'伝説レア',category:'growth',categoryLabel:'育成素材',cost:50,limit:10,desc:'伝説レアキャラの育成に使う金を1個獲得する。',reward:'rarityGold',rarityName:'伝説レア',amount:1},
-  {id:'color_power',name:'ランダム属性パワー ×1',emoji:'🌈',category:'growth',categoryLabel:'育成素材',cost:8,limit:10,desc:'赤・青・黄・緑・紫のいずれかの属性パワーを1個獲得する。',reward:'power',amount:1}
+  {id:'shinju_draw',name:'真髄1回分',emoji:'✨',category:'gacha',categoryLabel:'ガチャ関連',cost:15,limit:3,desc:'現在選択中の真髄を1回引く。毎日最大3回。',reward:'draw'},
+  {id:'coins_10000',name:'木下コイン 10,000枚',emoji:'🪙',category:'gacha',categoryLabel:'ガチャ・通貨',cost:10,limit:5,desc:'木下コイン10,000枚。毎日最大5回。',reward:'coins',amount:10000},
+  {id:'coins_50000',name:'木下コイン 50,000枚',emoji:'💰',category:'gacha',categoryLabel:'ガチャ・通貨',cost:42,limit:2,desc:'まとまった育成資金。毎日最大2回。',reward:'coins',amount:50000},
+  {id:'coins_100000',name:'木下コイン 100,000枚',emoji:'🏦',category:'gacha',categoryLabel:'ガチャ・通貨',cost:75,limit:1,desc:'大量の木下コイン。毎日1回まで。',reward:'coins',amount:100000},
+  {id:'player_xp',name:'プレイヤーXP 5,000',emoji:'⭐',category:'growth',categoryLabel:'育成素材',cost:12,limit:5,desc:'プレイヤー経験値を5,000獲得する。毎日最大5回。',reward:'xp',amount:5000},
+  {id:'player_xp_20000',name:'プレイヤーXP 20,000',emoji:'🌟',category:'growth',categoryLabel:'育成素材',cost:40,limit:2,desc:'プレイヤー経験値を20,000獲得する。毎日最大2回。',reward:'xp',amount:20000},
+  {id:'normal_gold',name:'ノーマルキャラの金 ×1',emoji:'🪙',category:'growth',categoryLabel:'育成素材',cost:12,limit:3,desc:'ノーマルキャラの育成に使う金を1個獲得する。毎日最大3回。',reward:'normalGold',amount:1},
+  {id:'normal_gold3',name:'ノーマルキャラの金 ×3',emoji:'🪙',category:'growth',categoryLabel:'育成素材',cost:32,limit:2,desc:'ノーマルキャラの金を3個まとめて獲得する。毎日最大2回。',reward:'normalGold',amount:3},
+  {id:'rare_gold',name:'レアキャラの金 ×1',emoji:'🪙',rarity:'レア',category:'growth',categoryLabel:'育成素材',cost:15,limit:3,desc:'レアキャラの育成に使う金を1個獲得する。毎日最大3回。',reward:'rarityGold',rarityName:'レア',amount:1},
+  {id:'super_rare_gold',name:'激レアキャラの金 ×1',emoji:'🪙',rarity:'激レア',category:'growth',categoryLabel:'育成素材',cost:20,limit:3,desc:'激レアキャラの育成に使う金を1個獲得する。毎日最大3回。',reward:'rarityGold',rarityName:'激レア',amount:1},
+  {id:'super_super_rare_gold',name:'超激レアキャラの金 ×1',emoji:'🪙',rarity:'超激レア',category:'growth',categoryLabel:'育成素材',cost:30,limit:2,desc:'超激レアキャラの育成に使う金を1個獲得する。毎日最大2回。',reward:'rarityGold',rarityName:'超激レア',amount:1},
+  {id:'legend_rare_gold',name:'伝説レアキャラの金 ×1',emoji:'🪙',rarity:'伝説レア',category:'growth',categoryLabel:'育成素材',cost:50,limit:1,desc:'伝説レアキャラの金を1個獲得する。毎日1回まで。',reward:'rarityGold',rarityName:'伝説レア',amount:1},
+  {id:'color_power',name:'ランダム属性パワー ×1',emoji:'🌈',category:'growth',categoryLabel:'育成素材',cost:8,limit:5,desc:'ランダムな属性パワーを1個獲得する。毎日最大5回。',reward:'power',amount:1},
+  {id:'color_power5',name:'ランダム属性パワー ×5',emoji:'🌈',category:'growth',categoryLabel:'育成素材',cost:32,limit:2,desc:'ランダムな属性パワーを合計5個獲得する。毎日最大2回。',reward:'power',amount:5}
  ];
 }
 function halloweenShopCanBuy(item){
@@ -1707,7 +1712,7 @@ function renderHalloweenShop(){
  const grid=document.getElementById('halloweenShopItems');if(!grid)return;
  grid.innerHTML=filtered.map(item=>{
   const count=halloweenShopPurchaseCount(item.id),owned=!!(item.owned&&item.owned()),can=halloweenShopCanBuy(item);
-  const countText=owned?'所持済み':('交換 '+count+'/'+item.limit);
+  const countText=owned?'所持済み':('本日 '+count+'/'+item.limit+' 回');
   return '<article class="hwShopCard '+(can?'':'hwShopDisabled')+'"><div class="hwShopIcon">'+item.emoji+'</div><div class="hwShopType">'+(item.rarity?item.rarity+' ・ ':'')+item.categoryLabel+'</div><h3>'+item.name+'</h3><p>'+item.desc+'</p><div class="hwShopCount">'+countText+'</div><div class="hwShopPrice">🍬 '+item.cost+'個</div><button type="button" '+(can?'':'disabled')+' onclick="buyHalloweenShopItem(\''+item.id+'\')">'+(owned?'入手済み':count>=item.limit?'交換上限':halloweenCandy<item.cost?'キャンディ不足':'交換する')+'</button></article>';
  }).join('');
  if(!filtered.length)grid.innerHTML='<div class="hwShopEmpty">このカテゴリの交換先はありません。</div>';
@@ -1743,7 +1748,7 @@ function buyHalloweenShopItem(id){
   else if(item.reward==='power'){const colors=['赤','青','黄','緑','紫'];const color=colors[Math.floor(Math.random()*colors.length)];colorPowers[color]=Math.max(0,Number(colorPowers[color]||0))+item.amount;message=color+'の属性パワーを'+item.amount+'個獲得しました！';}
   else throw new Error('未対応の交換報酬です。');
   halloweenCandy-=item.cost;
-  storage.setItem('kinoshitaHalloweenShopBought_'+id,String(halloweenShopPurchaseCount(id)+1));
+  storage.setItem('kinoshitaHalloweenShopBought_'+missionDateKey()+'_'+id,String(halloweenShopPurchaseCount(id)+1));
   saveHalloweenCandy();save();saveShinjuState();committed=true;
   if(revealRewards)showShinjuReveal(revealRewards);
   renderHalloweenShop();renderStageSelect();renderOwnedStart();renderCards();renderShinju();renderNormalGrowthInventory();
@@ -4010,12 +4015,12 @@ const MONTHLY_MISSION_DEFS=[
  {id:'monthly_evolve10',title:'進化研究の成果',desc:'ノーマルキャラクターを10体進化させる',stat:'evolutions',target:10,rewardCoins:12000,rewardXP:3500}
 ];
 const EVENT_MISSION_DEFS=[
- {id:'event_clear1',title:'イベント初出撃',desc:'イベントステージを1回クリアする',stat:'eventWins',target:1,rewardCoins:1200,rewardXP:350},
- {id:'event_clear5',title:'イベント攻略隊',desc:'イベントステージを5回クリアする',stat:'eventWins',target:5,rewardCoins:3500,rewardXP:1000},
- {id:'event_deploy50',title:'イベント増援部隊',desc:'イベントステージで味方を50体出撃させる',stat:'eventDeploys',target:50,rewardCoins:1800,rewardXP:500},
- {id:'event_kill300',title:'イベント掃討作戦',desc:'イベントステージで敵を300体撃破する',stat:'eventEnemyKills',target:300,rewardCoins:2500,rewardXP:750},
- {id:'event_kill1000',title:'イベント制圧者',desc:'イベントステージで敵を1,000体撃破する',stat:'eventEnemyKills',target:1000,rewardCoins:6000,rewardXP:1800},
- {id:'event_clear15',title:'イベント完全攻略',desc:'イベントステージを15回クリアする',stat:'eventWins',target:15,rewardCoins:9000,rewardXP:2500}
+ {id:'event_clear1',title:'キャンディ集め開始',desc:'イベントステージを1回クリアする',stat:'eventWins',target:1,rewardCandy:3},
+ {id:'event_clear5',title:'お菓子コレクター',desc:'イベントステージを5回クリアする',stat:'eventWins',target:5,rewardCandy:8},
+ {id:'event_deploy50',title:'ハロウィン増援部隊',desc:'イベントステージで味方を50体出撃させる',stat:'eventDeploys',target:50,rewardCandy:5},
+ {id:'event_kill300',title:'おばけ掃討作戦',desc:'イベントステージで敵を300体撃破する',stat:'eventEnemyKills',target:300,rewardCandy:8},
+ {id:'event_kill1000',title:'キャンディ大収穫',desc:'イベントステージで敵を1,000体撃破する',stat:'eventEnemyKills',target:1000,rewardCandy:15},
+ {id:'event_clear15',title:'ハロウィン完全攻略',desc:'イベントステージを15回クリアする',stat:'eventWins',target:15,rewardCandy:25}
 ];
 const ACHIEVEMENT_DEFS=[
  {id:'first_clear',icon:'🌱',name:'はじめの一歩',desc:'ステージを1回クリア',stat:'stageWins',target:1,title:'新人木下'},
@@ -4094,7 +4099,8 @@ function missionEnsurePeriods(){
  if(missionSystem.daily?.key!==today)missionSystem.daily=missionMakeState(DAILY_MISSION_DEFS,today);
  if(missionSystem.weekly?.key!==week)missionSystem.weekly=missionMakeState(WEEKLY_MISSION_DEFS,week);
  if(missionSystem.monthly?.key!==month)missionSystem.monthly=missionMakeState(MONTHLY_MISSION_DEFS,month);
- if(missionSystem.event?.key!==month)missionSystem.event=missionMakeState(EVENT_MISSION_DEFS,month);
+ const eventKey=halloweenEventActive()?'halloween-2026':'inactive-'+month;
+ if(missionSystem.event?.key!==eventKey)missionSystem.event=missionMakeState(EVENT_MISSION_DEFS,eventKey);
  for(const [type,defs] of [['daily',DAILY_MISSION_DEFS],['weekly',WEEKLY_MISSION_DEFS],['monthly',MONTHLY_MISSION_DEFS],['event',EVENT_MISSION_DEFS]]){
   const state=missionSystem[type];if(!state.items||typeof state.items!=='object')state.items={};
   for(const d of defs)if(!state.items[d.id])state.items[d.id]={progress:0,claimed:false};
@@ -4109,14 +4115,16 @@ function saveMissionSystem(){
 }
 function missionStatValue(stat){return Math.max(0,Number(missionSystem.stats?.[stat]||0))}
 function missionProgress(def,state){return Math.min(def.target,Math.max(0,Number(state.items?.[def.id]?.progress||0)))}
-function missionRewardText(def){return '🪙 '+Number(def.rewardCoins||0).toLocaleString()+'　⭐ '+Number(def.rewardXP||0).toLocaleString()+' XP'}
+function missionRewardText(def){const parts=[];if(Number(def.rewardCandy||0)>0)parts.push('🍬 '+Number(def.rewardCandy).toLocaleString()+'個');if(Number(def.rewardCoins||0)>0)parts.push('🪙 '+Number(def.rewardCoins).toLocaleString());if(Number(def.rewardXP||0)>0)parts.push('⭐ '+Number(def.rewardXP).toLocaleString()+' XP');return parts.join('　')||'報酬なし'}
 function claimMission(type,id){
  missionEnsurePeriods();
  const defs=type==='daily'?DAILY_MISSION_DEFS:type==='weekly'?WEEKLY_MISSION_DEFS:type==='monthly'?MONTHLY_MISSION_DEFS:type==='event'?EVENT_MISSION_DEFS:[],state=missionSystem[type],def=defs.find(d=>d.id===id),item=state?.items?.[id];
  if(!def||!item||item.claimed)return;
  if(missionProgress(def,state)<def.target)return;
+ if(Number(def.rewardCandy||0)>0&&!halloweenEventActive()){alert('このイベントの開催期間が終了したため、キャンディ報酬は受け取れません。');return;}
  item.claimed=true;gachaCoins+=Number(def.rewardCoins||0);playerXP+=Number(def.rewardXP||0);
- save();saveMissionSystem();renderMissionAchievement();
+ if(Number(def.rewardCandy||0)>0){halloweenCandy+=Number(def.rewardCandy);saveHalloweenCandy();}
+ save();saveMissionSystem();renderMissionAchievement();renderStageSelect();
  renderOwnedStart();
 }
 function missionTrack(stat,amount=1){
@@ -4191,7 +4199,7 @@ function renderMissionAchievement(){
  if(tab==='daily')content='<div class="missionSection"><div class="missionNotice">📅 '+missionDateKey()+'　｜　'+dailyDone+' / '+DAILY_MISSION_DEFS.length+'件受取済み</div>'+DAILY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.daily,'daily')).join('')+'</div>';
  else if(tab==='weekly')content='<div class="missionSection"><div class="missionNotice">🗓️ 週：'+missionSystem.weekly.key+'　｜　'+weeklyDone+' / '+WEEKLY_MISSION_DEFS.length+'件受取済み</div>'+WEEKLY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.weekly,'weekly')).join('')+'</div>';
  else if(tab==='monthly')content='<div class="missionSection"><div class="missionNotice">📆 月間：'+missionSystem.monthly.key+'　｜　毎月1日0:00（日本時間）に更新</div>'+MONTHLY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.monthly,'monthly')).join('')+'</div>';
- else if(tab==='event')content='<div class="missionSection"><div class="missionNotice">🎪 イベントミッション：'+missionSystem.event.key+'　｜　イベントステージ限定の目標。毎月更新</div>'+EVENT_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.event,'event')).join('')+'</div>';
+ else if(tab==='event')content='<div class="missionSection"><div class="missionNotice">🎃 イベントミッション：'+missionSystem.event.key+'　｜　達成報酬でハロウィンキャンディを獲得。開催中のイベントごとに更新</div>'+EVENT_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.event,'event')).join('')+'</div>';
  else if(tab==='achievements')content='<div class="missionSection"><div class="missionNotice">🏅 実績 '+achDone+' / '+ACHIEVEMENT_DEFS.length+'　｜　達成すると称号を獲得できます。</div><div class="achievementGrid">'+ACHIEVEMENT_DEFS.map(d=>{const ok=unlockedTitles.has(d.id);const reward=achievementReward(d),claimed=claimedAchievementRewards.has(d.id);return '<div class="achievementCard '+(ok?'unlocked':'')+'"><span class="achievementIcon">'+d.icon+'</span><div class="achievementName">'+(ok?'🏅 ':'🔒 ')+d.name+'</div><div class="achievementDesc">'+d.desc+'</div><div class="achievementProg">'+missionAchievementProgressText(d)+(ok&&d.title?'　【'+d.title+'】':'')+'</div><div class="achievementReward">報酬：'+achievementRewardText(d)+'</div>'+(ok?'<button class="missionClaim" data-achievement-reward="'+d.id+'" '+(claimed?'disabled':'')+'>'+(claimed?'報酬受取済み':'🎁 実績報酬を受け取る')+'</button>':'')+'</div>'}).join('')+'</div></div>';
  else {
   const titles=ACHIEVEMENT_DEFS.filter(d=>unlockedTitles.has(d.id)&&d.title);
