@@ -197,4 +197,25 @@ test('enemy area attack-down respects attackDownImmune', () => {
   assert.ok(html.includes("!hasAbilityFlag(ally,'attackDownImmune')"), 'area attack-down must skip immune units');
 });
 
+
+test('enemy wave starts from actual attack hit positions', () => {
+  assert.match(functionSource('enemyWaveAttack'), /Math\.max\(\.\.\.origins\.map\(u=>Number\(u\.x\)\)\)/);
+  assert.ok(html.includes('enemyWaveAttack(e,targets)'), 'enemy attack must pass its actual hit targets to wave generation');
+});
+
+test('reflected waves respect wave immunity on both sides', () => {
+  const allyReflect = functionSource('reflectAllyWave');
+  const enemyReflect = functionSource('reflectEnemyWave');
+  assert.match(allyReflect, /!isWaveImmuneEntity\(u\)/);
+  assert.match(enemyReflect, /!isWaveImmuneEntity\(e\)/);
+  assert.match(enemyReflect, /allyWaveEffect reflectedWaveEffect/, 'reflected enemy wave should travel visually toward the enemy side');
+});
+
+test('Yabayaba clone wave uses the hit target and does not bypass wave chance', () => {
+  const clone = functionSource('applyYabayabaCloneAbility');
+  assert.match(clone, /enemyWaveAttack\(e,\[target\]\)/);
+  assert.doesNotMatch(clone, /enemyWaveAttack\(e,targets\)/, 'targets is not defined in the clone ability function');
+  assert.match(clone, /if\(a\.waveChance!=null\)/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
