@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.45';
+const GAME_VERSION='v1.8.46';
 const UPDATE_LOG=[
+ {date:'2026-10-12',version:'v1.8.46',title:'🛡️ 能力監査・波動/烈波判定を修正',items:['通常の呪いで能力が誤って封印される問題を修正','シミュレーション側でも呪いと能力封印を分離','敵の範囲攻撃による攻撃力低下が攻撃力低下無効を無視する問題を修正','敵の波動を実際の攻撃命中位置から発生させるよう修正','ヤバヤバ複製の波動で未定義変数が発生する問題と確率判定の抜けを修正','波動反射でも波動無効を尊重し、反射波動の表示方向を修正','波動・烈波の回帰テストを追加']},
  {date:'2026-10-11',version:'v1.8.45',title:'🎃 イベント交換価格・新着通知を改善',items:['ハロウィン交換所の限定キャラ・衣装・通貨・育成素材を大幅値上げし、キャンディの価値を調整','新しいミッションや交換商品が追加されると各メニューに❗️通知を表示','ミッション・交換所を開くと確認済みになり、次の追加時に再通知']},
  {date:'2026-10-11',version:'v1.8.44',title:'🎃 ハロウィンミッション報酬・交換所を改善',items:['イベントミッションの報酬をハロウィンキャンディ中心に変更','ハロウィン交換所に高額コイン・XP・育成素材の交換商品を追加','交換回数を日本時間の毎日0時にリセットし、各商品の1日上限を再調整']},
  {date:'2026-10-11',version:'v1.8.43',title:'🎯 ミッション・実績を大幅拡充',items:['デイリー・週間・月間ミッションを拡充し、イベント専用ミッションを追加','実績を追加し、達成報酬としてコイン・プレイヤーXPを受け取れるよう改善','実績報酬は一度だけ受け取れるよう保存し、既存の達成済み実績も報酬対象に対応']},
@@ -1827,8 +1828,8 @@ function applyFrogAbility(target){
 }
 function hasAbilityFlag(entity,flag){return !!(entity&&(entity[flag]||entity.ability?.[flag]));}
 function applySlow(target,slow){if(!target||!slow||hasAbilityFlag(target,'slowImmune'))return;if(slow.trait!=="*"&&target.trait!==slow.trait)return;target.slowUntil=performance.now()/1000+slow.duration;target.slowFactor=slow.factor;setStatusMark(target,'🐌','速度低下',slow.duration,'slow');}
-function isAbilitySealed(target){const now=performance.now()/1000;return !!(target?.abilitySealed||(target?.abilitySealedUntil&&now<target.abilitySealedUntil)||(target?.cursedUntil&&now<target.cursedUntil))}
-function applySimCurseStatus(source,target,time){if(!source||!target||hasAbilityFlag(target,'curseImmune'))return false;const a=source.ability||{};if(!a.curseChance||Math.random()>=Number(a.curseChance))return false;const duration=Number(a.curseDuration||4);target.cursedUntil=time+duration;target.abilitySealedUntil=target.cursedUntil;if(a.cursedSpeedFactor)target.cursedSpeedFactor=Number(a.cursedSpeedFactor);if(a.cursedAttackFactor)target.cursedAttackFactor=Number(a.cursedAttackFactor);return true}
+function isAbilitySealed(target){const now=performance.now()/1000;return !!(target?.abilitySealed||(target?.abilitySealedUntil&&now<target.abilitySealedUntil))}
+function applySimCurseStatus(source,target,time){if(!source||!target||hasAbilityFlag(target,'curseImmune'))return false;const a=source.ability||{};if(!a.curseChance||Math.random()>=Number(a.curseChance))return false;const duration=Number(a.curseDuration||4);target.cursedUntil=time+duration;if(a.curseSeal)target.abilitySealedUntil=target.cursedUntil;if(a.cursedSpeedFactor)target.cursedSpeedFactor=Number(a.cursedSpeedFactor);if(a.cursedAttackFactor)target.cursedAttackFactor=Number(a.cursedAttackFactor);return true}
 function applyCurseStatus(source,target){if(!source||!target||hasAbilityFlag(target,'curseImmune'))return false;const now=performance.now()/1000,a=source.ability||{};if(!a.curseChance||Math.random()>=Number(a.curseChance))return false;const duration=Number(a.curseDuration||4);target.cursedUntil=now+duration;target.cursedBy=source;if(a.curseSeal)target.abilitySealedUntil=target.cursedUntil;if(a.cursedSpeedFactor)target.cursedSpeedFactor=Number(a.cursedSpeedFactor);if(a.cursedAttackFactor)target.cursedAttackFactor=Number(a.cursedAttackFactor);setStatusMark(target,'🪬','呪い・能力封印',duration,'curse');return true}
 function applyAbility(u,target,damage){const now=performance.now()/1000;if(!target||isAbilitySealed(u))return;const a=u.ability||{};const isSocrates=u?.name==='哲学の賢者ゾクラテス';if(!isSocrates&&u?.name!=='フェニックス')applyCurseStatus(u,target);if(isSocrates){const dist=Math.abs(Number(target.x||0)-Number(u.x||0));const tr=target.trait||'無';const inBand=dist>=251&&dist<=600;if(inBand&&a.rangeBands?.[2]){const band=a.rangeBands[2],allowed=tr==='黒'||tr==='宇宙'||tr==='無';if(allowed){const factor=Math.max(.01,Math.min(1,Number(band.rangeDownFactor??.2)));const duration=Math.max(.1,Number(band.rangeDownDuration??5));target.rangeOriginal=target.rangeOriginal??target.range;target.rangeDownUntil=now+duration;target.range=target.rangeOriginal*factor;const curseOK=!target.curseImmune&&Number(band.curseChance||0)>0;if(curseOK){const curseDuration=Math.max(.1,Number(band.curseDuration??5));target.cursedUntil=now+curseDuration;target.cursedBy=u;if(a.curseSeal)target.abilitySealedUntil=target.cursedUntil;target.cursedSpeedFactor=Number(a.cursedSpeedFactor||1);target.cursedAttackFactor=Number(a.cursedAttackFactor||1);setStatusMark(target,'🎯','射程80%低下'+(curseOK?'・🪬呪い':''),Math.max(duration,curseDuration),'socratesDebuff');}else setStatusMark(target,'🎯','射程80%低下',duration,'socratesRangeDown');}}}if(a.curseSlowChance&&!hasAbilityFlag(target,'slowImmune')&&Math.random()<Number(a.curseSlowChance)){target.slowUntil=now+Number(a.curseSlowDuration||2);target.slowFactor=Number(a.curseSlowFactor||.5);setStatusMark(target,'🪬','呪い鈍足',Number(a.curseSlowDuration||2),'curseSlow');}
  if(a.splash){for(const e of [...enemies])if(e!==target&&Math.abs(e.x-target.x)<70)hit(e,Math.round(damage*a.splash),null,null);}
@@ -2235,7 +2236,7 @@ function reflectAllyWave(sourceWave,reflector){
  if(!sourceWave||!reflector||reflector.hp<=0)return;
  const level=Math.max(1,Number(sourceWave.waveLevel||1));
  const range=90*level;
- const targets=units.filter(u=>u.hp>0&&u.x>=reflector.x&&Math.abs(u.x-reflector.x)<=range);
+ const targets=units.filter(u=>u&&u.hp>0&&!isWaveImmuneEntity(u)&&u.x>=reflector.x&&Math.abs(u.x-reflector.x)<=range);
  for(const u of targets){
    const dealt=Math.max(1,Number(damageTakenBy(u,reflector))||1);
    hit(u,dealt,null,null);
@@ -3320,6 +3321,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  }
 function applyYabayabaCloneAbility(e,target){
  const a=e?.ability||{};if(e?.key!=="ヤバヤバ複製"||!target||target.hp<=0||isAbilitySealed(e))return;
+ const waveTarget=target;
  const now=performance.now()/1000;
  if(a.stopChance&&!hasAbilityFlag(target,'stopImmune')&&Math.random()<Number(a.stopChance)){target.stopUntil=now+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
  if(a.slowChance&&Math.random()<Number(a.slowChance)){target.slowUntil=now+Number(a.slowDuration||2);target.slowFactor=Number(a.slowFactor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slowDuration||2),'slow');}
@@ -3330,8 +3332,8 @@ function applyYabayabaCloneAbility(e,target){
  if(a.slow?.all&&Math.random()<Number(a.slow.chance||0)){
    for(const u of units){if(!u||u.hp<=0)continue;target=u;target.slowUntil=now+Number(a.slow.duration||2);target.slowFactor=Number(a.slow.factor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slow.duration||2),'slow');}
  }
- if(a.waveChance&&Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel||a.waveLevel||3));enemyWaveAttack(e,targets);}
- else if(a.wave===true&&e.waveLevel>0)enemyWaveAttack(e);
+ if(a.waveChance!=null){if(Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel??e.waveLevel??3));enemyWaveAttack(e,[waveTarget]);}}
+ else if(a.wave===true&&e.waveLevel>0)enemyWaveAttack(e,[target]);
 }
 function reflectEnemyWave(sourceWave,reflector){
  // 波動反射：反射対象は元の波動ダメージを受けず、その波動を発生源側へ返す。
@@ -3339,7 +3341,7 @@ function reflectEnemyWave(sourceWave,reflector){
  const level=Math.max(1,Number(sourceWave.waveLevel||1));
  const range=90*level;
  const reflectedDamage=Math.max(1,Math.round(Number(damageTakenBy(reflector,sourceWave))||1));
- const targets=enemies.filter(e=>e!==sourceWave&&e.hp>0&&e.x<=reflector.x&&Math.abs(e.x-reflector.x)<=range);
+ const targets=enemies.filter(e=>e&&e!==sourceWave&&e.hp>0&&!isWaveImmuneEntity(e)&&e.x<=reflector.x&&Math.abs(e.x-reflector.x)<=range);
  for(const e of targets){
    const dealt=Math.max(1,Math.round(Number(damageAgainst(reflector,e))||reflectedDamage));
    hit(e,dealt,reflector);
@@ -3347,7 +3349,7 @@ function reflectEnemyWave(sourceWave,reflector){
    if(e.hp<=0)removeEnemy(e);
  }
  const wave=document.createElement('div');
- wave.className='enemyWaveEffect reflectedWaveEffect';
+ wave.className='enemyWaveEffect allyWaveEffect reflectedWaveEffect';
  wave.style.left=reflector.x+'px';
  wave.style.bottom='105px';
  wave.style.setProperty('--wave-width',Math.min(worldWidth-120,reflector.x)-Math.max(0,reflector.x-range)+'px');
@@ -3470,12 +3472,12 @@ function enemyWaveAttack(e,hitTargets=[],allowReflect=true){
 }
 
  for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed&&(e.phoenixSurgeLevel??ea.phoenixSurgeLevel))triggerPhoenixSurge(e,e.x,targets);
-     const enemyWaveLevel=Number(e.waveLevel??ea.waveLevel??0),enemyWaveChance=e.waveChance??ea.waveChance;if(!sourceSealed&&enemyWaveLevel>0&&(enemyWaveChance==null||Math.random()<Number(enemyWaveChance)))enemyWaveAttack(e);
+     const enemyWaveLevel=Number(e.waveLevel??ea.waveLevel??0),enemyWaveChance=e.waveChance??ea.waveChance;if(!sourceSealed&&enemyWaveLevel>0&&(enemyWaveChance==null||Math.random()<Number(enemyWaveChance)))enemyWaveAttack(e,targets);
      if(!sourceSealed&&ea.curseChance&&Math.random()<Number(ea.curseChance)){
        for(const ally of targets)if(ally&&ally.hp>0&&!isAbilitySealed(ally))applyCurseStatus(e,ally);
      }
      if(!sourceSealed&&ea.areaAttackDownChance){
-       for(const ally of units)if(ally&&ally.hp>0&&(ally.trait==='宇宙'||ally.trait==='赤')){
+       for(const ally of units)if(ally&&ally.hp>0&&!hasAbilityFlag(ally,'attackDownImmune')&&(ally.trait==='宇宙'||ally.trait==='赤')){
          ally.attackDownUntil=now2+Number(ea.areaAttackDownDuration||20);
          ally.attackDownFactor=Number(ea.areaAttackDownFactor||.01);
          setStatusMark(ally,'⬇️','攻撃力低下',Number(ea.areaAttackDownDuration||20),'attackDown');
