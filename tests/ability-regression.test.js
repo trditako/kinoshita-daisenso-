@@ -282,17 +282,26 @@ test('curse-only status text no longer claims ability seal', () => {
 });
 
 
-test('global slow rolls once and applies to the correct side', () => {
+test('global slow is rolled once per attack and applied to the correct side', () => {
   const body = functionSource('applyAbility');
-  assert.match(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
-  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+  assert.doesNotMatch(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
+  assert.match(functionSource('applyGlobalSlow'), /const targets=source\.isEnemy\?units:enemies/);
+  const calls = [];
+  const { fn } = getFunction('applyGlobalSlow', {
+    enemies: [{ hp: 10 }, { hp: 0 }, { hp: 20 }],
+    applySlow: target => calls.push(target),
+  });
+  fn({ ability: { slow: { trait: '*', chance: 0.35, factor: 0.8, duration: 2, all: true } } });
+  assert.equal(calls.length, 2);
+  assert.match(functionSource('loop'), /applyGlobalSlow\(u\);applyAreaAttackDown\(u\)/);
+  assert.match(functionSource('loop'), /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
 });
 
-test('clone global slow rolls once and checks composite traits', () => {
+test('clone per-target slow does not roll global slow once per hit', () => {
   const body = functionSource('applyYabayabaCloneAbility');
-  assert.match(body, /const affected=a\.slow\.all\?units:\[target\]/);
-  assert.match(body, /entityHasTrait\(candidate,a\.slow\.trait\)/);
-  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+  assert.match(body, /if\(a\.slow&&!a\.slow\.all&&Math\.random/);
+  assert.match(body, /const affected=\[target\]/);
+  assert.doesNotMatch(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{\s*const affected=a\.slow\.all/);
 });
 
 test('curse chance is rolled only by the shared curse helper', () => {
@@ -317,6 +326,20 @@ test('machine-series and attribute-overload modifiers recognize composite ancien
   assert.match(functionSource('damageAgainst'), /!entityHasTrait\(target,'古代'\)/);
   assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(u,'古代'\)/);
   assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(attacker,'古代'\)/);
+});
+
+
+test('reflected enemy waves do not apply the reflector ability twice', () => {
+  const body = functionSource('reflectEnemyWave');
+  assert.match(body, /hit\(e,dealt,reflector\)/);
+  assert.doesNotMatch(body, /applyAbility\(reflector,e,dealt\)/);
+});
+
+test('enemy nested slow abilities apply per target and respect slow immunity', () => {
+  const body = functionSource('enemyAttackTarget');
+  assert.match(body, /ea\.slow&&!ea\.slow\.all&&!hasAbilityFlag\(t,'slowImmune'\)/);
+  assert.match(body, /entityHasTrait\(t,ea\.slow\.trait\)/);
+  assert.match(functionSource('loop'), /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
 });
 
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
