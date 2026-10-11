@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.33';
+const GAME_VERSION='v1.8.34';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.34',title:'🤖 機械防衛隊！木下sの交換価格を調整',items:['超激レアの交換価格を30,000コイン、伝説レアを150,000コインに変更']},
  {date:'2026-10-11',version:'v1.8.33',title:'🤖 期間限定交換所を機械防衛隊！木下sに変更',items:['期間限定交換所の表示名と交換対象シリーズを機械防衛隊！木下sに統一']},
  {date:'2026-10-11',version:'v1.8.32',title:'🪙 SSR衣装重複コインを調整',items:['SSR衣装が重複した際の獲得コインを20,000から5,000に変更']},
  {date:'2026-10-11',version:'v1.8.31',title:'✨ シーズン12で真髄3を解放',items:['真髄の追加タイミングを修正し、シーズン12から真髄3を選択可能に']},
@@ -3571,19 +3572,20 @@ function renderGacha(){
  result.innerHTML='<div style="font-size:15px;margin-bottom:7px">交換する木下を選んでください</div><div class="gachaChars">'+available.map(i=>{const c=activeCard(i)||cards[i],cost=c.gachaCost,can=gachaCoins>=cost;return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-i="'+i+'" '+(can?'':'disabled')+'>'+(can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('.gachaGetBtn').forEach(btn=>btn.onclick=()=>buyGachaCharacter(Number(btn.dataset.i)));
 }
+function limitedExchangeCost(c){return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  const series='機械防衛隊！木下s';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🤖 '+series+'</h2><p>機械防衛隊！木下sのキャラクターを木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン</p></div>';
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🤖 '+series+'</h2><p>機械防衛隊！木下sのキャラクターを木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：30,000コイン／伝説レア：150,000コイン</p></div>';
  if(!result)return;
  const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries===series);
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
- result.innerHTML='<div style="font-size:15px;margin-bottom:7px">機械防衛隊！木下sのキャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=c.rarity==='LR'?50000:10000,can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+ result.innerHTML='<div style="font-size:15px;margin-bottom:7px">機械防衛隊！木下sのキャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=limitedExchangeCost(c),can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
  result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
 }
 function buyLimitedExchangeCharacter(i){
  if(!Number.isInteger(i)||!cards[i]||!cards[i].limitedExchange||ownedFlags[i])return;
- const cost=cards[i].rarity==='LR'?50000:10000;
+ const cost=limitedExchangeCost(cards[i]);
  if(gachaCoins<cost)return;
  gachaCoins-=cost;ownedFlags[i]=true;syncOwnedCount();normalizeFormation();save();renderGacha();renderOwnedStart();renderFormation();renderCards();
 }
