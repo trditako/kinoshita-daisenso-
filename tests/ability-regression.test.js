@@ -218,4 +218,16 @@ test('Yabayaba clone wave uses the hit target and does not bypass wave chance', 
   assert.match(clone, /if\(a\.waveChance!=null\)/);
 });
 
+
+test('wave and surge positions use hit-target coordinates and correct directions', () => {
+  const allyWave = functionSource('allyWaveAttack');
+  const enemyWave = functionSource('enemyWaveAttack');
+  const surge = functionSource('triggerPhoenixSurge');
+  assert.match(allyWave, /Math\.min\(\.\.\.origins\.map\(e=>Number\(e\.x\)\)\)/);
+  assert.match(enemyWave, /Math\.max\(\.\.\.origins\.map\(u=>Number\(u\.x\)\)\)/);
+  assert.match(surge, /const origin=Number\(targets\[i\]\?\.x\?\?center\)/);
+  assert.match(surge, /const lo=isAlly\?origin-max:origin\+min/);
+  assert.match(surge, /const hi=isAlly\?origin-min:origin\+max/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
