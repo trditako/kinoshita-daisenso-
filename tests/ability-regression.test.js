@@ -213,7 +213,7 @@ test('reflected waves respect wave immunity on both sides', () => {
 
 test('Yabayaba clone wave uses the hit target and does not bypass wave chance', () => {
   const clone = functionSource('applyYabayabaCloneAbility');
-  assert.match(clone, /enemyWaveAttack\(e,\[target\]\)/);
+  assert.match(clone, /enemyWaveAttack\(e,\[waveTarget\]\)/);
   assert.doesNotMatch(clone, /enemyWaveAttack\(e,targets\)/, 'targets is not defined in the clone ability function');
   assert.match(clone, /if\(a\.waveChance!=null\)/);
 });
