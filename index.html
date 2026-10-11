@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.42';
+const GAME_VERSION='v1.8.43';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.43',title:'🎯 ミッション・実績を大幅拡充',items:['デイリー・週間・月間ミッションを拡充し、イベント専用ミッションを追加','実績を追加し、達成報酬としてコイン・プレイヤーXPを受け取れるよう改善','実績報酬は一度だけ受け取れるよう保存し、既存の達成済み実績も報酬対象に対応']},
  {date:'2026-10-11',version:'v1.8.42',title:'🛒 交換所の商品を大幅追加',items:['デイリー・ウィークリーに属性パワーや各レアリティの金、追加のパワー宝箱を追加','マンスリーにパワー宝箱10個・古代のパワー10個・伝説レアの金など高額商品を追加','木・銀・金の宝箱を追加し、開封でコイン・XP・全属性パワーを獲得可能に変更','商品ごとの交換上限と購入時の通貨チェックを維持']},
  {date:'2026-10-11',version:'v1.8.41',title:'🛒 デイリー・ウィークリー・マンスリー交換所を追加',items:['木下コイン・プレイヤーXPで育成素材や宝箱を交換できる期間別交換所を追加','交換回数は日・週・月ごとに保存し、期間更新時にリセット','ノーマルキャラの金5個からレアキャラの金1個など、金の両替機能を追加']},
  {date:'2026-10-11',version:'v1.8.40',title:'💎 特別真髄を独立画面化・提供割合を調整',items:['特別真髄を木下交換所のタブから分離し、専用画面だけで表示','富豪木下2%、伝説レアの金1%、超激レアの金25%、パワー宝箱72%に変更']},
@@ -356,7 +357,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .missionPanel{width:min(96vw,720px)!important;max-height:92vh;overflow:auto!important;background:#f8fafc!important;color:#111827!important}
 .missionHero{background:linear-gradient(135deg,#172554,#4c1d95);color:#fff;border-radius:14px;padding:12px;text-align:left}
 .missionHero b{font-size:20px;color:#fde68a}.missionHero small{display:block;margin-top:3px;color:#dbeafe}
-.missionTabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:9px 0}
+.missionTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0}
 .missionTab{background:#e2e8f0!important;color:#0f172a!important;border:2px solid #94a3b8!important;padding:8px!important}
 .missionTab.active{background:#2563eb!important;color:#fff!important;border-color:#1d4ed8!important}
 .missionSection{margin-top:8px;text-align:left}
@@ -374,6 +375,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 .achievementGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .achievementCard{background:#fff;border:2px solid #cbd5e1;border-radius:10px;padding:8px;text-align:left}
 .achievementCard.unlocked{border-color:#d97706;background:#fffbeb}
+.achievementReward{font-size:10px;font-weight:900;color:#92400e;margin-top:5px;clear:both}
 .achievementIcon{font-size:28px;float:left;margin-right:7px}.achievementName{font-weight:1000;font-size:12px}.achievementDesc{font-size:10px;color:#64748b;margin-top:3px;min-height:27px}.achievementProg{font-size:10px;font-weight:900;color:#2563eb;margin-top:4px}.achievementCard.unlocked .achievementProg{color:#166534}
 .titleEquipBox{background:#172554;color:#fff;border-radius:11px;padding:10px;margin:8px 0;text-align:left}
 .titleEquipBox b{color:#fde68a}.titleGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
@@ -3972,13 +3974,20 @@ const KINOSHITA_MISSION_SYSTEM_V1='1';
 const MISSION_STORAGE_KEY='kinoshitaMissionSystemV1';
 const ACHIEVEMENT_STORAGE_KEY='kinoshitaAchievementsV1';
 const TITLE_STORAGE_KEY='kinoshitaEquippedTitleV1';
+const ACHIEVEMENT_REWARD_CLAIMS_KEY='kinoshitaAchievementRewardClaimsV1';
+let claimedAchievementRewards=new Set();try{claimedAchievementRewards=new Set(JSON.parse(storage.getItem(ACHIEVEMENT_REWARD_CLAIMS_KEY)||'[]').filter(Boolean))}catch(e){claimedAchievementRewards=new Set()}
 
 const DAILY_MISSION_DEFS=[
  {id:'daily_clear',title:'今日も出撃',desc:'ステージを3回クリア',stat:'stageWins',target:3,rewardCoins:500,rewardXP:100},
  {id:'daily_deploy',title:'木下軍を動かせ',desc:'味方キャラクターを10体出撃させる',stat:'deploys',target:10,rewardCoins:350,rewardXP:80},
  {id:'daily_worker',title:'働かせろ！',desc:'働き木下を1回強化する',stat:'workerUpgrades',target:1,rewardCoins:300,rewardXP:100},
  {id:'daily_level',title:'育成の日',desc:'キャラクターを1回レベルアップする',stat:'levelUps',target:1,rewardCoins:400,rewardXP:150},
- {id:'daily_enemy',title:'敵を倒せ！',desc:'敵を50体撃破する',stat:'enemyKills',target:50,rewardCoins:450,rewardXP:100}
+ {id:'daily_enemy',title:'敵を倒せ！',desc:'敵を50体撃破する',stat:'enemyKills',target:50,rewardCoins:450,rewardXP:100},
+ {id:'daily_deploy25',title:'前線を厚く！',desc:'味方キャラクターを25体出撃させる',stat:'deploys',target:25,rewardCoins:650,rewardXP:180},
+ {id:'daily_kill100',title:'今日の大掃討',desc:'敵を100体撃破する',stat:'enemyKills',target:100,rewardCoins:700,rewardXP:200},
+ {id:'daily_gacha',title:'新戦力を確保',desc:'キャラクターを1体交換する',stat:'gachaBuys',target:1,rewardCoins:550,rewardXP:180},
+ {id:'daily_rank',title:'ランク戦の練習',desc:'ランク戦で1勝する',stat:'rankWins',target:1,rewardCoins:900,rewardXP:250},
+ {id:'daily_evolve',title:'進化素材を活用',desc:'ノーマルキャラクターを1体進化させる',stat:'evolutions',target:1,rewardCoins:800,rewardXP:250}
 ];
 const WEEKLY_MISSION_DEFS=[
  {id:'weekly_clear',title:'週間出撃隊',desc:'ステージを15回クリア',stat:'stageWins',target:15,rewardCoins:1800,rewardXP:500},
@@ -3986,7 +3995,27 @@ const WEEKLY_MISSION_DEFS=[
  {id:'weekly_enemy',title:'大掃討',desc:'敵を300体撃破する',stat:'enemyKills',target:300,rewardCoins:1700,rewardXP:450},
  {id:'weekly_gacha',title:'木下コレクター',desc:'キャラクターを3体交換する',stat:'gachaBuys',target:3,rewardCoins:1600,rewardXP:450},
  {id:'weekly_level',title:'育成週間',desc:'キャラクターを5回レベルアップする',stat:'levelUps',target:5,rewardCoins:1800,rewardXP:600},
- {id:'weekly_rank',title:'ランク挑戦者',desc:'ランク戦で2勝する',stat:'rankWins',target:2,rewardCoins:2200,rewardXP:700}
+ {id:'weekly_rank',title:'ランク挑戦者',desc:'ランク戦で2勝する',stat:'rankWins',target:2,rewardCoins:2200,rewardXP:700},
+ {id:'weekly_deploy150',title:'精鋭部隊の総動員',desc:'味方キャラクターを150体出撃させる',stat:'deploys',target:150,rewardCoins:2600,rewardXP:800},
+ {id:'weekly_kill1000',title:'千体討伐作戦',desc:'敵を1,000体撃破する',stat:'enemyKills',target:1000,rewardCoins:3000,rewardXP:900},
+ {id:'weekly_gacha10',title:'大規模増援',desc:'キャラクターを10体交換する',stat:'gachaBuys',target:10,rewardCoins:2800,rewardXP:850},
+ {id:'weekly_evolve3',title:'進化計画',desc:'ノーマルキャラクターを3体進化させる',stat:'evolutions',target:3,rewardCoins:3200,rewardXP:1000}
+];
+const MONTHLY_MISSION_DEFS=[
+ {id:'monthly_clear50',title:'月間戦線維持',desc:'ステージを50回クリアする',stat:'stageWins',target:50,rewardCoins:7000,rewardXP:1800},
+ {id:'monthly_deploy500',title:'大軍団を編成',desc:'味方キャラクターを500体出撃させる',stat:'deploys',target:500,rewardCoins:6500,rewardXP:1700},
+ {id:'monthly_kill5000',title:'月間大掃討',desc:'敵を5,000体撃破する',stat:'enemyKills',target:5000,rewardCoins:8000,rewardXP:2200},
+ {id:'monthly_rank15',title:'ランク戦の猛者',desc:'ランク戦で15勝する',stat:'rankWins',target:15,rewardCoins:10000,rewardXP:2800},
+ {id:'monthly_gacha25',title:'戦力大増強',desc:'キャラクターを25体交換する',stat:'gachaBuys',target:25,rewardCoins:9000,rewardXP:2500},
+ {id:'monthly_evolve10',title:'進化研究の成果',desc:'ノーマルキャラクターを10体進化させる',stat:'evolutions',target:10,rewardCoins:12000,rewardXP:3500}
+];
+const EVENT_MISSION_DEFS=[
+ {id:'event_clear1',title:'イベント初出撃',desc:'イベントステージを1回クリアする',stat:'eventWins',target:1,rewardCoins:1200,rewardXP:350},
+ {id:'event_clear5',title:'イベント攻略隊',desc:'イベントステージを5回クリアする',stat:'eventWins',target:5,rewardCoins:3500,rewardXP:1000},
+ {id:'event_deploy50',title:'イベント増援部隊',desc:'イベントステージで味方を50体出撃させる',stat:'eventDeploys',target:50,rewardCoins:1800,rewardXP:500},
+ {id:'event_kill300',title:'イベント掃討作戦',desc:'イベントステージで敵を300体撃破する',stat:'eventEnemyKills',target:300,rewardCoins:2500,rewardXP:750},
+ {id:'event_kill1000',title:'イベント制圧者',desc:'イベントステージで敵を1,000体撃破する',stat:'eventEnemyKills',target:1000,rewardCoins:6000,rewardXP:1800},
+ {id:'event_clear15',title:'イベント完全攻略',desc:'イベントステージを15回クリアする',stat:'eventWins',target:15,rewardCoins:9000,rewardXP:2500}
 ];
 const ACHIEVEMENT_DEFS=[
  {id:'first_clear',icon:'🌱',name:'はじめの一歩',desc:'ステージを1回クリア',stat:'stageWins',target:1,title:'新人木下'},
@@ -4008,13 +4037,36 @@ const ACHIEVEMENT_DEFS=[
  {id:'pvp5',icon:'⚔️',name:'対戦好き',desc:'プレイヤー対戦で5勝',stat:'pvpWins',target:5,title:'対戦好き'},
  {id:'deploy100',icon:'🚀',name:'総動員',desc:'味方キャラクターを100体出撃',stat:'deploys',target:100,title:'総動員司令官'},
  {id:'worker10',icon:'🌳',name:'働き木下主任',desc:'働き木下を10回強化',stat:'workerUpgrades',target:10,title:'働き木下主任'},
- {id:'enemy500',icon:'💥',name:'大掃討',desc:'敵を500体撃破',stat:'enemyKills',target:500,title:'大掃討者'}
+ {id:'enemy500',icon:'💥',name:'大掃討',desc:'敵を500体撃破',stat:'enemyKills',target:500,title:'大掃討者'},
+ {id:'clear500',icon:'🌋',name:'歴戦の将',desc:'ステージを500回クリア',stat:'stageWins',target:500,title:'歴戦の将'},
+ {id:'clear1000',icon:'🏆',name:'千戦の覇者',desc:'ステージを1,000回クリア',stat:'stageWins',target:1000,title:'千戦の覇者'},
+ {id:'owned75',icon:'🗃️',name:'木下大図鑑',desc:'キャラクターを75体所持',kind:'owned',target:75,title:'木下大図鑑博士'},
+ {id:'owned100',icon:'🏰',name:'全軍招集',desc:'キャラクターを100体所持',kind:'owned',target:100,title:'全軍招集者'},
+ {id:'level250',icon:'🛠️',name:'育成の達人',desc:'キャラクターを250回レベルアップ',stat:'levelUps',target:250,title:'育成の達人'},
+ {id:'evolve20',icon:'🧬',name:'進化の権威',desc:'ノーマルキャラクターを20体進化',stat:'evolutions',target:20,title:'進化の権威'},
+ {id:'gacha50',icon:'🎫',name:'交換所の常連',desc:'キャラクターを50体交換',stat:'gachaBuys',target:50,title:'交換所の常連'},
+ {id:'gacha100',icon:'💠',name:'戦力収集の王',desc:'キャラクターを100体交換',stat:'gachaBuys',target:100,title:'戦力収集の王'},
+ {id:'rank100',icon:'🥇',name:'ランク戦の伝説',desc:'ランク戦で100勝',stat:'rankWins',target:100,title:'ランク戦の伝説'},
+ {id:'rank250',icon:'👑',name:'ランクの頂点',desc:'ランク戦で250勝',stat:'rankWins',target:250,title:'ランクの頂点'},
+ {id:'pvp25',icon:'🤝',name:'対戦の熟練者',desc:'プレイヤー対戦で25勝',stat:'pvpWins',target:25,title:'対戦の熟練者'},
+ {id:'enemy2500',icon:'💣',name:'戦場の掃除人',desc:'敵を2,500体撃破',stat:'enemyKills',target:2500,title:'戦場の掃除人'},
+ {id:'enemy10000',icon:'☄️',name:'一万体討伐',desc:'敵を10,000体撃破',stat:'enemyKills',target:10000,title:'一万体討伐者'},
+ {id:'event_clear1_ach',icon:'🎪',name:'イベントデビュー',desc:'イベントステージを1回クリア',stat:'eventWins',target:1,title:'イベントデビュー者'},
+ {id:'event_clear25_ach',icon:'🎆',name:'イベントの英雄',desc:'イベントステージを25回クリア',stat:'eventWins',target:25,title:'イベントの英雄'},
+ {id:'event_kill2500_ach',icon:'🔥',name:'イベント掃討の英雄',desc:'イベントステージで敵を2,500体撃破',stat:'eventEnemyKills',target:2500,title:'イベント掃討の英雄'},
+ {id:'deploy1000',icon:'🚩',name:'百万の軍勢への道',desc:'味方キャラクターを1,000体出撃',stat:'deploys',target:1000,title:'大軍団司令官'},
+ {id:'worker50',icon:'🌲',name:'働き木下の大師匠',desc:'働き木下を50回強化',stat:'workerUpgrades',target:50,title:'働き木下の大師匠'},
+ {id:'japan_first',icon:'🗾',name:'日本編の第一歩',desc:'日本編1章をすべてクリア',kind:'japanChapter1',target:1,title:'日本編1章制覇者'},
+ {id:'japan_second',icon:'🗾',name:'日本編の熟練者',desc:'日本編2章をすべてクリア',kind:'japanChapter2',target:1,title:'日本編2章制覇者'},
+ {id:'japan_third',icon:'🗾',name:'日本編の英雄',desc:'日本編3章をすべてクリア',kind:'japanChapter3',target:1,title:'日本編3章制覇者'},
+ {id:'legend50',icon:'🌠',name:'レジェンドの半歩先',desc:'レジェンドステージを合計30回クリア',kind:'legendClears',target:30,title:'レジェンド探究者'},
+ {id:'myth10',icon:'🌌',name:'神話の探究者',desc:'神話編を10ステージクリア',kind:'mythClears',target:10,title:'神話の探究者'}
 ];
 let missionSystem;
 try{missionSystem=JSON.parse(storage.getItem(MISSION_STORAGE_KEY)||'null')}catch(e){missionSystem=null}
-if(!missionSystem||typeof missionSystem!=='object')missionSystem={version:KINOSHITA_MISSION_SYSTEM_V1,stats:{},daily:{},weekly:{}};
+if(!missionSystem||typeof missionSystem!=='object')missionSystem={version:KINOSHITA_MISSION_SYSTEM_V1,stats:{},daily:{},weekly:{},monthly:{},event:{}};
 missionSystem.stats=missionSystem.stats&&typeof missionSystem.stats==='object'?missionSystem.stats:{};
-for(const k of ['stageWins','deploys','workerUpgrades','levelUps','enemyKills','gachaBuys','rankWins','pvpWins','evolutions'])missionSystem.stats[k]=Math.max(0,Number(missionSystem.stats[k]||0));
+for(const k of ['stageWins','deploys','workerUpgrades','levelUps','enemyKills','gachaBuys','rankWins','pvpWins','evolutions','eventWins','eventDeploys','eventEnemyKills'])missionSystem.stats[k]=Math.max(0,Number(missionSystem.stats[k]||0));
 let equippedTitle=storage.getItem(TITLE_STORAGE_KEY)||'新人木下';
 let unlockedTitles=new Set();
 try{unlockedTitles=new Set(JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY)||'[]').filter(Boolean))}catch(e){unlockedTitles=new Set()}
@@ -4038,22 +4090,29 @@ function missionMakeState(defs,key){
  return {key,items:Object.fromEntries(defs.map(d=>[d.id,{progress:0,claimed:false}]))};
 }
 function missionEnsurePeriods(){
- const today=missionDateKey(),week=missionWeekKey();
+ const today=missionDateKey(),week=missionWeekKey(),month=today.slice(0,7);
  if(missionSystem.daily?.key!==today)missionSystem.daily=missionMakeState(DAILY_MISSION_DEFS,today);
  if(missionSystem.weekly?.key!==week)missionSystem.weekly=missionMakeState(WEEKLY_MISSION_DEFS,week);
+ if(missionSystem.monthly?.key!==month)missionSystem.monthly=missionMakeState(MONTHLY_MISSION_DEFS,month);
+ if(missionSystem.event?.key!==month)missionSystem.event=missionMakeState(EVENT_MISSION_DEFS,month);
+ for(const [type,defs] of [['daily',DAILY_MISSION_DEFS],['weekly',WEEKLY_MISSION_DEFS],['monthly',MONTHLY_MISSION_DEFS],['event',EVENT_MISSION_DEFS]]){
+  const state=missionSystem[type];if(!state.items||typeof state.items!=='object')state.items={};
+  for(const d of defs)if(!state.items[d.id])state.items[d.id]={progress:0,claimed:false};
+ }
  saveMissionSystem();
 }
 function saveMissionSystem(){
  storage.setItem(MISSION_STORAGE_KEY,JSON.stringify(missionSystem));
  storage.setItem(ACHIEVEMENT_STORAGE_KEY,JSON.stringify([...unlockedTitles]));
  storage.setItem(TITLE_STORAGE_KEY,equippedTitle);
+ storage.setItem(ACHIEVEMENT_REWARD_CLAIMS_KEY,JSON.stringify([...claimedAchievementRewards]));
 }
 function missionStatValue(stat){return Math.max(0,Number(missionSystem.stats?.[stat]||0))}
-function missionProgress(def,state){return Math.min(def.target,missionStatValue(def.stat))}
+function missionProgress(def,state){return Math.min(def.target,Math.max(0,Number(state.items?.[def.id]?.progress||0)))}
 function missionRewardText(def){return '🪙 '+Number(def.rewardCoins||0).toLocaleString()+'　⭐ '+Number(def.rewardXP||0).toLocaleString()+' XP'}
 function claimMission(type,id){
  missionEnsurePeriods();
- const defs=type==='daily'?DAILY_MISSION_DEFS:WEEKLY_MISSION_DEFS,state=missionSystem[type],def=defs.find(d=>d.id===id),item=state.items?.[id];
+ const defs=type==='daily'?DAILY_MISSION_DEFS:type==='weekly'?WEEKLY_MISSION_DEFS:type==='monthly'?MONTHLY_MISSION_DEFS:type==='event'?EVENT_MISSION_DEFS:[],state=missionSystem[type],def=defs.find(d=>d.id===id),item=state?.items?.[id];
  if(!def||!item||item.claimed)return;
  if(missionProgress(def,state)<def.target)return;
  item.claimed=true;gachaCoins+=Number(def.rewardCoins||0);playerXP+=Number(def.rewardXP||0);
@@ -4064,8 +4123,8 @@ function missionTrack(stat,amount=1){
  missionEnsurePeriods();
  const n=Math.max(0,Number(amount)||0);if(!n)return;
  missionSystem.stats[stat]=Math.max(0,Number(missionSystem.stats[stat]||0)+n);
- for(const type of ['daily','weekly']){
-  const defs=type==='daily'?DAILY_MISSION_DEFS:WEEKLY_MISSION_DEFS,state=missionSystem[type];
+ for(const type of ['daily','weekly','monthly','event']){
+  const defs=type==='daily'?DAILY_MISSION_DEFS:type==='weekly'?WEEKLY_MISSION_DEFS:type==='monthly'?MONTHLY_MISSION_DEFS:EVENT_MISSION_DEFS,state=missionSystem[type];
   for(const d of defs){if(d.stat===stat&&state.items?.[d.id])state.items[d.id].progress=Math.min(d.target,Number(state.items[d.id].progress||0)+n);}
  }
  missionCheckAchievements();
@@ -4074,6 +4133,11 @@ function missionTrack(stat,amount=1){
 function missionAchievementValue(def){
  if(def.stat)return missionStatValue(def.stat);
  if(def.kind==='owned')return ownedFlags.filter(Boolean).length;
+ if(def.kind==='japanChapter1')return Number(chapterClears[0]||0)>=48?1:0;
+ if(def.kind==='japanChapter2')return Number(chapterClears[1]||0)>=48?1:0;
+ if(def.kind==='japanChapter3')return Number(chapterClears[2]||0)>=48?1:0;
+ if(def.kind==='legendClears')return legendClears.reduce((a,b)=>a+Number(b||0),0);
+ if(def.kind==='mythClears')return Number(chapterClears[6]||0);
  if(def.kind==='japanMaster')return chapterClears.slice(0,3).every(x=>Number(x||0)>=48)?1:0;
  if(def.kind==='mythMaster')return Number(chapterClears[6]||0)>=48?1:0;
  if(def.kind==='legendMaster')return legendClears.reduce((a,b)=>a+Number(b||0),0)>=60?1:0;
@@ -4090,6 +4154,18 @@ function missionCheckAchievements(){
   if(last&&last.title&&!equippedTitle)equippedTitle=last.title;
   saveMissionSystem();
  }
+}
+function achievementReward(d){
+ if(Number.isFinite(d.rewardCoins)&&Number.isFinite(d.rewardXP))return {coins:d.rewardCoins,xp:d.rewardXP};
+ if(d.kind==='japanMaster'||d.kind==='mythMaster'||d.kind==='legendMaster')return {coins:50000,xp:15000};
+ if(d.kind==='japanChapter1'||d.kind==='japanChapter2'||d.kind==='japanChapter3')return {coins:10000,xp:3000};
+ const n=Math.max(1,Number(d.target)||1),factor=d.kind==='owned'?500:d.stat==='rankWins'?180:d.stat==='eventEnemyKills'?3:d.stat==='enemyKills'?2:d.stat==='stageWins'?35:20;
+ return {coins:Math.max(500,Math.min(150000,Math.round(n*factor))),xp:Math.max(200,Math.min(50000,Math.round(n*factor*.35)))};
+}
+function achievementRewardText(d){const r=achievementReward(d);return '🪙 '+r.coins.toLocaleString()+'　⭐ '+r.xp.toLocaleString()+' XP'}
+function claimAchievementReward(id){
+ const d=ACHIEVEMENT_DEFS.find(x=>x.id===id);if(!d||!unlockedTitles.has(id)||claimedAchievementRewards.has(id))return;
+ const r=achievementReward(d);gachaCoins+=r.coins;playerXP+=r.xp;claimedAchievementRewards.add(id);save();saveMissionSystem();renderMissionAchievement();renderOwnedStart();
 }
 function missionAchievementProgressText(d){
  const v=missionAchievementValue(d),t=d.target;
@@ -4114,14 +4190,17 @@ function renderMissionAchievement(){
  let content='';
  if(tab==='daily')content='<div class="missionSection"><div class="missionNotice">📅 '+missionDateKey()+'　｜　'+dailyDone+' / '+DAILY_MISSION_DEFS.length+'件受取済み</div>'+DAILY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.daily,'daily')).join('')+'</div>';
  else if(tab==='weekly')content='<div class="missionSection"><div class="missionNotice">🗓️ 週：'+missionSystem.weekly.key+'　｜　'+weeklyDone+' / '+WEEKLY_MISSION_DEFS.length+'件受取済み</div>'+WEEKLY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.weekly,'weekly')).join('')+'</div>';
- else if(tab==='achievements')content='<div class="missionSection"><div class="missionNotice">🏅 実績 '+achDone+' / '+ACHIEVEMENT_DEFS.length+'　｜　達成すると称号を獲得できます。</div><div class="achievementGrid">'+ACHIEVEMENT_DEFS.map(d=>{const ok=unlockedTitles.has(d.id);return '<div class="achievementCard '+(ok?'unlocked':'')+'"><span class="achievementIcon">'+d.icon+'</span><div class="achievementName">'+(ok?'🏅 ':'🔒 ')+d.name+'</div><div class="achievementDesc">'+d.desc+'</div><div class="achievementProg">'+missionAchievementProgressText(d)+(ok&&d.title?'　【'+d.title+'】':'')+'</div></div>'}).join('')+'</div></div>';
+ else if(tab==='monthly')content='<div class="missionSection"><div class="missionNotice">📆 月間：'+missionSystem.monthly.key+'　｜　毎月1日0:00（日本時間）に更新</div>'+MONTHLY_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.monthly,'monthly')).join('')+'</div>';
+ else if(tab==='event')content='<div class="missionSection"><div class="missionNotice">🎪 イベントミッション：'+missionSystem.event.key+'　｜　イベントステージ限定の目標。毎月更新</div>'+EVENT_MISSION_DEFS.map(d=>missionCardHTML(d,missionSystem.event,'event')).join('')+'</div>';
+ else if(tab==='achievements')content='<div class="missionSection"><div class="missionNotice">🏅 実績 '+achDone+' / '+ACHIEVEMENT_DEFS.length+'　｜　達成すると称号を獲得できます。</div><div class="achievementGrid">'+ACHIEVEMENT_DEFS.map(d=>{const ok=unlockedTitles.has(d.id);const reward=achievementReward(d),claimed=claimedAchievementRewards.has(d.id);return '<div class="achievementCard '+(ok?'unlocked':'')+'"><span class="achievementIcon">'+d.icon+'</span><div class="achievementName">'+(ok?'🏅 ':'🔒 ')+d.name+'</div><div class="achievementDesc">'+d.desc+'</div><div class="achievementProg">'+missionAchievementProgressText(d)+(ok&&d.title?'　【'+d.title+'】':'')+'</div><div class="achievementReward">報酬：'+achievementRewardText(d)+'</div>'+(ok?'<button class="missionClaim" data-achievement-reward="'+d.id+'" '+(claimed?'disabled':'')+'>'+(claimed?'報酬受取済み':'🎁 実績報酬を受け取る')+'</button>':'')+'</div>'}).join('')+'</div></div>';
  else {
   const titles=ACHIEVEMENT_DEFS.filter(d=>unlockedTitles.has(d.id)&&d.title);
   content='<div class="titleEquipBox"><b>現在の称号</b><div style="font-size:22px;margin-top:4px">🏅 '+escapeRankText(equippedTitle)+'</div><div style="font-size:10px;color:#dbeafe;margin-top:3px">プロフィールやメニューで表示される称号です。</div></div><div class="titleGrid">'+(titles.length?titles.map(d=>'<button class="titleChoice '+(equippedTitle===d.title?'active':'')+'" data-title-id="'+d.id+'">'+d.icon+' '+escapeRankText(d.title)+(equippedTitle===d.title?'　✓':'')+'</button>').join(''):'<div class="missionNotice">まだ獲得した称号はありません。</div>')+'</div>';
  }
- body.innerHTML='<div class="missionHero"><b>🎯 やり込みセンター</b><small>デイリー・週間ミッションをこなし、実績を解除して称号を集めよう！</small></div><div class="missionTabs"><button class="missionTab '+(tab==='daily'?'active':'')+'" data-mission-tab="daily">📅 デイリー</button><button class="missionTab '+(tab==='weekly'?'active':'')+'" data-mission-tab="weekly">🗓️ 週間</button><button class="missionTab '+(tab==='achievements'?'active':'')+'" data-mission-tab="achievements">🏅 実績・称号</button></div>'+content;
+ body.innerHTML='<div class="missionHero"><b>🎯 やり込みセンター</b><small>通常・週間・月間・イベントミッションに挑戦し、実績報酬と称号を集めよう！</small></div><div class="missionTabs"><button class="missionTab '+(tab==='daily'?'active':'')+'" data-mission-tab="daily">📅 デイリー</button><button class="missionTab '+(tab==='weekly'?'active':'')+'" data-mission-tab="weekly">🗓️ 週間</button><button class="missionTab '+(tab==='monthly'?'active':'')+'" data-mission-tab="monthly">📆 月間</button><button class="missionTab '+(tab==='event'?'active':'')+'" data-mission-tab="event">🎪 イベント</button><button class="missionTab '+(tab==='achievements'?'active':'')+'" data-mission-tab="achievements">🏅 実績・称号</button></div>'+content;
  body.querySelectorAll('[data-mission-tab]').forEach(b=>b.onclick=()=>{missionAchievementTab=b.dataset.missionTab;renderMissionAchievement()});
  body.querySelectorAll('[data-mission-type]').forEach(b=>b.onclick=()=>claimMission(b.dataset.missionType,b.dataset.missionId));
+ body.querySelectorAll('[data-achievement-reward]').forEach(b=>b.onclick=()=>claimAchievementReward(b.dataset.achievementReward));
  body.querySelectorAll('[data-title-id]').forEach(b=>b.onclick=()=>{const d=ACHIEVEMENT_DEFS.find(x=>x.id===b.dataset.titleId);if(d?.title&&unlockedTitles.has(d.id)){equippedTitle=d.title;saveMissionSystem();renderMissionAchievement();renderOwnedStart()}});
 }
 function openMissionAchievement(){document.getElementById('start').style.display='none';document.getElementById('missionAchievement').style.display='flex';renderMissionAchievement()}
@@ -4130,9 +4209,9 @@ missionEnsurePeriods();missionCheckAchievements();
 
 const _missionOriginalShowResult=showResult;
 showResult=function(win){
- const wasPvp=!!pvpMode;
+ const wasPvp=!!pvpMode,wasEvent=selectedMode==='event'||selectedMode==='halloween';
  if(win&&wasPvp)missionTrack('pvpWins',1);
- if(win&&!wasPvp&&!rankMode)missionTrack('stageWins',1);
+ if(win&&!wasPvp&&!rankMode){missionTrack('stageWins',1);if(wasEvent)missionTrack('eventWins',1);}
  return _missionOriginalShowResult(win);
 };
 const _missionOriginalFinishRank=finishRank;
@@ -4144,7 +4223,7 @@ const _missionOriginalDeploy=deploy;
 deploy=function(i){
  const before=money;
  const result=_missionOriginalDeploy(i);
- if(money<before)missionTrack('deploys',1);
+ if(money<before){missionTrack('deploys',1);if(selectedMode==='event'||selectedMode==='halloween')missionTrack('eventDeploys',1);}
  return result;
 };
 const _missionOriginalWorkerUpgrade=workerUpgrade;
@@ -4179,7 +4258,7 @@ const _missionOriginalRemoveEnemy=removeEnemy;
 removeEnemy=function(e,noReward){
  const already=!!e?.__missionDeathCounted;
  const result=_missionOriginalRemoveEnemy(e,noReward);
- if(e&&!already&&e.hp<=0){e.__missionDeathCounted=true;missionTrack('enemyKills',1)}
+ if(e&&!already&&e.hp<=0){e.__missionDeathCounted=true;missionTrack('enemyKills',1);if(selectedMode==='event'||selectedMode==='halloween')missionTrack('eventEnemyKills',1)}
  return result;
 };
 const _missionOriginalRenderOwnedStart=renderOwnedStart;
