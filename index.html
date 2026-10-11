@@ -4145,7 +4145,7 @@ function getShinjuSeasonState(){
  const seasonNumber=Math.max(10,currentRankSeason()+1);
  const elapsed=seasonNumber-10;
  const cycle=Math.floor(elapsed/5)+1,slot=elapsed%5;
- const phase=slot===0?1:slot<=2?2:3;
+ const phase=slot===0?1:slot===1?2:3;
  for(let c=2;c<=cycle;c++)getShinjuCycleEssences(c);
  const cycleEssences=getShinjuCycleEssences(cycle);
  const groupStart=((cycle-1)%2)*3;
