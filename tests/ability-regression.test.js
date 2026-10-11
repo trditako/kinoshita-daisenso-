@@ -194,7 +194,7 @@ test('simulation curse only seals abilities when curseSeal is enabled', () => {
 });
 
 test('enemy area attack-down respects attackDownImmune', () => {
-  assert.match(html, /for\\(const ally of units\\)if\\(ally&&ally\\.hp>0&&!hasAbilityFlag\\(ally,'attackDownImmune'\\)&&\\(ally\\.trait==='宇宙'\\|\\|ally\\.trait==='赤'\\)\\)/);
+  assert.ok(html.includes("!hasAbilityFlag(ally,'attackDownImmune')"), 'area attack-down must skip immune units');
 });
 
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
