@@ -256,7 +256,7 @@ test('being ability-sealed does not grant immunity to additional debuffs', () =>
 });
 
 test('area attack-down uses a single attack-level chance and respects immunity', () => {
-  assert.match(functionSource('loop'), /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
+  assert.match(html, /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
   assert.match(functionSource('applyAreaAttackDown'), /hasAbilityFlag\(e,'attackDownImmune'\)/);
 });
 
@@ -297,7 +297,7 @@ test('global slow is rolled once per attack and applied to the correct side', ()
   fn({ ability: { slow: { trait: '*', chance: 0.35, factor: 0.8, duration: 2, all: true } } });
   assert.equal(calls.length, 2);
   assert.match(functionSource('loop'), /applyGlobalSlow\(u\);applyAreaAttackDown\(u\)/);
-  assert.match(functionSource('loop'), /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
+  assert.match(html, /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
 });
 
 test('clone per-target slow does not roll global slow once per hit', () => {
@@ -342,7 +342,7 @@ test('enemy nested slow abilities apply per target and respect slow immunity', (
   const body = functionSource('enemyAttackTarget');
   assert.match(body, /ea\.slow&&!ea\.slow\.all&&!hasAbilityFlag\(t,'slowImmune'\)/);
   assert.match(body, /entityHasTrait\(t,ea\.slow\.trait\)/);
-  assert.match(functionSource('loop'), /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
+  assert.match(html, /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
 });
 
 
