@@ -376,17 +376,24 @@ test('top-level and nested strong/resistance modifiers both affect combat damage
     isAbilitySealed: () => false,
     traitMultiplier,
     entityHasTrait: () => false,
+    performance: { now: () => 1000 },
   });
   assert.equal(damageAgainst({ atk: 100, strong: { 赤: 4 }, ability: {} }, { trait: '赤' }), 400);
   assert.equal(damageAgainst({ atk: 100, ability: { strong: { 赤: 3 } } }, { trait: '赤' }), 300);
+  assert.equal(damageAgainst({ atk: 100, attackDownUntil: 2, attackDownFactor: 0.25, ability: {} }, { trait: '赤' }), 25);
+  assert.equal(damageAgainst({ atk: 100, cursedUntil: 2, cursedAttackFactor: 0.5, ability: {} }, { trait: '赤' }), 50);
   const { fn: damageTakenBy } = getFunction('damageTakenBy', {
     isAbilitySealed: () => false,
     traitMultiplier,
     entityHasTrait: () => false,
     entityTraitMatch: () => false,
     traitTableMatches: () => false,
+    performance: { now: () => 1000 },
   });
   assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', resist: { 赤: 0.2 }, ability: {} }, { atk: 100, trait: '赤', ability: {} }), 20);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', ability: {} }, { atk: 100, trait: '無', attackDownUntil: 2, attackDownFactor: 0.25, ability: {} }), 25);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', ability: {} }, { atk: 100, trait: '無', ability: { criticalChance: 1, criticalMultiplier: 3 } }), 300);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '鋼', metal: true, ability: {} }, { atk: 100, trait: '無', ability: { criticalChance: 1, criticalMultiplier: 3 } }), 300);
 });
 
 test('first-hit and wave-stop abilities respect stop immunity and ability seal', () => {
