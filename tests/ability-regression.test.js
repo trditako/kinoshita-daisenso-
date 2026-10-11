@@ -230,4 +230,55 @@ test('wave and surge positions use hit-target coordinates and correct directions
   assert.match(surge, /const hi=isAlly\?origin-min:origin\+max/);
 });
 
+
+test('ally and enemy knockback chance causes an independent push', () => {
+  assert.match(functionSource('applyAbility'), /a\.knockbackChance&&target\.hp>0/);
+  assert.match(functionSource('enemyAttackTarget'), /ea\.knockbackChance&&Math\.random\(\)<Number\(ea\.knockbackChance\)/);
+});
+
+test('barrier break bypasses both normal barrier and mythology barrier absorption', () => {
+  assert.match(functionSource('hit'), /attackSource\?\.ability\?\.barrierBreak/);
+  assert.match(functionSource('hit'), /target\.mythBarrier=0/);
+});
+
+test('enemy seal and warp effects respect their respective immunities', () => {
+  const attack = functionSource('enemyAttackTarget');
+  assert.match(attack, /hasAbilityFlag\(t,'sealImmune'\)/);
+  assert.match(attack, /hasAbilityFlag\(t,'warpImmune'\)/);
+});
+
+test('being ability-sealed does not grant immunity to additional debuffs', () => {
+  assert.doesNotMatch(functionSource('enemyAttackTarget'), /if\(!sourceSealed&&!isAbilitySealed\(t\)\)/);
+  assert.doesNotMatch(functionSource('applyPhoenixAttackAbility'), /isAbilitySealed\(target\)/);
+});
+
+test('area attack-down uses a single attack-level chance and respects immunity', () => {
+  assert.match(functionSource('loop'), /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
+  assert.match(functionSource('applyAreaAttackDown'), /hasAbilityFlag\(e,'attackDownImmune'\)/);
+});
+
+test('mythology gravity and rune debuffs respect immunity flags', () => {
+  assert.match(functionSource('mythologyV2Tick'), /gravityWell[^;]*hasAbilityFlag\(u,'slowImmune'\)/);
+  assert.match(functionSource('mythologyV2OnEnemyAttack'), /hasAbilityFlag\(t,'attackDownImmune'\)/);
+});
+
+test('Socrates surge does not apply ability effects twice per hit', () => {
+  assert.doesNotMatch(functionSource('triggerSocratesSurge'), /applyAbility\(source,t,dealt\)/);
+});
+
+test('composite traits match their individual trait abilities', () => {
+  const { fn: hasTrait } = getFunction('entityHasTrait');
+  const { fn: multiplier } = getFunction('traitMultiplier');
+  assert.equal(hasTrait({ trait: '赤・黒' }, '赤'), true);
+  assert.equal(hasTrait({ trait: '赤・黒' }, '黒'), true);
+  assert.equal(hasTrait({ trait: '赤・黒' }, '宇宙'), false);
+  assert.equal(multiplier({ 赤: 2, 黒: 3 }, { trait: '赤・黒' }, 'max'), 3);
+  assert.equal(multiplier({ 赤: 0.4, 黒: 0.7 }, { trait: '赤・黒' }, 'min'), 0.4);
+});
+
+test('curse-only status text no longer claims ability seal', () => {
+  assert.match(functionSource('applyCurseStatus'), /a\.curseSeal\?'呪い・能力封印':'呪い'/);
+  assert.match(functionSource('updateStatusMark'), /curseSealUntil/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
