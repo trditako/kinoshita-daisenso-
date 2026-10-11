@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.41';
+const GAME_VERSION='v1.8.42';
 const UPDATE_LOG=[
+ {date:'2026-10-11',version:'v1.8.42',title:'🛒 交換所の商品を大幅追加',items:['デイリー・ウィークリーに属性パワーや各レアリティの金、追加のパワー宝箱を追加','マンスリーにパワー宝箱10個・古代のパワー10個・伝説レアの金など高額商品を追加','商品ごとの交換上限と購入時の通貨チェックを維持']},
  {date:'2026-10-11',version:'v1.8.41',title:'🛒 デイリー・ウィークリー・マンスリー交換所を追加',items:['木下コイン・プレイヤーXPで育成素材や宝箱を交換できる期間別交換所を追加','交換回数は日・週・月ごとに保存し、期間更新時にリセット','ノーマルキャラの金5個からレアキャラの金1個など、金の両替機能を追加']},
  {date:'2026-10-11',version:'v1.8.40',title:'💎 特別真髄を独立画面化・提供割合を調整',items:['特別真髄を木下交換所のタブから分離し、専用画面だけで表示','富豪木下2%、伝説レアの金1%、超激レアの金25%、パワー宝箱72%に変更']},
  {date:'2026-10-11',version:'v1.8.39',title:'💎 ホーム画面に特別真髄ボタンを追加',items:['真髄と同じようにホーム画面から特別真髄を直接開ける専用ボタンを追加','特別真髄ボタンから開くと特別真髄の抽選画面を直接表示']},
@@ -3703,19 +3704,36 @@ const ITEM_EXCHANGE_OFFERS={
   {id:'daily_chest',name:'パワー宝箱',emoji:'🌈📦',desc:'属性パワーを選んで3個獲得',costType:'coins',cost:5000,rewardType:'item',rewardId:'power_chest',amount:1,limit:1},
   {id:'daily_red',name:'赤のパワー×5',emoji:'🔴',desc:'第二形態への進化素材',costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'赤',amount:5,limit:2},
   {id:'daily_normal_gold',name:'ノーマルキャラの金×1',emoji:'🪙',desc:'ノーマルキャラの育成素材',costType:'xp',cost:300,rewardType:'gold',rewardId:'ノーマル',amount:1,limit:2},
-  {id:'daily_xp',name:'プレイヤーXP×500',emoji:'⭐',desc:'プレイヤー経験値を獲得',costType:'coins',cost:2000,rewardType:'xp',amount:500,limit:2}
+  {id:'daily_xp',name:'プレイヤーXP×500',emoji:'⭐',desc:'プレイヤー経験値を獲得',costType:'coins',cost:2000,rewardType:'xp',amount:500,limit:2},
+  {id:'daily_blue_power',name:'青のパワー×5',emoji:'🔵',desc:'第二形態への進化素材',costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'青',amount:5,limit:2},
+  {id:'daily_yellow_power',name:'黄のパワー×5',emoji:'🟡',desc:'第二形態への進化素材',costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'黄',amount:5,limit:2},
+  {id:'daily_green_power',name:'緑のパワー×5',emoji:'🟢',desc:'第二形態への進化素材',costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'緑',amount:5,limit:2},
+  {id:'daily_purple_power',name:'紫のパワー×5',emoji:'🟣',desc:'第二形態への進化素材',costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'紫',amount:5,limit:2},
+  {id:'daily_chest_x2',name:'パワー宝箱×2',emoji:'🌈📦',desc:'属性パワーを選んで合計6個獲得',costType:'xp',cost:900,rewardType:'item',rewardId:'power_chest',amount:2,limit:1}
  ],
  weekly:[
   {id:'weekly_ancient',name:'古代のパワー×1',emoji:'🦴',desc:'第二形態への進化素材',costType:'coins',cost:25000,rewardType:'ancientPower',amount:1,limit:1},
   {id:'weekly_chests',name:'パワー宝箱×2',emoji:'🌈📦',desc:'開封して属性パワーを獲得',costType:'xp',cost:1800,rewardType:'item',rewardId:'power_chest',amount:2,limit:2},
   {id:'weekly_xp',name:'プレイヤーXP×2,000',emoji:'⭐',desc:'プレイヤー経験値を獲得',costType:'coins',cost:6000,rewardType:'xp',amount:2000,limit:2},
-  {id:'weekly_rare_gold',name:'レアキャラの金×1',emoji:'🪙',desc:'レアキャラの育成素材',costType:'coins',cost:12000,rewardType:'gold',rewardId:'レア',amount:1,limit:1}
+  {id:'weekly_rare_gold',name:'レアキャラの金×1',emoji:'🪙',desc:'レアキャラの育成素材',costType:'coins',cost:12000,rewardType:'gold',rewardId:'レア',amount:1,limit:1},
+  {id:'weekly_red_power',name:'赤のパワー×20',emoji:'🔴',desc:'進化素材をまとめて獲得',costType:'coins',cost:18000,rewardType:'colorPower',rewardId:'赤',amount:20,limit:2},
+  {id:'weekly_power_chest5',name:'パワー宝箱×5',emoji:'🌈📦',desc:'属性パワーを選んで合計15個獲得',costType:'xp',cost:4000,rewardType:'item',rewardId:'power_chest',amount:5,limit:1},
+  {id:'weekly_epic_gold',name:'激レアキャラの金×1',emoji:'🪙',desc:'激レアキャラの育成素材',costType:'coins',cost:30000,rewardType:'gold',rewardId:'激レア',amount:1,limit:1},
+  {id:'weekly_ancient2',name:'古代のパワー×2',emoji:'🦴',desc:'第二形態への進化素材',costType:'coins',cost:45000,rewardType:'ancientPower',amount:2,limit:1},
+  {id:'weekly_coins',name:'木下コイン×20,000',emoji:'🪙',desc:'交換用コインをまとめて獲得',costType:'xp',cost:4000,rewardType:'coins',amount:20000,limit:1}
  ],
  monthly:[
   {id:'monthly_ancient',name:'古代のパワー×3',emoji:'🦴',desc:'第二形態への進化素材',costType:'coins',cost:70000,rewardType:'ancientPower',amount:3,limit:1},
   {id:'monthly_chests',name:'パワー宝箱×5',emoji:'🌈📦',desc:'開封して属性パワーを獲得',costType:'xp',cost:5000,rewardType:'item',rewardId:'power_chest',amount:5,limit:1},
   {id:'monthly_super_gold',name:'超激レアキャラの金×1',emoji:'🪙',desc:'超激レアキャラの育成素材',costType:'coins',cost:50000,rewardType:'gold',rewardId:'超激レア',amount:1,limit:1},
-  {id:'monthly_coins',name:'木下コイン×5,000',emoji:'🪙',desc:'交換用コインを獲得',costType:'xp',cost:1000,rewardType:'coins',amount:5000,limit:2}
+  {id:'monthly_coins',name:'木下コイン×5,000',emoji:'🪙',desc:'交換用コインを獲得',costType:'xp',cost:1000,rewardType:'coins',amount:5000,limit:2},
+  {id:'monthly_power_chest10',name:'大型パワー宝箱×10',emoji:'💎📦',desc:'属性パワーを選んで合計30個獲得',costType:'xp',cost:12000,rewardType:'item',rewardId:'power_chest',amount:10,limit:1},
+  {id:'monthly_ancient10',name:'古代のパワー×10',emoji:'🦴✨',desc:'進化素材を大量に獲得できる高額商品',costType:'coins',cost:220000,rewardType:'ancientPower',amount:10,limit:1},
+  {id:'monthly_legend_gold',name:'伝説レアキャラの金×1',emoji:'👑🪙',desc:'最上位レアリティの育成素材・月1回限定',costType:'coins',cost:500000,rewardType:'gold',rewardId:'伝説レア',amount:1,limit:1},
+  {id:'monthly_super_gold5',name:'超激レアキャラの金×5',emoji:'🌟🪙',desc:'超激レアキャラの育成素材をまとめて獲得',costType:'coins',cost:180000,rewardType:'gold',rewardId:'超激レア',amount:5,limit:1},
+  {id:'monthly_power_mix',name:'全属性パワーセット',emoji:'🌈💠',desc:'赤・青・黄・緑・紫のパワーを各10個獲得',costType:'coins',cost:100000,rewardType:'powerBundle',amount:10,limit:1},
+  {id:'monthly_xp10k',name:'プレイヤーXP×10,000',emoji:'⭐💰',desc:'プレイヤー経験値を大量に獲得',costType:'coins',cost:75000,rewardType:'xp',amount:10000,limit:1},
+  {id:'monthly_coins50k',name:'木下コイン×50,000',emoji:'💰🪙',desc:'XPをコインにまとめて交換',costType:'xp',cost:10000,rewardType:'coins',amount:50000,limit:1}
  ]
 };
 function itemExchangePeriodKey(tab){
@@ -3765,6 +3783,7 @@ function buyItemExchange(id){
  if(o.costType==='coins')gachaCoins-=o.cost;else playerXP-=o.cost;
  if(o.rewardType==='item')inventoryAddItem(o.rewardId,o.amount);
  else if(o.rewardType==='colorPower')colorPowers[o.rewardId]=Math.max(0,Number(colorPowers[o.rewardId]||0))+o.amount;
+ else if(o.rewardType==='powerBundle'){for(const color of ['赤','青','黄','緑','紫'])colorPowers[color]=Math.max(0,Number(colorPowers[color]||0))+o.amount;}
  else if(o.rewardType==='ancientPower')ancientPower+=o.amount;
  else if(o.rewardType==='gold')addRarityGold(o.rewardId,o.amount);
  else if(o.rewardType==='xp')playerXP+=o.amount;
