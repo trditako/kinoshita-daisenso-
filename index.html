@@ -3321,6 +3321,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  }
 function applyYabayabaCloneAbility(e,target){
  const a=e?.ability||{};if(e?.key!=="ヤバヤバ複製"||!target||target.hp<=0||isAbilitySealed(e))return;
+ const waveTarget=target;
  const now=performance.now()/1000;
  if(a.stopChance&&!hasAbilityFlag(target,'stopImmune')&&Math.random()<Number(a.stopChance)){target.stopUntil=now+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
  if(a.slowChance&&Math.random()<Number(a.slowChance)){target.slowUntil=now+Number(a.slowDuration||2);target.slowFactor=Number(a.slowFactor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slowDuration||2),'slow');}
@@ -3331,7 +3332,7 @@ function applyYabayabaCloneAbility(e,target){
  if(a.slow?.all&&Math.random()<Number(a.slow.chance||0)){
    for(const u of units){if(!u||u.hp<=0)continue;target=u;target.slowUntil=now+Number(a.slow.duration||2);target.slowFactor=Number(a.slow.factor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slow.duration||2),'slow');}
  }
- if(a.waveChance!=null){if(Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel??e.waveLevel??3));enemyWaveAttack(e,[target]);}}
+ if(a.waveChance!=null){if(Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel??e.waveLevel??3));enemyWaveAttack(e,[waveTarget]);}}
  else if(a.wave===true&&e.waveLevel>0)enemyWaveAttack(e,[target]);
 }
 function reflectEnemyWave(sourceWave,reflector){
