@@ -230,4 +230,93 @@ test('wave and surge positions use hit-target coordinates and correct directions
   assert.match(surge, /const hi=isAlly\?origin-min:origin\+max/);
 });
 
+
+test('ally and enemy knockback chance causes an independent push', () => {
+  assert.match(functionSource('applyAbility'), /a\.knockbackChance&&target\.hp>0/);
+  assert.match(functionSource('enemyAttackTarget'), /ea\.knockbackChance&&Math\.random\(\)<Number\(ea\.knockbackChance\)/);
+});
+
+test('barrier break bypasses both normal barrier and mythology barrier absorption', () => {
+  assert.match(functionSource('hit'), /attackSource\?\.ability\?\.barrierBreak/);
+  assert.match(functionSource('hit'), /target\.mythBarrier=0/);
+});
+
+test('enemy seal and warp effects respect their respective immunities', () => {
+  const attack = functionSource('enemyAttackTarget');
+  assert.match(attack, /hasAbilityFlag\(t,'sealImmune'\)/);
+  assert.match(attack, /hasAbilityFlag\(t,'warpImmune'\)/);
+});
+
+test('being ability-sealed does not grant immunity to additional debuffs', () => {
+  assert.doesNotMatch(functionSource('enemyAttackTarget'), /if\(!sourceSealed&&!isAbilitySealed\(t\)\)/);
+  assert.doesNotMatch(functionSource('applyPhoenixAttackAbility'), /isAbilitySealed\(target\)/);
+});
+
+test('area attack-down uses a single attack-level chance and respects immunity', () => {
+  assert.match(functionSource('loop'), /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
+  assert.match(functionSource('applyAreaAttackDown'), /hasAbilityFlag\(e,'attackDownImmune'\)/);
+});
+
+test('mythology gravity and rune debuffs respect immunity flags', () => {
+  assert.match(functionSource('mythologyV2Tick'), /gravityWell[^;]*hasAbilityFlag\(u,'slowImmune'\)/);
+  assert.match(functionSource('mythologyV2OnEnemyAttack'), /hasAbilityFlag\(t,'attackDownImmune'\)/);
+});
+
+test('Socrates surge does not apply ability effects twice per hit', () => {
+  assert.doesNotMatch(functionSource('triggerSocratesSurge'), /applyAbility\(source,t,dealt\)/);
+});
+
+test('composite traits match their individual trait abilities', () => {
+  const { fn: hasTrait } = getFunction('entityHasTrait');
+  const { fn: multiplier } = getFunction('traitMultiplier');
+  assert.equal(hasTrait({ trait: '赤・黒' }, '赤'), true);
+  assert.equal(hasTrait({ trait: '赤・黒' }, '黒'), true);
+  assert.equal(hasTrait({ trait: '赤・黒' }, '宇宙'), false);
+  assert.equal(multiplier({ 赤: 2, 黒: 3 }, { trait: '赤・黒' }, 'max'), 3);
+  assert.equal(multiplier({ 赤: 0.4, 黒: 0.7 }, { trait: '赤・黒' }, 'min'), 0.4);
+});
+
+test('curse-only status text no longer claims ability seal', () => {
+  assert.match(functionSource('applyCurseStatus'), /a\.curseSeal\?'呪い・能力封印':'呪い'/);
+  assert.match(functionSource('updateStatusMark'), /curseSealUntil/);
+});
+
+
+test('global slow rolls once and applies to the correct side', () => {
+  const body = functionSource('applyAbility');
+  assert.match(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
+  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+});
+
+test('clone global slow rolls once and checks composite traits', () => {
+  const body = functionSource('applyYabayabaCloneAbility');
+  assert.match(body, /const affected=a\.slow\.all\?units:\[target\]/);
+  assert.match(body, /entityHasTrait\(candidate,a\.slow\.trait\)/);
+  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+});
+
+test('curse chance is rolled only by the shared curse helper', () => {
+  assert.doesNotMatch(functionSource('applyPhoenixAttackAbility'), /Math\.random\(\)<Number\(a\.curseChance\)/);
+  assert.match(functionSource('enemyAttackTarget'), /if\(ea\.curseChance\)applyCurseStatus\(e,t\)/);
+  assert.doesNotMatch(functionSource('enemyAttackTarget'), /Math\.random\(\)<Number\(ea\.curseChance\).*applyCurseStatus/);
+  assert.match(functionSource('applyAbility'), /Math\.random\(\)<Number\(band\.curseChance\|\|0\)/);
+});
+
+test('splash damage follows the attacker side and can hit flying targets when allowed', () => {
+  assert.match(functionSource('applyAbility'), /const splashTargets=u\.isEnemy\?units:enemies/);
+  assert.match(functionSource('applyAbility'), /airAttack:!!u\.airAttack/);
+});
+
+test('seal duration is extended rather than shortened by a weaker reapplication', () => {
+  assert.match(functionSource('applyAbility'), /Math\.max\(Number\(target\.abilitySealedUntil\|\|0\),now\+Number\(a\.sealDuration\|\|3\)\)/);
+  assert.match(functionSource('enemyAttackTarget'), /Math\.max\(Number\(t\.abilitySealedUntil\|\|0\),now2\+Number\(ea\.sealDuration\|\|4\)\)/);
+});
+
+
+test('machine-series and attribute-overload modifiers recognize composite ancient traits', () => {
+  assert.match(functionSource('damageAgainst'), /!entityHasTrait\(target,'古代'\)/);
+  assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(u,'古代'\)/);
+  assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(attacker,'古代'\)/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
