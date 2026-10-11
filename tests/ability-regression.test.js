@@ -312,4 +312,11 @@ test('seal duration is extended rather than shortened by a weaker reapplication'
   assert.match(functionSource('enemyAttackTarget'), /Math\.max\(Number\(t\.abilitySealedUntil\|\|0\),now2\+Number\(ea\.sealDuration\|\|4\)\)/);
 });
 
+
+test('machine-series and attribute-overload modifiers recognize composite ancient traits', () => {
+  assert.match(functionSource('damageAgainst'), /!entityHasTrait\(target,'古代'\)/);
+  assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(u,'古代'\)/);
+  assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(attacker,'古代'\)/);
+});
+
 process.stdout.write('\n' + passed + ' regression checks passed.\n');
