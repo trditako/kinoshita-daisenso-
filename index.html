@@ -5196,6 +5196,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  el('operatorRewardPlayerId').disabled=true;
  el('worldAnnouncementDismiss')?.addEventListener('click',()=>{localDismissedUpdatedAt=currentUpdatedAt;hideBanner()});
  async function refreshWorldState(){
+  if(document.visibilityState==='hidden')return;
   try{
    const res=await fetch('https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_operator_state?select=event_name,event_active,event_expires_at,maintenance_active,maintenance_message&id=eq.1',{headers:headers(),cache:'no-store'});
    if(!res.ok)return;
