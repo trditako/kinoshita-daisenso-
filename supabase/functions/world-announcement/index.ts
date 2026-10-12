@@ -2,11 +2,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const OPERATOR_PLAYER_ID = 'cd19b245-1a70-45de-9bb7-967f6c568425'
 const URL = Deno.env.get('SUPABASE_URL') || ''
-const TOKEN = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
 const RAW_SECRET_KEYS = Deno.env.get('SUPABASE_SECRET_KEYS') || ''
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-operator-broadcast-token',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json',
 }
@@ -26,13 +25,6 @@ function getDb() {
   db = createClient(URL, key, { auth: { persistSession: false, autoRefreshToken: false } })
   return db
 }
-function safeEqual(a: string, b: string) {
-  const aa = new TextEncoder().encode(a), bb = new TextEncoder().encode(b)
-  if (aa.length !== bb.length) return false
-  let difference = 0
-  for (let i = 0; i < aa.length; i++) difference |= aa[i] ^ bb[i]
-  return difference === 0
-}
 function integerInRange(value: unknown, min: number, max: number) {
   const n = Number(value)
   if (!Number.isSafeInteger(n) || n < min || n > max) return null
@@ -41,17 +33,22 @@ function integerInRange(value: unknown, min: number, max: number) {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return respond({ ok: false, error: 'POST only' }, 405)
-  if (!TOKEN) return respond({ ok: false, error: 'Server operator token is not configured' }, 503)
-  if (!safeEqual(req.headers.get('x-operator-broadcast-token') || '', TOKEN))
-    return respond({ ok: false, error: 'Operator authentication failed' }, 401)
+  const authorization = req.headers.get('authorization') || ''
+  const accessToken = authorization.match(/^Bearer\\s+(.+)$/i)?.[1] || ''
+  if (!accessToken) return respond({ ok: false, error: 'Supabase Auth login required' }, 401)
+  const allowedOperatorAuthId = Deno.env.get('WORLD_OPERATOR_AUTH_USER_ID') || ''
+  if (!allowedOperatorAuthId) return respond({ ok: false, error: 'Operator Auth user ID is not configured' }, 503)
 
   try {
+    const client = getDb()
+    const { data: authData, error: authError } = await client.auth.getUser(accessToken)
+    if (authError || !authData.user) return respond({ ok: false, error: 'Supabase Auth session is invalid or expired' }, 401)
+    if (authData.user.id !== allowedOperatorAuthId) return respond({ ok: false, error: 'This account is not authorized for operator actions' }, 403)
     const body = await req.json()
     if (!body || typeof body !== 'object' || body.operatorId !== OPERATOR_PLAYER_ID)
-      return respond({ ok: false, error: 'Operator account check failed' }, 403)
+      return respond({ ok: false, error: 'Operator game account check failed' }, 403)
     const action = String(body.action || '')
     const now = new Date().toISOString()
-    const client = getDb()
 
     if (action === 'publish' || action === 'clear') {
       let row: Record<string, unknown>
