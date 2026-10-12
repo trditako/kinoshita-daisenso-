@@ -1,13 +1,13 @@
 # 運営コントロールパネルのセットアップ
 
-この実装では、運営画面に認証キーを入力し、Supabase Edge Functionがサーバー側の秘密設定と照合します。
+この実装では、運営画面にWORLD_ANNOUNCEMENT_TOKENを入力し、Supabase Edge Functionがサーバー側の秘密設定と照合します。
 
 ## Supabase設定
 
 1. `supabase/migrations/202610120001_world_announcements.sql` を適用します。
 2. Supabase Dashboard の Edge Function Secrets で `WORLD_ANNOUNCEMENT_TOKEN` を設定します。最低12文字以上の推測されにくいキーを推奨します。キーはHTMLやGitHubに書かず、チャットにも貼らないでください。
 3. `supabase/functions/world-announcement/index.ts` を Edge Function `world-announcement` としてデプロイします。
-4. ゲームの運営パネルに認証キーを入力し、「認証」を押します。キーはページ内のメモリだけに保持され、再読み込みで消えます。
+4. ゲームの運営パネルにWORLD_ANNOUNCEMENT_TOKENを入力し、「認証」を押します。入力したトークンはページ内のメモリだけに保持され、再読み込みで消えます。
 5. 認証キーを変更する場合は、Edge Function Secrets の `WORLD_ANNOUNCEMENT_TOKEN` を更新して関数を再デプロイしてください。
 
 ## 使える機能
