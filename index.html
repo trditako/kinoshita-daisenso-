@@ -1367,7 +1367,7 @@ async function syncPlayerRanking(){
     }
     // 運営からの配布はランク報酬とは別に取り込み、順位による金額補正をしない。
      if(rewardRes.ok){
-       const operatorRows=await rewardRes.clone().json().catch(()=>[]);const p=operatorRows&&operatorRows[0];
+       const p=rewardRows&&rewardRows[0];
        const operatorCoins=Math.max(0,Number(p?.operator_pending_coins||0)),operatorXP=Math.max(0,Number(p?.operator_pending_xp||0)),operatorRef=String(p?.operator_pending_ref||'');
        if(p&&operatorRef&&(operatorCoins>0||operatorXP>0)&&!pendingRankGifts.some(g=>g.operatorRef===operatorRef)){
          pendingRankGifts.push({cycle:'operator-'+operatorRef,label:'運営からのプレゼント',coins:operatorCoins,xp:operatorXP,badge:'',char:false,operator:true,operatorRef});
