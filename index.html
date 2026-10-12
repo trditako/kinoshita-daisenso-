@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.52';
+const GAME_VERSION='v1.8.53';
 const UPDATE_LOG=[
+ {date:'2026-10-12',version:'v1.8.53',title:'📉 Supabase利用量を削減',items:['AIアカウント読み込みを必要な列だけに限定し、巨大な履歴データの一括転送を削減','AI稼働状況のポーリングを15秒から60秒へ変更し、ランク画面表示中のみ更新','ワールド告知・イベント状態の確認を45秒から120秒へ変更']},
  {date:'2026-10-12',version:'v1.8.52',title:'🔑 WORLD_ANNOUNCEMENT_TOKEN方式に統一',items:['運営パネルでWORLD_ANNOUNCEMENT_TOKENを入力して認証','Supabase Edge Function Secretsの同名トークンとサーバー側で照合','キーはページ内のメモリだけに保持し、再読み込みで破棄']},
 
  {date:'2026-10-12',version:'v1.8.49',title:'📣 運営ワールド告知を追加',items:['運営が入力したメッセージを全プレイヤーの画面上部に期間限定で表示','運営専用パネルから告知の掲載・停止が可能','告知の配信はSupabaseのサーバー側認証で保護し、通常プレイヤーからの直接書き込みを禁止']},
@@ -1304,7 +1305,7 @@ async function loadAIServerProfiles(force=false){
  if(aiServerProfilesLoadBusy)return false;
  aiServerProfilesLoadBusy=true;
  try{
-  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=*&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
+  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=account_id,name,rp,skill,wins,losses,generation,strategy,aggression,save_rate,coins,player_xp,worker_level,stage_clears,chapter_clears,owned_characters,formation,char_levels,event_clears,training_xp,matches,last_result,activity,population,reward_rank,reward_cycle,rank_badge,limited_character_owned&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
   const rows=await res.json();
   if(!Array.isArray(rows)||rows.length===0)throw new Error('AIデータが空です');
@@ -3852,7 +3853,7 @@ document.addEventListener('click',e=>{
 document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankRewardInfoBtn').onclick=openRankRewardInfo;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
 document.getElementById('editFriendProfile').onclick=async()=>{const old=storage.getItem('kinoshitaPlayerBio')||'';const v=prompt('プロフィール文（80文字以内）',old);if(v===null)return;storage.setItem('kinoshitaPlayerBio',v.slice(0,80));document.getElementById('myFriendProfileText').textContent=v.slice(0,80)||'プロフィール文はありません。';await ensureMyPlayerProfile();};document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 /* AI自動処理はUIイベント登録を止めないよう安全に開始 */
-(async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(12);runAIActivities(50);}catch(e){console.warn("AI初期処理をスキップ:",e)}},120);setInterval(async()=>{try{await loadAIServerWorkerState();if(document.getElementById('rankLobby').style.display!=='none')renderRankLobby();}catch(e){}},15000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
+(async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(12);runAIActivities(50);}catch(e){console.warn("AI初期処理をスキップ:",e)}},120);setInterval(async()=>{if(document.visibilityState==='hidden'||document.getElementById('rankLobby').style.display==='none')return;try{await loadAIServerWorkerState();renderRankLobby();}catch(e){}},60000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
 
 /* ===== UIボタンの安全な再バインド =====
    初期化途中の例外があっても、メインメニューのボタンが無反応にならないようにします。
@@ -5195,6 +5196,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  el('operatorRewardPlayerId').disabled=true;
  el('worldAnnouncementDismiss')?.addEventListener('click',()=>{localDismissedUpdatedAt=currentUpdatedAt;hideBanner()});
  async function refreshWorldState(){
+  if(document.visibilityState==='hidden')return;
   try{
    const res=await fetch('https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_operator_state?select=event_name,event_active,event_expires_at,maintenance_active,maintenance_message&id=eq.1',{headers:headers(),cache:'no-store'});
    if(!res.ok)return;
@@ -5207,7 +5209,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   }catch(e){/* keep gameplay usable if global status is unavailable */}
  }
  refresh();refreshWorldState();
- setInterval(refresh,45000);setInterval(refreshWorldState,45000);
+ setInterval(refresh,120000);setInterval(refreshWorldState,120000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refresh();refreshWorldState()}});
 })();
 </script>
