@@ -2,7 +2,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const OPERATOR_PLAYER_ID = 'cd19b245-1a70-45de-9bb7-967f6c568425'
 const URL = Deno.env.get('SUPABASE_URL') || ''
-const TOKEN = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
 const RAW_SECRET_KEYS = Deno.env.get('SUPABASE_SECRET_KEYS') || ''
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,13 +25,6 @@ function getDb() {
   db = createClient(URL, key, { auth: { persistSession: false, autoRefreshToken: false } })
   return db
 }
-function safeEqual(a: string, b: string) {
-  const aa = new TextEncoder().encode(a), bb = new TextEncoder().encode(b)
-  if (aa.length !== bb.length) return false
-  let difference = 0
-  for (let i = 0; i < aa.length; i++) difference |= aa[i] ^ bb[i]
-  return difference === 0
-}
 function integerInRange(value: unknown, min: number, max: number) {
   const n = Number(value)
   if (!Number.isSafeInteger(n) || n < min || n > max) return null
@@ -41,17 +33,23 @@ function integerInRange(value: unknown, min: number, max: number) {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return respond({ ok: false, error: 'POST only' }, 405)
-  if (!TOKEN) return respond({ ok: false, error: 'Server operator token is not configured' }, 503)
-  if (!safeEqual(req.headers.get('x-operator-broadcast-token') || '', TOKEN))
-    return respond({ ok: false, error: 'Operator authentication failed' }, 401)
+  const providedToken = req.headers.get('x-operator-broadcast-token') || ''
+  const expectedToken = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
+  if (!expectedToken) return respond({ ok: false, error: 'Operator token is not configured in Edge Function Secrets' }, 503)
+  if (!providedToken || providedToken.length !== expectedToken.length) {
+    return respond({ ok: false, error: 'Invalid operator key' }, 401)
+  }
+  let mismatch = 0
+  for (let i = 0; i < expectedToken.length; i++) mismatch |= providedToken.charCodeAt(i) ^ expectedToken.charCodeAt(i)
+  if (mismatch !== 0) return respond({ ok: false, error: 'Invalid operator key' }, 401)
 
   try {
+    const client = getDb()
     const body = await req.json()
     if (!body || typeof body !== 'object' || body.operatorId !== OPERATOR_PLAYER_ID)
-      return respond({ ok: false, error: 'Operator account check failed' }, 403)
+      return respond({ ok: false, error: 'Operator game account check failed' }, 403)
     const action = String(body.action || '')
     const now = new Date().toISOString()
-    const client = getDb()
 
     if (action === 'publish' || action === 'clear') {
       let row: Record<string, unknown>
