@@ -236,9 +236,12 @@ test('ally and enemy knockback chance causes an independent push', () => {
   assert.match(functionSource('enemyAttackTarget'), /ea\.knockbackChance&&Math\.random\(\)<Number\(ea\.knockbackChance\)/);
 });
 
-test('barrier break bypasses both normal barrier and mythology barrier absorption', () => {
-  assert.match(functionSource('hit'), /attackSource\?\.ability\?\.barrierBreak/);
-  assert.match(functionSource('hit'), /target\.mythBarrier=0/);
+test('barrier break bypasses barriers, respects ability seal, and covers enemy attacks', () => {
+  const hit = functionSource('hit');
+  assert.match(hit, /barrierBreakSource\?\.ability\?\.barrierBreak/);
+  assert.match(hit, /!isAbilitySealed\(source\)/);
+  assert.match(hit, /target\.mythBarrier=0/);
+  assert.match(functionSource('enemyAttackTarget'), /if\(ea\.barrierBreak\)/);
 });
 
 test('enemy seal and warp effects respect their respective immunities', () => {
@@ -253,7 +256,7 @@ test('being ability-sealed does not grant immunity to additional debuffs', () =>
 });
 
 test('area attack-down uses a single attack-level chance and respects immunity', () => {
-  assert.match(functionSource('loop'), /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
+  assert.match(html, /ea\.areaAttackDownChance&&Math\.random\(\)<Number\(ea\.areaAttackDownChance\)/);
   assert.match(functionSource('applyAreaAttackDown'), /hasAbilityFlag\(e,'attackDownImmune'\)/);
 });
 
@@ -282,17 +285,26 @@ test('curse-only status text no longer claims ability seal', () => {
 });
 
 
-test('global slow rolls once and applies to the correct side', () => {
+test('global slow is rolled once per attack and applied to the correct side', () => {
   const body = functionSource('applyAbility');
-  assert.match(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
-  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+  assert.doesNotMatch(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{if\(a\.slow\.all\)/);
+  assert.match(functionSource('applyGlobalSlow'), /const targets=source\.isEnemy\?units:enemies/);
+  const calls = [];
+  const { fn } = getFunction('applyGlobalSlow', {
+    enemies: [{ hp: 10 }, { hp: 0 }, { hp: 20 }],
+    applySlow: target => calls.push(target),
+  });
+  fn({ ability: { slow: { trait: '*', chance: 0.35, factor: 0.8, duration: 2, all: true } } });
+  assert.equal(calls.length, 2);
+  assert.match(functionSource('loop'), /applyGlobalSlow\(u\);applyAreaAttackDown\(u\)/);
+  assert.match(html, /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
 });
 
-test('clone global slow rolls once and checks composite traits', () => {
+test('clone per-target slow does not roll global slow once per hit', () => {
   const body = functionSource('applyYabayabaCloneAbility');
-  assert.match(body, /const affected=a\.slow\.all\?units:\[target\]/);
-  assert.match(body, /entityHasTrait\(candidate,a\.slow\.trait\)/);
-  assert.doesNotMatch(body, /if\(a\.slow\?\.all&&Math\.random/);
+  assert.match(body, /if\(a\.slow&&!a\.slow\.all&&Math\.random/);
+  assert.match(body, /const affected=\[target\]/);
+  assert.doesNotMatch(body, /if\(a\.slow&&Math\.random\(\)<Number\(a\.slow\.chance\|\|0\)\)\{\s*const affected=a\.slow\.all/);
 });
 
 test('curse chance is rolled only by the shared curse helper', () => {
@@ -317,6 +329,86 @@ test('machine-series and attribute-overload modifiers recognize composite ancien
   assert.match(functionSource('damageAgainst'), /!entityHasTrait\(target,'古代'\)/);
   assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(u,'古代'\)/);
   assert.match(functionSource('damageTakenBy'), /!entityHasTrait\(attacker,'古代'\)/);
+});
+
+
+test('reflected enemy waves do not apply the reflector ability twice', () => {
+  const body = functionSource('reflectEnemyWave');
+  assert.match(body, /hit\(e,dealt,reflector\)/);
+  assert.doesNotMatch(body, /applyAbility\(reflector,e,dealt\)/);
+});
+
+test('enemy nested slow abilities apply per target and respect slow immunity', () => {
+  const body = functionSource('enemyAttackTarget');
+  assert.match(body, /ea\.slow&&!ea\.slow\.all&&!hasAbilityFlag\(t,'slowImmune'\)/);
+  assert.match(body, /entityHasTrait\(t,ea\.slow\.trait\)/);
+  assert.match(html, /if\(!sourceSealed\)applyGlobalSlow\(e\)/);
+});
+
+
+test('multi-hit attacks and Socrates range bands select the configured damage', () => {
+  const { fn: sequence } = getFunction('getAttackSequence');
+  const fighting = sequence({ name: 'ファイティング木下', atk: 400, multiAttack: [400, 800, 200] }, { x: 100 });
+  assert.equal(fighting.length, 3);
+  assert.equal(fighting[0].damage, 400);
+  assert.equal(fighting[1].damage, 800);
+  assert.equal(fighting[2].damage, 200);
+  const pair = sequence({ name: '木下&吉田', atk: 1200, secondAtk: 550 }, { x: 100 });
+  assert.equal(pair.length, 2);
+  assert.equal(pair[1].damage, 550);
+  const socrates = sequence({ name: '哲学の賢者ゾクラテス', atk: 3200, x: 0, ability: { rangeBands: [{ max: 100, damage: 3200 }, { min: 101, max: 250, damage: 2000 }, { min: 251, max: 600, damage: 1750 }] } }, { x: 150 });
+  assert.equal(socrates.length, 1);
+  assert.equal(socrates[0].damage, 2000);
+  assert.equal(socrates[0].bandIndex, 1);
+  assert.match(functionSource('loop'), /setTimeout\(\(\)=>resolveFollowupAttack\(u,t,followup\.damage,hitIndex\),hitIndex\*100\)/);
+  assert.match(functionSource('loop'), /waveTargets=targets\.filter\(t=>Math\.abs\(Number\(t\.x\|\|0\)-Number\(u\.x\|\|0\)\)<=100\)/);
+});
+
+test('top-level and nested strong/resistance modifiers both affect combat damage', () => {
+  const traitMultiplier = (table, target, mode) => {
+    if (!table) return 1;
+    const traits = String(target?.trait || '無').split(/[・,]/);
+    const values = traits.map(trait => table[trait]).filter(value => value != null).map(Number);
+    if (table['*'] != null) values.push(Number(table['*']));
+    return values.length ? (mode === 'min' ? Math.min(...values) : Math.max(...values)) : 1;
+  };
+  const { fn: damageAgainst } = getFunction('damageAgainst', {
+    isAbilitySealed: () => false,
+    traitMultiplier,
+    entityHasTrait: () => false,
+    performance: { now: () => 1000 },
+  });
+  assert.equal(damageAgainst({ atk: 100, strong: { 赤: 4 }, ability: {} }, { trait: '赤' }), 400);
+  assert.equal(damageAgainst({ atk: 100, ability: { strong: { 赤: 3 } } }, { trait: '赤' }), 300);
+  assert.equal(damageAgainst({ atk: 100, attackDownUntil: 2, attackDownFactor: 0.25, ability: {} }, { trait: '赤' }), 25);
+  assert.equal(damageAgainst({ atk: 100, cursedUntil: 2, cursedAttackFactor: 0.5, ability: {} }, { trait: '赤' }), 50);
+  const { fn: damageTakenBy } = getFunction('damageTakenBy', {
+    isAbilitySealed: () => false,
+    traitMultiplier,
+    entityHasTrait: () => false,
+    entityTraitMatch: () => false,
+    traitTableMatches: () => false,
+    performance: { now: () => 1000 },
+  });
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', resist: { 赤: 0.2 }, ability: {} }, { atk: 100, trait: '赤', ability: {} }), 20);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', ability: {} }, { atk: 100, trait: '無', attackDownUntil: 2, attackDownFactor: 0.25, ability: {} }), 25);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '赤', ability: {} }, { atk: 100, trait: '無', ability: { criticalChance: 1, criticalMultiplier: 3 } }), 300);
+  assert.equal(damageTakenBy({ hp: 100, maxhp: 100, trait: '鋼', metal: true, ability: {} }, { atk: 100, trait: '無', ability: { criticalChance: 1, criticalMultiplier: 3 } }), 300);
+});
+
+test('first-hit and wave-stop abilities respect stop immunity and ability seal', () => {
+  const { fn: applyStop } = getFunction('applyDirectStop', {
+    setStatusMark: () => {},
+    performance: { now: () => 1000 },
+  });
+  const immune = { hp: 100, spd: 1, ability: { stopImmune: true } };
+  applyStop(immune, 1, 2);
+  assert.equal(immune.stopUntil, undefined);
+  const vulnerable = { hp: 100, spd: 1 };
+  applyStop(vulnerable, 1, 2);
+  assert.equal(vulnerable.stopUntil, 3);
+  assert.match(functionSource('loop'), /!isAbilitySealed\(u\)&&firstStopChance/);
+  assert.match(functionSource('loop'), /!isAbilitySealed\(u\)&&waveStopChance/);
 });
 
 process.stdout.write('\n' + passed + ' regression checks passed.\n');

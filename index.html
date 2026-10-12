@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.47';
+const GAME_VERSION='v1.8.48';
 const UPDATE_LOG=[
+ {date:'2026-10-12',version:'v1.8.48',title:'🧪 全キャラクター能力の戦闘経路を追加監査',items:['反射波動で攻撃能力が二重発動する問題を修正','全体鈍足の確率を攻撃単位に統一し、敵の複合鈍足能力を反映','複数回攻撃・初撃停止・波動停止を実装し、ゾクラテスの射程別攻撃と烈波ダメージを修正','キャラクター本体に設定された特効・耐性をダメージ計算に適用','能力封印中のバリアブレイクを無効化し、敵側のバリアブレイクにも対応','攻撃力低下・呪い中の攻撃補正と敵側の会心判定をダメージ計算に適用']},
  {date:'2026-10-12',version:'v1.8.47',title:'🧪 全能力・無効判定の追加監査',items:['吹っ飛ばし確率・バリアブレイク・ワープ/能力封印無効の未反映を修正','敵/味方の能力封印中でも別の妨害を受けられるよう状態判定を分離','範囲攻撃力低下の確率判定と攻撃単位の発動を修正','神話能力の鈍足/攻撃力低下無効を適用し、哲学の賢者ゾクラテスの烈波で能力が二重発動する問題を修正','複合属性の特効・耐性・妨害判定を統一','呪いの確率を二重抽選してしまう問題と全体鈍足の二重判定を修正','範囲攻撃の副次ダメージを正しい陣営へ適用し、能力封印時間の短縮を防止']},
  {date:'2026-10-12',version:'v1.8.46',title:'🛡️ 能力監査・波動/烈波判定を修正',items:['通常の呪いで能力が誤って封印される問題を修正','シミュレーション側でも呪いと能力封印を分離','敵の範囲攻撃による攻撃力低下が攻撃力低下無効を無視する問題を修正','敵の波動を実際の攻撃命中位置から発生させるよう修正','ヤバヤバ複製の波動で未定義変数が発生する問題と確率判定の抜けを修正','波動反射でも波動無効を尊重し、反射波動の表示方向を修正','波動・烈波の回帰テストを追加']},
  {date:'2026-10-11',version:'v1.8.45',title:'🎃 イベント交換価格・新着通知を改善',items:['ハロウィン交換所の限定キャラ・衣装・通貨・育成素材を大幅値上げし、キャンディの価値を調整','新しいミッションや交換商品が追加されると各メニューに❗️通知を表示','ミッション・交換所を開くと確認済みになり、次の追加時に再通知']},
@@ -551,7 +552,7 @@ cards.push(
 );
 // 期間限定交換所の対象：エレメンタル木下sの超激レア5体＋ファイティング木下（伝説レア）
 ['炎撃木下','水帝木下','大地木下','疾風木下','雷光木下','ファイティング木下'].forEach(n=>{const x=cards.find(c=>c.name===n);if(x)x.limitedExchange=true;});
-cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
+cards.push({name:"木下&吉田",cost:800,hp:1700,atk:1200,secondAtk:550,range:60,spd:.7,interval:.8,recharge:22,icon:"👨‍🤝‍👨",motion:"power",attackType:"area",kb:2,trait:"宇宙",rarity:"LR",series:"ランク1位限定",specialReward:true,rankLimited:true,firstStopChance:.5,firstStopDuration:1,waveLevel:5,waveOnHit:2,ability:{name:"二連撃・波動Lv5",desc:"2連続攻撃。1段目が当たると50%で敵を1秒停止。2段目で波動Lv5を放つ。",wave:true}});
 cards.push({name:"千年に一歩歩く木下",cost:1001,hp:1001,atk:6000,range:600,minRange:150,detectionRange:800,spd:0,interval:5,recharge:120,icon:"🐦",motion:"thousandStep",attackType:"area",kb:1,trait:"宇宙",series:"千年に一歩",rarity:"SSR",gachaCost:15000,chargeTime:3,ability:{name:"千年に一歩",desc:"【専用能力】移動不可。感知射程800。150〜600の遠方範囲を攻撃し、150未満には攻撃不可。攻撃前に3秒間チャージする。チャージ中は専用モーションと攻撃範囲を表示。無・赤・黒に4倍ダメージ。",strong:{無:4,赤:4,黒:4}}});
 cards.push({name:"ヤバすぎ木下",cost:1600,hp:6000,atk:350,range:35,spd:.3,interval:1.5,recharge:30,icon:"👽",motion:"super",attackType:"single",kb:4,series:"ヤバすぎ木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"ヤバすぎ木下降臨",trait:"宇宙",stopImmune:true,attackDownImmune:true,ability:{name:"ヤバヤバLv2・停止無効・攻撃力低下無効",desc:"ヤバヤバLv2。停止と攻撃力低下を無効化する。",yabayaba:2}});
 cards.push({name:"呪木下",cost:1650,hp:3200,atk:620,range:120,spd:.8,interval:0.8,recharge:20,icon:"🪬",motion:"super",attackType:"area",kb:3,trait:"無",rarity:"SSR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",ability:{name:"呪い・封印",desc:"100%の確率で4秒間呪い。呪われた敵は特殊能力を発動できない。30%の確率で2秒間、移動速度を50%にする。",curseChance:1,curseDuration:4,curseSeal:true,curseSlowChance:.3,curseSlowFactor:.5,curseSlowDuration:2}});
@@ -1803,10 +1804,75 @@ let formationPresets;try{formationPresets=JSON.parse(storage.getItem('kinoshitaF
 function statAt(i,key){const c=activeCard(i)||cards[i],lv=charLevel[i]||1;const growth={hp:1.04,atk:1.04};const rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i);if(key==='cost')return c[key];if(rankMode&&key==='range')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='spd')return Math.round(c[key]*rankMul*weakMul*100)/100;if(rankMode&&key==='interval')return Math.round((c[key]/rankMul/weakMul)*100)/100;if(key==='range'||key==='spd'||key==='interval')return c[key];let v=c[key]*Math.pow(growth[key]||1,lv-1);if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;return Math.round(v*100)/100;}
 function xpNeed(i){return 50*(charLevel[i]||1);}
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
-function damageAgainst(u,target){const a0=isAbilitySealed(u)?{}:(u?.ability||{});if(target?.metal){if(a0.criticalChance&&Math.random()<Number(a0.criticalChance)){let md=Number(u.atk||1)*Number(a0.criticalMultiplier||2);if(a0.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a0.hpBelowThreshold||.5))md*=Number(a0.hpBelowThresholdMultiplier)||1;return Math.max(1,Math.round(md));}return 1;}let mult=1;if(u?.mythDomainUntil&&performance.now()/1000<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);if(!isAbilitySealed(u)&&u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;const tr=target.trait||"無";const a=isAbilitySealed(u)?{}:(u?.ability||{});if(a.criticalChance&&Math.random()<Number(a.criticalChance))mult*=Number(a.criticalMultiplier||2);if(a.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a.hpBelowThreshold||.5))mult*=Number(a.hpBelowThresholdMultiplier)||1;if(a.wyvernStrongTraits&&String(tr).split(/[・,]/).some(k=>a.wyvernStrongTraits.includes(k)))mult*=Number(a.wyvernStrongMultiplier||4);else mult*=traitMultiplier(a.strong,target,'max');if(a.ancientHunter&&entityHasTrait(target,'古代'))mult*=Number(a.ancientHunter)||1;if(a.attributeOverload&&!entityHasTrait(target,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;if(target?.cursedUntil&&performance.now()/1000<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;return Math.max(1,Math.round(u.atk*mult));}
-function damageTakenBy(u,attacker){if(!u||!attacker)return 1;let mult=1;if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='cosmicRuin'&&attacker.hp<attacker.maxhp*Number(attacker.ability.threshold||.5))mult*=Number(attacker.ability.multiplier||2);if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;if(!isAbilitySealed(attacker)&&attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;const now=performance.now()/1000;const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
-if(!isAbilitySealed(attacker)&&attacker?.ability?.mythicNew==='rage'&&attacker.hp<attacker.maxhp*Number(attacker.ability.rageThreshold||.5))mult*=Number(attacker.ability.rageMultiplier||1.7);
-if(!isAbilitySealed(attacker)&&attacker?.ability?.mythicNew==='stacking')mult*=1+Math.min(Number(attacker.ability.maxStacks||5),Number(attacker.mythicStackCount||0))*Number(attacker.ability.stackFactor||.12);const targetTrait=u.trait||"無";const attackerTrait=attacker.trait||"無";const ua=u.ability||{};const aa=isAbilitySealed(attacker)?{}:(attacker.ability||{});if(ua.wyvernResistTraits&&entityTraitMatch(attacker,ua.wyvernResistTraits)&&!traitTableMatches(ua.resist,attacker))mult*=Number(ua.wyvernResistMultiplier||.25);mult*=traitMultiplier(aa.strong,u,'max');if(aa.ancientHunter&&entityHasTrait(u,'古代'))mult*=Number(aa.ancientHunter)||1;if(aa.attributeOverload&&!entityHasTrait(u,'古代'))mult*=Number(aa.attributeOverload.outgoing)||1;mult*=traitMultiplier(ua.resist,attacker,'min');if(ua.ancientHunter&&entityHasTrait(attacker,'古代'))mult*=Number(ua.ancientHunterResist)||1;if(ua.attributeOverload&&!entityHasTrait(attacker,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(ua.attributeOverload.incoming)||1;if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(attacker,'古代'))mult*=2.5;if(u.metal)return 1;if(ua.damageReduce&&Math.random()<Number(ua.damageReduce.chance??.5))mult*=Number(ua.damageReduce.factor??ua.damageReduce)||1;if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)mult*=Number(attacker.cursedAttackFactor)||1;if(u.cursedUntil&&now<u.cursedUntil&&aa.cursedAttackMultiplier)mult*=Number(aa.cursedAttackMultiplier)||1;return Math.max(1,Math.round(effectiveAtk*mult));}
+function damageAgainst(u,target,baseAtk){
+ const a0=isAbilitySealed(u)?{}:{...(u||{}),...(u?.ability||{})};
+ const baseAttack=Math.max(1,Number(baseAtk??u?.atk??1)||1);
+ const now=performance.now()/1000;
+ let effectiveAttack=baseAttack;
+ if(u?.attackDownUntil&&now<u.attackDownUntil)effectiveAttack*=Number(u.attackDownFactor||.01);
+ if(u?.cursedUntil&&now<u.cursedUntil&&u.cursedAttackFactor)effectiveAttack*=Number(u.cursedAttackFactor)||1;
+ if(target?.metal){
+  if(a0.criticalChance&&Math.random()<Number(a0.criticalChance)){
+   let md=effectiveAttack*Number(a0.criticalMultiplier||2);
+   if(a0.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a0.hpBelowThreshold||.5))md*=Number(a0.hpBelowThresholdMultiplier)||1;
+   return Math.max(1,Math.round(md));
+  }
+  return 1;
+ }
+ let mult=1;
+ if(u?.mythDomainUntil&&now<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);
+ if(!isAbilitySealed(u)&&u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;
+ const tr=target.trait||"無";
+ const a=isAbilitySealed(u)?{}:{...(u||{}),...(u?.ability||{})};
+ if(a.criticalChance&&Math.random()<Number(a.criticalChance))mult*=Number(a.criticalMultiplier||2);
+ if(a.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a.hpBelowThreshold||.5))mult*=Number(a.hpBelowThresholdMultiplier)||1;
+ if(a.wyvernStrongTraits&&String(tr).split(/[・,]/).some(k=>a.wyvernStrongTraits.includes(k)))mult*=Number(a.wyvernStrongMultiplier||4);
+ else mult*=traitMultiplier(a.strong,target,'max');
+ if(a.ancientHunter&&entityHasTrait(target,'古代'))mult*=Number(a.ancientHunter)||1;
+ if(a.attributeOverload&&!entityHasTrait(target,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;
+ if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;
+ if(target?.cursedUntil&&now<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;
+ return Math.max(1,Math.round(effectiveAttack*mult));
+}
+function damageTakenBy(u,attacker){
+ if(!u||!attacker)return 1;
+ let mult=1;
+ if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='cosmicRuin'&&attacker.hp<attacker.maxhp*Number(attacker.ability.threshold||.5))mult*=Number(attacker.ability.multiplier||2);
+ if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;
+ if(!isAbilitySealed(attacker)&&attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;
+ const now=performance.now()/1000;
+ const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
+ const ua={...(u||{}),...(u.ability||{})};
+ const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
+ if(u.metal){
+  let metalAtk=effectiveAtk;
+  if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)metalAtk*=Number(attacker.cursedAttackFactor)||1;
+  if(aa.criticalChance&&Math.random()<Number(aa.criticalChance)){
+   let md=metalAtk*Number(aa.criticalMultiplier||2);
+   if(aa.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(aa.hpBelowThreshold||.5))md*=Number(aa.hpBelowThresholdMultiplier)||1;
+   return Math.max(1,Math.round(md));
+  }
+  return 1;
+ }
+ if(aa.criticalChance&&Math.random()<Number(aa.criticalChance))mult*=Number(aa.criticalMultiplier||2);
+ if(aa.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(aa.hpBelowThreshold||.5))mult*=Number(aa.hpBelowThresholdMultiplier)||1;
+ if(!isAbilitySealed(attacker)&&attacker?.ability?.mythicNew==='rage'&&attacker.hp<attacker.maxhp*Number(attacker.ability.rageThreshold||.5))mult*=Number(attacker.ability.rageMultiplier||1.7);
+ if(!isAbilitySealed(attacker)&&attacker?.ability?.mythicNew==='stacking')mult*=1+Math.min(Number(attacker.ability.maxStacks||5),Number(attacker.mythicStackCount||0))*Number(attacker.ability.stackFactor||.12);
+ const targetTrait=u.trait||"無";
+ const attackerTrait=attacker.trait||"無";
+ if(ua.wyvernResistTraits&&entityTraitMatch(attacker,ua.wyvernResistTraits)&&!traitTableMatches(ua.resist,attacker))mult*=Number(ua.wyvernResistMultiplier||.25);
+ mult*=traitMultiplier(aa.strong,u,'max');
+ if(aa.ancientHunter&&entityHasTrait(u,'古代'))mult*=Number(aa.ancientHunter)||1;
+ if(aa.attributeOverload&&!entityHasTrait(u,'古代'))mult*=Number(aa.attributeOverload.outgoing)||1;
+ mult*=traitMultiplier(ua.resist,attacker,'min');
+ if(ua.ancientHunter&&entityHasTrait(attacker,'古代'))mult*=Number(ua.ancientHunterResist)||1;
+ if(ua.attributeOverload&&!entityHasTrait(attacker,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(ua.attributeOverload.incoming)||1;
+ if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(attacker,'古代'))mult*=2.5;
+ if(ua.damageReduce&&Math.random()<Number(ua.damageReduce.chance??.5))mult*=Number(ua.damageReduce.factor??ua.damageReduce)||1;
+ if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)mult*=Number(attacker.cursedAttackFactor)||1;
+ if(u.cursedUntil&&now<u.cursedUntil&&aa.cursedAttackMultiplier)mult*=Number(aa.cursedAttackMultiplier)||1;
+ return Math.max(1,Math.round(effectiveAtk*mult));
+}
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;try{const d=Number.isFinite(Number(duration))?Math.max(0,Number(duration)):0;if(!target.statuses||typeof target.statuses!=='object')target.statuses={};target.statuses[type]={icon:String(icon||''),text:String(text||''),until:performance.now()/1000+d};updateStatusMark(target);}catch(err){console.warn('status mark skipped',err);}}
 function updateStatusMark(target){if(!target?.el)return;try{const now=performance.now()/1000;const statuses=target.statuses&&typeof target.statuses==='object'?target.statuses:{};for(const k of Object.keys(statuses)){const until=Number(statuses[k]?.until);if(!Number.isFinite(until)||until<=now)delete statuses[k];}let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}if(target.cursedUntil&&target.cursedUntil<=now){target.cursedUntil=0;target.cursedBy=null;target.cursedSpeedFactor=1;target.cursedAttackFactor=1;if(target.curseSealUntil&&Number(target.abilitySealedUntil||0)<=Number(target.curseSealUntil)+.001)target.abilitySealedUntil=0;target.curseSealUntil=0;}if(target.rangeDownUntil&&target.rangeDownUntil<=now){target.rangeDownUntil=0;if(target.rangeOriginal!=null){target.range=target.rangeOriginal;delete target.rangeOriginal;}}const active=Object.values(statuses);if(active.length){const s=statuses.attackBoost||active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove();}catch(err){console.warn('status update skipped',err)}}
 function applyFrogAbility(target){
@@ -1845,10 +1911,55 @@ function applyAbility(u,target,damage){const now=performance.now()/1000;if(!targ
  /* 範囲攻撃力低下は攻撃単位の処理 applyAreaAttackDown で判定する。 */
  if(a.attackDownChance&&!hasAbilityFlag(target,'attackDownImmune')&&Math.random()<Number(a.attackDownChance)){target.attackDownUntil=now+Number(a.attackDownDuration||4);target.attackDownFactor=Number(a.attackDownFactor||.5);setStatusMark(target,'⚔️','攻撃力低下',Number(a.attackDownDuration||4),'attackDown');}
  if(a.sealChance&&!hasAbilityFlag(target,'sealImmune')&&Math.random()<Number(a.sealChance)){target.abilitySealedUntil=Math.max(Number(target.abilitySealedUntil||0),now+Number(a.sealDuration||3));setStatusMark(target,'🔒','能力封印',Number(a.sealDuration||3),'seal');}
- if(a.slow&&Math.random()<Number(a.slow.chance||0)){if(a.slow.all){const affected=u.isEnemy?units:enemies;for(const entity of affected)if(entity&&entity.hp>0)applySlow(entity,a.slow);}else applySlow(target,a.slow);}
+ if(a.slow&&!a.slow.all&&Math.random()<Number(a.slow.chance||0))applySlow(target,a.slow);
+}
+function applyGlobalSlow(source){
+ if(!source||isAbilitySealed(source))return false;
+ const slow=source.ability?.slow;
+ if(!slow?.all||Math.random()>=Number(slow.chance||0))return false;
+ const targets=source.isEnemy?units:enemies;
+ for(const target of targets){if(!target||target.hp<=0)continue;applySlow(target,slow);}
+ return true;
+}
+function applyDirectStop(target,chance,duration){
+ if(!target||target.hp<=0||!chance||hasAbilityFlag(target,'stopImmune')||Math.random()>=Number(chance))return false;
+ const seconds=Number(duration||1),now=performance.now()/1000;
+ target.stopUntil=Math.max(Number(target.stopUntil||0),now+seconds);
+ target.spdOriginal=target.spdOriginal??target.spd;
+ setStatusMark(target,'⏸️','停止',seconds,'stop');
+ return true;
+}
+function getAttackSequence(source,target){
+ if(!source)return [];
+ if(source.name==='哲学の賢者ゾクラテス'&&Array.isArray(source.ability?.rangeBands)){
+  const distance=Math.abs(Number(target?.x||0)-Number(source.x||0));
+  const bandIndex=distance<=100?0:distance<=250?1:2;
+  const band=source.ability.rangeBands[bandIndex];
+  if(band)return [{damage:Math.max(1,Number(band.damage??source.atk)||1),index:0,bandIndex}];
+ }
+ const raw=Array.isArray(source.multiAttack)&&source.multiAttack.length
+  ?source.multiAttack
+  :[source.atk,...(source.secondAtk!=null?[source.secondAtk]:[]),...(source.thirdAtk!=null?[source.thirdAtk]:[])];
+ return raw.map((value,index)=>({damage:Math.max(1,Number(value)||Number(source.atk)||1),index}));
+}
+function resolveFollowupAttack(source,target,baseAttack,hitIndex){
+ if(!source||source.hp<=0||!target||target.hp<=0||!enemies.includes(target))return;
+ attackEffect(source,target);
+ const dealt=damageAgainst(source,target,baseAttack);
+ hit(target,dealt,source);
+ const stopChance=Number(source.waveStopChance??source.ability?.waveStopChance??0);
+ if(!isAbilitySealed(source)&&stopChance)applyDirectStop(target,stopChance,source.waveStopDuration??source.ability?.waveStopDuration);
+ if(pvpMode&&target.isRemote)pvpSend({type:'hit',targetId:target.id,damage:dealt,attackerIndex:source.cardIndex});
+ if(target.hp<=0){
+  if(!isAbilitySealed(source)&&source.ability?.yabayaba)spawnYabayabaClone(target,source.ability.yabayaba,true);
+  if(target.key==='フェニックス'&&!target.phoenixRevived){revivePhoenix(target);removeEnemy(target,true);}
+  else if(target.ability?.mythic==='resurrection'&&!target.mythicRevived){target.mythicRevived=true;target.hp=Math.max(1,Math.round(target.maxhp*Number(target.ability.revive||.5)));target.x=Math.max(120,target.x-90);target.cd=1.5;mythicPopup('☠️ 再臨',target);if(target.el){const hp=target.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,target.hp/target.maxhp*100)+'%';}}
+  else removeEnemy(target);
+ }
+ return dealt;
 }
 function triggerKnockback(target,attacker,previousHp){if(!target||target.hp<=0)return false;const maxKB=Math.max(1,target.kb||1);const threshold=target.maxhp/maxKB;const beforeLevel=Math.floor((target.maxhp-previousHp)/threshold);const afterLevel=Math.floor((target.maxhp-target.hp)/threshold);const count=Math.max(0,afterLevel-beforeLevel);if(count<=0)return false;target.kbRemaining=Math.max(0,(target.kbRemaining??maxKB)-count);const distance=42+Math.min(30,Math.max(0,count-1)*12);if(target.isEnemy){target.x=Math.max(120,target.x-distance);}else{target.x=Math.min(worldWidth-178,target.x+distance);}target.cd=Math.max(target.cd,0.22);target.hitbackUntil=performance.now()/1000+0.22;target.el?.classList.remove('hitback');target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);return true;}
-let lastImpactSE=0;function hit(target,damage,source,abilitySource){if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack))return;if(target.isEnemy&&target.ability?.phaseChance&&Math.random()<Number(target.ability.phaseChance)){mythicPopup('🫥 位相転移',target);target.x=Math.max(120,target.x-55);return 0;}const hitNow=performance.now();if(hitNow-lastImpactSE>=45){playSE('impact');lastImpactSE=hitNow;}const before=target.hp;let dealt=damage;const attackSource=abilitySource||source;if(attackSource?.ability?.barrierBreak){if(Number(target.barrier||0)>0)target.barrier=0;if(Number(target.mythBarrier||0)>0)target.mythBarrier=0;updateBarrierDisplay(target);}if(target.isEnemy&&target.ability?.mythologyV2){const pre=mythologyV2PreHit(target,dealt,source);if(pre?.handled)return 0;dealt=Number(pre?.damage??dealt);}if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}target.hp=Math.max(0,target.hp-dealt);if(target.el){target.el.classList.remove('hit');target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}if(dealt>0)popup('-'+Math.round(dealt),target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,dealt);else if(source&&source.ability)applyAbility(source,target,dealt);return before-target.hp;}
+let lastImpactSE=0;function hit(target,damage,source,abilitySource){if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack))return;if(target.isEnemy&&target.ability?.phaseChance&&Math.random()<Number(target.ability.phaseChance)){mythicPopup('🫥 位相転移',target);target.x=Math.max(120,target.x-55);return 0;}const hitNow=performance.now();if(hitNow-lastImpactSE>=45){playSE('impact');lastImpactSE=hitNow;}const before=target.hp;let dealt=damage;const attackSource=abilitySource||source;const barrierBreakSource=source?.ability?.barrierBreak?source:(abilitySource?.ability?.barrierBreak?abilitySource:null);if(barrierBreakSource?.ability?.barrierBreak&&!isAbilitySealed(source)&&!isAbilitySealed(barrierBreakSource)){if(Number(target.barrier||0)>0)target.barrier=0;if(Number(target.mythBarrier||0)>0)target.mythBarrier=0;updateBarrierDisplay(target);}if(target.isEnemy&&target.ability?.mythologyV2){const pre=mythologyV2PreHit(target,dealt,source);if(pre?.handled)return 0;dealt=Number(pre?.damage??dealt);}if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}target.hp=Math.max(0,target.hp-dealt);if(target.el){target.el.classList.remove('hit');target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}if(dealt>0)popup('-'+Math.round(dealt),target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,dealt);else if(source&&source.ability)applyAbility(source,target,dealt);return before-target.hp;}
 function stageCardHTML(s,n,mode,chapter=1){const unlockLimit=chapter===1?unlocked:(chapter===4?(Number(chapterClears[3]||0)+1):(chapter===5?(Number(chapterClears[4]||0)+1):(chapter===6?(Number(chapterClears[5]||0)+1):(chapter===7?(Number(chapterClears[6]||0)+1):((chapterClears[chapter-1]||0)+1)))));const ok=mode==='legend'?legendStageUnlocked(chapter,n):(mode==='event'||mode==='halloween')?chapterUnlocked(1):n<=unlockLimit;const icons=s.enemies.map(k=>(enemyTypes[k]?.icon||MYTHOLOGY_ENEMY_SPECS.find(e=>e.name===k)?.icon||'❔')).join('');const last=s.schedule[s.schedule.length-1]?.t||0;const mult=(mode==='event'||mode==='halloween'||mode==='legend')?'ステージ専用倍率':s.enemies.slice(0,8).map(k=>(enemyTypes[k]?.name||k)+'×'+chapterScale(chapter,n,k).toFixed(2)).join(' / ');const bossCount=s.schedule.filter(x=>x.role==='boss').length,midCount=s.schedule.filter(x=>x.role==='midboss').length;const bossText=(midCount||bossCount)?`<br>👑 中ボス${midCount}体 / BOSS ${bossCount}体`:'';return `<div class="stage ${ok?'':'locked'}" data-stage="${n}" data-mode="${mode}" data-chapter="${chapter}"><b>${s.name}${ok?'':' 🔒'}</b><small>敵種類：${s.enemies.length}/10　${icons}<br>敵城HP：${s.baseHp}　全${s.schedule.length}体${s.repeatSpawns?.length?'＋無限出現':''}${s.triggerSpawns?'＋城HPトリガー増援':''}　最終出現 ${last.toFixed(2)}秒${bossText}${s.triggerSpawns?'<br>⚡ 城HP'+Math.round(Number(s.triggerSpawns.threshold||.99)*100)+'%以下で増援・吹っ飛ばし':''}<br>📏 ステージ幅：${s.width} px<br>📊 ${mult}</small><div class="reward">${(mode==='event'||mode==='halloween'||mode==='growth')?(s.itemReward?(s.itemReward.type==='normalGold'?'クリア報酬：🪙 ノーマルキャラの金 ×'+s.itemReward.amount:s.itemReward.type==='rarityGold'?'クリア報酬：🪙 '+s.itemReward.rarity+'の金 ×'+s.itemReward.amount:s.itemReward.type==='ancientPower'?'クリア報酬：🦴 古代のパワー ×'+s.itemReward.amount:s.itemReward.type==='power'?'クリア報酬：🌈 '+s.itemReward.color+'のパワー ×'+s.itemReward.amount:'クリア報酬：XP '+s.xp):(s.eventReward?'クリア報酬：'+s.eventReward:'クリア報酬：XP '+s.xp)):(n<=owned?'入手済み':s.reward?'クリア報酬：'+s.rewardName:'クリア報酬：XP '+s.xp)}</div><button class="mapDetailBtn" data-map="${n}" data-mode="${mode}" data-chapter="${chapter}">マップ詳細</button></div>`}
 function renderNormalGrowthInventory(){const ids={赤:'powerRedCount',青:'powerBlueCount',黄:'powerYellowCount',緑:'powerGreenCount',紫:'powerPurpleCount'};const g=document.getElementById('normalGoldCount');if(g)g.textContent=normalGold;for(const [color,id] of Object.entries(ids)){const el=document.getElementById(id);if(el)el.textContent=colorPowers[color]||0;}const ancient=document.getElementById('ancientPowerCount');if(ancient)ancient.textContent=ancientPower;}
 function updateHalloweenCountdown(){
@@ -2264,8 +2375,8 @@ function triggerSocratesSurge(source,origin){
  const band=source.ability?.rangeBands?.[1];
  const level=Math.max(1,Number(band?.surgeLevel||0));
  if(!level)return;
- const duration=level; // 烈波Lv2 = 2秒
- const damageBase=Math.max(1,Number(source.atk)||0); // 烈波ダメージは発生元キャラの攻撃力
+ const duration=level;
+ const damageBase=Math.max(1,Number(band?.damage??source.secondAtk??source.atk)||1);
  const center=Number(origin.x||0);
  const radius=105+level*35;
  const surge=document.createElement('div');
@@ -2275,39 +2386,26 @@ function triggerSocratesSurge(source,origin){
  surge.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
  surge.style.setProperty('--surge-duration',duration+'s');
  effects.appendChild(surge);
-
- // 烈波は生成位置に敵がいる間、0.2秒間隔で繰り返し判定する。
- // 各判定は烈波を生成したキャラの攻撃力を基準にし、通常攻撃と同じ能力補正・属性相性・状態異常を適用する。
  const applySurgeHit=()=>{
-   const targets=enemies.filter(e=>e&&e.hp>0&&!isSurgeImmuneEntity(e)&&Math.abs(e.x-center)<=radius);
-   for(const t of targets){
-     const dealt=damageAgainst(source,t);
-     hit(t,dealt,source);
-     /* hit() already applies the source ability once; do not roll it a second time. */
-     if(t.hp<=0)removeEnemy(t);
-   }
+  const targets=enemies.filter(e=>e&&e.hp>0&&!isSurgeImmuneEntity(e)&&Math.abs(e.x-center)<=radius);
+  for(const t of targets){
+   const dealt=damageAgainst(source,t,damageBase);
+   hit(t,dealt,source);
+   if(t.hp<=0)removeEnemy(t);
+  }
  };
-
  const surgeEndTime=performance.now()+duration*1000;
- // 生成時に1回判定し、その後0.2秒ごとに再判定する。
  applySurgeHit();
  const surgeTimer=setInterval(()=>{
-   if(performance.now()>=surgeEndTime){
-     clearInterval(surgeTimer);
-     return;
-   }
-   applySurgeHit();
+  if(performance.now()>=surgeEndTime){clearInterval(surgeTimer);return;}
+  applySurgeHit();
  },200);
-
  setStatusMark(origin,'🌋','烈波Lv'+level,duration,'socratesSurge');
- setTimeout(()=>{
-   clearInterval(surgeTimer);
-   surge.remove();
- },duration*1000+50);
+ setTimeout(()=>{clearInterval(surgeTimer);surge.remove();},duration*1000+50);
 }
-function allyWaveAttack(u,hitTargets=[]){
+function allyWaveAttack(u,hitTargets=[],baseAttack=null){
  const level=Math.max(0,Number(u?.waveLevel)||0,Number(u?.ability?.waveLevel)||0);
- if(!u||!level)return;
+ if(!u||!level||isAbilitySealed(u))return;
  const waveRange=90*level;
  // 波動は通常攻撃の命中位置から敵城側（左方向）へ伸びる。長射程キャラでも波動Lvの距離だけ攻撃元から測らない。
  const origins=(Array.isArray(hitTargets)?hitTargets:[]).filter(e=>e&&Number.isFinite(Number(e.x)));
@@ -2317,8 +2415,10 @@ function allyWaveAttack(u,hitTargets=[]){
  const affected=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&!isWaveImmuneEntity(e)&&e.x>=left&&e.x<=origin);
  for(const e of affected){
    if(e.waveReflect&&!isAbilitySealed(e)){reflectAllyWave(u,e);continue;}
-   const dealt=Math.max(1,Math.round(Number(damageAgainst(u,e))||Number(u.atk)||1));
+   const dealt=Math.max(1,Math.round(Number(damageAgainst(u,e,baseAttack))||Number(baseAttack??u.atk)||1));
    hit(e,dealt,(u.waveCarriesEffects||u.ability?.waveCarriesEffects)?u:null,null);
+   const stopChance=Number(u.waveStopChance??u.ability?.waveStopChance??0);
+   if(stopChance)applyDirectStop(e,stopChance,u.waveStopDuration??u.ability?.waveStopDuration);
    if(e.hp<=0)removeEnemy(e);
  }
  const wave=document.createElement('div');
@@ -3317,8 +3417,60 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
      for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0||(e.isFlying&&!u.airAttack))continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);const inRange=u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e):d<detectionRange;if(inRange&&d<bestDist){target=e;bestDist=d;}}
      u.target=target;
    }
-   if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}applyAreaAttackDown(u);u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
-   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){const dist=Math.abs(Number(t.x||0)-Number(u.x||0));if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);}if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});}if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});if(t.hp<=0){if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true)}else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}else removeEnemy(t)}}applyAreaAttackDown(u);if(!isAbilitySealed(u)&&(u.phoenixSurgeLevel??u.ability?.phoenixSurgeLevel))triggerPhoenixSurge(u,u.x,targets);const waveLevel=Math.max(0,Number(u.waveLevel)||0,Number(u.ability?.waveLevel)||0),waveChance=u.waveChance??u.ability?.waveChance;if(waveLevel>0&&!isAbilitySealed(u)&&(waveChance==null||Math.random()<Number(waveChance)))allyWaveAttack(u,targets);u.cd=u.interval}}
+   if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}applyGlobalSlow(u);applyAreaAttackDown(u);u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
+   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){
+ attackEffect(u,t);
+ const sequence=getAttackSequence(u,t);
+ const baseAttack=sequence[0]?.damage??u.atk;
+ const dealt=damageAgainst(u,t,baseAttack);
+ hit(t,dealt,u);
+ const firstStopChance=Number(u.firstStopChance??u.ability?.firstStopChance??0);
+ if(!isAbilitySealed(u)&&firstStopChance)applyDirectStop(t,firstStopChance,u.firstStopDuration??u.ability?.firstStopDuration);
+ const waveStopChance=Number(u.waveStopChance??u.ability?.waveStopChance??0);
+ if(!isAbilitySealed(u)&&waveStopChance)applyDirectStop(t,waveStopChance,u.waveStopDuration??u.ability?.waveStopDuration);
+ if(!isAbilitySealed(u)&&u.name==='フェニックス')applyPhoenixAttackAbility(u,t);
+ if(u.name==='哲学の賢者ゾクラテス'&&!isAbilitySealed(u)){
+  const dist=Math.abs(Number(t.x||0)-Number(u.x||0));
+  if(dist>=101&&dist<=250&&u.ability?.rangeBands?.[1]?.surgeLevel)triggerSocratesSurge(u,t);
+ }
+ if(!isAbilitySealed(u)&&u.ability?.extraAttackChance&&t.hp>0&&Math.random()<Number(u.ability.extraAttackChance)){
+  const extra=Math.max(1,Math.round(dealt));hit(t,extra,u,{extraAttack:true});
+ }
+ if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});
+ if(t.hp<=0){
+  if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);
+  if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true);}
+  else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}
+  else removeEnemy(t);
+ }
+ for(let hitIndex=1;hitIndex<sequence.length;hitIndex++){
+  const followup=sequence[hitIndex];
+  setTimeout(()=>resolveFollowupAttack(u,t,followup.damage,hitIndex),hitIndex*100);
+ }
+}applyGlobalSlow(u);applyAreaAttackDown(u);if(!isAbilitySealed(u)&&(u.phoenixSurgeLevel??u.ability?.phoenixSurgeLevel))triggerPhoenixSurge(u,u.x,targets);
+const waveLevel=Math.max(0,Number(u.waveLevel)||0,Number(u.ability?.waveLevel)||0),waveChance=u.waveChance??u.ability?.waveChance;
+if(waveLevel>0&&!isAbilitySealed(u)){
+ if(u.name==='哲学の賢者ゾクラテス'){
+  const waveTargets=targets.filter(t=>Math.abs(Number(t.x||0)-Number(u.x||0))<=100);
+  const bandDamage=Number(u.ability?.rangeBands?.[0]?.damage??u.atk);
+  if(waveTargets.length&&(waveChance==null||Math.random()<Number(waveChance)))allyWaveAttack(u,waveTargets,bandDamage);
+ }else{
+  const sequence=getAttackSequence(u,targets[0]);
+  if(sequence.length>1){
+   for(let waveIndex=0;waveIndex<sequence.length;waveIndex++){
+    if(u.waveOnHit!=null&&Number(u.waveOnHit)!==waveIndex+1)continue;
+    const triggerWave=()=>{
+     if(isAbilitySealed(u)||u.hp<=0)return;
+     if(waveChance!=null&&Math.random()>=Number(waveChance))return;
+     const liveTargets=targets.filter(t=>t&&t.hp>0&&enemies.includes(t));
+     if(liveTargets.length)allyWaveAttack(u,liveTargets,sequence[waveIndex]?.damage??u.atk);
+    };
+    if(waveIndex===0)triggerWave();else setTimeout(triggerWave,waveIndex*100);
+   }
+  }else if(waveChance==null||Math.random()<Number(waveChance))allyWaveAttack(u,targets,sequence[0]?.damage??u.atk);
+ }
+}
+u.cd=u.interval}}
    else if(u.x<=enemyBaseStop&&selectedMode==='bossrush'){u.state='idle';}else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
    else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const slowNow=nowMove<(u.slowUntil||0);const rawSlowSf=Number(u.slowFactor??1);const slowSf=slowNow?Math.max(.05,Math.min(1,Number.isFinite(rawSlowSf)?rawSlowSf:1)):1;const cursedNow=nowMove<(u.cursedUntil||0);const rawCurseSf=Number(u.cursedSpeedFactor??1);const curseSf=cursedNow?Math.max(.05,Math.min(1,Number.isFinite(rawCurseSf)?rawCurseSf:1)):1;if(!isThousandStep&&!stopNow)u.x-=u.spd*slowSf*curseSf*60*dt;if(!slowNow)u.slowFactor=1;}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';updateBarrierDisplay(u);
@@ -3330,8 +3482,8 @@ function applyYabayabaCloneAbility(e,target){
  const now=performance.now()/1000;
  if(a.stopChance&&!hasAbilityFlag(target,'stopImmune')&&Math.random()<Number(a.stopChance)){target.stopUntil=now+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
  if(a.slowChance&&!hasAbilityFlag(target,'slowImmune')&&Math.random()<Number(a.slowChance)){target.slowUntil=now+Number(a.slowDuration||2);target.slowFactor=Number(a.slowFactor||.6);setStatusMark(target,'🐌','速度低下',Number(a.slowDuration||2),'slow');}
- if(a.slow&&Math.random()<Number(a.slow.chance||0)){
-    const affected=a.slow.all?units:[target];
+ if(a.slow&&!a.slow.all&&Math.random()<Number(a.slow.chance||0)){
+    const affected=[target];
     for(const candidate of affected){if(!candidate||candidate.hp<=0||hasAbilityFlag(candidate,'slowImmune'))continue;const match=a.slow.trait==="*"||entityHasTrait(candidate,a.slow.trait);if(!match)continue;candidate.slowUntil=now+Number(a.slow.duration||2);candidate.slowFactor=Number(a.slow.factor||.6);setStatusMark(candidate,'🐌','速度低下',Number(a.slow.duration||2),'slow');}
   }
   if(a.waveChance!=null){if(Math.random()<Number(a.waveChance)){e.waveLevel=Math.max(1,Number(a.waveLevel??e.waveLevel??3));enemyWaveAttack(e,[waveTarget]);}}
@@ -3347,7 +3499,6 @@ function reflectEnemyWave(sourceWave,reflector){
  for(const e of targets){
    const dealt=Math.max(1,Math.round(Number(damageAgainst(reflector,e))||reflectedDamage));
    hit(e,dealt,reflector);
-   if(!isAbilitySealed(reflector))applyAbility(reflector,e,dealt);
    if(e.hp<=0)removeEnemy(e);
  }
  const wave=document.createElement('div');
@@ -3420,8 +3571,10 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  t.hp=Math.max(0,t.hp-dealt);if(t.el){t.el.classList.remove('hit');t.el.classList.add('hit');setTimeout(()=>t.el?.classList.remove('hit'),170);const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}
  playSE('impact');popup('-'+raw,t.x,Math.max(25,field.clientHeight-115));if(t.hp>0)triggerKnockback(t,e,before);if(t.hp>0&&ea.knockbackChance&&Math.random()<Number(ea.knockbackChance)){const distance=42;t.x=t.isEnemy?Math.max(120,t.x-distance):Math.min(worldWidth-178,t.x+distance);t.cd=Math.max(Number(t.cd||0),.22);t.hitbackUntil=now2+.22;t.el?.classList.remove('hitback');t.el?.classList.add('hitback');setTimeout(()=>t.el?.classList.remove('hitback'),220);}
  if(!sourceSealed){
+   if(ea.barrierBreak){if(Number(t.barrier||0)>0)t.barrier=0;if(Number(t.mythBarrier||0)>0)t.mythBarrier=0;updateBarrierDisplay(t);}
    if(ea.curseChance)applyCurseStatus(e,t);
-   if(ea.stopChance&&!t.stopImmune&&!t.ability?.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');} if(ea.slowChance&&!t.slowImmune&&!t.ability?.slowImmune&&Math.random()<Number(ea.slowChance)){t.slowUntil=now2+Number(ea.slowDuration||2);t.slowFactor=.5;setStatusMark(t,'🐌','速度低下',Number(ea.slowDuration||2),'slow');}
+   if(ea.stopChance&&!t.stopImmune&&!t.ability?.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');} if(ea.slowChance&&!hasAbilityFlag(t,'slowImmune')&&Math.random()<Number(ea.slowChance)){t.slowUntil=now2+Number(ea.slowDuration||2);t.slowFactor=Number(ea.slowFactor||.5);setStatusMark(t,'🐌','速度低下',Number(ea.slowDuration||2),'slow');}
+   if(ea.slow&&!ea.slow.all&&!hasAbilityFlag(t,'slowImmune')&&(ea.slow.trait==='*'||entityHasTrait(t,ea.slow.trait))&&Math.random()<Number(ea.slow.chance||0)){t.slowUntil=now2+Number(ea.slow.duration||2);t.slowFactor=Number(ea.slow.factor||.6);setStatusMark(t,'🐌','速度低下',Number(ea.slow.duration||2),'slow');}
    if(ea.sealChance&&!hasAbilityFlag(t,'sealImmune')&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=Math.max(Number(t.abilitySealedUntil||0),now2+Number(ea.sealDuration||4));setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}
    if(ea.attackDownChance&&!t.attackDownImmune&&!t.ability?.attackDownImmune&&Math.random()<Number(ea.attackDownChance)){t.attackDownUntil=now2+Number(ea.attackDownDuration||4);t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||4),'attackDown');}
    if(ea.warpChance&&!hasAbilityFlag(t,'warpImmune')&&Math.random()<Number(ea.warpChance)){t.x=Math.min(worldWidth-178,t.x+Number(ea.warpDistance||180));setStatusMark(t,'🌀','ワープ',1,'warp');}
@@ -3473,7 +3626,7 @@ function enemyWaveAttack(e,hitTargets=[],allowReflect=true){
  setTimeout(()=>wave.remove(),520);
 }
 
- for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed&&(e.phoenixSurgeLevel??ea.phoenixSurgeLevel))triggerPhoenixSurge(e,e.x,targets);
+ for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed)applyGlobalSlow(e);if(!sourceSealed&&(e.phoenixSurgeLevel??ea.phoenixSurgeLevel))triggerPhoenixSurge(e,e.x,targets);
      const enemyWaveLevel=Number(e.waveLevel??ea.waveLevel??0),enemyWaveChance=e.waveChance??ea.waveChance;if(!sourceSealed&&enemyWaveLevel>0&&(enemyWaveChance==null||Math.random()<Number(enemyWaveChance)))enemyWaveAttack(e,targets);
      // 呪いは enemyAttackTarget 内で対象ごとに1回だけ判定する。
       if(!sourceSealed&&ea.areaAttackDownChance&&Math.random()<Number(ea.areaAttackDownChance)){
