@@ -1700,7 +1700,7 @@ function dailyChallengeStage(difficulty=dailyDifficulty){
  clone.width=Math.max(1500,Number(clone.width||1900));
  clone.baseHp=Math.max(1200,Math.round(Number(clone.baseHp||5000)*(difficulty==='extreme'?1.4:.8)));
  clone.xp=0;clone.itemReward=null;clone.dailyChallenge=true;clone.dailyDate=dayKey;clone.dailyDifficulty=difficulty;
- const scaleSpawn=x=>{if(x&&x.mult!=null)x.mult=Number(x.mult)*factor;};
+ const scaleSpawn=x=>{if(x)x.mult=Number(x.mult??1)*factor;};
  (clone.schedule||[]).forEach(scaleSpawn);(clone.repeatSpawns||[]).forEach(scaleSpawn);
  if(clone.triggerSpawns){(clone.triggerSpawns.spawns||[]).forEach(scaleSpawn);(clone.triggerSpawns.repeats||[]).forEach(scaleSpawn);}
  return clone;
