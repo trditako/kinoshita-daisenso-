@@ -5097,11 +5097,11 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  const el=id=>document.getElementById(id);
  const endpoint='https://jhohdvuoyvbzwjumnibc.supabase.co/functions/v1/world-announcement';
  const tableUrl='https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_announcements?select=id,message,active,expires_at,updated_at&id=eq.1';
- let pollBusy=false,localDismissedUpdatedAt='',currentUpdatedAt='';
+ let pollBusy=false,localDismissedUpdatedAt='',currentUpdatedAt='',expiryTimer=null;
  function operator(){try{return typeof isOperatorPlayer==='function'&&typeof playerRankingId!=='undefined'&&isOperatorPlayer(playerRankingId)}catch(e){return false}}
  function setStatus(text,ok){const n=el('operatorAnnouncementStatus');if(n){n.textContent=text;n.style.color=ok?'#166534':'#b91c1c'}}
  function headers(extra){return Object.assign({apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},extra||{})}
- function hideBanner(){const n=el('worldAnnouncementBanner');if(n)n.style.display='none'}
+ function hideBanner(){const n=el('worldAnnouncementBanner');if(n)n.style.display='none';if(expiryTimer!==null){clearTimeout(expiryTimer);expiryTimer=null}}
  async function refresh(){
   if(pollBusy||document.visibilityState==='hidden')return;
   pollBusy=true;
@@ -5114,6 +5114,8 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    if(currentUpdatedAt===localDismissedUpdatedAt){hideBanner();return}
    el('worldAnnouncementMessage').textContent=String(row.message).slice(0,300);
    el('worldAnnouncementBanner').style.display='block';
+   if(expiryTimer!==null)clearTimeout(expiryTimer);
+   expiryTimer=setTimeout(()=>{hideBanner();},Math.max(0,Date.parse(row.expires_at)-Date.now()));
   }catch(e){/* Offline or unavailable: preserve gameplay and retry later. */}
   finally{pollBusy=false}
  }
