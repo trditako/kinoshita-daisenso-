@@ -5,9 +5,11 @@
 ## Supabase設定
 
 1. supabase/migrations/202610120001_world_announcements.sql を適用します。告知/ワールド状態は公開クライアントから読み取りのみ可能で、書き込みはできません。プレイヤーランキングには運営配布用の未受取コイン/XP列が追加されます。
-2. supabase/functions/world-announcement/index.ts を Supabase Edge Function world-announcement としてデプロイし、JWT検証を無効化します。関数内で専用トークンを検証するためです。
-3. Supabase Dashboard の Edge Function Secrets に WORLD_ANNOUNCEMENT_TOKEN を設定します。長くランダムな値を使用し、ゲームコードやGitHubには書き込まないでください。
-4. 運営アカウントでゲームを開き、運営パネルの「運営認証キー」に同じ値を入力します。ゲームはトークンを保存しません。
+2. Supabase Auth で運営専用ユーザーを作成します。一般プレイヤーにこのアカウントを共有しないでください。
+3. 作成したユーザーの Auth User ID（UUID）を確認し、Supabase Dashboard の Edge Function Secrets に WORLD_OPERATOR_AUTH_USER_ID として設定します。これは運営専用ユーザーのIDで、ゲームのプレイヤーIDとは別です。
+4. supabase/functions/world-announcement/index.ts を Supabase Edge Function world-announcement としてデプロイし、関数内で Authorization Bearer トークンと許可済み Auth User ID を検証します。Edge Function の Gateway JWT検証を無効化する構成を維持する場合も、関数内部の検証を削除しないでください。
+5. ゲームの運営パネルで運営用メールアドレスとパスワードを入力してログインします。認証キー入力欄はなくなり、アクセストークンはページ内のメモリだけに保持され、ログアウトまたは再読み込みで消えます。
+6. 旧 WORLD_ANNOUNCEMENT_TOKEN はこの実装では使用しません。新方式のデプロイと動作確認後、Supabase の Edge Function Secrets から削除できます。
 
 ## 使える機能
 
@@ -22,4 +24,4 @@
 - ワールドイベント機能は現時点ではグローバルな開催状態の表示です。ステージ出現敵の変更やボス自動出現を行うには、別途バトルのステージ生成ロジックへの接続が必要です。
 - 「全プレイヤー」は player_rankings に登録されている実プレイヤーを対象にします。AIアカウントへの配布は対象外です。
 - サーバー側トークン、マイグレーション、Edge Functionの設定が完了するまでは、操作は成功しません。
-- プレイヤーIDは現在クライアント側で管理されているため、専用トークンは運営本人以外に共有しないでください。より強固な本人確認にはSupabase Authなどのサーバー認証基盤への移行が必要です。
+- プレイヤーIDは現在クライアント側で管理されているため、運営用Supabase Authアカウントを共有しないでください。サーバーはAuthのユーザーIDを許可リストと照合します。WORLD_OPERATOR_AUTH_USER_IDが未設定の場合、運営操作は拒否されます。
