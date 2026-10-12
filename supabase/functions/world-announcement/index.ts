@@ -5,7 +5,7 @@ const URL = Deno.env.get('SUPABASE_URL') || ''
 const RAW_SECRET_KEYS = Deno.env.get('SUPABASE_SECRET_KEYS') || ''
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-operator-broadcast-token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json',
 }
@@ -33,17 +33,18 @@ function integerInRange(value: unknown, min: number, max: number) {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return respond({ ok: false, error: 'POST only' }, 405)
-  const authorization = req.headers.get('authorization') || ''
-  const accessToken = authorization.match(/^Bearer\\s+(.+)$/i)?.[1] || ''
-  if (!accessToken) return respond({ ok: false, error: 'Supabase Auth login required' }, 401)
-  const allowedOperatorAuthId = Deno.env.get('WORLD_OPERATOR_AUTH_USER_ID') || ''
-  if (!allowedOperatorAuthId) return respond({ ok: false, error: 'Operator Auth user ID is not configured' }, 503)
+  const providedToken = req.headers.get('x-operator-broadcast-token') || ''
+  const expectedToken = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
+  if (!expectedToken) return respond({ ok: false, error: 'Operator token is not configured in Edge Function Secrets' }, 503)
+  if (!providedToken || providedToken.length !== expectedToken.length) {
+    return respond({ ok: false, error: 'Invalid operator key' }, 401)
+  }
+  let mismatch = 0
+  for (let i = 0; i < expectedToken.length; i++) mismatch |= providedToken.charCodeAt(i) ^ expectedToken.charCodeAt(i)
+  if (mismatch !== 0) return respond({ ok: false, error: 'Invalid operator key' }, 401)
 
   try {
     const client = getDb()
-    const { data: authData, error: authError } = await client.auth.getUser(accessToken)
-    if (authError || !authData.user) return respond({ ok: false, error: 'Supabase Auth session is invalid or expired' }, 401)
-    if (authData.user.id !== allowedOperatorAuthId) return respond({ ok: false, error: 'This account is not authorized for operator actions' }, 403)
     const body = await req.json()
     if (!body || typeof body !== 'object' || body.operatorId !== OPERATOR_PLAYER_ID)
       return respond({ ok: false, error: 'Operator game account check failed' }, 403)
