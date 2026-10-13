@@ -5286,30 +5286,38 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    if(!payload.message){setStatus('告知メッセージを入力してください。',false);return}
    if(payload.message.length>300){setStatus('告知は300文字以内にしてください。',false);return}
   }else if(action==='grant'){
-   payload.target=el('operatorRewardTarget').value;payload.playerId=String(el('operatorRewardPlayerId').value||'').trim();
+   payload.target=el('operatorRewardTarget').value;payload.targetIds=String(el('operatorRewardPlayerId').value||'').split(/[\\n,，;；]+/).map(x=>x.trim()).filter(Boolean);
+   payload.playerId=payload.targetIds[0]||'';
    payload.coins=Number(el('operatorRewardCoins').value||0);payload.xp=Number(el('operatorRewardXp').value||0);
-   if(payload.target==='single'&&!payload.playerId){setStatus('配布先のプレイヤーIDを入力してください。',false);return}
+   if(['single','multiple'].includes(payload.target)&&!payload.targetIds.length){setStatus('対象アカウントのID・登録名・AI番号を入力してください。',false);return}
+   if(payload.target==='single'&&payload.targetIds.length!==1){setStatus('1アカウント指定では対象を1件だけ入力してください。',false);return}
    if(!Number.isInteger(payload.coins)||payload.coins<0||payload.coins>1000000||!Number.isInteger(payload.xp)||payload.xp<0||payload.xp>1000000||(!payload.coins&&!payload.xp)){setStatus('コインまたはXPを1～1,000,000の範囲で入力してください。',false);return}
-   if(!confirm((payload.target==='all'?'登録プレイヤー全員':'指定プレイヤー')+'に、コイン '+payload.coins.toLocaleString()+'・XP '+payload.xp.toLocaleString()+' を配布します。実行しますか？'))return;
+   if(!confirm('対象：'+({all:'全アカウント',all_players:'プレイヤー全員',all_ai:'AIアカウント全員',single:'指定アカウント1件',multiple:payload.targetIds.length+'件の指定アカウント'}[payload.target]||'指定アカウント')+'\nコイン '+payload.coins.toLocaleString()+'・XP '+payload.xp.toLocaleString()+' を配布します。実行しますか？'))return;
   }else if(action==='event_start'){
    payload.eventName=String(el('operatorEventName').value||'').trim();payload.durationSeconds=Number(el('operatorEventDuration').value||3600);
    if(!payload.eventName){setStatus('イベント名を入力してください。',false);return}
-  }else if(action==='player_lookup'||action==='rp_adjust'){
-   payload.playerId=String(el('operatorPlayerLookupId').value||'').trim();
-   if(!payload.playerId){setStatus('プレイヤーIDを入力してください。',false);return}
+  }else if(action==='player_lookup'){
+   payload.accountId=String(el('operatorPlayerLookupId').value||'').trim();
+   if(!payload.accountId){setStatus('アカウントID・AI番号・登録名を入力してください。',false);return}
+  }else if(action==='rp_adjust'||action==='limited_character_grant'){
+   payload.target=el('operatorRewardTarget').value;payload.targetIds=String(el('operatorRewardPlayerId').value||'').split(/[\\n,，;；]+/).map(x=>x.trim()).filter(Boolean);
+   payload.playerId=payload.targetIds[0]||String(el('operatorPlayerLookupId').value||'').trim();
+   if(['single','multiple'].includes(payload.target)&&!payload.targetIds.length){setStatus('対象アカウントのID・登録名・AI番号を配布先欄に入力してください。',false);return}
+   if(payload.target==='single'&&payload.targetIds.length!==1){setStatus('1アカウント指定では対象を1件だけ入力してください。',false);return}
    if(action==='rp_adjust'){
     payload.delta=Number(el('operatorPlayerRpDelta').value);
     if(!Number.isInteger(payload.delta)||payload.delta===0||Math.abs(payload.delta)>100000){setStatus('RP変更量は-100,000～100,000の整数（0以外）で入力してください。',false);return}
-    if(!confirm('指定プレイヤーのRPを '+(payload.delta>0?'+':'')+payload.delta.toLocaleString()+' 変更します。対象IDを確認しましたか？'))return;
    }
+   const targetLabel=({all:'全アカウント',all_players:'プレイヤー全員',all_ai:'AIアカウント全員',single:'指定アカウント1件',multiple:payload.targetIds.length+'件の指定アカウント'}[payload.target]||'指定アカウント');
+   if(!confirm(targetLabel+'に'+(action==='rp_adjust'?'RPを '+(payload.delta>0?'+':'')+payload.delta.toLocaleString()+' 変更':'限定キャラクターを付与')+'します。実行しますか？'))return;
   }
-  const buttons=['operatorAnnouncementPublish','operatorAnnouncementClear','operatorRewardGrant','operatorEventStart','operatorEventStop','operatorMaintenanceStart','operatorMaintenanceStop','operatorPlayerLookup','operatorPlayerRpAdjust'].map(el);buttons.forEach(b=>{if(b)b.disabled=true});
+  const buttons=['operatorAnnouncementPublish','operatorAnnouncementClear','operatorRewardGrant','operatorEventStart','operatorEventStop','operatorMaintenanceStart','operatorMaintenanceStop','operatorPlayerLookup','operatorPlayerRpAdjust','operatorLimitedCharacterGrant'].map(el);buttons.forEach(b=>{if(b)b.disabled=true});
   setStatus('サーバーへ送信中…',true);
   try{
    const res=await fetch(endpoint,{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store'});
    let data={};try{data=await res.json()}catch(e){}
    if(!res.ok||!data.ok)throw new Error(data.error||('HTTP '+res.status));
-   const messages={publish:'告知を配信しました。各プレイヤーの画面は最大45秒以内に更新されます。',clear:'告知を停止しました。',grant:'配布を受け付けました。対象 '+Number(data.granted||0)+' 人。プレゼントBOX同期後に受け取れます。',event_start:'ワールドイベント「'+payload.eventName+'」を開始しました。画面への反映は最大45秒後です。',event_stop:'ワールドイベントを停止しました。',maintenance_start:'メンテナンス表示を開始しました。ゲーム自体は停止しません。',maintenance_stop:'メンテナンス表示を解除しました。',player_lookup:'プレイヤー情報を取得しました。',rp_adjust:'RPを調整しました。新しいRP：'+Number(data.rp||0).toLocaleString()};
+   const messages={publish:'告知を配信しました。各プレイヤーの画面は最大45秒以内に更新されます。',clear:'告知を停止しました。',grant:'配布を受け付けました。対象 '+Number(data.granted||0)+' 人。プレゼントBOX同期後に受け取れます。',event_start:'ワールドイベント「'+payload.eventName+'」を開始しました。画面への反映は最大45秒後です。',event_stop:'ワールドイベントを停止しました。',maintenance_start:'メンテナンス表示を開始しました。ゲーム自体は停止しません。',maintenance_stop:'メンテナンス表示を解除しました。',player_lookup:'プレイヤー情報を取得しました。',rp_adjust:'RPを調整しました。対象アカウント：'+Number(data.updated||1)+'件',limited_character_grant:'限定キャラクターを付与しました。対象アカウント：'+Number(data.updated||1)+'件};
    if(action==='player_lookup'&&el('operatorPlayerInfo'))el('operatorPlayerInfo').textContent='プレイヤー名：'+String(data.name||'(名前未設定)')+'\n現在RP：'+Number(data.rp||0).toLocaleString()+'\n勝敗：'+Number(data.wins||0)+'勝 '+Number(data.losses||0)+'敗\nID：'+String(data.playerId||payload.playerId);
    if(action==='rp_adjust'&&el('operatorPlayerInfo'))el('operatorPlayerInfo').textContent='プレイヤー名：'+String(data.name||'(名前未設定)')+'\n現在RP：'+Number(data.rp||0).toLocaleString()+'\n勝敗：'+Number(data.wins||0)+'勝 '+Number(data.losses||0)+'敗\nID：'+String(data.playerId||payload.playerId);
    setStatus(messages[action]||'操作が完了しました。',true);
@@ -5330,10 +5338,11 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  el('operatorEventStop')?.addEventListener('click',()=>send('event_stop'));
  el('operatorMaintenanceStart')?.addEventListener('click',()=>send('maintenance_start'));
  el('operatorMaintenanceStop')?.addEventListener('click',()=>send('maintenance_stop'));
- el('operatorRewardTarget')?.addEventListener('change',()=>{const n=el('operatorRewardPlayerId');if(n)n.disabled=el('operatorRewardTarget').value!=='single'});
+ el('operatorRewardTarget')?.addEventListener('change',()=>{const n=el('operatorRewardPlayerId');if(n)n.disabled=!['single','multiple'].includes(el('operatorRewardTarget').value)});
  el('operatorPlayerLookup')?.addEventListener('click',()=>send('player_lookup'));
  el('operatorPlayerRpAdjust')?.addEventListener('click',()=>send('rp_adjust'));
- el('operatorRewardPlayerId').disabled=true;
+ el('operatorLimitedCharacterGrant')?.addEventListener('click',()=>send('limited_character_grant'));
+ el('operatorRewardPlayerId').disabled=!['single','multiple'].includes(el('operatorRewardTarget').value);
  el('worldAnnouncementDismiss')?.addEventListener('click',()=>{localDismissedUpdatedAt=currentUpdatedAt;hideBanner()});
  async function refreshWorldState(){
   if(document.visibilityState==='hidden')return;
