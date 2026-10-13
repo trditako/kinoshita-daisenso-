@@ -1872,16 +1872,26 @@ function skillTreeFor(i){
  return {hp:Math.max(0,Math.min(5,Number(raw.hp)||0)),atk:Math.max(0,Math.min(5,Number(raw.atk)||0)),range:Math.max(0,Math.min(3,Number(raw.range)||0)),spd:Math.max(0,Math.min(3,Number(raw.spd)||0)),interval:Math.max(0,Math.min(3,Number(raw.interval)||0)),recharge:Math.max(0,Math.min(3,Number(raw.recharge)||0)),ability1:raw.ability1?1:0,ability2:raw.ability2?1:0,ability3:raw.ability3?1:0};
 }
 const SKILL_TREE_ABILITY_PROFILES=[
- [{name:'狙い撃ち',desc:'クリティカル率+5%',effect:{criticalChance:.05}},{name:'反撃の構え',desc:'攻撃時8%で敵をふっとばす',effect:{knockbackChance:.08}},{name:'粘りの一撃',desc:'攻撃時10%で敵を15%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.1,factor:.85,duration:1.5}}}],
- [{name:'赤対策強化',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:1.8}}},{name:'赤耐性強化',desc:'赤属性からの被ダメージをさらに軽減',effect:{resist:{赤:.8}}},{name:'精密攻撃',desc:'クリティカル率+7%',effect:{criticalChance:.07}}],
- [{name:'鉄壁の筋肉',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'重い一撃',desc:'攻撃時10%で敵をふっとばす',effect:{knockbackChance:.1}},{name:'根性の反撃',desc:'HP半分以下で攻撃力1.3倍',effect:{hpBelowThresholdMultiplier:1.3,hpBelowThreshold:.5}}],
- [{name:'赤狩り',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.7}}},{name:'豪快な一振り',desc:'クリティカル率+8%',effect:{criticalChance:.08}},{name:'ホームラン',desc:'攻撃時15%で敵をふっとばす',effect:{knockbackChance:.15}}],
- [{name:'赤の足止め',desc:'赤属性への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.6,duration:2.5}}},{name:'覚醒の一撃',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.5}}},{name:'英雄の集中',desc:'クリティカル率+10%',effect:{criticalChance:.1}}],
- [{name:'忍び足',desc:'移動速度をさらに10%強化',effect:{spdBonus:.1}},{name:'影縫い',desc:'攻撃時15%で敵を20%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.15,factor:.8,duration:1.5}}},{name:'急所狙い',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
- [{name:'範囲解析',desc:'範囲攻撃の追加ダメージを+15%',effect:{splashBonus:.15}},{name:'赤妨害強化',desc:'赤への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.6,duration:3}}},{name:'天才の照準',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
- [{name:'追加装甲',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'過負荷ショット',desc:'攻撃時10%で敵をふっとばす',effect:{knockbackChance:.1}},{name:'照準AI',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
- [{name:'王の威圧強化',desc:'全敵への鈍足発動率を+15%',effect:{slow:{trait:'*',chance:.15,factor:.75,duration:2}}},{name:'王の一撃',desc:'クリティカル率+8%',effect:{criticalChance:.08}},{name:'王の制圧',desc:'攻撃時12%で敵をふっとばす',effect:{knockbackChance:.12}}],
- [{name:'超覚醒・赤特効',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.6}}},{name:'超覚醒・鈍足',desc:'赤への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.5,duration:3}}},{name:'超覚醒・急所',desc:'クリティカル率+12%',effect:{criticalChance:.12}}]
+ // 0 木下：基本型。急所・後退・鈍足をそれぞれ伸ばす
+ [{name:'急所の心得',desc:'クリティカル率+5%',effect:{criticalChance:.05}},{name:'押し返し',desc:'攻撃時8%で敵をふっとばす',effect:{knockbackChance:.08}},{name:'粘着攻撃',desc:'攻撃時10%で敵を15%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.1,factor:.85,duration:1.5}}}],
+ // 1 強化木下：赤属性への攻防に特化
+ [{name:'赤破り',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:1.8}}},{name:'赤装甲',desc:'赤属性からの被ダメージをさらに軽減',effect:{resist:{赤:.8}}},{name:'赤封じ',desc:'赤属性を攻撃時15%で鈍足・2秒',effect:{slow:{trait:'赤',chance:.15,factor:.7,duration:2}}}],
+ // 2 マッチョ木下：耐久・低HP逆転型
+ [{name:'鋼の肉体',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'土壇場の底力',desc:'HP半分以下で攻撃力1.3倍',effect:{hpBelowThresholdMultiplier:1.3,hpBelowThreshold:.5}},{name:'重装反撃',desc:'被弾時に35%でダメージを半減',effect:{damageReduce:{chance:.35,factor:.5}}}],
+ // 3 木下（野球）：一撃とホームランに特化
+ [{name:'赤球ホームラン',desc:'赤属性への攻撃倍率を大幅強化',effect:{strong:{赤:2.7}}},{name:'特大クリティカル',desc:'クリティカル倍率を3倍に強化',effect:{criticalChance:.04,criticalMultiplier:3}},{name:'場外弾',desc:'攻撃時15%で敵を大きくふっとばす',effect:{knockbackChance:.15,guaranteeKnockback:false}}],
+ // 4 木下（覚醒）：赤妨害と停止
+ [{name:'覚醒の赤封じ',desc:'赤属性を攻撃時15%で大幅鈍足・2.5秒',effect:{slow:{trait:'赤',chance:.15,factor:.5,duration:2.5}}},{name:'覚醒特効',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.5}}},{name:'覚醒の威圧',desc:'攻撃時12%で敵の動きを停止・1秒',effect:{stopChance:.12,stopDuration:1}}],
+ // 5 木下（忍者）：高速機動と奇襲
+ [{name:'影走り',desc:'移動速度をさらに10%強化',effect:{spdBonus:.1}},{name:'影縫い',desc:'攻撃時15%で敵を20%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.15,factor:.8,duration:1.5}}},{name:'急所暗殺',desc:'クリティカル率+8%',effect:{criticalChance:.08,criticalMultiplier:2.5}}],
+ // 6 木下（博士）：範囲攻撃と呪い
+ [{name:'範囲解析',desc:'範囲攻撃の追加ダメージを+15%',effect:{splashBonus:.15}},{name:'赤妨害実験',desc:'赤属性を攻撃時15%で鈍足・3秒',effect:{slow:{trait:'赤',chance:.15,factor:.6,duration:3}}},{name:'能力封じの研究',desc:'攻撃時10%で敵を2秒呪う',effect:{curseChance:.1,curseDuration:2,curseSeal:true}}],
+ // 7 木下（ロボ）：装甲と制圧射撃
+ [{name:'追加装甲',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'自動防御',desc:'被弾時に30%でダメージを35%に抑える',effect:{damageReduce:{chance:.3,factor:.35}}},{name:'制圧射撃',desc:'攻撃時15%で敵をふっとばす',effect:{knockbackChance:.15}}],
+ // 8 木下（王）：広域妨害と王の防壁
+ [{name:'王の威圧',desc:'全属性の敵を攻撃時15%で25%鈍足・2秒',effect:{slow:{trait:'*',chance:.15,factor:.75,duration:2,all:true}}},{name:'王の防壁',desc:'全属性からの被ダメージを15%軽減',effect:{resist:{'*':.85}}},{name:'王命・強制退却',desc:'攻撃時12%で敵をふっとばす',effect:{knockbackChance:.12}}],
+ // 9 木下（超覚醒）：赤特効と高確率の急所
+ [{name:'超覚醒・赤特効',desc:'赤属性への攻撃倍率を大幅強化',effect:{strong:{赤:2.6}}},{name:'超覚醒・赤封じ',desc:'赤属性を攻撃時15%で50%鈍足・3秒',effect:{slow:{trait:'赤',chance:.15,factor:.5,duration:3}}},{name:'超覚醒・必中急所',desc:'クリティカル率+12%',effect:{criticalChance:.12,criticalMultiplier:2.5}}]
 ];
 function skillTreeAbility(i,slot){return SKILL_TREE_ABILITY_PROFILES[Math.max(0,Math.min(9,Number(i)||0))]?.[slot-1]||{name:'固有能力',desc:'キャラクター固有の能力',effect:{}};}
 function skillTreeCost(branch,level){
@@ -1898,6 +1908,7 @@ function applySkillTreeEffect(ability,profile){
  const e=profile?.effect||{};
  if(e.criticalChance)ability.criticalChance=Math.min(1,Number(ability.criticalChance||0)+e.criticalChance);
  if(e.knockbackChance)ability.knockbackChance=Math.min(1,Number(ability.knockbackChance||0)+e.knockbackChance);
+ if(e.guaranteeKnockback)ability.guaranteeKnockback=true;
  if(e.criticalMultiplier)ability.criticalMultiplier=Math.max(Number(ability.criticalMultiplier||2),e.criticalMultiplier);
  if(e.hpBelowThresholdMultiplier){ability.hpBelowThresholdMultiplier=Math.max(Number(ability.hpBelowThresholdMultiplier||1),e.hpBelowThresholdMultiplier);ability.hpBelowThreshold=Math.max(Number(ability.hpBelowThreshold||0),e.hpBelowThreshold||.5);}
  if(e.strong){ability.strong={...(ability.strong||{})};for(const [trait,mult] of Object.entries(e.strong))ability.strong[trait]=Math.max(Number(ability.strong[trait]||1),mult);}
@@ -1905,6 +1916,12 @@ function applySkillTreeEffect(ability,profile){
  if(e.slow){const old=ability.slow||{},slow=e.slow;ability.slow={...old,trait:slow.trait||old.trait||'*',chance:Math.min(1,Number(old.chance||0)+Number(slow.chance||0)),factor:Math.min(Number(old.factor||1),Number(slow.factor||1)),duration:Math.max(Number(old.duration||0),Number(slow.duration||0)),all:!!(old.all||slow.all)};}
  if(e.splashBonus)ability.splash=Math.min(.95,Number(ability.splash||0)+e.splashBonus);
  if(e.spdBonus)ability.skillTreeSpdBonus=Number(ability.skillTreeSpdBonus||0)+e.spdBonus;
+ if(e.stopChance)ability.stopChance=Math.min(1,Number(ability.stopChance||0)+e.stopChance);
+ if(e.stopDuration)ability.stopDuration=Math.max(Number(ability.stopDuration||0),e.stopDuration);
+ if(e.curseChance)ability.curseChance=Math.min(1,Number(ability.curseChance||0)+e.curseChance);
+ if(e.curseDuration)ability.curseDuration=Math.max(Number(ability.curseDuration||0),e.curseDuration);
+ if(e.curseSeal)ability.curseSeal=true;
+ if(e.damageReduce){const old=ability.damageReduce||{},next=e.damageReduce;ability.damageReduce={chance:Math.min(1,Number(old.chance||0)+Number(next.chance||0)),factor:Math.min(Number(old.factor??1),Number(next.factor??1))};}
  return ability;
 }
 function statAt(i,key){
