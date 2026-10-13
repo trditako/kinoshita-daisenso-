@@ -5315,7 +5315,14 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    if(!Number.isInteger(payload.amount)||payload.amount<1||payload.amount>10000){setStatus('配布個数は1～10,000の整数で入力してください。',false);return}
    const itemName=el('operatorRewardItem').selectedOptions[0]?.textContent||payload.itemId;
    if(!confirm('対象：'+({all:'全アカウント',all_players:'プレイヤー全員',all_ai:'AIアカウント全員',single:'指定アカウント1件',multiple:payload.targetIds.length+'件の指定アカウント'}[payload.target]||'指定アカウント')+'に '+itemName+' ×'+payload.amount.toLocaleString()+' を配布します。実行しますか？'))return;
-  }else if(action==='event_start'){
+  }else if(action==='second_form_unlock'){
+    payload.characterName=String(el('operatorSecondFormCharacter').value||'').trim();
+    const candidate=getSecondFormCandidates().find(x=>x.name===payload.characterName);
+    if(!candidate){setStatus('解禁対象のキャラクターを選択してください。',false);return}
+    payload.formName=candidate.formName;
+    payload.message='新形態解禁！ '+candidate.formName+'が全プレイヤーに解禁されました。キャラクター詳細から進化条件を確認してください。';
+    if(!confirm('全プレイヤーに「'+payload.formName+'」を解禁し、ポップアップとお知らせで発表します。実行しますか？'))return;
+   }else if(action==='event_start'){
    payload.eventName=String(el('operatorEventName').value||'').trim();payload.durationSeconds=Number(el('operatorEventDuration').value||3600);
    if(!payload.eventName){setStatus('イベント名を入力してください。',false);return}
   }else if(action==='player_lookup'){
@@ -5333,13 +5340,13 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    const targetLabel=({all:'全アカウント',all_players:'プレイヤー全員',all_ai:'AIアカウント全員',single:'指定アカウント1件',multiple:payload.targetIds.length+'件の指定アカウント'}[payload.target]||'指定アカウント');
    if(!confirm(targetLabel+'に'+(action==='rp_adjust'?'RPを '+(payload.delta>0?'+':'')+payload.delta.toLocaleString()+' 変更':'限定キャラクターを付与')+'します。実行しますか？'))return;
   }
-  const buttons=['operatorAnnouncementPublish','operatorAnnouncementClear','operatorRewardGrant','operatorItemGrant','operatorEventStart','operatorEventStop','operatorMaintenanceStart','operatorMaintenanceStop','operatorPlayerLookup','operatorPlayerRpAdjust','operatorLimitedCharacterGrant'].map(el);buttons.forEach(b=>{if(b)b.disabled=true});
+  const buttons=['operatorAnnouncementPublish','operatorAnnouncementClear','operatorRewardGrant','operatorItemGrant','operatorEventStart','operatorEventStop','operatorMaintenanceStart','operatorMaintenanceStop','operatorPlayerLookup','operatorPlayerRpAdjust','operatorLimitedCharacterGrant','operatorSecondFormUnlock'].map(el);buttons.forEach(b=>{if(b)b.disabled=true});
   setStatus('サーバーへ送信中…',true);
   try{
    const res=await fetch(endpoint,{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store'});
    let data={};try{data=await res.json()}catch(e){}
    if(!res.ok||!data.ok)throw new Error(data.error||('HTTP '+res.status));
-   const messages={publish:'告知を配信しました。各プレイヤーの画面は最大45秒以内に更新されます。',clear:'告知を停止しました。',grant:'配布を受け付けました。対象 '+Number(data.granted||0)+' アカウント（プレイヤー '+Number(data.grantedPlayers||0)+'・AI '+Number(data.grantedAi||0)+'）。プレイヤーはプレゼントBOX同期後、AIはサーバー値に反映されます。',grant_item:'アイテムを配布しました。対象 '+Number(data.granted||0)+' アカウント（プレイヤー '+Number(data.grantedPlayers||0)+'・AI '+Number(data.grantedAi||0)+'）。プレイヤーは次回同期後に所持アイテムへ反映されます。',event_start:'ワールドイベント「'+payload.eventName+'」を開始しました。画面への反映は最大45秒後です。',event_stop:'ワールドイベントを停止しました。',maintenance_start:'メンテナンス表示を開始しました。ゲーム自体は停止しません。',maintenance_stop:'メンテナンス表示を解除しました。',player_lookup:'プレイヤー情報を取得しました。',rp_adjust:'RPを調整しました。対象アカウント：'+Number(data.updated||1)+'件',limited_character_grant:'限定キャラクターを付与しました。対象アカウント：'+Number(data.updated||1)+'件'};
+   const messages={publish:'告知を配信しました。各プレイヤーの画面は最大45秒以内に更新されます。',clear:'告知を停止しました。',second_form_unlock:'第二形態を全プレイヤーに解禁し、発表を登録しました。画面への反映は最大45秒後です。',grant:'配布を受け付けました。対象 '+Number(data.granted||0)+' アカウント（プレイヤー '+Number(data.grantedPlayers||0)+'・AI '+Number(data.grantedAi||0)+'）。プレイヤーはプレゼントBOX同期後、AIはサーバー値に反映されます。',grant_item:'アイテムを配布しました。対象 '+Number(data.granted||0)+' アカウント（プレイヤー '+Number(data.grantedPlayers||0)+'・AI '+Number(data.grantedAi||0)+'）。プレイヤーは次回同期後に所持アイテムへ反映されます。',event_start:'ワールドイベント「'+payload.eventName+'」を開始しました。画面への反映は最大45秒後です。',event_stop:'ワールドイベントを停止しました。',maintenance_start:'メンテナンス表示を開始しました。ゲーム自体は停止しません。',maintenance_stop:'メンテナンス表示を解除しました。',player_lookup:'プレイヤー情報を取得しました。',rp_adjust:'RPを調整しました。対象アカウント：'+Number(data.updated||1)+'件',limited_character_grant:'限定キャラクターを付与しました。対象アカウント：'+Number(data.updated||1)+'件'};
    if(action==='player_lookup'&&el('operatorPlayerInfo'))el('operatorPlayerInfo').textContent=String(data.accountType||'アカウント')+'：'+String(data.name||'(名前未設定)')+'\\n現在RP：'+Number(data.rp||0).toLocaleString()+'\\n勝敗：'+Number(data.wins||0)+'勝 '+Number(data.losses||0)+'敗\\n限定キャラクター：'+(data.limitedCharacterOwned?'所持':'未所持')+'\\nID：'+String(data.accountId||data.playerId||payload.accountId);
    if(action==='rp_adjust'&&el('operatorPlayerInfo'))el('operatorPlayerInfo').textContent='RP変更完了：'+Number(data.updated||1)+'件\\n'+(data.results||[]).slice(0,30).map(x=>x.accountType+' '+x.name+'：'+x.rp+' RP').join('\\n');
    if(action==='limited_character_grant'&&el('operatorPlayerInfo'))el('operatorPlayerInfo').textContent='限定キャラクター付与完了：'+Number(data.updated||1)+'件\\n'+(data.results||[]).slice(0,30).map(x=>x.accountType+' '+x.name+'：付与済み').join('\\n');
@@ -5366,6 +5373,11 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  el('operatorPlayerLookup')?.addEventListener('click',()=>send('player_lookup'));
  el('operatorPlayerRpAdjust')?.addEventListener('click',()=>send('rp_adjust'));
  el('operatorLimitedCharacterGrant')?.addEventListener('click',()=>send('limited_character_grant'));
+  el('operatorSecondFormUnlock')?.addEventListener('click',()=>send('second_form_unlock'));
+  function getSecondFormCandidates(){const special={'突撃ハーランド木下':'突撃ハーランド木下・極','異常木下':'異常木下・終焉形態','富豪木下':'大富豪木下'};return (Array.isArray(cards)?cards:[]).map((c,i)=>{const form=i<10&&typeof NORMAL_SECOND_FORMS!=='undefined'?NORMAL_SECOND_FORMS[i]:c?.secondForm;const formName=String(form?.name||special[c?.name]||(form?String(c?.name||'')+'・第二形態':'')).trim();return {index:i,name:String(c?.name||''),formName,supported:!!form||!!special[c?.name]};}).filter(x=>x.name&&x.supported)}
+  function renderSecondFormUnlockCandidates(){const select=el('operatorSecondFormCharacter');if(!select)return;const previous=select.value;const items=getSecondFormCandidates();const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');select.innerHTML='<option value="">解禁するキャラクターを選択</option>'+items.map(x=>'<option value="'+esc(x.name)+'">'+esc(cards[x.index]?.icon||'✨')+' '+esc(x.name)+' → '+esc(x.formName)+'</option>').join('');if(items.some(x=>x.name===previous))select.value=previous;updateSecondFormPreview()}
+  function updateSecondFormPreview(){const select=el('operatorSecondFormCharacter'),box=el('operatorSecondFormPreview');if(!select||!box)return;const item=getSecondFormCandidates().find(x=>x.name===select.value);box.textContent=item?(item.formName+'を全員に解禁します。既存の進化レベル・素材条件は維持されます。'):'第二形態を選択してください。'}
+  el('operatorSecondFormCharacter')?.addEventListener('change',updateSecondFormPreview);renderSecondFormUnlockCandidates();
  el('operatorRewardPlayerId').disabled=!['single','multiple'].includes(el('operatorRewardTarget').value);
  el('worldAnnouncementDismiss')?.addEventListener('click',()=>{localDismissedUpdatedAt=currentUpdatedAt;hideBanner()});
  async function refreshWorldState(){
