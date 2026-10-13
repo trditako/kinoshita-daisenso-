@@ -8,9 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.64';
+const GAME_VERSION='v1.8.65';
 const UPDATE_LOG=[
  {date:'2026-10-13',version:'v1.8.63',title:'💥 スキル解放判定とクリティカル表示を修正',items:['保存データの文字列0を未解放として扱い、未解放能力の誤発動を防止','クリティカル発動時に大きな「クリティカル!!」表示と強調ダメージ表示を追加','金属敵へのクリティカル発動も画面上で判別可能に']},
+ {date:'2026-10-14',version:'v1.8.65',title:'🔓 運営認証キーを撤去',items:['運営パネルの認証キー入力欄・認証ボタンを削除','運営操作時のWORLD_ANNOUNCEMENT_TOKEN送信を撤去','ワールド告知・報酬配布・イベント・メンテナンス操作のキー入力を不要化']},
  {date:'2026-10-13',version:'v1.8.64',title:'🌳 キャラ別スキルツリー表示を修正',items:['固有能力の見出しと説明を選択中キャラクターの専用能力に連動','共通のクリティカル・ふっとばし・鈍足という固定説明を撤去','解放ノードに専用能力名を表示']},
  {date:'2026-10-13',version:'v1.8.62',title:'🌳 解放能力をキャラクターごとに個性化',items:['ノーマル10体の解放能力をキャラクターの特徴に合わせて再設計','赤特効・装甲・低HP火力・クリティカル倍率・停止・範囲攻撃・呪いなど効果を差別化','停止・呪い・被ダメージ軽減など新たに使用する能力効果を戦闘処理へ接続']},
  {date:'2026-10-13',version:'v1.8.61',title:'🌳 キャラ別スキル能力と専用素材を追加',items:['ノーマル10体それぞれに個性に合った3種類の解放能力を設定','各ステータス強化枝の最終段階に木下コイン＋スキル結晶が必要','固有能力の解放には木下コイン＋能力解放コアが必要','所持アイテムとウィークリー／マンスリー交換所から専用素材を入手可能']},{date:'2026-10-13',version:'v1.8.60',title:'🌳 ノーマル10体専用スキルツリーを拡張',items:['強化コインを1段階15,000枚以上に引き上げ、上位ほど高額化','HP・攻撃力・射程・移動速度・攻撃間隔・再生産の6枝に分岐','クリティカル・ふっとばし・鈍足の3能力を個別解放可能に変更','対象を最初のノーマルキャラ10体に限定']},{date:'2026-10-13',version:'v1.8.59',title:'🌳 キャラクター別4方向スキルツリーを追加',items:['HP・攻撃力・能力追加・その他強化の4系統を追加','取得状況を端末に保存し、強化を戦闘時のステータスへ反映','既存のXP・レベルアップ計算式は変更せず維持']},
@@ -444,7 +445,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <hr style="margin:14px 0;border:0;border-top:1px solid #cbd5e1"><h3 style="color:#1d4ed8;margin:8px 0 5px">🎁 コイン・XP配布</h3><p style="font-size:12px;color:#475569">プレゼントBOX経由で配布します。全員または指定したプレイヤーIDを対象にできます。</p><label for="operatorRewardTarget" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">配布対象</label><select id="operatorRewardTarget" style="width:100%;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"><option value="all">全登録プレイヤー</option><option value="single">指定プレイヤーID</option></select><label for="operatorRewardPlayerId" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">プレイヤーID（指定配布の場合）</label><input id="operatorRewardPlayerId" type="text" maxlength="80" placeholder="ランキングに表示されるプレイヤーID" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"><div><label for="operatorRewardCoins" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">コイン（0～1,000,000）</label><input id="operatorRewardCoins" type="number" min="0" max="1000000" step="1" value="0" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"></div><div><label for="operatorRewardXp" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">XP（0～1,000,000）</label><input id="operatorRewardXp" type="number" min="0" max="1000000" step="1" value="0" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"></div></div><button id="operatorRewardGrant" type="button" class="formationBtn" style="width:100%;background:#1d4ed8!important;color:#fff!important">🎁 配布内容を確定</button>
 <hr style="margin:14px 0;border:0;border-top:1px solid #cbd5e1"><h3 style="color:#7e22ce;margin:8px 0 5px">🎪 ワールドイベント</h3><label for="operatorEventName" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">イベント名</label><input id="operatorEventName" type="text" maxlength="60" placeholder="例：運営記念イベント" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"><label for="operatorEventDuration" style="display:block;color:#0f172a;font-weight:900;margin:8px 0 4px">開催時間</label><select id="operatorEventDuration" style="width:100%;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"><option value="300">5分</option><option value="1800">30分</option><option value="3600" selected>1時間</option><option value="21600">6時間</option><option value="86400">24時間</option></select><button id="operatorEventStart" type="button" class="formationBtn" style="width:100%;background:#7e22ce!important;color:#fff!important">🎪 イベント開始</button><button id="operatorEventStop" type="button" class="formationBtn" style="width:100%;background:#475569!important;color:#fff!important">イベント停止</button>
 <hr style="margin:14px 0;border:0;border-top:1px solid #cbd5e1"><h3 style="color:#b45309;margin:8px 0 5px">🚧 メンテナンス表示</h3><p style="font-size:12px;color:#475569">ゲームへのログインや戦闘は停止しません。全プレイヤー向けのメンテナンス案内表示です。</p><button id="operatorMaintenanceStart" type="button" class="formationBtn" style="width:100%;background:#b45309!important;color:#fff!important">🚧 メンテナンス表示を開始</button><button id="operatorMaintenanceStop" type="button" class="formationBtn" style="width:100%;background:#475569!important;color:#fff!important">メンテナンス表示を解除</button>
-<div style="border:1px solid #cbd5e1;border-radius:10px;padding:10px;margin:12px 0;background:#f8fafc"><strong style="display:block;color:#0f172a;margin-bottom:6px">🔑 運営認証キー</strong><label for="operatorAuthKey" style="display:block;color:#334155;font-weight:800;margin:6px 0 3px">認証キー</label><input id="operatorAuthKey" type="password" autocomplete="off" placeholder="運営認証キーを入力" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #94a3b8;border-radius:9px;color:#111;background:#fff;font:inherit"><div style="display:flex;gap:8px;margin-top:8px"><button id="operatorAuthLogin" type="button" class="formationBtn" style="flex:1;background:#166534!important;color:#fff!important">認証</button><button id="operatorAuthLogout" type="button" class="formationBtn" style="flex:1;background:#475569!important;color:#fff!important">キーを消去</button></div><p style="font-size:11px;color:#475569;margin:7px 0 0">キーはSupabase側の秘密設定と照合されます。入力したキーは再読み込みで消去されます。</p></div><div id="operatorAnnouncementStatus" role="status" style="font-size:13px;font-weight:900;color:#334155;margin:8px 0"></div><button id="operatorToolsClose" type="button" class="backbtn">戻る</button></div></div>
+<p style="font-size:12px;color:#475569;margin:8px 0">運営認証キーは不要です。運営パネルから各操作を実行できます。</p><div id="operatorAnnouncementStatus" role="status" style="font-size:13px;font-weight:900;color:#334155;margin:8px 0"></div><button id="operatorToolsClose" type="button" class="backbtn">戻る</button></div></div>
 <div id="rankLobby" class="overlay" style="display:none"><div class="panel rankPanel">
 <h1>🏆 ランク戦</h1>
 <div class="rankHeader"><span id="rankBadge" class="rankBadge">木の芽 I</span><span><span id="rankRP">0 RP</span><br><small id="playerRankRecord">0勝 0敗</small></span></div>
@@ -5253,8 +5254,6 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  const endpoint='https://jhohdvuoyvbzwjumnibc.supabase.co/functions/v1/world-announcement';
  const tableUrl='https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_announcements?select=id,message,active,expires_at,updated_at&id=eq.1';
  let pollBusy=false,localDismissedUpdatedAt='',currentUpdatedAt='',expiryTimer=null;
- let operatorAccessToken='';
- let operatorAuthKey='';
  function operator(){try{return typeof isOperatorPlayer==='function'&&typeof playerRankingId!=='undefined'&&isOperatorPlayer(playerRankingId)}catch(e){return false}}
  function setStatus(text,ok){const n=el('operatorAnnouncementStatus');if(n){n.textContent=text;n.style.color=ok?'#166534':'#b91c1c'}}
  function headers(extra){return Object.assign({apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},extra||{})}
@@ -5278,7 +5277,6 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  }
  async function send(action){
   if(!operator()){setStatus('運営アカウントを確認できません。',false);return}
-  if(!operatorAccessToken){setStatus('先に運営アカウントでログインしてください。',false);return}
   const payload={action,operatorId:playerRankingId};
   if(action==='publish'){
    payload.message=String(el('operatorAnnouncementMessage').value||'').trim();
@@ -5298,7 +5296,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   const buttons=['operatorAnnouncementPublish','operatorAnnouncementClear','operatorRewardGrant','operatorEventStart','operatorEventStop','operatorMaintenanceStart','operatorMaintenanceStop'].map(el);buttons.forEach(b=>{if(b)b.disabled=true});
   setStatus('サーバーへ送信中…',true);
   try{
-   const res=await fetch(endpoint,{method:'POST',headers:headers({'x-operator-broadcast-token':operatorAuthKey}),body:JSON.stringify(payload),cache:'no-store'});
+   const res=await fetch(endpoint,{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store'});
    let data={};try{data=await res.json()}catch(e){}
    if(!res.ok||!data.ok)throw new Error(data.error||('HTTP '+res.status));
    const messages={publish:'告知を配信しました。各プレイヤーの画面は最大45秒以内に更新されます。',clear:'告知を停止しました。',grant:'配布を受け付けました。対象 '+Number(data.granted||0)+' 人。プレゼントBOX同期後に受け取れます。',event_start:'ワールドイベント「'+payload.eventName+'」を開始しました。画面への反映は最大45秒後です。',event_stop:'ワールドイベントを停止しました。',maintenance_start:'メンテナンス表示を開始しました。ゲーム自体は停止しません。',maintenance_stop:'メンテナンス表示を解除しました。'};
@@ -5311,13 +5309,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   finally{buttons.forEach(b=>{if(b)b.disabled=false})}
  }
  const openBtn=el('operatorToolsBtn');
- if(openBtn&&operator()){openBtn.hidden=false;openBtn.style.display='block';openBtn.addEventListener('click',()=>{el('operatorToolsModal').style.display='flex';setStatus(operatorAccessToken?'運営アカウントでログイン済みです。':'運営アカウントでログインしてください。',true)})}
- el('operatorAuthLogin')?.addEventListener('click',()=>{
-  operatorAuthKey=String(el('operatorAuthKey').value||'').trim();
-  if(!operatorAuthKey){setStatus('認証キーを入力してください。',false);return}
-  setStatus('認証キーを入力しました。運営操作時にサーバー側で確認します。',true);
- });
- el('operatorAuthLogout')?.addEventListener('click',()=>{operatorAuthKey='';el('operatorAuthKey').value='';setStatus('認証キーを消去しました。',true)});
+ if(openBtn&&operator()){openBtn.hidden=false;openBtn.style.display='block';openBtn.addEventListener('click',()=>{el('operatorToolsModal').style.display='flex';setStatus('運営認証キーは不要です。操作を選択してください。',true)})}
  el('operatorToolsClose')?.addEventListener('click',()=>{el('operatorToolsModal').style.display='none'});
  el('operatorAnnouncementPublish')?.addEventListener('click',()=>send('publish'));
  el('operatorAnnouncementClear')?.addEventListener('click',()=>send('clear'));
