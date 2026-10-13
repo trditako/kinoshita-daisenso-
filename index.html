@@ -5128,6 +5128,11 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
  }
  detectUpdates();
  news.push(...readDynamic().sort((a,b)=>String(b.date).localeCompare(String(a.date))));
+ window.addEventListener('kinoshitaSecondFormUnlocksUpdated',event=>{
+   const unlocks=Array.isArray(event.detail?.unlocks)?event.detail.unlocks:[];let changed=false;
+   for(const item of unlocks){const name=String(item?.characterName||''),form=String(item?.formName||'');if(!name||!form)continue;const id='second-form-unlock-'+name;const entry={id,date:String(item.unlockedAt||'').slice(0,10)||dateToday(),title:'✨ '+form+' 解禁！',summary:'運営から第二形態の全体解禁',body:['運営操作により「'+form+'」が全プレイヤーに解禁されました。','キャラクター「'+name+'」の詳細画面から第二形態を確認してください。','レベル・最大レベル・必要素材など、既存の進化条件を満たすと進化できます。']};const at=news.findIndex(n=>n.id===id);if(at>=0)news[at]=entry;else{news.push(entry);changed=true;}const dyn=readDynamic();const di=dyn.findIndex(n=>n.id===id);if(di>=0)dyn[di]=entry;else dyn.push(entry);writeDynamic(dyn);}
+   if(changed)render();paintBadge();
+  });
  function paintBadge(){
   const seen=read(),unread=news.some(n=>!seen[n.id]),b=el('announcementsUnread');if(b)b.style.display=unread?'inline-flex':'none';
   const sb=el('shinjuUnread'),signature=currentShinjuSignature(),seenSignature=localStorage.getItem(SHINJU_SEEN_SIGNATURE_KEY);
@@ -5380,13 +5385,20 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   el('operatorSecondFormCharacter')?.addEventListener('change',updateSecondFormPreview);renderSecondFormUnlockCandidates();
  el('operatorRewardPlayerId').disabled=!['single','multiple'].includes(el('operatorRewardTarget').value);
  el('worldAnnouncementDismiss')?.addEventListener('click',()=>{localDismissedUpdatedAt=currentUpdatedAt;hideBanner()});
+  el('secondFormUnlockPopupClose')?.addEventListener('click',()=>{el('secondFormUnlockModal').style.display='none'});
+  el('secondFormUnlockPopupNews')?.addEventListener('click',()=>{el('secondFormUnlockModal').style.display='none';el('announcementsBtn')?.click()});
  async function refreshWorldState(){
   if(document.visibilityState==='hidden')return;
   try{
-   const res=await fetch('https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_operator_state?select=event_name,event_active,event_expires_at,maintenance_active,maintenance_message&id=eq.1',{headers:headers(),cache:'no-store'});
+   const res=await fetch('https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_operator_state?select=event_name,event_active,event_expires_at,maintenance_active,maintenance_message,second_form_unlocks,second_form_unlock_character,second_form_unlock_form_name,second_form_unlock_message,second_form_unlock_updated_at&id=eq.1',{headers:headers(),cache:'no-store'});
    if(!res.ok)return;
    const rows=await res.json(),row=rows&&rows[0],banner=el('worldOperatorStatusBanner'),label=el('worldOperatorStatusText');
    if(!row){banner.style.display='none';return}
+    const unlocks=Array.isArray(row.second_form_unlocks)?row.second_form_unlocks:[];
+    kinoshitaGloballyUnlockedSecondForms=new Set(unlocks.map(x=>String(x?.characterName||'')).filter(Boolean));
+    window.dispatchEvent(new CustomEvent('kinoshitaSecondFormUnlocksUpdated',{detail:{unlocks}}));
+    const unlockAt=String(row.second_form_unlock_updated_at||''),unlockName=String(row.second_form_unlock_form_name||''),unlockMessage=String(row.second_form_unlock_message||'');
+    if(unlockAt&&unlockName&&localStorage.getItem('kinoshitaSecondFormPopupSeenAt')!==unlockAt){const popup=el('secondFormUnlockModal');if(popup){el('secondFormUnlockPopupCharacter').textContent=String(row.second_form_unlock_character||'キャラクター')+' ／ '+unlockName;el('secondFormUnlockPopupMessage').textContent=unlockMessage||('「'+unlockName+'」が全プレイヤーに解禁されました。');popup.style.display='flex';localStorage.setItem('kinoshitaSecondFormPopupSeenAt',unlockAt);}}
    const eventOn=row.event_active===true&&row.event_expires_at&&Date.parse(row.event_expires_at)>Date.now(),parts=[];
    if(row.maintenance_active===true)parts.push('🚧 '+String(row.maintenance_message||'メンテナンスのお知らせ'));
    if(eventOn)parts.push('🎪 開催中：'+String(row.event_name||'ワールドイベント')+'（終了 '+new Date(row.event_expires_at).toLocaleString('ja-JP')+'）');
@@ -5394,7 +5406,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   }catch(e){/* keep gameplay usable if global status is unavailable */}
  }
  refresh();refreshWorldState();
- setInterval(refresh,120000);setInterval(refreshWorldState,120000);
+ setInterval(refresh,120000);setInterval(refreshWorldState,45000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refresh();refreshWorldState()}});
 })();
 </script>
