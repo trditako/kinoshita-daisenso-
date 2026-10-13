@@ -2219,6 +2219,7 @@ function showEnemyDetail(key){
 }
 
 let kinoshitaGloballyUnlockedSecondForms=new Set();
+try{const cachedUnlocks=JSON.parse(localStorage.getItem('kinoshitaGlobalSecondFormUnlocksCacheV1')||'[]');if(Array.isArray(cachedUnlocks))kinoshitaGloballyUnlockedSecondForms=new Set(cachedUnlocks.map(String));}catch(e){}
 function isSecondFormGloballyUnlocked(i){return kinoshitaGloballyUnlockedSecondForms.has(String(cards[i]?.name||''))}
 function normalPowerRequirements(i){return NORMAL_POWER_REQUIREMENTS[i]||{}}
 function hasNormalPowerRequirements(i){const req=normalPowerRequirements(i);return Object.entries(req).every(([color,n])=>(colorPowers[color]||0)>=n)}
@@ -5396,6 +5397,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    if(!row){banner.style.display='none';return}
     const unlocks=Array.isArray(row.second_form_unlocks)?row.second_form_unlocks:[];
     kinoshitaGloballyUnlockedSecondForms=new Set(unlocks.map(x=>String(x?.characterName||'')).filter(Boolean));
+    try{localStorage.setItem('kinoshitaGlobalSecondFormUnlocksCacheV1',JSON.stringify(Array.from(kinoshitaGloballyUnlockedSecondForms)));}catch(e){}
     window.dispatchEvent(new CustomEvent('kinoshitaSecondFormUnlocksUpdated',{detail:{unlocks}}));
     const unlockAt=String(row.second_form_unlock_updated_at||''),unlockName=String(row.second_form_unlock_form_name||''),unlockMessage=String(row.second_form_unlock_message||'');
     if(unlockAt&&unlockName&&localStorage.getItem('kinoshitaSecondFormPopupSeenAt')!==unlockAt){const popup=el('secondFormUnlockModal');if(popup){el('secondFormUnlockPopupCharacter').textContent=String(row.second_form_unlock_character||'キャラクター')+' ／ '+unlockName;el('secondFormUnlockPopupMessage').textContent=unlockMessage||('「'+unlockName+'」が全プレイヤーに解禁されました。');popup.style.display='flex';localStorage.setItem('kinoshitaSecondFormPopupSeenAt',unlockAt);}}
