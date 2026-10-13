@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.60';
+const GAME_VERSION='v1.8.61';
 const UPDATE_LOG=[
- {date:'2026-10-13',version:'v1.8.60',title:'🌳 ノーマル10体専用スキルツリーを拡張',items:['強化コインを1段階15,000枚以上に引き上げ、上位ほど高額化','HP・攻撃力・射程・移動速度・攻撃間隔・再生産の6枝に分岐','クリティカル・ふっとばし・鈍足の3能力を個別解放可能に変更','対象を最初のノーマルキャラ10体に限定']},{date:'2026-10-13',version:'v1.8.59',title:'🌳 キャラクター別4方向スキルツリーを追加',items:['HP・攻撃力・能力追加・その他強化の4系統を追加','取得状況を端末に保存し、強化を戦闘時のステータスへ反映','既存のXP・レベルアップ計算式は変更せず維持']},
+ {date:'2026-10-13',version:'v1.8.61',title:'🌳 キャラ別スキル能力と専用素材を追加',items:['ノーマル10体それぞれに個性に合った3種類の解放能力を設定','各ステータス強化枝の最終段階に木下コイン＋スキル結晶が必要','固有能力の解放には木下コイン＋能力解放コアが必要','所持アイテムとウィークリー／マンスリー交換所から専用素材を入手可能']},{date:'2026-10-13',version:'v1.8.60',title:'🌳 ノーマル10体専用スキルツリーを拡張',items:['強化コインを1段階15,000枚以上に引き上げ、上位ほど高額化','HP・攻撃力・射程・移動速度・攻撃間隔・再生産の6枝に分岐','クリティカル・ふっとばし・鈍足の3能力を個別解放可能に変更','対象を最初のノーマルキャラ10体に限定']},{date:'2026-10-13',version:'v1.8.59',title:'🌳 キャラクター別4方向スキルツリーを追加',items:['HP・攻撃力・能力追加・その他強化の4系統を追加','取得状況を端末に保存し、強化を戦闘時のステータスへ反映','既存のXP・レベルアップ計算式は変更せず維持']},
  {date:'2026-10-13',version:'v1.8.58',title:'📈 Lv.10以降のキャラクター育成XPをさらに増加',items:['必要XPの増加カーブを強化し、特にLv.10以降はレベルが上がるほど大幅に必要XPが増えるよう調整']},
   {date:'2026-10-13',version:'v1.8.57',title:'📈 キャラクター育成に必要なXPを大幅増加',items:['レベルアップ必要XPをレベルに応じて増加する新計算式に変更','序盤から高レベルまで一律に簡単に育たないよう調整']},
   {date:'2026-10-13',version:'v1.8.56',title:'🎁 日替わり異次元戦線に限定報酬を追加',items:['異次元ポイント累計100ptで専用称号を獲得','250ptで限定UR衣装、400ptで限定URキャラクターを交換可能に']},
@@ -1871,12 +1871,42 @@ function skillTreeFor(i){
  const key=String(cards[i]?.name||i),raw=characterSkillTrees[key]||{};
  return {hp:Math.max(0,Math.min(5,Number(raw.hp)||0)),atk:Math.max(0,Math.min(5,Number(raw.atk)||0)),range:Math.max(0,Math.min(3,Number(raw.range)||0)),spd:Math.max(0,Math.min(3,Number(raw.spd)||0)),interval:Math.max(0,Math.min(3,Number(raw.interval)||0)),recharge:Math.max(0,Math.min(3,Number(raw.recharge)||0)),ability1:raw.ability1?1:0,ability2:raw.ability2?1:0,ability3:raw.ability3?1:0};
 }
+const SKILL_TREE_ABILITY_PROFILES=[
+ [{name:'狙い撃ち',desc:'クリティカル率+5%',effect:{criticalChance:.05}},{name:'反撃の構え',desc:'攻撃時8%で敵をふっとばす',effect:{knockbackChance:.08}},{name:'粘りの一撃',desc:'攻撃時10%で敵を15%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.1,factor:.85,duration:1.5}}}],
+ [{name:'赤対策強化',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:1.8}}},{name:'赤耐性強化',desc:'赤属性からの被ダメージをさらに軽減',effect:{resist:{赤:.8}}},{name:'精密攻撃',desc:'クリティカル率+7%',effect:{criticalChance:.07}}],
+ [{name:'鉄壁の筋肉',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'重い一撃',desc:'攻撃時10%で敵をふっとばす',effect:{knockbackChance:.1}},{name:'根性の反撃',desc:'HP半分以下で攻撃力1.3倍',effect:{hpBelowThresholdMultiplier:1.3,hpBelowThreshold:.5}}],
+ [{name:'赤狩り',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.7}}},{name:'豪快な一振り',desc:'クリティカル率+8%',effect:{criticalChance:.08}},{name:'ホームラン',desc:'攻撃時15%で敵をふっとばす',effect:{knockbackChance:.15}}],
+ [{name:'赤の足止め',desc:'赤属性への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.6,duration:2.5}}},{name:'覚醒の一撃',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.5}}},{name:'英雄の集中',desc:'クリティカル率+10%',effect:{criticalChance:.1}}],
+ [{name:'忍び足',desc:'移動速度をさらに10%強化',effect:{spdBonus:.1}},{name:'影縫い',desc:'攻撃時15%で敵を20%鈍足・1.5秒',effect:{slow:{trait:'*',chance:.15,factor:.8,duration:1.5}}},{name:'急所狙い',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
+ [{name:'範囲解析',desc:'範囲攻撃の追加ダメージを+15%',effect:{splashBonus:.15}},{name:'赤妨害強化',desc:'赤への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.6,duration:3}}},{name:'天才の照準',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
+ [{name:'追加装甲',desc:'全属性からの被ダメージをさらに軽減',effect:{resist:{'*':.9}}},{name:'過負荷ショット',desc:'攻撃時10%で敵をふっとばす',effect:{knockbackChance:.1}},{name:'照準AI',desc:'クリティカル率+8%',effect:{criticalChance:.08}}],
+ [{name:'王の威圧強化',desc:'全敵への鈍足発動率を+15%',effect:{slow:{trait:'*',chance:.15,factor:.75,duration:2}}},{name:'王の一撃',desc:'クリティカル率+8%',effect:{criticalChance:.08}},{name:'王の制圧',desc:'攻撃時12%で敵をふっとばす',effect:{knockbackChance:.12}}],
+ [{name:'超覚醒・赤特効',desc:'赤属性への攻撃倍率を強化',effect:{strong:{赤:2.6}}},{name:'超覚醒・鈍足',desc:'赤への鈍足発動率を+15%',effect:{slow:{trait:'赤',chance:.15,factor:.5,duration:3}}},{name:'超覚醒・急所',desc:'クリティカル率+12%',effect:{criticalChance:.12}}]
+];
+function skillTreeAbility(i,slot){return SKILL_TREE_ABILITY_PROFILES[Math.max(0,Math.min(9,Number(i)||0))]?.[slot-1]||{name:'固有能力',desc:'キャラクター固有の能力',effect:{}};}
 function skillTreeCost(branch,level){
  const abilityCosts={ability1:45000,ability2:60000,ability3:75000};
  if(Object.prototype.hasOwnProperty.call(abilityCosts,branch))return abilityCosts[branch];
  return [15000,30000,60000,100000,150000][Math.max(0,Math.min(4,Number(level)||0))]||150000;
 }
 function skillTreeBranchMax(branch){return branch==='hp'||branch==='atk'?5:(branch==='ability1'||branch==='ability2'||branch==='ability3'?1:3);}
+function skillTreeRequiredItem(branch,level){
+ if(branch.startsWith('ability'))return level===1?{id:'ability_core',amount:1,name:'能力解放コア'}:null;
+ return level===skillTreeBranchMax(branch)?{id:'skill_crystal',amount:1,name:'スキル結晶'}:null;
+}
+function applySkillTreeEffect(ability,profile){
+ const e=profile?.effect||{};
+ if(e.criticalChance)ability.criticalChance=Math.min(1,Number(ability.criticalChance||0)+e.criticalChance);
+ if(e.knockbackChance)ability.knockbackChance=Math.min(1,Number(ability.knockbackChance||0)+e.knockbackChance);
+ if(e.criticalMultiplier)ability.criticalMultiplier=Math.max(Number(ability.criticalMultiplier||2),e.criticalMultiplier);
+ if(e.hpBelowThresholdMultiplier){ability.hpBelowThresholdMultiplier=Math.max(Number(ability.hpBelowThresholdMultiplier||1),e.hpBelowThresholdMultiplier);ability.hpBelowThreshold=Math.max(Number(ability.hpBelowThreshold||0),e.hpBelowThreshold||.5);}
+ if(e.strong){ability.strong={...(ability.strong||{})};for(const [trait,mult] of Object.entries(e.strong))ability.strong[trait]=Math.max(Number(ability.strong[trait]||1),mult);}
+ if(e.resist){ability.resist={...(ability.resist||{})};for(const [trait,mult] of Object.entries(e.resist))ability.resist[trait]=Math.min(Number(ability.resist[trait]||1),mult);}
+ if(e.slow){const old=ability.slow||{},slow=e.slow;ability.slow={...old,trait:slow.trait||old.trait||'*',chance:Math.min(1,Number(old.chance||0)+Number(slow.chance||0)),factor:Math.min(Number(old.factor||1),Number(slow.factor||1)),duration:Math.max(Number(old.duration||0),Number(slow.duration||0)),all:!!(old.all||slow.all)};}
+ if(e.splashBonus)ability.splash=Math.min(.95,Number(ability.splash||0)+e.splashBonus);
+ if(e.spdBonus)ability.skillTreeSpdBonus=Number(ability.skillTreeSpdBonus||0)+e.spdBonus;
+ return ability;
+}
 function statAt(i,key){
  const c=activeCard(i)||cards[i],lv=charLevel[i]||1,growth={hp:1.04,atk:1.04},rankMul=rankPowerMultiplier(),weakMul=seasonWeakMultiplier(i),tree=skillTreeFor(i);
  if(key==='cost')return c[key];
@@ -1885,6 +1915,7 @@ function statAt(i,key){
   if(rankMode&&key==='range')v*=rankMul*weakMul;else if(rankMode&&key==='spd')v*=rankMul*weakMul;else if(rankMode&&key==='interval')v/=rankMul*weakMul;
   if(key==='range')v*=1+tree.range*.04;
   if(key==='spd')v*=1+tree.spd*.05;
+  if(key==='spd'&&tree.ability1)v*=1+Number(SKILL_TREE_ABILITY_PROFILES[i]?.[0]?.effect?.spdBonus||0);
   if(key==='interval')v*=Math.max(.55,1-tree.interval*.04);
   if(key==='recharge')v*=Math.max(.55,1-tree.recharge*.05);
   return Math.round(v*100)/100;
@@ -2529,7 +2560,7 @@ function allyWaveAttack(u,hitTargets=[],baseAttack=null){
  }
  setTimeout(()=>wave.remove(),520);
 }
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a={...(c.ability||{})},tree=skillTreeFor(i);if(tree.ability1){a.criticalChance=Math.min(1,Number(a.criticalChance||0)+.05);a.criticalMultiplier=Math.max(2,Number(a.criticalMultiplier||2));}if(tree.ability2)a.knockbackChance=Math.min(1,Number(a.knockbackChance||0)+.08);if(tree.ability3){const old=a.slow||{};a.slow={...old,trait:old.trait||'*',chance:Math.min(1,Number(old.chance||0)+.1),factor:Math.min(Number(old.factor||1),.85),duration:Math.max(Number(old.duration||0),1.5)};}return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=Math.max(1,Number(c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a={...(c.ability||{})},tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot])applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};rechargeLeft[i]=Math.max(1,Number(c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
 function updateBarrierDisplay(target){if(!target?.el)return;const isMythBarrier=!!(target.isEnemy&&Array.isArray(target.ability?.mythologyV2)&&target.ability.mythologyV2.includes('barrier'));if(isMythBarrier){if(!target.mythBarrierMax)target.mythBarrierMax=Number(target.ability?.barrier||10000);if(target.mythBarrier==null)target.mythBarrier=target.mythBarrierMax;}const max=Number(isMythBarrier?(target.mythBarrierMax||target.ability?.barrier||0):(target.barrierMax??target.barrier??0));if(max<=0)return;const current=Math.max(0,Number(isMythBarrier?target.mythBarrier:(target.barrier??max)));const bar=target.el.querySelector('.barrierBar'),fill=target.el.querySelector('.barrierBar i'),label=target.el.querySelector('.barrierLabel');if(bar&&fill)fill.style.width=Math.max(0,Math.min(100,current/max*100))+'%';if(label&&current>0)label.textContent='🛡 '+(isMythBarrier?'結界':'バリア')+' '+Math.ceil(current).toLocaleString()+' / '+Math.ceil(max).toLocaleString();else if(label&&current<=0)label.textContent='🛡 '+(isMythBarrier?'結界破壊！':'バリア破壊！');}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion+(Number(u.chargeTime||0)>0?' thousandStepUnit':'');const isMythBarrier=!!(u.isEnemy&&Array.isArray(u.ability?.mythologyV2)&&u.ability.mythologyV2.includes('barrier'));const bm=Number(isMythBarrier?(u.mythBarrierMax??u.ability?.barrier??10000):(u.barrierMax??u.barrier??0));const bc=Number(isMythBarrier?(u.mythBarrier??bm):(u.barrier??bm));d.innerHTML=`${bm>0?`<div class="barrierBar" title="バリア"><i style="width:${Math.max(0,Math.min(100,bc/bm*100))}%"></i></div><div class="barrierLabel">🛡 ${isMythBarrier?'結界':'バリア'} ${Math.ceil(bc).toLocaleString()} / ${bm.toLocaleString()}</div>`:''}<div class="unitNameLabel">${u.name||u.key||"味方"}</div><div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>${Number(u.chargeTime||0)>0?'<div class="chargeRange"></div><div class="chargeLabel">⚡ チャージ完了後にこの範囲を攻撃</div>':''}`;unitsEl.appendChild(d);u.el=d;d.__unit=u;applyCosmeticToElement(u);updateStatusMark(u);updateBarrierDisplay(u);return d}
 function spawnRemoteUnit(i,id){const c=cards[i];if(!c)return;const hp=statAt(i,'hp');const e={...c,hp,maxhp:hp,barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id,x:145,cd:.15,state:'move',ability:c.ability,motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,isEnemy:true,isRemote:true,owner:'remote',remoteIndex:i,slowUntil:0,slowFactor:1};
@@ -3935,7 +3966,7 @@ function bindSafeClick(id,fn){
  el.onclick=(e)=>{try{e.preventDefault();e.stopPropagation();fn(e)}catch(err){console.error(id,err)}};
 }
 
-const KINOSHITA_INVENTORY_ITEM_DEFS={power_chest:{name:'パワー宝箱',emoji:'🌈📦',category:'growth',desc:'使用時に選んだ属性パワーを3個獲得できます。'},wooden_chest:{name:'木の宝箱',emoji:'🪵📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'},silver_chest:{name:'銀の宝箱',emoji:'🩶📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'},golden_chest:{name:'金の宝箱',emoji:'🌟📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'}};
+const KINOSHITA_INVENTORY_ITEM_DEFS={skill_crystal:{name:'スキル結晶',emoji:'💠',category:'growth',desc:'ノーマルキャラの各ステータス強化枝の最終段階に必要な専用素材。'},ability_core:{name:'能力解放コア',emoji:'🔮',category:'growth',desc:'ノーマルキャラ固有の追加能力を解放するための専用素材。'},power_chest:{name:'パワー宝箱',emoji:'🌈📦',category:'growth',desc:'使用時に選んだ属性パワーを3個獲得できます。'},wooden_chest:{name:'木の宝箱',emoji:'🪵📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'},silver_chest:{name:'銀の宝箱',emoji:'🩶📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'},golden_chest:{name:'金の宝箱',emoji:'🌟📦',category:'other',desc:'開封すると報酬を獲得できる宝箱。開封機能は今後追加予定。'}};
 function readInventoryItems(){try{const v=JSON.parse(storage.getItem('kinoshitaInventoryItems')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}}
 function saveInventoryItems(items){storage.setItem('kinoshitaInventoryItems',JSON.stringify(items))}
 function inventoryAddItem(id,amount=1){const n=Math.max(0,Math.floor(Number(amount)||0));if(!id||!n)return false;const items=readInventoryItems();items[id]=Math.max(0,Math.floor(Number(items[id])||0))+n;saveInventoryItems(items);return true}
@@ -3984,7 +4015,8 @@ const ITEM_EXCHANGE_OFFERS={
   {id:'weekly_ancient2',name:'古代のパワー×2',emoji:'🦴',desc:'第二形態への進化素材',costType:'coins',cost:45000,rewardType:'ancientPower',amount:2,limit:1},
   {id:'weekly_coins',name:'木下コイン×20,000',emoji:'🪙',desc:'交換用コインをまとめて獲得',costType:'xp',cost:4000,rewardType:'coins',amount:20000,limit:1},
   {id:'weekly_wooden_chest',name:'木の宝箱×3',emoji:'🪵📦',desc:'開封するとコイン・XP・全属性パワーを獲得',costType:'coins',cost:8000,rewardType:'item',rewardId:'wooden_chest',amount:3,limit:2},
-  {id:'weekly_silver_chest',name:'銀の宝箱×2',emoji:'🩶📦',desc:'木の宝箱より多くの報酬が期待できる',costType:'coins',cost:35000,rewardType:'item',rewardId:'silver_chest',amount:2,limit:1}
+  {id:'weekly_silver_chest',name:'銀の宝箱×2',emoji:'🩶📦',desc:'木の宝箱より多くの報酬が期待できる',costType:'coins',cost:35000,rewardType:'item',rewardId:'silver_chest',amount:2,limit:1},
+  {id:'weekly_skill_crystal',name:'スキル結晶×1',emoji:'💠',desc:'スキルツリーのステータス最終強化に使用',costType:'coins',cost:40000,rewardType:'item',rewardId:'skill_crystal',amount:1,limit:2}
  ],
  monthly:[
   {id:'monthly_ancient',name:'古代のパワー×3',emoji:'🦴',desc:'第二形態への進化素材',costType:'coins',cost:70000,rewardType:'ancientPower',amount:3,limit:1},
@@ -3992,6 +4024,8 @@ const ITEM_EXCHANGE_OFFERS={
   {id:'monthly_super_gold',name:'超激レアキャラの金×1',emoji:'🪙',desc:'超激レアキャラの育成素材',costType:'coins',cost:50000,rewardType:'gold',rewardId:'超激レア',amount:1,limit:1},
   {id:'monthly_coins',name:'木下コイン×5,000',emoji:'🪙',desc:'交換用コインを獲得',costType:'xp',cost:1000,rewardType:'coins',amount:5000,limit:2},
   {id:'monthly_power_chest10',name:'大型パワー宝箱×10',emoji:'💎📦',desc:'属性パワーを選んで合計30個獲得',costType:'xp',cost:12000,rewardType:'item',rewardId:'power_chest',amount:10,limit:1},
+  {id:'monthly_skill_crystals',name:'スキル結晶×3',emoji:'💠',desc:'複数の強化枝の最終段階に使える専用素材',costType:'coins',cost:90000,rewardType:'item',rewardId:'skill_crystal',amount:3,limit:2},
+  {id:'monthly_ability_core',name:'能力解放コア×1',emoji:'🔮',desc:'ノーマルキャラ固有の追加能力を解放',costType:'coins',cost:100000,rewardType:'item',rewardId:'ability_core',amount:1,limit:2},
   {id:'monthly_ancient10',name:'古代のパワー×10',emoji:'🦴✨',desc:'進化素材を大量に獲得できる高額商品',costType:'coins',cost:220000,rewardType:'ancientPower',amount:10,limit:1},
   {id:'monthly_legend_gold',name:'伝説レアキャラの金×1',emoji:'👑🪙',desc:'最上位レアリティの育成素材・月1回限定',costType:'coins',cost:500000,rewardType:'gold',rewardId:'伝説レア',amount:1,limit:1},
   {id:'monthly_super_gold5',name:'超激レアキャラの金×5',emoji:'🌟🪙',desc:'超激レアキャラの育成素材をまとめて獲得',costType:'coins',cost:180000,rewardType:'gold',rewardId:'超激レア',amount:5,limit:1},
@@ -5300,12 +5334,12 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
  const el=id=>document.getElementById(id);
  let selected=0;
  const branches=['hp','atk','range','spd','interval','recharge','ability1','ability2','ability3'];
- const names={hp:'最大HP強化',atk:'攻撃力強化',range:'射程強化',spd:'移動速度強化',interval:'攻撃間隔短縮',recharge:'再生産時間短縮',ability1:'クリティカル能力',ability2:'ふっとばし能力',ability3:'鈍足能力'};
+ const names={hp:'最大HP強化',atk:'攻撃力強化',range:'射程強化',spd:'移動速度強化',interval:'攻撃間隔短縮',recharge:'再生産時間短縮',ability1:'固有能力 I',ability2:'固有能力 II',ability3:'固有能力 III'};
  function ownedIndices(){const ids=[];for(let i=0;i<Math.min(10,cards.length);i++)if(hasCharacter(i))ids.push(i);return ids.length?ids:Array.from({length:Math.min(10,cards.length)},(_,i)=>i);}
  function renderNodes(branch){
   const node=el('skillTree'+branch[0].toUpperCase()+branch.slice(1)+'Nodes');if(!node)return;
   const state=skillTreeFor(selected),max=skillTreeBranchMax(branch),current=state[branch];
-  node.innerHTML=Array.from({length:max},(_,n)=>{const lv=n+1,owned=lv<=current,cost=skillTreeCost(branch,n);return '<button type="button" class="skillTreeNode '+(owned?'owned':lv===current+1?'next':'')+'" '+(owned||lv>current+1?'disabled':'')+' title="'+(owned?'取得済み':cost.toLocaleString()+'コイン')+'" onclick="buyCharacterSkillTreeNode(\''+branch+'\','+lv+')">'+(owned?'✓':(branch.startsWith('ability')?'解放':lv))+'<br><small>'+(owned?'取得':cost.toLocaleString())+'</small></button>';}).join('');
+  node.innerHTML=Array.from({length:max},(_,n)=>{const lv=n+1,owned=lv<=current,cost=skillTreeCost(branch,n),required=skillTreeRequiredItem(branch,lv),profile=branch.startsWith('ability')?skillTreeAbility(selected,Number(branch.slice(-1))):null,label=profile?profile.name:(branch.startsWith('ability')?'解放':lv),price=owned?'取得済み':cost.toLocaleString()+'コイン'+(required?' + '+required.name+'×'+required.amount:'');return '<button type="button" class="skillTreeNode '+(owned?'owned':lv===current+1?'next':'')+'" '+(owned||lv>current+1?'disabled':'')+' title="'+price+'" onclick="buyCharacterSkillTreeNode(\''+branch+'\','+lv+')">'+(owned?'✓':label)+'<br><small>'+(owned?'取得':cost.toLocaleString()+(required?' + 素材':'') )+'</small></button>';}).join('');
  }
  window.buyCharacterSkillTreeNode=function(branch,level){
   if(!branches.includes(branch)||!hasCharacter(selected)||selected<0||selected>=10)return;
@@ -5313,7 +5347,11 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   if(level!==state[branch]+1||level>max)return;
   const cost=skillTreeCost(branch,level-1);
   if(Number(gachaCoins||0)<cost){alert('木下コインが足りません。必要：'+cost.toLocaleString()+'枚');return;}
-  if(!confirm((cards[selected]?.name||'キャラクター')+'の「'+names[branch]+'」'+(branch.startsWith('ability')?'を解放':' Lv.'+level)+'に'+cost.toLocaleString()+'コインを使用しますか？'))return;
+  const required=skillTreeRequiredItem(branch,level),inventoryCount=required?Number(readInventoryItems()[required.id]||0):0;
+  if(required&&inventoryCount<required.amount){alert(required.name+'が足りません。必要：'+required.amount+'個');return;}
+  const profile=branch.startsWith('ability')?skillTreeAbility(selected,Number(branch.slice(-1))):null;
+  if(!confirm((cards[selected]?.name||'キャラクター')+'の「'+(profile?profile.name:names[branch])+'」'+(branch.startsWith('ability')?'を解放':' Lv.'+level)+'に'+cost.toLocaleString()+'コイン'+(required?'＋'+required.name+'×'+required.amount:'')+'を使用しますか？'+(profile?'\n'+profile.desc:'')))return;
+  if(required&&!inventoryRemoveItem(required.id,required.amount)){alert(required.name+'が足りません。');return;}
   gachaCoins-=cost;const key=String(cards[selected]?.name||selected);
   if(!characterSkillTrees[key])characterSkillTrees[key]={};
   characterSkillTrees[key][branch]=level;
@@ -5325,9 +5363,9 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   if(!ids.includes(selected))selected=ids[0]||0;
   select.innerHTML=ids.map(i=>'<option value="'+i+'" '+(i===selected?'selected':'')+'>'+String(cards[i].icon||'')+' '+String(cards[i].name||('キャラ'+i))+'</option>').join('');
   const c=activeCard(selected)||cards[selected],tree=skillTreeFor(selected);
-  el('skillTreeSelectedInfo').innerHTML='<div class="skillTreeMeta"><b>'+c.icon+' '+c.name+'</b>　Lv.'+(charLevel[selected]||1)+'<br>HP '+statAt(selected,'hp').toLocaleString()+'　攻撃 '+statAt(selected,'atk').toLocaleString()+'<br>射程 '+statAt(selected,'range')+'　速度 '+statAt(selected,'spd')+'　攻撃間隔 '+Number(statAt(selected,'interval')).toFixed(2)+'秒　再生産 '+Number(statAt(selected,'recharge')).toFixed(2)+'秒<br>取得：HP '+tree.hp+'/5・攻撃 '+tree.atk+'/5・射程 '+tree.range+'/3・速度 '+tree.spd+'/3・攻撃間隔 '+tree.interval+'/3・再生産 '+tree.recharge+'/3<br>能力：'+[tree.ability1?'クリティカル':'',tree.ability2?'ふっとばし':'',tree.ability3?'鈍足':''].filter(Boolean).join('・')+'（'+[tree.ability1,tree.ability2,tree.ability3].filter(Boolean).length+'/3）</div>';
+  el('skillTreeSelectedInfo').innerHTML='<div class="skillTreeMeta"><b>'+c.icon+' '+c.name+'</b>　Lv.'+(charLevel[selected]||1)+'<br>HP '+statAt(selected,'hp').toLocaleString()+'　攻撃 '+statAt(selected,'atk').toLocaleString()+'<br>射程 '+statAt(selected,'range')+'　速度 '+statAt(selected,'spd')+'　攻撃間隔 '+Number(statAt(selected,'interval')).toFixed(2)+'秒　再生産 '+Number(statAt(selected,'recharge')).toFixed(2)+'秒<br>取得：HP '+tree.hp+'/5・攻撃 '+tree.atk+'/5・射程 '+tree.range+'/3・速度 '+tree.spd+'/3・攻撃間隔 '+tree.interval+'/3・再生産 '+tree.recharge+'/3<br>能力：'+[tree.ability1?skillTreeAbility(selected,1).name:'',tree.ability2?skillTreeAbility(selected,2).name:'',tree.ability3?skillTreeAbility(selected,3).name:''].filter(Boolean).join('・')+'（'+[tree.ability1,tree.ability2,tree.ability3].filter(Boolean).length+'/3）</div>';
   branches.forEach(renderNodes);
-  el('skillTreeWallet').textContent='🪙 所持コイン：'+Number(gachaCoins||0).toLocaleString()+'枚　｜　強化は15,000コインから';
+  const inv=readInventoryItems();el('skillTreeWallet').textContent='🪙 所持コイン：'+Number(gachaCoins||0).toLocaleString()+'枚　｜　💠 スキル結晶：'+Number(inv.skill_crystal||0)+'個　｜　🔮 能力解放コア：'+Number(inv.ability_core||0)+'個';
  }
  el('skillTreeOpenBtn')?.addEventListener('click',()=>{selected=ownedIndices()[0]||0;renderCharacterSkillTree();el('skillTreeModal').style.display='flex';el('start').style.display='none';});
  el('skillTreeCharacter')?.addEventListener('change',e=>{selected=Number(e.target.value)||0;renderCharacterSkillTree()});
