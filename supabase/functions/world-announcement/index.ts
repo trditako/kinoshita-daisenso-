@@ -96,6 +96,24 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, action, granted, coins, xp })
     }
 
+    if (action === 'clear_bonus_start' || action === 'clear_bonus_stop') {
+      let row: Record<string, unknown> = { id: 1, updated_at: now, updated_by: OPERATOR_PLAYER_ID }
+      if (action === 'clear_bonus_start') {
+        const coinMultiplier = integerInRange(body.coinMultiplier, 1, 1000)
+        const xpMultiplier = integerInRange(body.xpMultiplier, 1, 1000)
+        const durationMinutes = integerInRange(body.durationMinutes, 1, 43200)
+        if (coinMultiplier === null || xpMultiplier === null || durationMinutes === null)
+          return respond({ ok: false, error: 'Multipliers must be 1-1000 and duration 1-43200 minutes' }, 400)
+        const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString()
+        row = { ...row, clear_coin_multiplier: coinMultiplier, clear_xp_multiplier: xpMultiplier, clear_bonus_active: true, clear_bonus_expires_at: expiresAt, clear_bonus_updated_at: now }
+      } else {
+        row = { ...row, clear_coin_multiplier: 1, clear_xp_multiplier: 1, clear_bonus_active: false, clear_bonus_expires_at: null, clear_bonus_updated_at: now }
+      }
+      const { error } = await client.from('world_operator_state').upsert(row, { onConflict: 'id' })
+      if (error) { console.error('clear bonus state write failed:', error.message); return respond({ ok: false, error: 'Could not update clear reward bonus' }, 500) }
+      return respond({ ok: true, action, coinMultiplier: row.clear_coin_multiplier || 1, xpMultiplier: row.clear_xp_multiplier || 1, expiresAt: row.clear_bonus_expires_at || null })
+    }
+
     if (['event_start','event_stop','maintenance_start','maintenance_stop'].includes(action)) {
       let row: Record<string, unknown> = { id: 1, updated_at: now, updated_by: OPERATOR_PLAYER_ID }
       if (action === 'event_start') {
