@@ -474,7 +474,7 @@ Deno.serve(async (req: Request) => {
           awarded++
         }
       }
-      await client.from('world_lottery_draws').update({ prizes: { ...storedPrizes, _status: 'awarded', _winningNumbers: winningNumbers }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
+      await client.from('world_lottery_draws').update({ prizes: { ...prizes, _status: 'awarded', _winningNumbers: winningNumbers }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
         ? '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '。アイテムバッグで報酬を確認してください。'
         : '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '（最大1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで報酬を確認してください。'
