@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.85';
+const GAME_VERSION='v1.8.86';
 const UPDATE_LOG=[
+ {date:'2026-10-15',version:'v1.8.86',title:'🧪 お試しプレイ中に運営パネルが重ならないよう修正',items:['テスト開始時に運営パネルを一時的に隠し、戦闘画面を操作可能にする','編集画面へ戻ると運営パネルを元の状態で再表示']},
  {date:'2026-10-15',version:'v1.8.85',title:'🧪 ワールドイベントの事前お試しプレイ',items:['開催前に作成中ステージを実際の戦闘画面でテスト可能','テスト中は経験値・コイン・キャラクター・宝くじなどの報酬を一切付与しない','テスト終了後はステージ選択へ戻り、作成内容を調整してから開催できる']},
  {date:'2026-10-15',version:'v1.8.84',title:'🛠️ ワールドイベント自由作成エディター',items:['ステージ名・城距離・敵城体力・BGM・背景を自由設定','敵の種類・出現時刻・倍率・同時出現数・ボス種別を複数行で設定','既存ステージのテンプレート方式も引き続き利用可能']},
  {date:'2026-10-15',version:'v1.8.83',title:'🎪 開催更新中のイベント戦闘ステージを固定',items:['戦闘開始時のワールドイベントステージを記録し、一覧更新で別ステージへずれる問題を防止']},
@@ -5715,6 +5716,7 @@ function exitWorldStagePreview(){
  next.style.display='';back.style.display='';
  if(saved.previewStage){const ix=eventStages.indexOf(saved.previewStage);if(ix>=0)eventStages.splice(ix,1);}
  selectedMode=saved.mode;selectedStage=saved.stage;selectedChapter=saved.chapter;
+ const modalToRestore=document.getElementById('operatorToolsModal');if(modalToRestore)modalToRestore.style.display=saved.operatorModalDisplay;
  document.getElementById('start').style.display='flex';
  renderStageSelect();renderCards();
 }
@@ -5735,10 +5737,12 @@ function beginWorldStagePreview(){
  }catch(e){alert('テストを開始できません：'+e.message);return;}
  if(!confirm('「'+title+'」のお試しプレイを開始します。開催登録はされず、報酬も獲得できません。'))return;
  const previewStage={...stage,worldEventPreview:true};
- const saved={mode:selectedMode,stage:selectedStage,chapter:selectedChapter,previewStage};
+ const operatorModal=document.getElementById('operatorToolsModal');
+ const saved={mode:selectedMode,stage:selectedStage,chapter:selectedChapter,previewStage,operatorModalDisplay:operatorModal?.style.display||'flex'};
  savedStageBackHandler=document.getElementById('stageBack').onclick;
  savedNextButtonHandler=document.getElementById('nextBtn').onclick;
  activeWorldStagePreview=saved;
+ if(operatorModal)operatorModal.style.display='none';
  eventStages.push(previewStage);
  selectedMode='event';selectedStage=eventStagePool().indexOf(previewStage)+1;
  document.getElementById('start').style.display='none';
