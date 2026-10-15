@@ -485,6 +485,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <label for="operatorWorldStageDuration" style="display:block;font-weight:900;margin:8px 0 4px">開催時間</label>
 <select id="operatorWorldStageDuration" style="width:100%;padding:10px;border:2px solid #a78bfa;border-radius:9px;background:#fff;color:#111;font:inherit"><option value="300">5分</option><option value="1800">30分</option><option value="3600" selected>1時間</option><option value="21600">6時間</option><option value="86400">24時間</option></select>
 <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:900"><input id="operatorWorldStageLottery" type="checkbox" checked> 初回クリア報酬：宝くじチケット1枚</label>
+<div id="operatorWorldStageRewards" style="padding:10px;margin:8px 0;background:#f8fafc;border:1px solid #cbd5e1;border-radius:9px">
+<b>🎁 クリア報酬（複数設定可）</b><p style="font-size:12px;margin:5px 0">報酬種類ごとに数量を設定できます。複数追加できます。</p>
+<div id="operatorWorldStageRewardRows"></div><button id="operatorWorldStageRewardAdd" type="button" class="formationBtn" style="width:100%;margin-top:6px">＋ クリア報酬を追加</button></div>
 <button id="operatorWorldStagePreview" type="button" class="formationBtn" style="width:100%;background:#0f766e!important;color:#fff!important">🧪 開催前にお試しプレイ</button>
 <button id="operatorWorldStageCreate" type="button" class="formationBtn" style="width:100%;background:#6d28d9!important;color:#fff!important">➕ ステージを作成して開催</button>
 <button id="operatorWorldStageRefresh" type="button" class="formationBtn" style="width:100%;background:#475569!important;color:#fff!important;margin-top:6px">🔄 開催ステージ一覧を更新</button>
@@ -5612,6 +5615,19 @@ function worldStageBuildEnemyRow(index){
  const opts=enemies.map(n=>'<option value="'+worldStageEsc(n)+'">'+worldStageEsc(n)+'</option>').join('');
  return '<div class="world-stage-enemy-row" style="padding:8px;margin:8px 0;border:1px solid #c4b5fd;border-radius:8px;background:#faf5ff"><b>出現条件 '+(index+1)+'</b><button type="button" data-remove-world-enemy="'+index+'" style="float:right">削除</button><label style="display:block;margin:6px 0 3px">敵キャラクター</label><select data-field="enemy" style="width:100%;padding:8px">'+opts+'</select><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><label>出現時刻（秒）<input data-field="t" type="number" min="0" max="3600" value="'+(index*5+2)+'" style="width:100%;box-sizing:border-box;padding:7px"></label><label>敵倍率<input data-field="mult" type="number" min="0.1" max="100000" step="0.1" value="2" style="width:100%;box-sizing:border-box;padding:7px"></label><label>出現数<input data-field="count" type="number" min="1" max="50" value="1" style="width:100%;box-sizing:border-box;padding:7px"></label><label>敵の役割<select data-field="role" style="width:100%;padding:7px"><option value="normal">通常</option><option value="midboss">中ボス</option><option value="boss">ボス</option></select></label></div></div>';
 }
+function worldStageRewardRow(){
+ const wrap=document.createElement('div');wrap.className='world-stage-reward-row';wrap.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) 100px 38px;gap:6px;margin:7px 0;align-items:end;padding:7px;background:#fff;border:1px solid #e2e8f0;border-radius:7px';
+ wrap.innerHTML='<label style="font-size:12px">報酬種類<select data-reward="type" style="width:100%;padding:7px"><option value="coins">木下コイン</option><option value="xp">プレイヤーXP</option><option value="normalGold">ノーマルキャラの金</option><option value="rarityGold:レア">レアキャラの金</option><option value="rarityGold:激レア">激レアキャラの金</option><option value="rarityGold:超激レア">超激レアキャラの金</option><option value="rarityGold:伝説レア">伝説レアキャラの金</option><option value="power">属性パワー（ランダム属性）</option></select></label><label style="font-size:12px">数量<input data-reward="amount" type="number" min="1" max="10000000" value="1000" style="width:100%;box-sizing:border-box;padding:7px"></label><button type="button" data-reward-remove style="padding:8px;border:0;border-radius:6px;background:#fee2e2;color:#991b1b">削除</button>';
+ wrap.querySelector('[data-reward-remove]').addEventListener('click',()=>wrap.remove());return wrap;
+}
+function worldStageCustomRewards(){
+ return [...document.querySelectorAll('#operatorWorldStageRewardRows .world-stage-reward-row')].map(row=>{
+  const type=String(row.querySelector('[data-reward="type"]')?.value||'coins'),amount=Number(row.querySelector('[data-reward="amount"]')?.value);
+  if(!Number.isInteger(amount)||amount<1||amount>10000000)throw new Error('クリア報酬の数量は1〜10,000,000の整数で指定してください。');
+  return {type,amount};
+ });
+}
+document.getElementById('operatorWorldStageRewardAdd')?.addEventListener('click',()=>document.getElementById('operatorWorldStageRewardRows')?.appendChild(worldStageRewardRow()));
 function worldStageCustomConfig(){
  const rows=[...document.querySelectorAll('#operatorWorldStageEnemyRows .world-stage-enemy-row')],schedule=[],enemies=[];
  for(const row of rows){const get=f=>row.querySelector('[data-field="'+f+'"]')?.value;const enemy=String(get('enemy')||''),t=Number(get('t')),mult=Number(get('mult')),count=Number(get('count')),role=String(get('role')||'normal');
@@ -5620,7 +5636,7 @@ function worldStageCustomConfig(){
  if(!schedule.length)throw new Error('敵の出現条件を1つ以上追加してください。');schedule.sort((a,b)=>a.t-b.t);
  const width=Number(document.getElementById('operatorWorldStageWidth')?.value),baseHp=Number(document.getElementById('operatorWorldStageCastleHp')?.value),xp=Number(document.getElementById('operatorWorldStageXp')?.value);
  if(!Number.isInteger(width)||width<600||width>12000||!Number.isInteger(baseHp)||baseHp<100||baseHp>1000000000||!Number.isInteger(xp)||xp<0||xp>10000000)throw new Error('ステージ幅・敵城体力・経験値を確認してください。');
- return {customWorldEvent:true,width,baseHp,xp,enemies:[...new Set(enemies)],schedule,customBgm:document.getElementById('operatorWorldStageBgm')?.value||'event',customBackground:document.getElementById('operatorWorldStageBackground')?.value||'field'};
+ return {customWorldEvent:true,width,baseHp,xp,enemies:[...new Set(enemies)],schedule,customBgm:document.getElementById('operatorWorldStageBgm')?.value||'event',customBackground:document.getElementById('operatorWorldStageBackground')?.value||'field',clearRewards:worldStageCustomRewards()};
 }
 function worldStageTemplateOptions(){
  const sel=document.getElementById('operatorWorldStageTemplate');if(!sel||typeof eventStages==='undefined')return;
@@ -5666,6 +5682,22 @@ async function loadWorldEventStages(refresh){
  }catch(e){console.warn('World event stages unavailable:',e);}
 }
 let activeWorldEventBattleStage=null;
+const previousWorldEventRewardShowResult=showResult;
+showResult=function(win){
+ const stage=(win&&selectedMode==='event')?(activeWorldEventBattleStage||currentStage()):null;
+ previousWorldEventRewardShowResult(win);
+ if(!stage?.worldEventId||!Array.isArray(stage.clearRewards)||!stage.clearRewards.length)return;
+ const lines=[];
+ for(const reward of stage.clearRewards){
+  const amount=Math.max(1,Math.floor(Number(reward.amount)||1));
+  if(reward.type==='coins'){gachaCoins+=amount;lines.push('🪙 木下コイン '+amount.toLocaleString()+'枚');}
+  else if(reward.type==='xp'){playerXP+=amount;lines.push('✨ プレイヤーXP '+amount.toLocaleString());}
+  else if(reward.type==='normalGold'){normalGold+=amount;lines.push('🟡 ノーマルキャラの金 '+amount.toLocaleString()+'個');}
+  else if(String(reward.type).startsWith('rarityGold:')){const rarity=String(reward.type).split(':')[1];addRarityGold(rarity,amount);lines.push('🟡 '+rarity+'キャラの金 '+amount.toLocaleString()+'個');}
+  else if(reward.type==='power'){const colors=['赤','青','黄','緑','紫'];const color=colors[Math.floor(Math.random()*colors.length)];colorPowers[color]=Math.max(0,Number(colorPowers[color]||0))+amount;lines.push('💠 '+color+'の属性パワー '+amount.toLocaleString()+'個');}
+ }
+ if(lines.length){save();const resultText=document.getElementById('resultText');if(resultText)resultText.textContent+='\\n🎁 運営設定クリア報酬：\\n'+lines.join('\\n');}
+};
 const previousStartStage=startStage;
 startStage=function(n){
  previousStartStage(n);
@@ -5766,11 +5798,12 @@ function initWorldEventTools(){
   const templateName=String(document.getElementById('operatorWorldStageTemplate')?.value||'');
   const durationSeconds=Number(document.getElementById('operatorWorldStageDuration')?.value||3600);
   const lotteryTicketReward=!!document.getElementById('operatorWorldStageLottery')?.checked;
+  const clearRewards=worldStageCustomRewards();
   if(!title){alert('ステージ名を入力してください。');return}
   if(!customToggle?.checked&&!templateName){alert('敵編成テンプレートを選択してください。');return}
   if(!confirm('「'+title+'」を'+Math.round(durationSeconds/60)+'分間開催しますか？'+(lotteryTicketReward?' 初回クリア報酬は宝くじチケット1枚です。':'')))return;
   const btn=document.getElementById('operatorWorldStageCreate');btn.disabled=true;
-  try{const customMode=!!customToggle?.checked;const stageConfig=customMode?worldStageCustomConfig():null;await worldStageRequest({action:'world_event_stage_create',title,templateName:customMode?'__custom__':templateName,durationSeconds,lotteryTicketReward,stageConfig});document.getElementById('operatorWorldStageTitle').value='';await loadWorldEventStages(true);await refreshWorldStageAdmin();alert('イベントステージを作成し、開催しました。');}
+  try{const customMode=!!customToggle?.checked;const stageConfig=customMode?worldStageCustomConfig():null;await worldStageRequest({action:'world_event_stage_create',title,templateName:customMode?'__custom__':templateName,durationSeconds,lotteryTicketReward,clearRewards,stageConfig});document.getElementById('operatorWorldStageTitle').value='';await loadWorldEventStages(true);await refreshWorldStageAdmin();alert('イベントステージを作成し、開催しました。');}
   catch(e){alert('作成できませんでした：'+e.message)}
   finally{btn.disabled=false}
  });
