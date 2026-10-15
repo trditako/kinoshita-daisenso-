@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.75';
+const GAME_VERSION='v1.8.76';
 const UPDATE_LOG=[
+ {date:'2026-10-15',version:'v1.8.76',title:'✨ 真髄7〜9を事前実装',items:['真髄7「星蝕と深淵」・真髄8「桜華と雷霆」・真髄9「天狼と幻影」を追加','各真髄にUR衣装・UR携帯品・SSR衣装3種の味方限定報酬を用意','開催中の真髄だけが選択対象となる既存のシーズン解放制御を維持']},
  {date:'2026-10-15',version:'v1.8.75',title:'✨ 真髄の先行解放を修正',items:['シーズン切替前に次の真髄が解放される問題を修正','真髄番号はリセットせず、4・5・6…と順番に追加']},
  {date:'2026-10-15',version:'v1.8.72',title:'🎁 報酬処理を改善',items:['ステージクリア時の報酬計算を調整']},
  {date:'2026-10-15',version:'v1.8.71',title:'🔧 キャラクター詳細画面の表示条件を修正',items:['進化関連の表示条件を調整','解放状態の判定をサーバー側の最新情報に統一']}, 
@@ -4704,13 +4705,33 @@ const SHINJU_S6_SSR_A={id:'shinju_s6_ssr_costume_robot',type:'costume',rarity:'S
 const SHINJU_S6_SSR_B={id:'shinju_s6_ssr_costume_speed',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'流星木下',name:'流星木下・極光の航海者',emoji:'🌠',color:'#67e8f9',desc:'味方の流星木下専用の第6真髄限定SSR衣装。極光の航跡を引く航海装束。'};
 const SHINJU_S6_SSR_C={id:'shinju_s6_ssr_costume_forest',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・深海樹海の王衣',emoji:'🌿',color:'#34d399',desc:'味方の森王木下専用の第6真髄限定SSR衣装。深海に広がる樹海を模した王衣。'};
 
+
+const SHINJU_S7_UR_COSTUME={id:'shinju_s7_ur_costume_ai_oracle',type:'costume',rarity:'UR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・星蝕の予言者',emoji:'🔮',color:'#a78bfa',desc:'木下（AI）専用の第7真髄限定UR衣装。星蝕を解析する予言者の外套と輝く星図。'};
+const SHINJU_S7_UR_ACCESSORY={id:'shinju_s7_ur_accessory_forest_crown',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'森王木下',name:'森王木下・深淵樹冠',emoji:'🌑',desc:'森王木下専用の第7真髄限定UR携帯品。深淵の光を宿す樹冠が周囲に星屑を散らす。'};
+const SHINJU_S7_SSR_A={id:'shinju_s7_ssr_costume_ninja_moon',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（忍者）',name:'木下（忍者）・月蝕の影装',emoji:'🌘',color:'#7c3aed',desc:'木下（忍者）専用の第7真髄限定SSR衣装。月蝕の影に溶け込む紫黒の忍装束。'};
+const SHINJU_S7_SSR_B={id:'shinju_s7_ssr_costume_robot_void',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（ロボ）',name:'木下（ロボ）・星喰い機甲',emoji:'🛸',color:'#6366f1',desc:'木下（ロボ）専用の第7真髄限定SSR衣装。星の光を吸収する装甲をまとった機甲服。'};
+const SHINJU_S7_SSR_C={id:'shinju_s7_ssr_costume_meteor',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'流星木下',name:'流星木下・彗星の残光',emoji:'☄️',color:'#c084fc',desc:'流星木下専用の第7真髄限定SSR衣装。彗星の尾を思わせる光のラインが走る装束。'};
+const SHINJU_S8_UR_COSTUME={id:'shinju_s8_ur_costume_star_king',type:'costume',rarity:'UR',characterIndex:-1,targetName:'星王木下',name:'星王木下・銀河戴冠式',emoji:'👑',color:'#e0e7ff',desc:'星王木下専用の第8真髄限定UR衣装。銀河を束ねる王のための白銀と星光の王装。'};
+const SHINJU_S8_UR_ACCESSORY={id:'shinju_s8_ur_accessory_awakened_prism',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・七彩の覚醒核',emoji:'💎',desc:'木下（覚醒）専用の第8真髄限定UR携帯品。七色の光を放つ結晶核が覚醒の力を増幅する。'};
+const SHINJU_S8_SSR_A={id:'shinju_s8_ssr_costume_cyber_sakura',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（電脳）',name:'木下（電脳）・桜花電脳装',emoji:'🌸',color:'#f472b6',desc:'木下（電脳）専用の第8真髄限定SSR衣装。桜色の回路が走る和風サイバー装束。'};
+const SHINJU_S8_SSR_B={id:'shinju_s8_ssr_costume_baseball_thunder',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・雷霆の強打者',emoji:'⚡',color:'#facc15',desc:'木下（野球）専用の第8真髄限定SSR衣装。雷光のラインをあしらった特別ユニフォーム。'};
+const SHINJU_S8_SSR_C={id:'shinju_s8_ssr_costume_super_guardian',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（超覚醒）',name:'木下（超覚醒）・桜華の守護者',emoji:'🪽',color:'#f9a8d4',desc:'木下（超覚醒）専用の第8真髄限定SSR衣装。桜の花弁と光翼を組み合わせた守護装束。'};
+const SHINJU_S9_UR_COSTUME={id:'shinju_s9_ur_costume_phoenix_aurora',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・白銀極光の不死鳥',emoji:'🐦‍🔥',color:'#67e8f9',desc:'フェニックス専用の第9真髄限定UR衣装。白銀の羽と極光が燃え上がる特別な不死鳥の姿。'};
+const SHINJU_S9_UR_ACCESSORY={id:'shinju_s9_ur_accessory_drone_skybell',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（ドローン）',name:'木下（ドローン）・天狼の星鈴',emoji:'🔔',desc:'木下（ドローン）専用の第9真髄限定UR携帯品。天狼の星光を集める浮遊式の星鈴。'};
+const SHINJU_S9_SSR_A={id:'shinju_s9_ssr_costume_king_illusion',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・幻影の戴冠衣',emoji:'🎭',color:'#c084fc',desc:'木下（王）専用の第9真髄限定SSR衣装。幻影の紋様が揺らめく気品ある王衣。'};
+const SHINJU_S9_SSR_B={id:'shinju_s9_ssr_costume_ai_mirror',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・鏡界演算衣',emoji:'🪞',color:'#a5b4fc',desc:'木下（AI）専用の第9真髄限定SSR衣装。鏡のような光沢と幾何学模様を持つ演算装束。'};
+const SHINJU_S9_SSR_C={id:'shinju_s9_ssr_costume_forest_phantom',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・幻影花冠の王衣',emoji:'🦚',color:'#86efac',desc:'森王木下専用の第9真髄限定SSR衣装。幻影の花冠と翠色の羽飾りをまとった王衣。'};
+
 const SHINJU_ESSENCES=[
  {id:1,name:'真髄1：覚醒の火',desc:'普通の木下の第二形態実装記念真髄。',items:[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C]},
  {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
  {id:3,name:'真髄3：不死鳥と星盤',desc:'不死鳥と賢者の力をテーマにした限定真髄。',items:[SHINJU_S3_UR_COSTUME,SHINJU_S3_UR_ACCESSORY,SHINJU_S3_SSR_A,SHINJU_S3_SSR_B,SHINJU_S3_SSR_C]},
  {id:4,name:'真髄4：機巧都市',desc:'機械と電脳の力をテーマにした限定真髄。',items:[SHINJU_S4_UR_COSTUME,SHINJU_S4_UR_ACCESSORY,SHINJU_S4_SSR_A,SHINJU_S4_SSR_B,SHINJU_S4_SSR_C]},
  {id:5,name:'真髄5：百鬼夜行',desc:'鬼火と幽世の力をテーマにした限定真髄。',items:[SHINJU_S5_UR_COSTUME,SHINJU_S5_UR_ACCESSORY,SHINJU_S5_SSR_A,SHINJU_S5_SSR_B,SHINJU_S5_SSR_C]},
- {id:6,name:'真髄6：深海と極光',desc:'深海と極光をテーマにした限定真髄。',items:[SHINJU_S6_UR_COSTUME,SHINJU_S6_UR_ACCESSORY,SHINJU_S6_SSR_A,SHINJU_S6_SSR_B,SHINJU_S6_SSR_C]}
+ {id:6,name:'真髄6：深海と極光',desc:'深海と極光をテーマにした限定真髄。',items:[SHINJU_S6_UR_COSTUME,SHINJU_S6_UR_ACCESSORY,SHINJU_S6_SSR_A,SHINJU_S6_SSR_B,SHINJU_S6_SSR_C]},
+ {id:7,name:'真髄7：星蝕と深淵',desc:'星蝕と深淵の力をテーマにした限定真髄。',items:[SHINJU_S7_UR_COSTUME,SHINJU_S7_UR_ACCESSORY,SHINJU_S7_SSR_A,SHINJU_S7_SSR_B,SHINJU_S7_SSR_C]},
+ {id:8,name:'真髄8：桜華と雷霆',desc:'桜華と雷霆の力をテーマにした限定真髄。',items:[SHINJU_S8_UR_COSTUME,SHINJU_S8_UR_ACCESSORY,SHINJU_S8_SSR_A,SHINJU_S8_SSR_B,SHINJU_S8_SSR_C]},
+ {id:9,name:'真髄9：天狼と幻影',desc:'天狼と幻影の力をテーマにした限定真髄。',items:[SHINJU_S9_UR_COSTUME,SHINJU_S9_UR_ACCESSORY,SHINJU_S9_SSR_A,SHINJU_S9_SSR_B,SHINJU_S9_SSR_C]}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
 SHINJU_ITEMS.push({id:'daily_dimensional_ur_costume',type:'costume',rarity:'UR',characterIndex:0,name:'普通の木下・異次元の旅装',emoji:'🌀',color:'#6366f1',desc:'日替わり異次元戦線の累計ポイント交換限定UR衣装。'});
