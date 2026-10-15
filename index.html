@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.82';
+const GAME_VERSION='v1.8.83';
 const UPDATE_LOG=[
+ {date:'2026-10-15',version:'v1.8.83',title:'🎪 開催更新中のイベント戦闘ステージを固定',items:['戦闘開始時のワールドイベントステージを記録し、一覧更新で別ステージへずれる問題を防止']},
  {date:'2026-10-15',version:'v1.8.82',title:'🎪 運営ワールドイベントステージを追加',items:['運営パネルから複数のイベントステージを作成・開催・停止可能','既存ステージをテンプレートにしてタイトルと開催時間を設定','対象ステージの初回クリア時のみ、サーバーで重複を防いで宝くじチケット1枚を発行']},
  {date:'2026-10-15',version:'v1.8.81',title:'🎲 宝くじのランダム抽選・発表をワンボタン化',items:['報酬を設定してランダム抽選・発表ボタンを押すと、安全な乱数で当選番号を生成','発表前に確認ダイアログを表示し、承認後に既存の抽選・報酬配布処理を実行','番号生成のみのボタンも残し、手動確認にも対応']},
  {date:'2026-10-15',version:'v1.8.80',title:'🎟️ 宝くじ番号の確認とランダム抽選を改善',items:['アイテムバッグで自分の宝くじチケット番号を確認できることを案内','運営画面にランダム当選番号の生成ボタンを追加','生成した番号を確認してから発表・報酬配布できる安全な手順に変更']},
@@ -5631,9 +5632,16 @@ async function loadWorldEventStages(refresh){
   if(refresh||rows?.length)renderStageSelect();
  }catch(e){console.warn('World event stages unavailable:',e);}
 }
+let activeWorldEventBattleStage=null;
+const previousStartStage=startStage;
+startStage=function(n){
+ previousStartStage(n);
+ activeWorldEventBattleStage=(selectedMode==='event'&&currentStage()?.worldEventId)?currentStage():null;
+};
 const previousShowResult=showResult;
 showResult=function(win){
- const stage=(win&&selectedMode==='event')?currentStage():null;
+ const stage=(win&&selectedMode==='event')?(activeWorldEventBattleStage||currentStage()):null;
+ activeWorldEventBattleStage=null;
  previousShowResult(win);
  if(!stage?.worldEventId||!stage.worldEventLotteryTicket)return;
  (async()=>{
