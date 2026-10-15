@@ -5698,7 +5698,7 @@ function initWorldEventTools(){
   const durationSeconds=Number(document.getElementById('operatorWorldStageDuration')?.value||3600);
   const lotteryTicketReward=!!document.getElementById('operatorWorldStageLottery')?.checked;
   if(!title){alert('ステージ名を入力してください。');return}
-  if(!templateName){alert('敵編成テンプレートを選択してください。');return}
+  if(!customToggle?.checked&&!templateName){alert('敵編成テンプレートを選択してください。');return}
   if(!confirm('「'+title+'」を'+Math.round(durationSeconds/60)+'分間開催しますか？'+(lotteryTicketReward?' 初回クリア報酬は宝くじチケット1枚です。':'')))return;
   const btn=document.getElementById('operatorWorldStageCreate');btn.disabled=true;
   try{const customMode=!!customToggle?.checked;const stageConfig=customMode?worldStageCustomConfig():null;await worldStageRequest({action:'world_event_stage_create',title,templateName:customMode?'__custom__':templateName,durationSeconds,lotteryTicketReward,stageConfig});document.getElementById('operatorWorldStageTitle').value='';await loadWorldEventStages(true);await refreshWorldStageAdmin();alert('イベントステージを作成し、開催しました。');}
