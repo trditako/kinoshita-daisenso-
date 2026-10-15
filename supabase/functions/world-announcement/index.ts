@@ -310,14 +310,29 @@ Deno.serve(async (req: Request) => {
       if (error) return respond({ ok: false, error: 'Could not load issued ticket numbers' }, 500)
       const numbers = (tickets || []).map((t: {ticket_number: unknown}) => String(t.ticket_number || '')).filter((n: string) => /^[0-9]{6}$/.test(n))
       if (!numbers.length) return respond({ ok: false, error: 'No issued lottery tickets are available for a random draw' }, 409)
-      const pick = () => {
-        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / numbers.length) * numbers.length
+      const pickIndex = (max: number) => {
+        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
-        return numbers[buf[0] % numbers.length]
+        return buf[0] % max
       }
-      const first = pick(), second = pick(), third = pick(), fourth = pick()
-      const rangeStart = Math.min(Number(fourth), 999900)
-      return respond({ ok: true, action, winningNumbers: { '1': first, '2': second.slice(-4), '3': third.slice(-2), '4Start': String(rangeStart).padStart(6, '0'), '4End': String(rangeStart + 99).padStart(6, '0') } })
+      const pick = () => numbers[pickIndex(numbers.length)]
+      const first = pick(), firstFour = first.slice(-4), firstTwo = first.slice(-2)
+      const uniqueSuffixes = (digits: number, excluded: Set<string>) => [...new Set(numbers.map(n => n.slice(-digits)).filter(suffix => !excluded.has(suffix))) ]
+      const secondCandidates = uniqueSuffixes(4, new Set([firstFour])).filter(suffix => suffix.slice(-2) !== firstTwo)
+      if (secondCandidates.length < 2) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for two 2nd-prize numbers' }, 409)
+      const secondNumbers: string[] = []
+      while (secondNumbers.length < 2) {
+        const picked = secondCandidates.splice(pickIndex(secondCandidates.length), 1)[0]
+        secondNumbers.push(picked)
+        for (let i = secondCandidates.length - 1; i >= 0; i--) if (secondCandidates[i].slice(-2) === picked.slice(-2)) secondCandidates.splice(i, 1)
+      }
+      const excludedThird = new Set<string>([firstTwo, ...secondNumbers.map(suffix => suffix.slice(-2))])
+      const thirdCandidates = uniqueSuffixes(2, excludedThird)
+      if (thirdCandidates.length < 10) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for ten 3rd-prize numbers' }, 409)
+      const thirdNumbers: string[] = []
+      while (thirdNumbers.length < 10) thirdNumbers.push(thirdCandidates.splice(pickIndex(thirdCandidates.length), 1)[0])
+      const fourth = pick(), rangeStart = Math.min(Number(fourth), 999900)
+      return respond({ ok: true, action, winningNumbers: { '1': first, '2': secondNumbers, '3': thirdNumbers, '4Start': String(rangeStart).padStart(6, '0'), '4End': String(rangeStart + 99).padStart(6, '0') } })
     }
 
     if (action === 'lottery_announce' || action === 'lottery_award' || action === 'lottery_publish') {
@@ -338,14 +353,23 @@ Deno.serve(async (req: Request) => {
       const legacyMode = !(body.winningNumbers && typeof body.winningNumbers === 'object')
       const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
       const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
-      const winningNumbers: Record<string, string> = {
-        '1': String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, ''),
-        '2': String(suppliedNumbers['2'] || legacyNumber.slice(-4)).replace(/[^0-9]/g, ''),
-        '3': String(suppliedNumbers['3'] || legacyNumber.slice(-2)).replace(/[^0-9]/g, ''),
+      const parseNumberList = (value: unknown, fallback: string, digits: number): string[] => {
+        const raw = Array.isArray(value) ? value : String(value || fallback).split(/[\\s,，]+/)
+        return raw.map((x: unknown) => String(x || '').replace(/[^0-9]/g, '')).filter((x: string) => new RegExp('^[0-9]{' + digits + '}$').test(x))
+      }
+      const firstNumber = String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, '')
+      const secondNumbers = parseNumberList(suppliedNumbers['2'], legacyNumber.slice(-4), 4)
+      const thirdNumbers = parseNumberList(suppliedNumbers['3'], legacyNumber.slice(-2), 2)
+      const winningNumbers: Record<string, any> = {
+        '1': firstNumber,
+        '2': secondNumbers,
+        '3': thirdNumbers,
         '4Start': String(suppliedNumbers['4Start'] || (legacyMode ? '999900' : '')).replace(/[^0-9]/g, ''),
         '4End': String(suppliedNumbers['4End'] || (legacyMode ? '999999' : '')).replace(/[^0-9]/g, '')
       }
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !/^[0-9]{4}$/.test(winningNumbers['2']) || !/^[0-9]{2}$/.test(winningNumbers['3']) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
+      const validLegacy = legacyMode && secondNumbers.length === 1 && thirdNumbers.length === 1
+      const validNew = secondNumbers.length === 2 && new Set(secondNumbers).size === 2 && new Set(secondNumbers.map((suffix: string) => suffix.slice(-2))).size === 2 && thirdNumbers.length === 10 && new Set(thirdNumbers).size === 10 && !secondNumbers.includes(firstNumber.slice(-4)) && !thirdNumbers.includes(firstNumber.slice(-2)) && !secondNumbers.some((suffix: string) => thirdNumbers.includes(suffix.slice(-2)))
+      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !(validLegacy || validNew) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
         return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
       }
       const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
@@ -381,7 +405,7 @@ Deno.serve(async (req: Request) => {
         if (de || !createdDraw) return respond({ ok: false, error: 'Could not create draw' }, 500)
         draw = createdDraw
         if (action === 'lottery_announce') {
-          const announcement = '🎟️ ' + title + ' 当選番号を事前発表！ 1等 ' + winningNumbers['1'] + '（最大1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）。報酬はまだ配布していません。'
+          const announcement = '🎟️ ' + title + ' 当選番号を事前発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'].join('・') + '（2口）／3等 下2桁 ' + winningNumbers['3'].join('・') + '（10口）。報酬はまだ配布していません。'
           const { error: announceError } = await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
           if (announceError) return respond({ ok: false, error: 'Numbers were saved, but the announcement could not be published' }, 500)
           return respond({ ok: true, action, title, drawId: draw.id, announced: true, rewardGranted: false, winningNumbers })
@@ -396,7 +420,7 @@ Deno.serve(async (req: Request) => {
       const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
       for (const t of tickets || []) {
         const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
+        const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
       }
       // Enforce ticket-count caps: 1st max 1, 2nd max 2, 3rd max 10. Extra matching tickets do not become lower numbered prizes.
@@ -482,8 +506,8 @@ Deno.serve(async (req: Request) => {
       }
       await client.from('world_lottery_draws').update({ prizes: { ...prizes, _status: 'awarded', _winningNumbers: winningNumbers }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '。アイテムバッグで報酬を確認してください。'
-        : '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '（最大1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで報酬を確認してください。'
+        ? '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'].join('・') + '／3等 下2桁 ' + winningNumbers['3'].join('・') + '。アイテムバッグで報酬を確認してください。'
+        : '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'].join('・') + '（2口）／3等 下2桁 ' + winningNumbers['3'].join('・') + '（10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで報酬を確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
       return respond({ ok: true, action: action === 'lottery_award' ? 'lottery_award' : 'lottery_publish', title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
