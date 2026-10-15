@@ -4765,11 +4765,13 @@ function getShinjuSeasonState(){
  const seasonNumber=Math.max(10,currentRankSeason()+1);
  const elapsed=seasonNumber-10;
  const essenceCount=elapsed+1;
+ // 真髄は3種類ずつのグループで開催するが、番号は1へ戻さず4～6、7～9…と続ける。
  const cycle=Math.floor((essenceCount-1)/SHINJU_ESSENCES.length)+1;
- const phase=essenceCount;
+ const phase=((essenceCount-1)%3)+1;
+ const groupStart=Math.floor((essenceCount-1)/3)*3+1;
  for(let c=1;c<=cycle;c++)getShinjuCycleEssences(c);
  const active=[];
- for(let c=1;c<=cycle;c++)active.push(...getShinjuCycleEssences(c).filter(x=>x.id<=essenceCount));
+ for(let c=1;c<=cycle;c++)active.push(...getShinjuCycleEssences(c).filter(x=>x.id>=groupStart&&x.id<=essenceCount));
  const nextReset=rankSeasonResetAt();
  return {seasonNumber,phase,cycle,active,daysRemaining:Math.max(0,Math.ceil((nextReset-Date.now())/day))};
 }
@@ -4850,7 +4852,7 @@ function renderShinju(){
  if(banner){
   const tabs=state.active.map(x=>'<button type="button" class="shinjuEssenceTab" data-shinju-essence="'+x.id+'" style="flex:1;min-width:90px;padding:9px 6px;border:2px solid '+(x.id===essence.id?'#facc15':'#cbd5e1')+';border-radius:9px;background:'+(x.id===essence.id?'#6d28d9':'#f8fafc')+';color:'+(x.id===essence.id?'#fff':'#1e293b')+';font-weight:900">'+x.name+'</button>').join('');
   const items=essence.items;
-  banner.innerHTML='<div class="gachaBanner"><h2>✨ '+essence.name+'</h2><p>'+essence.desc+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+tabs+'</div><div style="background:#ede9fe;border:1px solid #a78bfa;border-radius:9px;padding:8px;margin:8px 0;color:#3b0764;font-weight:900">📅 シーズン '+state.seasonNumber+'（累計 '+state.active.length+'種類の真髄）　｜　現在の最新：真髄'+(state.active[state.active.length-1]?.id||1)+'　｜　次の真髄追加まで約'+state.daysRemaining+'日</div><div class="shinjuBannerItems"><span>👕 UR：'+items[0].name+'</span><span>🎒 UR：'+items[1].name+'</span><span>✨ SSR：'+items[2].name+'／'+items[3].name+'／'+items[4].name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装・携帯品 各0.2%（救済で上昇）<br>限定SSR衣装 各1.0%（救済で上昇）<br>色のパワー 45%<br>金：ノーマル・レア・激レア 各3.9%　｜ 超激レア 3%　｜ 伝説レア 0.3%（金合計15%）<br>XP 20%　｜ コイン 16.6%（救済で変動）</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
+  banner.innerHTML='<div class="gachaBanner"><h2>✨ '+essence.name+'</h2><p>'+essence.desc+'</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+tabs+'</div><div style="background:#ede9fe;border:1px solid #a78bfa;border-radius:9px;padding:8px;margin:8px 0;color:#3b0764;font-weight:900">📅 シーズン '+state.seasonNumber+'（グループ '+state.cycle+'・段階 '+state.phase+'/3）　｜　開催中 '+state.active.length+'種類　｜　現在の最新：真髄'+(state.active[state.active.length-1]?.id||1)+'　｜　次の更新まで約'+state.daysRemaining+'日</div><div class="shinjuBannerItems"><span>👕 UR：'+items[0].name+'</span><span>🎒 UR：'+items[1].name+'</span><span>✨ SSR：'+items[2].name+'／'+items[3].name+'／'+items[4].name+'</span></div><div class="shinjuRates"><b>提供割合（合計100%）</b><br>限定UR衣装・携帯品 各0.2%（救済で上昇）<br>限定SSR衣装 各1.0%（救済で上昇）<br>色のパワー 45%<br>金：ノーマル・レア・激レア 各3.9%　｜ 超激レア 3%　｜ 伝説レア 0.3%（金合計15%）<br>XP 20%　｜ コイン 16.6%（救済で変動）</div><div class="gachaButtons"><button id="shinjuSingleBtn" type="button">1連　🪙1,000</button><button id="shinjuElevenBtn" type="button">11連　🪙10,000</button></div><p class="shinjuDrawCount">累計真髄：'+shinjuDrawCount.toLocaleString()+'回</p></div>';
   banner.querySelectorAll('[data-shinju-essence]').forEach(btn=>btn.onclick=()=>{shinjuSelectedEssence=Number(btn.dataset.shinjuEssence);renderShinju();});
  }
  if(result&&!result.innerHTML)result.innerHTML='<div class="gachaResult">真髄を引くと、ここに今回の結果が表示されます。</div>';
