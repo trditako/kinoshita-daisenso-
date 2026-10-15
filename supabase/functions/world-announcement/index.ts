@@ -53,6 +53,9 @@ Deno.serve(async (req: Request) => {
         const ownerName = String(player?.name || 'プレイヤー').slice(0, 80)
         const { data: existingClaim } = await client.from('world_event_stage_claims').select('ticket_number').eq('stage_id', stageId).eq('player_id', playerId).maybeSingle()
         if (existingClaim) return respond({ ok: true, action: publicBody.action, granted: false, alreadyClaimed: true, ticketNumber: existingClaim.ticket_number || null })
+        const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('created_at', { ascending: false }).limit(50)
+        if (pendingDrawError) return respond({ ok: false, error: 'Could not verify lottery status' }, 500)
+        if ((pendingDraws || []).some((d: any) => d?.prizes?._status === 'announced')) return respond({ ok: false, error: 'Lottery ticket issuance is paused while the announced draw awaits reward distribution' }, 409)
         const allocateTicketNumber = async () => {
           const { data, error } = await client.rpc('allocate_world_lottery_ticket_numbers', { p_count: 1 })
           if (error || !Array.isArray(data) || !data[0]?.ticket_number) throw new Error('Could not allocate a sequential ticket number')
@@ -266,6 +269,9 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'lottery_issue') {
+      const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('created_at', { ascending: false }).limit(50)
+      if (pendingDrawError) return respond({ ok: false, error: 'Could not verify lottery status' }, 500)
+      if ((pendingDraws || []).some((d: any) => d?.prizes?._status === 'announced')) return respond({ ok: false, error: 'Lottery ticket issuance is paused while the announced draw awaits reward distribution' }, 409)
       const target=String(body.target||''), amount=integerInRange(body.amount,1,100)
       const ids=Array.isArray(body.targetIds)?body.targetIds.map((x:unknown)=>String(x).trim()).filter(Boolean).slice(0,100):[]
       if(!amount)return respond({ok:false,error:'Ticket amount must be 1-100 per account'},400)
