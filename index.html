@@ -5426,7 +5426,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   finally{buttons.forEach(b=>{if(b)b.disabled=false})}
  }
  const openBtn=el('operatorToolsBtn');
- if(openBtn&&operator()){openBtn.hidden=false;openBtn.style.display='block';openBtn.addEventListener('click',()=>{el('operatorToolsModal').style.display='flex';setStatus('運営認証キーは不要です。操作を選択してください。',true)})}
+ if(openBtn&&operator()){openBtn.hidden=false;openBtn.style.display='block';openBtn.addEventListener('click',()=>{el('operatorToolsModal').style.display='flex';setStatus('運営認証キーを入力してから操作してください。',true)})}
  el('operatorToolsClose')?.addEventListener('click',()=>{el('operatorToolsModal').style.display='none'});
  el('operatorAnnouncementPublish')?.addEventListener('click',()=>send('publish'));
  el('operatorAnnouncementClear')?.addEventListener('click',()=>send('clear'));
