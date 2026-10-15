@@ -4764,8 +4764,9 @@ function getShinjuSeasonState(){
  const phase=slot===0?1:slot===1?2:3;
  for(let c=2;c<=cycle;c++)getShinjuCycleEssences(c);
  const cycleEssences=getShinjuCycleEssences(cycle);
- const groupStart=((cycle-1)%2)*3;
- const active=cycleEssences.slice(groupStart,groupStart+3).slice(0,phase);
+ // 5シーズンごとに新サイクルへ移行し、毎回真髄1から3まで順番に解放する。
+ // getShinjuCycleEssences(cycle) がサイクル別テーマ・限定アイテムを生成する。
+ const active=cycleEssences.slice(0,phase);
  const nextReset=rankSeasonResetAt();
  return {seasonNumber,phase,cycle,active,daysRemaining:Math.max(0,Math.ceil((nextReset-Date.now())/day))};
 }
