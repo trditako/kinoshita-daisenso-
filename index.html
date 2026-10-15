@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.84';
+const GAME_VERSION='v1.8.85';
 const UPDATE_LOG=[
+ {date:'2026-10-15',version:'v1.8.85',title:'🧪 ワールドイベントの事前お試しプレイ',items:['開催前に作成中ステージを実際の戦闘画面でテスト可能','テスト中は経験値・コイン・キャラクター・宝くじなどの報酬を一切付与しない','テスト終了後はステージ選択へ戻り、作成内容を調整してから開催できる']},
  {date:'2026-10-15',version:'v1.8.84',title:'🛠️ ワールドイベント自由作成エディター',items:['ステージ名・城距離・敵城体力・BGM・背景を自由設定','敵の種類・出現時刻・倍率・同時出現数・ボス種別を複数行で設定','既存ステージのテンプレート方式も引き続き利用可能']},
  {date:'2026-10-15',version:'v1.8.83',title:'🎪 開催更新中のイベント戦闘ステージを固定',items:['戦闘開始時のワールドイベントステージを記録し、一覧更新で別ステージへずれる問題を防止']},
  {date:'2026-10-15',version:'v1.8.82',title:'🎪 運営ワールドイベントステージを追加',items:['運営パネルから複数のイベントステージを作成・開催・停止可能','既存ステージをテンプレートにしてタイトルと開催時間を設定','対象ステージの初回クリア時のみ、サーバーで重複を防いで宝くじチケット1枚を発行']},
@@ -483,6 +484,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <label for="operatorWorldStageDuration" style="display:block;font-weight:900;margin:8px 0 4px">開催時間</label>
 <select id="operatorWorldStageDuration" style="width:100%;padding:10px;border:2px solid #a78bfa;border-radius:9px;background:#fff;color:#111;font:inherit"><option value="300">5分</option><option value="1800">30分</option><option value="3600" selected>1時間</option><option value="21600">6時間</option><option value="86400">24時間</option></select>
 <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:900"><input id="operatorWorldStageLottery" type="checkbox" checked> 初回クリア報酬：宝くじチケット1枚</label>
+<button id="operatorWorldStagePreview" type="button" class="formationBtn" style="width:100%;background:#0f766e!important;color:#fff!important">🧪 開催前にお試しプレイ</button>
 <button id="operatorWorldStageCreate" type="button" class="formationBtn" style="width:100%;background:#6d28d9!important;color:#fff!important">➕ ステージを作成して開催</button>
 <button id="operatorWorldStageRefresh" type="button" class="formationBtn" style="width:100%;background:#475569!important;color:#fff!important;margin-top:6px">🔄 開催ステージ一覧を更新</button>
 <div id="operatorWorldStageList" style="margin-top:8px;font-size:12px;line-height:1.5;color:#1f2937">開催ステージを読み込みます。</div>
@@ -5684,8 +5686,71 @@ showResult=function(win){
   }catch(e){if(resultText)resultText.textContent+='\n⚠️ 宝くじチケットの確認に失敗しました。通信状態を確認してから、運営へお問い合わせください。';console.warn('World event ticket claim failed:',e);}
  })();
 };
+let activeWorldStagePreview=null;
+let savedStageBackHandler=null,savedNextButtonHandler=null;
+function finishWorldStagePreview(win,reason){
+ if(!activeWorldStagePreview)return;
+ running=false;paused=false;stopBGM();
+ document.getElementById('pause').style.display='none';
+ document.getElementById('detail').style.display='none';
+ document.getElementById('start').style.display='none';
+ document.getElementById('battlePauseBtn').style.display='';
+ const result=document.getElementById('result');
+ result.style.setProperty('display','flex','important');result.style.setProperty('position','fixed','important');result.style.setProperty('inset','0','important');result.style.setProperty('z-index','99999','important');result.style.setProperty('pointer-events','auto','important');
+ document.getElementById('resultTitle').textContent=win?'🧪 テストプレイ成功（報酬なし）':'🧪 テストプレイ終了（報酬なし）';
+ document.getElementById('resultText').textContent=(win?'敵城を破壊しました。':'テストプレイを終了しました。')+'\nこのモードでは経験値・コイン・キャラクター・宝くじチケットなどの報酬は付与されません。\nステージ内容を調整する場合は、編集画面へ戻ってから再テストしてください。';
+ const next=document.getElementById('nextBtn'),back=document.getElementById('stageBack');
+ next.style.display='none';back.style.display='inline-block';back.textContent='編集画面へ戻る';
+ back.onclick=exitWorldStagePreview;next.onclick=exitWorldStagePreview;
+ const quit=document.getElementById('worldStagePreviewQuit');if(quit)quit.style.display='none';
+}
+function exitWorldStagePreview(){
+ if(!activeWorldStagePreview)return;
+ const saved=activeWorldStagePreview;
+ activeWorldStagePreview=null;running=false;paused=false;stopBGM();
+ const quit=document.getElementById('worldStagePreviewQuit');if(quit)quit.remove();
+ const r=document.getElementById('result');r.style.setProperty('display','none','important');
+ const next=document.getElementById('nextBtn'),back=document.getElementById('stageBack');
+ next.onclick=savedNextButtonHandler;back.onclick=savedStageBackHandler;
+ next.style.display='';back.style.display='';
+ if(saved.previewStage){const ix=eventStages.indexOf(saved.previewStage);if(ix>=0)eventStages.splice(ix,1);}
+ selectedMode=saved.mode;selectedStage=saved.stage;selectedChapter=saved.chapter;
+ document.getElementById('start').style.display='flex';
+ renderStageSelect();renderCards();
+}
+const originalWorldStageShowResult=showResult;
+showResult=function(win){
+ if(activeWorldStagePreview){finishWorldStagePreview(!!win,'result');return;}
+ return originalWorldStageShowResult(win);
+};
+function beginWorldStagePreview(){
+ const title=String(document.getElementById('operatorWorldStageTitle')?.value||'').trim();
+ const customMode=!!document.getElementById('operatorWorldStageCustomMode')?.checked;
+ const templateName=String(document.getElementById('operatorWorldStageTemplate')?.value||'');
+ if(!title){alert('先にステージ名を入力してください。');return;}
+ let stage;
+ try{
+  if(customMode){stage={...worldStageCustomConfig(),name:title,xp:0,worldEventPreview:true};}
+  else{const template=eventStages.find(st=>st.name===templateName&&!st.worldEventId&&!st.itemReward&&!st.halloweenEvent);if(!template)throw new Error('敵編成テンプレートを選択してください。');stage={...template,name:title,worldEventPreview:true,eventReward:undefined,rewardCharacter:undefined,itemReward:undefined,halloweenEvent:false};}
+ }catch(e){alert('テストを開始できません：'+e.message);return;}
+ if(!confirm('「'+title+'」のお試しプレイを開始します。開催登録はされず、報酬も獲得できません。'))return;
+ const previewStage={...stage,worldEventPreview:true};
+ const saved={mode:selectedMode,stage:selectedStage,chapter:selectedChapter,previewStage};
+ savedStageBackHandler=document.getElementById('stageBack').onclick;
+ savedNextButtonHandler=document.getElementById('nextBtn').onclick;
+ activeWorldStagePreview=saved;
+ eventStages.push(previewStage);
+ selectedMode='event';selectedStage=eventStagePool().indexOf(previewStage)+1;
+ document.getElementById('start').style.display='none';
+ const quit=document.createElement('button');quit.id='worldStagePreviewQuit';quit.type='button';quit.textContent='🧪 テスト終了・編集へ戻る';
+ quit.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px;z-index:100000;background:#0f766e;color:#fff;border:2px solid #fff;border-radius:10px;padding:10px;font-weight:900;box-shadow:0 2px 10px #0008';
+ quit.addEventListener('click',()=>finishWorldStagePreview(false,'quit'));
+ document.body.appendChild(quit);
+ try{startStage(selectedStage);}catch(e){console.error('World stage preview failed:',e);exitWorldStagePreview();alert('テストを開始できませんでした：'+e.message);}
+}
 function initWorldEventTools(){
  worldStageTemplateOptions();
+ document.getElementById('operatorWorldStagePreview')?.addEventListener('click',beginWorldStagePreview);
  const customToggle=document.getElementById('operatorWorldStageCustomMode'),templateWrap=document.getElementById('operatorWorldStageTemplateWrap'),customFields=document.getElementById('operatorWorldStageCustomFields');
  const syncWorldStageMode=()=>{if(templateWrap)templateWrap.style.display=customToggle?.checked?'none':'block';if(customFields)customFields.style.display=customToggle?.checked?'block':'none';};
  customToggle?.addEventListener('change',syncWorldStageMode);syncWorldStageMode();
