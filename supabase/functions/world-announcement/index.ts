@@ -333,7 +333,7 @@ Deno.serve(async (req: Request) => {
         return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
       }
       const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
-      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4'])) {
+      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
         const raw = input[tier]
         const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
         if (!rows.length || rows.length > 10) return respond({ ok: false, error: 'Set 1-10 rewards for tier ' + tier }, 400)
@@ -347,30 +347,47 @@ Deno.serve(async (req: Request) => {
           prizes[tier].push({ type, value, amount })
         }
       }
-      if (legacyMode) prizes['4'] = []
+      if (legacyMode) {
+        prizes['4'] = []
+        prizes['5'] = [{ type: 'coins', value: '5000', amount: 1 }]
+        prizes['6'] = [{ type: 'coins', value: '1000', amount: 1 }]
+        prizes['7'] = [{ type: 'coins', value: '100', amount: 1 }]
+      }
       const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
       const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
       if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
       const { data: tickets, error: te } = await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
       if (te) return respond({ ok: false, error: 'Could not load tickets' }, 500)
-      const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], none: [] }
-      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0 }
+      const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
+      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
       const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
       for (const t of tickets || []) {
         const n = String(t.ticket_number || ''), numeric = Number(n)
         const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
-        if (tier !== 'none') counts[tier]++
       }
-      for (const tier of ['1', '2', '3', '4', 'none']) {
+      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
+      const drawRandomIndex = (max: number): number => {
+        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
+        do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
+        return buf[0] % max
+      }
+      const lowerPrizeCandidates = buckets.none
+      for (const tier of ['5', '6']) {
+        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
+      }
+      buckets['7'].push(...lowerPrizeCandidates.splice(0))
+      buckets.none = []
+      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) counts[tier] = buckets[tier].length
+      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
         for (let i = 0; i < buckets[tier].length; i += 250) {
           const ids = buckets[tier].slice(i, i + 250).map((t: any) => String(t.id))
-          const { error } = await client.from('world_lottery_tickets').update({ draw_id: draw.id, prize_tier: tier === 'none' ? null : tier, reward_granted: tier === 'none' }).in('id', ids)
+          const { error } = await client.from('world_lottery_tickets').update({ draw_id: draw.id, prize_tier: tier, reward_granted: false }).in('id', ids)
           if (error) return respond({ ok: false, error: 'Could not finalize ticket results' }, 500)
         }
       }
       let awarded = 0
-      for (const tier of ['1', '2', '3', '4']) {
+      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
         const rewardList = prizes[tier] || []
         for (const t of buckets[tier]) {
           const owner = String(t.owner_id), kind = String(t.owner_type)
@@ -422,10 +439,10 @@ Deno.serve(async (req: Request) => {
       }
       await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。アイテムバッグでチケット番号を確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。アイテムバッグでチケット番号を確認してください.'
+        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
+        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      return respond({ ok: true, action, title, drawId: draw.id, winners: counts['1'] + counts['2'] + counts['3'] + counts['4'], prizeCounts: counts, awarded })
+      return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
     return respond({ ok: false, error: 'Unknown action' }, 400)
   } catch (error) {
