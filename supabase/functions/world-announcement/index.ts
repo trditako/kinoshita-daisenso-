@@ -153,18 +153,56 @@ Deno.serve(async (req: Request) => {
       const title=typeof body.title==='string'?body.title.trim():'', winningNumber=String(body.winningNumber||'').replace(/[^0-9]/g,'')
       const input=body.prizes&&typeof body.prizes==='object'?body.prizes:{}, allowed=['coins','xp','item','character','limited_character'], items=['power_chest','wooden_chest','silver_chest','golden_chest','skill_crystal','ability_core','operator_chest','special_operator_chest']
       if(!title||title.length>60||! /^[0-9]{6}$/.test(winningNumber))return respond({ok:false,error:'Invalid lottery title or six-digit number'},400)
-      const prizes:Record<string,{type:string;value:string;amount:number}>={}
-      for(const tier of ['1','2','3']){const p=input[tier]||{},type=String(p.type||''),value=String(p.value||'').trim(),amount=integerInRange(p.amount,1,1000000);if(!allowed.includes(type)||!value||value.length>80||!amount)return respond({ok:false,error:'Invalid prize for tier '+tier},400);if((type==='coins'||type==='xp')&&!/^[0-9]+$/.test(value))return respond({ok:false,error:'Coin/XP value must be numeric'},400);if(type==='item'&&!items.includes(value))return respond({ok:false,error:'Unsupported item ID'},400);prizes[tier]={type,value,amount}}
+      type LotteryPrize={type:string;value:string;amount:number}
+      const prizes:Record<string,LotteryPrize[]>={}
+      for(const tier of ['1','2','3']){
+        const raw=input[tier], list=Array.isArray(raw)?raw:[raw||{}]
+        if(!list.length||list.length>10)return respond({ok:false,error:'Each tier must have 1-10 rewards'},400)
+        const normalized:LotteryPrize[]=[]
+        for(const p of list){
+          const type=String(p?.type||''),value=String(p?.value||'').trim(),amount=integerInRange(p?.amount,1,1000000)
+          if(!allowed.includes(type)||!value||value.length>80||!amount)return respond({ok:false,error:'Invalid prize for tier '+tier},400)
+          if((type==='coins'||type==='xp')&&!/^[0-9]+$/.test(value))return respond({ok:false,error:'Coin/XP value must be numeric'},400)
+          if(type==='item'&&!items.includes(value))return respond({ok:false,error:'Unsupported item ID'},400)
+          if((type==='character'||type==='limited_character')&&amount!==1)return respond({ok:false,error:'Character reward amount must be 1'},400)
+          normalized.push({type,value,amount})
+        }
+        prizes[tier]=normalized
+      }
       const {data:draw,error:de}=await client.from('world_lottery_draws').insert({title,winning_number:winningNumber,prizes,published_by:OPERATOR_PLAYER_ID}).select('id').single();if(de||!draw)return respond({ok:false,error:'Could not create draw'},500)
       const {data:tickets,error:te}=await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id',null).order('created_at',{ascending:true}).limit(10000);if(te)return respond({ok:false,error:'Could not load tickets'},500)
       const buckets:Record<string,any[]>={'1':[],'2':[],'3':[],none:[]}, counts:Record<string,number>={'1':0,'2':0,'3':0}
       for(const t of tickets||[]){const n=String(t.ticket_number||'');const tier=n===winningNumber?'1':n.slice(-4)===winningNumber.slice(-4)?'2':n.slice(-2)===winningNumber.slice(-2)?'3':'none';buckets[tier].push(t);if(tier!=='none')counts[tier]++}
       for(const tier of ['1','2','3','none'])for(let i=0;i<buckets[tier].length;i+=250){const ids=buckets[tier].slice(i,i+250).map(t=>String(t.id));const {error}=await client.from('world_lottery_tickets').update({draw_id:draw.id,prize_tier:tier==='none'?null:tier,reward_granted:tier==='none'}).in('id',ids);if(error)return respond({ok:false,error:'Could not finalize ticket results'},500)}
       let awarded=0
-      for(const tier of ['1','2','3'])for(const t of buckets[tier]){const p=prizes[tier],owner=String(t.owner_id),kind=String(t.owner_type),amount=Number(p.amount),value=p.value
-        if(kind==='ai'){const {data:a,error:ae}=await client.from('ai_accounts').select('coins,player_xp,inventory_items,owned_characters,limited_character_owned').eq('account_id',Number(owner)).maybeSingle();if(ae||!a)return respond({ok:false,error:'Could not load AI winner'},500);const patch:Record<string,unknown>={updated_at:now};if(p.type==='coins')patch.coins=Number(a.coins||0)+Number(value)*amount;else if(p.type==='xp')patch.player_xp=Number(a.player_xp||0)+Number(value)*amount;else if(p.type==='item'){const inv=a.inventory_items&&typeof a.inventory_items==='object'?a.inventory_items:{};patch.inventory_items={...inv,[value]:Number(inv[value]||0)+amount}}else{const chars=Array.isArray(a.owned_characters)?a.owned_characters:[];patch.owned_characters=[...new Set([...chars,String(value)])];if(p.type==='limited_character'&&String(value)==='木下&吉田')patch.limited_character_owned=true}const {error}=await client.from('ai_accounts').update(patch).eq('account_id',Number(owner));if(error)return respond({ok:false,error:'Could not grant AI prize'},500)}
-        else{const {data:a,error:ae}=await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,limited_character_owned').eq('player_id',owner).maybeSingle();if(ae||!a)return respond({ok:false,error:'Could not load player winner'},500);const patch:Record<string,unknown>={updated_at:now};if(p.type==='coins'){patch.operator_pending_coins=Number(a.operator_pending_coins||0)+Number(value)*amount;patch.operator_pending_ref=crypto.randomUUID()}else if(p.type==='xp'){patch.operator_pending_xp=Number(a.operator_pending_xp||0)+Number(value)*amount;patch.operator_pending_ref=crypto.randomUUID()}else if(p.type==='item'){const inv=a.operator_pending_items&&typeof a.operator_pending_items==='object'?a.operator_pending_items:{};patch.operator_pending_items={...inv,[value]:Number(inv[value]||0)+amount};patch.operator_pending_items_ref=crypto.randomUUID()}else{const pending=Array.isArray(a.operator_pending_lottery_rewards)?a.operator_pending_lottery_rewards:[];patch.operator_pending_lottery_rewards=[...pending,{type:p.type,value:String(value),amount,drawId:draw.id,tier}];patch.operator_pending_lottery_ref=crypto.randomUUID();if(p.type==='limited_character')patch.limited_character_owned=true}const {error}=await client.from('player_rankings').update(patch).eq('player_id',owner);if(error)return respond({ok:false,error:'Could not queue player prize'},500)}
-        await client.from('world_lottery_tickets').update({reward_granted:true,reward_result:{tier,type:p.type,value,amount}}).eq('id',String(t.id));awarded++}
+      for(const tier of ['1','2','3'])for(const t of buckets[tier]){
+        const rewards=prizes[tier],owner=String(t.owner_id),kind=String(t.owner_type),rewardResults=rewards.map(p=>({type:p.type,value:p.value,amount:p.amount}))
+        if(kind==='ai'){
+          const {data:a,error:ae}=await client.from('ai_accounts').select('coins,player_xp,inventory_items,owned_characters,limited_character_owned').eq('account_id',Number(owner)).maybeSingle();if(ae||!a)return respond({ok:false,error:'Could not load AI winner'},500)
+          const patch:Record<string,unknown>={updated_at:now},inv={...(a.inventory_items&&typeof a.inventory_items==='object'?a.inventory_items:{})},chars=Array.isArray(a.owned_characters)?[...a.owned_characters]:[]
+          let coins=Number(a.coins||0),xp=Number(a.player_xp||0),limitedOwned=Boolean(a.limited_character_owned)
+          for(const p of rewards){const amount=Number(p.amount),value=p.value;if(p.type==='coins')coins+=Number(value)*amount;else if(p.type==='xp')xp+=Number(value)*amount;else if(p.type==='item')inv[value]=Number(inv[value]||0)+amount;else{if(!chars.includes(String(value)))chars.push(String(value));if(p.type==='limited_character'&&String(value)==='木下&吉田')limitedOwned=true}}
+          if(rewards.some(p=>p.type==='coins'))patch.coins=coins
+          if(rewards.some(p=>p.type==='xp'))patch.player_xp=xp
+          if(rewards.some(p=>p.type==='item'))patch.inventory_items=inv
+          if(rewards.some(p=>['character','limited_character'].includes(p.type)))patch.owned_characters=chars
+          if(limitedOwned!==Boolean(a.limited_character_owned))patch.limited_character_owned=limitedOwned
+          const {error}=await client.from('ai_accounts').update(patch).eq('account_id',Number(owner));if(error)return respond({ok:false,error:'Could not grant AI prize'},500)
+        }else{
+          const {data:a,error:ae}=await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,limited_character_owned').eq('player_id',owner).maybeSingle();if(ae||!a)return respond({ok:false,error:'Could not load player winner'},500)
+          const patch:Record<string,unknown>={updated_at:now},inv={...(a.operator_pending_items&&typeof a.operator_pending_items==='object'?a.operator_pending_items:{})},pending=Array.isArray(a.operator_pending_lottery_rewards)?[...a.operator_pending_lottery_rewards]:[]
+          let coins=Number(a.operator_pending_coins||0),xp=Number(a.operator_pending_xp||0),limitedOwned=Boolean(a.limited_character_owned),coinChanged=false,xpChanged=false,itemChanged=false
+          for(const p of rewards){const amount=Number(p.amount),value=p.value;if(p.type==='coins'){coins+=Number(value)*amount;coinChanged=true}else if(p.type==='xp'){xp+=Number(value)*amount;xpChanged=true}else if(p.type==='item'){inv[value]=Number(inv[value]||0)+amount;itemChanged=true}else{pending.push({type:p.type,value:String(value),amount,drawId:draw.id,tier});if(p.type==='limited_character'&&String(value)==='木下&吉田')limitedOwned=true}}
+          if(coinChanged){patch.operator_pending_coins=coins;patch.operator_pending_ref=crypto.randomUUID()}
+          if(xpChanged){patch.operator_pending_xp=xp;patch.operator_pending_ref=crypto.randomUUID()}
+          if(itemChanged){patch.operator_pending_items=inv;patch.operator_pending_items_ref=crypto.randomUUID()}
+          if(pending.length!==(Array.isArray(a.operator_pending_lottery_rewards)?a.operator_pending_lottery_rewards.length:0)){patch.operator_pending_lottery_rewards=pending;patch.operator_pending_lottery_ref=crypto.randomUUID()}
+          if(limitedOwned!==Boolean(a.limited_character_owned))patch.limited_character_owned=limitedOwned
+          const {error}=await client.from('player_rankings').update(patch).eq('player_id',owner);if(error)return respond({ok:false,error:'Could not queue player prize'},500)
+        }
+        const {error:ticketError}=await client.from('world_lottery_tickets').update({reward_granted:true,reward_result:{tier,rewards:rewardResults}}).eq('id',String(t.id));if(ticketError)return respond({ok:false,error:'Could not save ticket reward result'},500)
+        awarded++
+      }
       const {error:de2}=await client.from('world_lottery_draws').update({ticket_count:(tickets||[]).length,winner_counts:counts,awarded_count:awarded}).eq('id',draw.id);if(de2)return respond({ok:false,error:'Could not save draw summary'},500)
       await client.from('world_announcements').upsert({id:1,message:'🎟️ '+title+' 当選発表！番号 '+winningNumber.slice(0,2)+'-'+winningNumber.slice(2)+'／1等6桁・2等下4桁・3等下2桁一致。アイテムバッグでチケット番号を確認してください。',active:true,expires_at:new Date(Date.now()+3600000).toISOString(),updated_at:now,updated_by:OPERATOR_PLAYER_ID},{onConflict:'id'})
       return respond({ok:true,action,title,drawId:draw.id,winners:counts['1']+counts['2']+counts['3'],prizeCounts:counts,awarded})
