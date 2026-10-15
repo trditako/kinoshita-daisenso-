@@ -5451,7 +5451,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    field.innerHTML=options.map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('');
    if(options.some(o=>o.value===previous))field.value=previous;
   }else{
-   field.type='number';field.min='0';field.max='1000000000';field.step='1';field.placeholder='コイン・XPの数値';field.value=old.tagName==='INPUT'&&/^\\d+$/.test(old.value)?old.value:'0';
+   field.type='number';field.min='0';field.max='1000000000';field.step='1';field.placeholder='コイン・XPの数値';field.value=old.tagName==='INPUT'&&/^\d+$/.test(old.value)?old.value:'0';
   }
   old.replaceWith(field);
  }
