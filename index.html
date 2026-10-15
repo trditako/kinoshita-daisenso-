@@ -10,7 +10,7 @@
 <script>
 const GAME_VERSION='v1.8.74';
 const UPDATE_LOG=[
- {date:'2026-10-15',version:'v1.8.74',title:'✨ 真髄番号を連番方式に変更',items:['真髄1～6の後も番号をリセットせず、真髄7・8・9…と順番に追加','開催済みの真髄を引き続き選択でき、所持品と真髄ポイントは保持']},
+ {date:'2026-10-15',version:'v1.8.74',title:'✨ 真髄番号を連番方式に変更',items:['真髄1～3の次は4～6、その次は7～9と番号をリセットせず順番に開催','同時開催は3種類ずつに整理し、所持品と真髄ポイントは保持']},
  {date:'2026-10-15',version:'v1.8.72',title:'🎁 報酬処理を改善',items:['ステージクリア時の報酬計算を調整']},
  {date:'2026-10-15',version:'v1.8.71',title:'🔧 キャラクター詳細画面の表示条件を修正',items:['進化関連の表示条件を調整','解放状態の判定をサーバー側の最新情報に統一']}, 
 
@@ -4766,12 +4766,13 @@ function getShinjuSeasonState(){
  const elapsed=seasonNumber-10;
  const essenceCount=elapsed+1;
  // 真髄は3種類ずつのグループで開催するが、番号は1へ戻さず4～6、7～9…と続ける。
- const cycle=Math.floor((essenceCount-1)/SHINJU_ESSENCES.length)+1;
+ const themeCycle=Math.floor((essenceCount-1)/SHINJU_ESSENCES.length)+1;
+ const cycle=Math.floor((essenceCount-1)/3)+1;
  const phase=((essenceCount-1)%3)+1;
- const groupStart=Math.floor((essenceCount-1)/3)*3+1;
- for(let c=1;c<=cycle;c++)getShinjuCycleEssences(c);
+ const groupStart=(cycle-1)*3+1;
+ for(let c=1;c<=themeCycle;c++)getShinjuCycleEssences(c);
  const active=[];
- for(let c=1;c<=cycle;c++)active.push(...getShinjuCycleEssences(c).filter(x=>x.id>=groupStart&&x.id<=essenceCount));
+ for(let c=1;c<=themeCycle;c++)active.push(...getShinjuCycleEssences(c).filter(x=>x.id>=groupStart&&x.id<=essenceCount));
  const nextReset=rankSeasonResetAt();
  return {seasonNumber,phase,cycle,active,daysRemaining:Math.max(0,Math.ceil((nextReset-Date.now())/day))};
 }
