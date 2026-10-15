@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === 'lottery_publish') {
       const title=typeof body.title==='string'?body.title.trim():'', winningNumber=String(body.winningNumber||'').replace(/[^0-9]/g,'')
-      const input=body.prizes&&typeof body.prizes==='object'?body.prizes:{}, allowed=['coins','xp','item','character','limited_character'], items=['power_chest','wooden_chest','silver_chest','golden_chest','skill_crystal','ability_core','operator_chest','special_operator_chest']
+      const input=body.prizes&&typeof body.prizes==='object'?body.prizes:{}, allowed=['coins','xp','item','character','limited_character'], items=['lottery_ticket','power_chest','wooden_chest','silver_chest','golden_chest','skill_crystal','ability_core','operator_chest','special_operator_chest']
       if(!title||title.length>60||! /^[0-9]{6}$/.test(winningNumber))return respond({ok:false,error:'Invalid lottery title or six-digit number'},400)
       type LotteryPrize={type:string;value:string;amount:number}
       const prizes:Record<string,LotteryPrize[]>={}
