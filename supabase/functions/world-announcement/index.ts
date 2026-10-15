@@ -314,7 +314,17 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, action, winningNumbers: { '1': first, '2': second.slice(-4), '3': third.slice(-2), '4Start': String(rangeStart).padStart(6, '0'), '4End': String(rangeStart + 99).padStart(6, '0') } })
     }
 
-    if (action === 'lottery_publish') {
+    if (action === 'lottery_announce' || action === 'lottery_award' || action === 'lottery_publish') {
+      let pendingDraw: any = null
+      if (action === 'lottery_award') {
+        const { data: recentDraws, error: pendingError } = await client.from('world_lottery_draws').select('id,title,winning_number,prizes,created_at').order('created_at', { ascending: false }).limit(50)
+        if (pendingError) return respond({ ok: false, error: 'Could not load pending lottery draw' }, 500)
+        pendingDraw = (recentDraws || []).find((d: any) => d?.prizes?._status === 'announced') || null
+        if (!pendingDraw) return respond({ ok: false, error: 'No announced lottery is waiting for reward distribution' }, 409)
+        body.title = pendingDraw.title
+        body.prizes = pendingDraw.prizes
+        body.winningNumbers = pendingDraw.prizes?._winningNumbers
+      }
       const title = typeof body.title === 'string' ? body.title.trim() : ''
       const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
       const allowed = ['coins', 'xp', 'item', 'character', 'limited_character']
@@ -353,9 +363,26 @@ Deno.serve(async (req: Request) => {
         prizes['6'] = [{ type: 'coins', value: '1000', amount: 1 }]
         prizes['7'] = [{ type: 'coins', value: '100', amount: 1 }]
       }
-      const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
-      const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
-      if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
+      let draw: any = pendingDraw
+      if (action !== 'lottery_award') {
+        if (action === 'lottery_announce') {
+          const { data: recentDraws, error: pendingError } = await client.from('world_lottery_draws').select('id,prizes,created_at').order('created_at', { ascending: false }).limit(50)
+          if (pendingError) return respond({ ok: false, error: 'Could not check pending lottery announcements' }, 500)
+          if ((recentDraws || []).some((d: any) => d?.prizes?._status === 'announced')) return respond({ ok: false, error: 'A lottery announcement is already waiting for reward distribution. Distribute its rewards first.' }, 409)
+        }
+        const storedPrizes = { ...prizes, _winningNumbers: winningNumbers, _status: action === 'lottery_announce' ? 'announced' : 'awarding' }
+        const { data: createdDraw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id,title,prizes').single()
+        if (de || !createdDraw) return respond({ ok: false, error: 'Could not create draw' }, 500)
+        draw = createdDraw
+        if (action === 'lottery_announce') {
+          const announcement = '🎟️ ' + title + ' 当選番号を事前発表！ 1等 ' + winningNumbers['1'] + '（最大1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）。報酬はまだ配布していません。'
+          const { error: announceError } = await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+          if (announceError) return respond({ ok: false, error: 'Numbers were saved, but the announcement could not be published' }, 500)
+          return respond({ ok: true, action, title, drawId: draw.id, announced: true, rewardGranted: false, winningNumbers })
+        }
+      } else {
+        draw = pendingDraw
+      }
       const { data: tickets, error: te } = await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
       if (te) return respond({ ok: false, error: 'Could not load tickets' }, 500)
       const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
@@ -366,12 +393,22 @@ Deno.serve(async (req: Request) => {
         const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
       }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
+      // Enforce ticket-count caps: 1st max 1, 2nd max 2, 3rd max 10. Extra matching tickets do not become lower numbered prizes.
       const drawRandomIndex = (max: number): number => {
         const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
         return buf[0] % max
       }
+      const takeRandomUpTo = (source: any[], cap: number): any[] => {
+        const pool = source.slice(), selected: any[] = []
+        while (pool.length && selected.length < cap) selected.push(pool.splice(drawRandomIndex(pool.length), 1)[0])
+        buckets.none.push(...pool)
+        return selected
+      }
+      buckets['1'] = takeRandomUpTo(buckets['1'], 1)
+      buckets['2'] = takeRandomUpTo(buckets['2'], 2)
+      buckets['3'] = takeRandomUpTo(buckets['3'], 10)
+      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const lowerPrizeCandidates = buckets.none
       for (const tier of ['5', '6']) {
         if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
@@ -437,12 +474,12 @@ Deno.serve(async (req: Request) => {
           awarded++
         }
       }
-      await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
+      await client.from('world_lottery_draws').update({ prizes: { ...storedPrizes, _status: 'awarded', _winningNumbers: winningNumbers }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
+        ? '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '。アイテムバッグで報酬を確認してください。'
+        : '🎟️ ' + title + ' 当選結果・報酬付与完了！ 1等 ' + winningNumbers['1'] + '（最大1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで報酬を確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
+      return respond({ ok: true, action: action === 'lottery_award' ? 'lottery_award' : 'lottery_publish', title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
     return respond({ ok: false, error: 'Unknown action' }, 400)
   } catch (error) {
