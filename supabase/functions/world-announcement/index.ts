@@ -311,14 +311,14 @@ Deno.serve(async (req: Request) => {
       }
       const pick = () => numbers[pickIndex(numbers.length)]
       const first = pick()
-      const secondCandidates = [...new Set(numbers.map(n => n.slice(-4)))].filter(s => s !== first.slice(-4))
+      const secondCandidates = [...new Set(numbers.map(n => n.slice(-4)))].filter(v => v !== first.slice(-4))
       const second: string[] = []
       while (second.length < 2 && secondCandidates.length) second.push(secondCandidates.splice(pickIndex(secondCandidates.length), 1)[0])
-      const blockedThird = new Set([first.slice(-2), ...second.map(s => s.slice(-2))])
-      const thirdCandidates = [...new Set(numbers.map(n => n.slice(-2)))].filter(s => !blockedThird.has(s))
+      const blockedThird = new Set([first.slice(-2), ...second.map(v => v.slice(-2))])
+      const thirdCandidates = [...new Set(numbers.map(n => n.slice(-2)))].filter(v => !blockedThird.has(v))
       const third: string[] = []
       while (third.length < 10 && thirdCandidates.length) third.push(thirdCandidates.splice(pickIndex(thirdCandidates.length), 1)[0])
-      if (second.length !== 2 || third.length !== 10) return respond({ ok: false, error: 'Not enough non-overlapping ticket suffixes for the requested prize counts' }, 409)
+      if (second.length !== 2 || third.length !== 10) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for the requested prize counts' }, 409)
       const fourth = pick()
       const rangeStart = Math.min(Number(fourth), 999900)
       return respond({ ok: true, action, winningNumbers: { '1': first, '2': second, '3': third, '4Start': String(rangeStart).padStart(6, '0'), '4End': String(rangeStart + 99).padStart(6, '0') } })
@@ -329,8 +329,22 @@ Deno.serve(async (req: Request) => {
       const supplied = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
       const first = String(supplied['1'] || '').replace(/[^0-9]/g, '')
       const parseList = (value: unknown, digits: number) => {
-        const raw = Array.isArray(value) ? value : String(value || '').split(/[,，;；\\s]+/)
-        return raw.map((v: unknown) => String(v || '').replace(/[^0-9]/g, '')).filter((v: string) => new RegExp('^[0-9]{' + digits + '}
+        const raw = Array.isArray(value) ? value : String(value || '').split(/[,，;；\s]+/)
+        return raw.map((v: unknown) => String(v || '').replace(/[^0-9]/g, '')).filter((v: string) => new RegExp('^[0-9]{' + digits + '}$').test(v))
+      }
+      const second = parseList(supplied['2'], 4), third = parseList(supplied['3'], 2)
+      const startNumber = String(supplied['4Start'] || '').replace(/[^0-9]/g, '')
+      const endNumber = String(supplied['4End'] || '').replace(/[^0-9]/g, '')
+      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || second.length !== 2 || new Set(second).size !== 2 || third.length !== 10 || new Set(third).size !== 10 || !/^[0-9]{6}$/.test(startNumber) || !/^[0-9]{6}$/.test(endNumber) || Number(endNumber) - Number(startNumber) !== 99) {
+        return respond({ ok: false, error: 'Require 1 first-prize number, 2 distinct second-prize numbers, 10 distinct third-prize numbers, and a 100-number fourth-prize range' }, 400)
+      }
+      const message = '📣 🎟️ ' + title + ' 1〜3等の番号を先行発表！ 1等 ' + first + '／2等 下4桁 ' + second.join('・') + '（2口）／3等 下2桁 ' + third.join('・') + '（10口）。番号の先行発表です。抽選結果の確定と報酬配布はまだ行っていません。'
+      const { error } = await client.from('world_announcements').upsert({ id: 1, message, active: true, expires_at: new Date(Date.now() + 86400000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (error) return respond({ ok: false, error: 'Could not publish lottery number announcement' }, 500)
+      return respond({ ok: true, action, title, winningNumbers: { '1': first, '2': second, '3': third, '4Start': startNumber, '4End': endNumber }, rewardsGranted: false })
+    }
+
+    if (action === 'lottery_publish') {
       const title = typeof body.title === 'string' ? body.title.trim() : ''
       const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
       const allowed = ['coins', 'xp', 'item', 'character', 'limited_character']
@@ -339,275 +353,8 @@ Deno.serve(async (req: Request) => {
       const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
       const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
       const parseList = (value: unknown, digits: number, fallback: string) => {
-        const raw = Array.isArray(value) ? value : value ? String(value).split(/[,，;；\\s]+/) : [fallback]
-        return raw.map((v: unknown) => String(v || '').replace(/[^0-9]/g, '')).filter((v: string) => new RegExp('^[0-9]{' + digits + '}
-      const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
-      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
-        const raw = input[tier]
-        const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
-        if (!rows.length || rows.length > 10) return respond({ ok: false, error: 'Set 1-10 rewards for tier ' + tier }, 400)
-        prizes[tier] = []
-        for (const row of rows) {
-          const type = String(row?.type || ''), value = String(row?.value || '').trim(), amount = integerInRange(row?.amount, 1, 1000000)
-          if (!allowed.includes(type) || !value || value.length > 80 || !amount) return respond({ ok: false, error: 'Invalid prize for tier ' + tier }, 400)
-          if ((type === 'coins' || type === 'xp') && !/^[0-9]+$/.test(value)) return respond({ ok: false, error: 'Coin/XP value must be numeric' }, 400)
-          if (type === 'item' && !items.includes(value)) return respond({ ok: false, error: 'Unsupported item ID' }, 400)
-          if ((type === 'character' || type === 'limited_character') && amount !== 1) return respond({ ok: false, error: 'Character prize amount must be 1' }, 400)
-          prizes[tier].push({ type, value, amount })
-        }
-      }
-      if (legacyMode) {
-        prizes['4'] = []
-        prizes['5'] = [{ type: 'coins', value: '5000', amount: 1 }]
-        prizes['6'] = [{ type: 'coins', value: '1000', amount: 1 }]
-        prizes['7'] = [{ type: 'coins', value: '100', amount: 1 }]
-      }
-      const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
-      const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
-      if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
-      const { data: tickets, error: te } = await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
-      if (te) return respond({ ok: false, error: 'Could not load tickets' }, 500)
-      const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
-      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
-      const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
-      for (const t of tickets || []) {
-        const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
-        buckets[tier].push(t)
-      }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
-      const drawRandomIndex = (max: number): number => {
-        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
-        do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
-        return buf[0] % max
-      }
-      const lowerPrizeCandidates = buckets.none
-      for (const tier of ['5', '6']) {
-        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
-      }
-      buckets['7'].push(...lowerPrizeCandidates.splice(0))
-      buckets.none = []
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) counts[tier] = buckets[tier].length
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        for (let i = 0; i < buckets[tier].length; i += 250) {
-          const ids = buckets[tier].slice(i, i + 250).map((t: any) => String(t.id))
-          const { error } = await client.from('world_lottery_tickets').update({ draw_id: draw.id, prize_tier: tier, reward_granted: false }).in('id', ids)
-          if (error) return respond({ ok: false, error: 'Could not finalize ticket results' }, 500)
-        }
-      }
-      let awarded = 0
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        const rewardList = prizes[tier] || []
-        for (const t of buckets[tier]) {
-          const owner = String(t.owner_id), kind = String(t.owner_type)
-          if (kind === 'ai') {
-            const { data: a, error: ae } = await client.from('ai_accounts').select('coins,player_xp,inventory_items,owned_characters,limited_character_owned').eq('account_id', Number(owner)).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load AI winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.inventory_items && typeof a.inventory_items === 'object' ? a.inventory_items : {}) } as Record<string, number>
-            const characters = new Set<string>(Array.isArray(a.owned_characters) ? a.owned_characters.map(String) : [])
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { characters.add(String(p.value)); if (p.type === 'limited_character' && String(p.value) === '木下&吉田') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) patch.coins = Number(a.coins || 0) + coinAdd
-            if (xpAdd) patch.player_xp = Number(a.player_xp || 0) + xpAdd
-            if (rewardList.some(p => p.type === 'item')) patch.inventory_items = inventory
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) patch.owned_characters = [...characters]
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('ai_accounts').update(patch).eq('account_id', Number(owner))
-            if (error) return respond({ ok: false, error: 'Could not grant AI prize' }, 500)
-          } else {
-            const { data: a, error: ae } = await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,limited_character_owned').eq('player_id', owner).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load player winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.operator_pending_items && typeof a.operator_pending_items === 'object' ? a.operator_pending_items : {}) } as Record<string, number>
-            const pending = Array.isArray(a.operator_pending_lottery_rewards) ? [...a.operator_pending_lottery_rewards] : []
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { pending.push({ type: p.type, value: String(p.value), amount: p.amount, drawId: draw.id, tier }); if (p.type === 'limited_character') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) { patch.operator_pending_coins = Number(a.operator_pending_coins || 0) + coinAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (xpAdd) { patch.operator_pending_xp = Number(a.operator_pending_xp || 0) + xpAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'item')) { patch.operator_pending_items = inventory; patch.operator_pending_items_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) { patch.operator_pending_lottery_rewards = pending; patch.operator_pending_lottery_ref = crypto.randomUUID() }
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('player_rankings').update(patch).eq('player_id', owner)
-            if (error) return respond({ ok: false, error: 'Could not queue player prize' }, 500)
-          }
-          const { error: ticketUpdateError } = await client.from('world_lottery_tickets').update({ reward_granted: true, reward_result: { tier, rewards: rewardList } }).eq('id', String(t.id))
-          if (ticketUpdateError) return respond({ ok: false, error: 'Could not mark ticket rewards as granted' }, 500)
-          awarded++
-        }
-      }
-      await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
-      const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'].join('・') + '（2口）／3等 下2桁 ' + winningNumbers['3'].join('・') + '（10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
-      await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
-    }
-    return respond({ ok: false, error: 'Unknown action' }, 400)
-  } catch (error) {
-    console.error('operator handler failed:', error instanceof Error ? error.message : 'unknown error')
-    return respond({ ok: false, error: 'Server error while processing operator command' }, 500)
-  }
-})
-).test(v))
-      }
-      const second = parseList(supplied['2'], 4), third = parseList(supplied['3'], 2)
-      const start = String(supplied['4Start'] || '').replace(/[^0-9]/g, '')
-      const end = String(supplied['4End'] || '').replace(/[^0-9]/g, '')
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || second.length !== 2 || new Set(second).size !== 2 || third.length !== 10 || new Set(third).size !== 10 || !/^[0-9]{6}$/.test(start) || !/^[0-9]{6}$/.test(end) || Number(end) - Number(start) !== 99) return respond({ ok: false, error: 'Invalid pre-announcement numbers; require 1 first-prize, 2 distinct second-prize, 10 distinct third-prize numbers and a 100-number fourth-prize range' }, 400)
-      const message = '📣 🎟️ ' + title + ' 1〜3等の番号を先行発表！ 1等 ' + first + '／2等 下4桁 ' + second.join('・') + '（2口）／3等 下2桁 ' + third.join('・') + '（10口）。番号の先行発表です。抽選結果の確定と報酬配布はまだ行っていません。'
-      const { error } = await client.from('world_announcements').upsert({ id: 1, message, active: true, expires_at: new Date(Date.now() + 86400000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      if (error) return respond({ ok: false, error: 'Could not publish lottery number announcement' }, 500)
-      return respond({ ok: true, action, title, winningNumbers: { '1': first, '2': second, '3': third, '4Start': start, '4End': end }, rewardsGranted: false })
-    }
-
-    if (action === 'lottery_publish') {
-      const title = typeof body.title === 'string' ? body.title.trim() : ''
-      const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
-      const allowed = ['coins', 'xp', 'item', 'character', 'limited_character']
-      const items = ['power_chest', 'wooden_chest', 'silver_chest', 'golden_chest', 'skill_crystal', 'ability_core', 'operator_chest', 'special_operator_chest']
-      const legacyMode = !(body.winningNumbers && typeof body.winningNumbers === 'object')
-      const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
-      const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
-      const winningNumbers: Record<string, string> = {
-        '1': String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, ''),
-        '2': String(suppliedNumbers['2'] || legacyNumber.slice(-4)).replace(/[^0-9]/g, ''),
-        '3': String(suppliedNumbers['3'] || legacyNumber.slice(-2)).replace(/[^0-9]/g, ''),
-        '4Start': String(suppliedNumbers['4Start'] || (legacyMode ? '999900' : '')).replace(/[^0-9]/g, ''),
-        '4End': String(suppliedNumbers['4End'] || (legacyMode ? '999999' : '')).replace(/[^0-9]/g, '')
-      }
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !/^[0-9]{4}$/.test(winningNumbers['2']) || !/^[0-9]{2}$/.test(winningNumbers['3']) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
-        return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
-      }
-      const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
-      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
-        const raw = input[tier]
-        const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
-        if (!rows.length || rows.length > 10) return respond({ ok: false, error: 'Set 1-10 rewards for tier ' + tier }, 400)
-        prizes[tier] = []
-        for (const row of rows) {
-          const type = String(row?.type || ''), value = String(row?.value || '').trim(), amount = integerInRange(row?.amount, 1, 1000000)
-          if (!allowed.includes(type) || !value || value.length > 80 || !amount) return respond({ ok: false, error: 'Invalid prize for tier ' + tier }, 400)
-          if ((type === 'coins' || type === 'xp') && !/^[0-9]+$/.test(value)) return respond({ ok: false, error: 'Coin/XP value must be numeric' }, 400)
-          if (type === 'item' && !items.includes(value)) return respond({ ok: false, error: 'Unsupported item ID' }, 400)
-          if ((type === 'character' || type === 'limited_character') && amount !== 1) return respond({ ok: false, error: 'Character prize amount must be 1' }, 400)
-          prizes[tier].push({ type, value, amount })
-        }
-      }
-      if (legacyMode) {
-        prizes['4'] = []
-        prizes['5'] = [{ type: 'coins', value: '5000', amount: 1 }]
-        prizes['6'] = [{ type: 'coins', value: '1000', amount: 1 }]
-        prizes['7'] = [{ type: 'coins', value: '100', amount: 1 }]
-      }
-      const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
-      const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
-      if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
-      const { data: tickets, error: te } = await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
-      if (te) return respond({ ok: false, error: 'Could not load tickets' }, 500)
-      const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
-      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
-      const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
-      for (const t of tickets || []) {
-        const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
-        buckets[tier].push(t)
-      }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
-      const drawRandomIndex = (max: number): number => {
-        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
-        do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
-        return buf[0] % max
-      }
-      const lowerPrizeCandidates = buckets.none
-      for (const tier of ['5', '6']) {
-        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
-      }
-      buckets['7'].push(...lowerPrizeCandidates.splice(0))
-      buckets.none = []
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) counts[tier] = buckets[tier].length
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        for (let i = 0; i < buckets[tier].length; i += 250) {
-          const ids = buckets[tier].slice(i, i + 250).map((t: any) => String(t.id))
-          const { error } = await client.from('world_lottery_tickets').update({ draw_id: draw.id, prize_tier: tier, reward_granted: false }).in('id', ids)
-          if (error) return respond({ ok: false, error: 'Could not finalize ticket results' }, 500)
-        }
-      }
-      let awarded = 0
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        const rewardList = prizes[tier] || []
-        for (const t of buckets[tier]) {
-          const owner = String(t.owner_id), kind = String(t.owner_type)
-          if (kind === 'ai') {
-            const { data: a, error: ae } = await client.from('ai_accounts').select('coins,player_xp,inventory_items,owned_characters,limited_character_owned').eq('account_id', Number(owner)).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load AI winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.inventory_items && typeof a.inventory_items === 'object' ? a.inventory_items : {}) } as Record<string, number>
-            const characters = new Set<string>(Array.isArray(a.owned_characters) ? a.owned_characters.map(String) : [])
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { characters.add(String(p.value)); if (p.type === 'limited_character' && String(p.value) === '木下&吉田') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) patch.coins = Number(a.coins || 0) + coinAdd
-            if (xpAdd) patch.player_xp = Number(a.player_xp || 0) + xpAdd
-            if (rewardList.some(p => p.type === 'item')) patch.inventory_items = inventory
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) patch.owned_characters = [...characters]
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('ai_accounts').update(patch).eq('account_id', Number(owner))
-            if (error) return respond({ ok: false, error: 'Could not grant AI prize' }, 500)
-          } else {
-            const { data: a, error: ae } = await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,limited_character_owned').eq('player_id', owner).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load player winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.operator_pending_items && typeof a.operator_pending_items === 'object' ? a.operator_pending_items : {}) } as Record<string, number>
-            const pending = Array.isArray(a.operator_pending_lottery_rewards) ? [...a.operator_pending_lottery_rewards] : []
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { pending.push({ type: p.type, value: String(p.value), amount: p.amount, drawId: draw.id, tier }); if (p.type === 'limited_character') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) { patch.operator_pending_coins = Number(a.operator_pending_coins || 0) + coinAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (xpAdd) { patch.operator_pending_xp = Number(a.operator_pending_xp || 0) + xpAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'item')) { patch.operator_pending_items = inventory; patch.operator_pending_items_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) { patch.operator_pending_lottery_rewards = pending; patch.operator_pending_lottery_ref = crypto.randomUUID() }
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('player_rankings').update(patch).eq('player_id', owner)
-            if (error) return respond({ ok: false, error: 'Could not queue player prize' }, 500)
-          }
-          const { error: ticketUpdateError } = await client.from('world_lottery_tickets').update({ reward_granted: true, reward_result: { tier, rewards: rewardList } }).eq('id', String(t.id))
-          if (ticketUpdateError) return respond({ ok: false, error: 'Could not mark ticket rewards as granted' }, 500)
-          awarded++
-        }
-      }
-      await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
-      const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
-      await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
-    }
-    return respond({ ok: false, error: 'Unknown action' }, 400)
-  } catch (error) {
-    console.error('operator handler failed:', error instanceof Error ? error.message : 'unknown error')
-    return respond({ ok: false, error: 'Server error while processing operator command' }, 500)
-  }
-})
-).test(v))
+        const raw = Array.isArray(value) ? value : value ? String(value).split(/[,，;；\s]+/) : [fallback]
+        return raw.map((v: unknown) => String(v || '').replace(/[^0-9]/g, '')).filter((v: string) => new RegExp('^[0-9]{' + digits + '}$').test(v))
       }
       const winningNumbers = {
         '1': String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, ''),
@@ -616,8 +363,11 @@ Deno.serve(async (req: Request) => {
         '4Start': String(suppliedNumbers['4Start'] || (legacyMode ? '999900' : '')).replace(/[^0-9]/g, ''),
         '4End': String(suppliedNumbers['4End'] || (legacyMode ? '999999' : '')).replace(/[^0-9]/g, '')
       }
-      const expectedSecondCount = legacyMode ? 1 : 2, expectedThirdCount = legacyMode ? 1 : 10
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || winningNumbers['2'].length !== expectedSecondCount || new Set(winningNumbers['2']).size !== expectedSecondCount || winningNumbers['3'].length !== expectedThirdCount || new Set(winningNumbers['3']).size !== expectedThirdCount || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) return respond({ ok: false, error: 'Invalid winning numbers or 100-number fourth-prize range' }, 400)
+      const expectedSecondCount = legacyMode ? 1 : 2
+      const expectedThirdCount = legacyMode ? 1 : 10
+      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || winningNumbers['2'].length !== expectedSecondCount || new Set(winningNumbers['2']).size !== expectedSecondCount || winningNumbers['3'].length !== expectedThirdCount || new Set(winningNumbers['3']).size !== expectedThirdCount || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
+        return respond({ ok: false, error: 'Invalid winning numbers or 100-number fourth-prize range' }, 400)
+      }
       const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
       for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
         const raw = input[tier]
@@ -647,20 +397,47 @@ Deno.serve(async (req: Request) => {
       const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
       const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
       const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
-      for (const t of tickets || []) {
-        const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
-        buckets[tier].push(t)
-      }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const drawRandomIndex = (max: number): number => {
         const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
         return buf[0] % max
       }
-      const lowerPrizeCandidates = buckets.none
+      const allTickets = tickets || []
+      const assigned = new Set<string>()
+      for (const t of allTickets) {
+        if (String(t.ticket_number || '') === winningNumbers['1']) {
+          buckets['1'].push(t)
+          assigned.add(String(t.id))
+        }
+      }
+      const secondCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)) && winningNumbers['2'].includes(String(t.ticket_number || '').slice(-4)))
+      for (let i = 0; i < Math.min(2, secondCandidates.length); i++) {
+        const winner = secondCandidates.splice(drawRandomIndex(secondCandidates.length), 1)[0]
+        buckets['2'].push(winner)
+        assigned.add(String(winner.id))
+      }
+      const thirdCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)) && winningNumbers['3'].includes(String(t.ticket_number || '').slice(-2)))
+      for (let i = 0; i < Math.min(10, thirdCandidates.length); i++) {
+        const winner = thirdCandidates.splice(drawRandomIndex(thirdCandidates.length), 1)[0]
+        buckets['3'].push(winner)
+        assigned.add(String(winner.id))
+      }
+      if (!legacyMode) {
+        for (const t of allTickets) {
+          const n = String(t.ticket_number || ''), numeric = Number(n)
+          if (!assigned.has(String(t.id)) && numeric >= rangeStart && numeric <= rangeEnd) {
+            buckets['4'].push(t)
+            assigned.add(String(t.id))
+          }
+        }
+      }
+      const lowerPrizeCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)))
       for (const tier of ['5', '6']) {
-        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
+        if (lowerPrizeCandidates.length) {
+          const winner = lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0]
+          buckets[tier].push(winner)
+          assigned.add(String(winner.id))
+        }
       }
       buckets['7'].push(...lowerPrizeCandidates.splice(0))
       buckets.none = []
@@ -726,155 +503,7 @@ Deno.serve(async (req: Request) => {
       await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
         ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
-      await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
-    }
-    return respond({ ok: false, error: 'Unknown action' }, 400)
-  } catch (error) {
-    console.error('operator handler failed:', error instanceof Error ? error.message : 'unknown error')
-    return respond({ ok: false, error: 'Server error while processing operator command' }, 500)
-  }
-})
-).test(v))
-      }
-      const second = parseList(supplied['2'], 4), third = parseList(supplied['3'], 2)
-      const start = String(supplied['4Start'] || '').replace(/[^0-9]/g, '')
-      const end = String(supplied['4End'] || '').replace(/[^0-9]/g, '')
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || second.length !== 2 || new Set(second).size !== 2 || third.length !== 10 || new Set(third).size !== 10 || !/^[0-9]{6}$/.test(start) || !/^[0-9]{6}$/.test(end) || Number(end) - Number(start) !== 99) return respond({ ok: false, error: 'Invalid pre-announcement numbers; require 1 first-prize, 2 distinct second-prize, 10 distinct third-prize numbers and a 100-number fourth-prize range' }, 400)
-      const message = '📣 🎟️ ' + title + ' 1〜3等の番号を先行発表！ 1等 ' + first + '／2等 下4桁 ' + second.join('・') + '（2口）／3等 下2桁 ' + third.join('・') + '（10口）。番号の先行発表です。抽選結果の確定と報酬配布はまだ行っていません。'
-      const { error } = await client.from('world_announcements').upsert({ id: 1, message, active: true, expires_at: new Date(Date.now() + 86400000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
-      if (error) return respond({ ok: false, error: 'Could not publish lottery number announcement' }, 500)
-      return respond({ ok: true, action, title, winningNumbers: { '1': first, '2': second, '3': third, '4Start': start, '4End': end }, rewardsGranted: false })
-    }
-
-    if (action === 'lottery_publish') {
-      const title = typeof body.title === 'string' ? body.title.trim() : ''
-      const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
-      const allowed = ['coins', 'xp', 'item', 'character', 'limited_character']
-      const items = ['power_chest', 'wooden_chest', 'silver_chest', 'golden_chest', 'skill_crystal', 'ability_core', 'operator_chest', 'special_operator_chest']
-      const legacyMode = !(body.winningNumbers && typeof body.winningNumbers === 'object')
-      const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
-      const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
-      const winningNumbers: Record<string, string> = {
-        '1': String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, ''),
-        '2': String(suppliedNumbers['2'] || legacyNumber.slice(-4)).replace(/[^0-9]/g, ''),
-        '3': String(suppliedNumbers['3'] || legacyNumber.slice(-2)).replace(/[^0-9]/g, ''),
-        '4Start': String(suppliedNumbers['4Start'] || (legacyMode ? '999900' : '')).replace(/[^0-9]/g, ''),
-        '4End': String(suppliedNumbers['4End'] || (legacyMode ? '999999' : '')).replace(/[^0-9]/g, '')
-      }
-      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !/^[0-9]{4}$/.test(winningNumbers['2']) || !/^[0-9]{2}$/.test(winningNumbers['3']) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
-        return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
-      }
-      const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
-      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
-        const raw = input[tier]
-        const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
-        if (!rows.length || rows.length > 10) return respond({ ok: false, error: 'Set 1-10 rewards for tier ' + tier }, 400)
-        prizes[tier] = []
-        for (const row of rows) {
-          const type = String(row?.type || ''), value = String(row?.value || '').trim(), amount = integerInRange(row?.amount, 1, 1000000)
-          if (!allowed.includes(type) || !value || value.length > 80 || !amount) return respond({ ok: false, error: 'Invalid prize for tier ' + tier }, 400)
-          if ((type === 'coins' || type === 'xp') && !/^[0-9]+$/.test(value)) return respond({ ok: false, error: 'Coin/XP value must be numeric' }, 400)
-          if (type === 'item' && !items.includes(value)) return respond({ ok: false, error: 'Unsupported item ID' }, 400)
-          if ((type === 'character' || type === 'limited_character') && amount !== 1) return respond({ ok: false, error: 'Character prize amount must be 1' }, 400)
-          prizes[tier].push({ type, value, amount })
-        }
-      }
-      if (legacyMode) {
-        prizes['4'] = []
-        prizes['5'] = [{ type: 'coins', value: '5000', amount: 1 }]
-        prizes['6'] = [{ type: 'coins', value: '1000', amount: 1 }]
-        prizes['7'] = [{ type: 'coins', value: '100', amount: 1 }]
-      }
-      const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
-      const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
-      if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
-      const { data: tickets, error: te } = await client.from('world_lottery_tickets').select('id,ticket_number,owner_type,owner_id,owner_name').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
-      if (te) return respond({ ok: false, error: 'Could not load tickets' }, 500)
-      const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
-      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
-      const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
-      for (const t of tickets || []) {
-        const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
-        buckets[tier].push(t)
-      }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
-      const drawRandomIndex = (max: number): number => {
-        const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
-        do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
-        return buf[0] % max
-      }
-      const lowerPrizeCandidates = buckets.none
-      for (const tier of ['5', '6']) {
-        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
-      }
-      buckets['7'].push(...lowerPrizeCandidates.splice(0))
-      buckets.none = []
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) counts[tier] = buckets[tier].length
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        for (let i = 0; i < buckets[tier].length; i += 250) {
-          const ids = buckets[tier].slice(i, i + 250).map((t: any) => String(t.id))
-          const { error } = await client.from('world_lottery_tickets').update({ draw_id: draw.id, prize_tier: tier, reward_granted: false }).in('id', ids)
-          if (error) return respond({ ok: false, error: 'Could not finalize ticket results' }, 500)
-        }
-      }
-      let awarded = 0
-      for (const tier of ['1', '2', '3', '4', '5', '6', '7']) {
-        const rewardList = prizes[tier] || []
-        for (const t of buckets[tier]) {
-          const owner = String(t.owner_id), kind = String(t.owner_type)
-          if (kind === 'ai') {
-            const { data: a, error: ae } = await client.from('ai_accounts').select('coins,player_xp,inventory_items,owned_characters,limited_character_owned').eq('account_id', Number(owner)).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load AI winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.inventory_items && typeof a.inventory_items === 'object' ? a.inventory_items : {}) } as Record<string, number>
-            const characters = new Set<string>(Array.isArray(a.owned_characters) ? a.owned_characters.map(String) : [])
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { characters.add(String(p.value)); if (p.type === 'limited_character' && String(p.value) === '木下&吉田') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) patch.coins = Number(a.coins || 0) + coinAdd
-            if (xpAdd) patch.player_xp = Number(a.player_xp || 0) + xpAdd
-            if (rewardList.some(p => p.type === 'item')) patch.inventory_items = inventory
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) patch.owned_characters = [...characters]
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('ai_accounts').update(patch).eq('account_id', Number(owner))
-            if (error) return respond({ ok: false, error: 'Could not grant AI prize' }, 500)
-          } else {
-            const { data: a, error: ae } = await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,limited_character_owned').eq('player_id', owner).maybeSingle()
-            if (ae || !a) return respond({ ok: false, error: 'Could not load player winner' }, 500)
-            let coinAdd = 0, xpAdd = 0, limited = Boolean(a.limited_character_owned)
-            const inventory = { ...(a.operator_pending_items && typeof a.operator_pending_items === 'object' ? a.operator_pending_items : {}) } as Record<string, number>
-            const pending = Array.isArray(a.operator_pending_lottery_rewards) ? [...a.operator_pending_lottery_rewards] : []
-            for (const p of rewardList) {
-              if (p.type === 'coins') coinAdd += Number(p.value) * p.amount
-              else if (p.type === 'xp') xpAdd += Number(p.value) * p.amount
-              else if (p.type === 'item') inventory[p.value] = Number(inventory[p.value] || 0) + p.amount
-              else { pending.push({ type: p.type, value: String(p.value), amount: p.amount, drawId: draw.id, tier }); if (p.type === 'limited_character') limited = true }
-            }
-            const patch: Record<string, unknown> = { updated_at: now }
-            if (coinAdd) { patch.operator_pending_coins = Number(a.operator_pending_coins || 0) + coinAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (xpAdd) { patch.operator_pending_xp = Number(a.operator_pending_xp || 0) + xpAdd; patch.operator_pending_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'item')) { patch.operator_pending_items = inventory; patch.operator_pending_items_ref = crypto.randomUUID() }
-            if (rewardList.some(p => p.type === 'character' || p.type === 'limited_character')) { patch.operator_pending_lottery_rewards = pending; patch.operator_pending_lottery_ref = crypto.randomUUID() }
-            if (limited !== Boolean(a.limited_character_owned)) patch.limited_character_owned = limited
-            const { error } = await client.from('player_rankings').update(patch).eq('player_id', owner)
-            if (error) return respond({ ok: false, error: 'Could not queue player prize' }, 500)
-          }
-          const { error: ticketUpdateError } = await client.from('world_lottery_tickets').update({ reward_granted: true, reward_result: { tier, rewards: rewardList } }).eq('id', String(t.id))
-          if (ticketUpdateError) return respond({ ok: false, error: 'Could not mark ticket rewards as granted' }, 500)
-          awarded++
-        }
-      }
-      await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
-      const announcement = legacyMode
-        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
+        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。2・3等は該当候補から上限口数までランダム選出。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
       return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
