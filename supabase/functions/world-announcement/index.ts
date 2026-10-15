@@ -299,6 +299,19 @@ Deno.serve(async (req: Request) => {
       }
       return respond({ok:true,action,issued,recipients:unique.length})
     }
+    if (action === 'lottery_announce_numbers') {
+      const title = typeof body.title === 'string' ? body.title.trim() : ''
+      const raw = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
+      const first = String(raw['1'] || '').replace(/[^0-9]/g, '')
+      const second = String(raw['2'] || '').replace(/[^0-9]/g, '')
+      const third = String(raw['3'] || '').replace(/[^0-9]/g, '')
+      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || !/^[0-9]{4}$/.test(second) || !/^[0-9]{2}$/.test(third)) return respond({ ok: false, error: 'Enter a draw title, six-digit first-prize number, four-digit second-prize number, and two-digit third-prize number' }, 400)
+      const message = '📣 ' + title + ' 先行発表！ 1等 ' + first + '（最大1口）／2等 下4桁 ' + second + '（最大2口）／3等 下2桁 ' + third + '（最大10口）。これは番号の先行発表です。報酬配布・当選確定処理はまだ行っていません。'
+      const { error } = await client.from('world_announcements').upsert({ id: 1, message, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (error) { console.error('lottery preannouncement write failed:', error.message); return respond({ ok: false, error: 'Lottery numbers could not be announced' }, 500) }
+      return respond({ ok: true, action, title, winningNumbers: { '1': first, '2': second, '3': third }, rewardsGranted: false, expiresAt: new Date(Date.now() + 3600000).toISOString() })
+    }
+
     if (action === 'lottery_random_numbers') {
       const { data: tickets, error } = await client.from('world_lottery_tickets').select('ticket_number').is('draw_id', null).order('created_at', { ascending: true }).limit(10000)
       if (error) return respond({ ok: false, error: 'Could not load issued ticket numbers' }, 500)
@@ -366,12 +379,34 @@ Deno.serve(async (req: Request) => {
         const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
       }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const drawRandomIndex = (max: number): number => {
         const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
         return buf[0] % max
       }
+      const takeRandomWinners = (bucket: any[], cap: number): { winners: any[]; overflow: any[] } => {
+        const candidates = [...bucket], winners: any[] = []
+        while (candidates.length && winners.length < cap) winners.push(candidates.splice(drawRandomIndex(candidates.length), 1)[0])
+        return { winners, overflow: candidates }
+      }
+      // 2nd prize is limited to 2 tickets; non-selected matches continue through lower-tier checks.
+      const secondSelection = takeRandomWinners(buckets['2'], 2)
+      buckets['2'] = secondSelection.winners
+      for (const t of secondSelection.overflow) {
+        const n = String(t.ticket_number || ''), numeric = Number(n)
+        if (n.slice(-2) === winningNumbers['3']) buckets['3'].push(t)
+        else if (!legacyMode && numeric >= rangeStart && numeric <= rangeEnd) buckets['4'].push(t)
+        else buckets.none.push(t)
+      }
+      // 3rd prize is limited to 10 tickets; overflow may qualify for 4th prize.
+      const thirdSelection = takeRandomWinners(buckets['3'], 10)
+      buckets['3'] = thirdSelection.winners
+      for (const t of thirdSelection.overflow) {
+        const numeric = Number(String(t.ticket_number || ''))
+        if (!legacyMode && numeric >= rangeStart && numeric <= rangeEnd) buckets['4'].push(t)
+        else buckets.none.push(t)
+      }
+      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const lowerPrizeCandidates = buckets.none
       for (const tier of ['5', '6']) {
         if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
