@@ -369,7 +369,7 @@ Deno.serve(async (req: Request) => {
       const validLegacy = legacyMode && secondNumbers.length === 1 && thirdNumbers.length === 1
       const validNew = secondNumbers.length === 2 && new Set(secondNumbers).size === 2 && new Set(secondNumbers.map((suffix: string) => suffix.slice(-2))).size === 2 && thirdNumbers.length === 10 && new Set(thirdNumbers).size === 10 && !secondNumbers.includes(firstNumber.slice(-4)) && !thirdNumbers.includes(firstNumber.slice(-2)) && !secondNumbers.some((suffix: string) => thirdNumbers.includes(suffix.slice(-2)))
       if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !(validLegacy || validNew) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
-        return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
+        return respond({ ok: false, error: 'Enter one six-digit first-prize number, two distinct four-digit second-prize suffixes, ten distinct two-digit third-prize suffixes, and an inclusive 100-number fourth-prize range' }, 400)
       }
       const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
       for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4', '5', '6', '7'])) {
