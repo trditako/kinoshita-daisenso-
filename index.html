@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.88';
+const GAME_VERSION='v1.8.89';
 const UPDATE_LOG=[
+ {date:'2026-10-16',version:'v1.8.89',title:'📉 Supabase通信・ログ負荷を軽減',items:['ワールドイベント一覧の自動同期を45秒ごとから180秒ごとに変更','ワールド状態の自動確認を45秒ごとから120秒ごとに変更','機能を削除せず、画面を開いた際の即時更新は維持']},
  {date:'2026-10-15',version:'v1.8.88',title:'🎟️ 宝くじの当選口数を調整',items:['1等1口・2等2口・3等10口に対応','2等は下4桁2種類、3等は下2桁10種類の番号を設定・先行発表可能']},
  {date:'2026-10-15',version:'v1.8.87',title:'🎟️ 宝くじ番号を連番化・4等を追加',items:['チケット番号を発行順の連番に変更し、既存番号と重複しないようサーバーで一元採番','1等6桁・2等下4桁・3等下2桁の当選番号を個別設定可能','4等は開始〜終了の100番号範囲で判定し、1〜3等優先で当選判定','ランダム抽選は発行済みの未抽選チケット番号を基に生成']},
  {date:'2026-10-15',version:'v1.8.86',title:'🧪 お試しプレイ中に運営パネルが重ならないよう修正',items:['テスト開始時に運営パネルを一時的に隠し、戦闘画面を操作可能にする','編集画面へ戻ると運営パネルを元の状態で再表示']},
@@ -5581,7 +5582,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   }catch(e){/* keep gameplay usable if global status is unavailable */}
  }
  refresh();refreshWorldState();
- setInterval(refresh,120000);setInterval(refreshWorldState,45000);
+ setInterval(refresh,300000);setInterval(refreshWorldState,120000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refresh();refreshWorldState()}});
 })();
 </script>
@@ -5850,7 +5851,7 @@ function initWorldEventTools(){
   finally{btn.disabled=false}
  });
  document.getElementById('operatorWorldStageRefresh')?.addEventListener('click',async()=>{await loadWorldEventStages(true);await refreshWorldStageAdmin()});
- refreshWorldStageAdmin();loadWorldEventStages(true);setInterval(()=>loadWorldEventStages(true),45000);
+ refreshWorldStageAdmin();loadWorldEventStages(true);setInterval(()=>{if(document.visibilityState==='visible')loadWorldEventStages(true)},180000);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initWorldEventTools,{once:true});else initWorldEventTools();
 })();
