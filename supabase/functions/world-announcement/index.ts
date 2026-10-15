@@ -314,6 +314,20 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, action, winningNumbers: { '1': first, '2': second.slice(-4), '3': third.slice(-2), '4Start': String(rangeStart).padStart(6, '0'), '4End': String(rangeStart + 99).padStart(6, '0') } })
     }
 
+    if (action === 'lottery_announce_numbers') {
+      const title = typeof body.title === 'string' ? body.title.trim() : ''
+      const numbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
+      const first = String(numbers['1'] || '').replace(/[^0-9]/g, '')
+      const second = String(numbers['2'] || '').replace(/[^0-9]/g, '')
+      const third = String(numbers['3'] || '').replace(/[^0-9]/g, '')
+      if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || !/^[0-9]{4}$/.test(second) || !/^[0-9]{2}$/.test(third))
+        return respond({ ok: false, error: 'Enter a title, six-digit first-prize number, four-digit second-prize number, and two-digit third-prize number' }, 400)
+      const announcement = '📣 🎟️ ' + title + ' 先行発表！ 1等 ' + first + '／2等 下4桁 ' + second + '／3等 下2桁 ' + third + '。これは番号の先行発表です。報酬の抽選・配布はまだ行われていません。'
+      const { error } = await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (error) return respond({ ok: false, error: 'Lottery number announcement could not be saved' }, 500)
+      return respond({ ok: true, action, title })
+    }
+
     if (action === 'lottery_publish') {
       const title = typeof body.title === 'string' ? body.title.trim() : ''
       const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
@@ -361,20 +375,47 @@ Deno.serve(async (req: Request) => {
       const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], none: [] }
       const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0 }
       const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
-      for (const t of tickets || []) {
-        const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
-        buckets[tier].push(t)
-      }
-      // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const drawRandomIndex = (max: number): number => {
         const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
         return buf[0] % max
       }
-      const lowerPrizeCandidates = buckets.none
+      const allTickets = tickets || []
+      const assigned = new Set<string>()
+      for (const t of allTickets) {
+        if (String(t.ticket_number || '') === winningNumbers['1']) {
+          buckets['1'].push(t)
+          assigned.add(String(t.id))
+        }
+      }
+      const secondCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)) && String(t.ticket_number || '').slice(-4) === winningNumbers['2'])
+      for (let i = 0; i < Math.min(2, secondCandidates.length); i++) {
+        const winner = secondCandidates.splice(drawRandomIndex(secondCandidates.length), 1)[0]
+        buckets['2'].push(winner)
+        assigned.add(String(winner.id))
+      }
+      const thirdCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)) && String(t.ticket_number || '').slice(-2) === winningNumbers['3'])
+      for (let i = 0; i < Math.min(10, thirdCandidates.length); i++) {
+        const winner = thirdCandidates.splice(drawRandomIndex(thirdCandidates.length), 1)[0]
+        buckets['3'].push(winner)
+        assigned.add(String(winner.id))
+      }
+      if (!legacyMode) {
+        for (const t of allTickets) {
+          const n = String(t.ticket_number || ''), numeric = Number(n)
+          if (!assigned.has(String(t.id)) && numeric >= rangeStart && numeric <= rangeEnd) {
+            buckets['4'].push(t)
+            assigned.add(String(t.id))
+          }
+        }
+      }
+      const lowerPrizeCandidates = allTickets.filter((t: any) => !assigned.has(String(t.id)))
       for (const tier of ['5', '6']) {
-        if (lowerPrizeCandidates.length) buckets[tier].push(lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0])
+        if (lowerPrizeCandidates.length) {
+          const winner = lowerPrizeCandidates.splice(drawRandomIndex(lowerPrizeCandidates.length), 1)[0]
+          buckets[tier].push(winner)
+          assigned.add(String(winner.id))
+        }
       }
       buckets['7'].push(...lowerPrizeCandidates.splice(0))
       buckets.none = []
@@ -440,7 +481,7 @@ Deno.serve(async (req: Request) => {
       await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
         ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
+        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。2・3等は該当候補から上限口数までランダム選出。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
       return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
