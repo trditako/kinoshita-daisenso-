@@ -1376,7 +1376,7 @@ async function syncPlayerRanking(){
     const res=await fetch(PLAYER_RANKINGS_URL,{method:'POST',headers:supabaseHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body),cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     // サーバー側で確定したランク報酬をプレゼントBOXへ取り込む。
-    let rewardRows=[];let rewardRes=await fetch(PLAYER_RANKINGS_URL+'?select=pending_coins,pending_xp,reward_rank,reward_cycle,limited_character_owned,operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref&player_id=eq.'+encodeURIComponent(playerRankingId),{headers:supabaseHeaders(),cache:'no-store'});
+    let rewardRows=[];let rewardRes=await fetch(PLAYER_RANKINGS_URL+'?select=pending_coins,pending_xp,reward_rank,reward_cycle,limited_character_owned,operator_pending_coins,operator_pending_xp,operator_pending_ref,operator_pending_items,operator_pending_items_ref,operator_pending_lottery_rewards,operator_pending_lottery_ref&player_id=eq.'+encodeURIComponent(playerRankingId),{headers:supabaseHeaders(),cache:'no-store'});
     if(!rewardRes.ok){rewardRes=await fetch(PLAYER_RANKINGS_URL+'?select=pending_coins,pending_xp,reward_rank,reward_cycle,limited_character_owned&player_id=eq.'+encodeURIComponent(playerRankingId),{headers:supabaseHeaders(),cache:'no-store'});}
     if(rewardRes.ok){
       rewardRows=await rewardRes.json();const p=rewardRows&&rewardRows[0];
@@ -1411,6 +1411,15 @@ async function syncPlayerRanking(){
          saveInventoryItems(inventory);storage.setItem('kinoshitaLastOperatorItemsRef',itemRef);
          await fetch(PLAYER_RANKINGS_URL+'?player_id=eq.'+encodeURIComponent(playerRankingId),{method:'PATCH',headers:supabaseHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({operator_pending_items:{},operator_pending_items_ref:''}),cache:'no-store'});
          if(typeof renderInventory==='function')renderInventory();
+       }
+       const lotteryRewards=Array.isArray(p?.operator_pending_lottery_rewards)?p.operator_pending_lottery_rewards:[];
+       const lotteryRef=String(p?.operator_pending_lottery_ref||'');
+       if(p&&lotteryRef&&lotteryRewards.length&&storage.getItem('kinoshitaLastLotteryRewardRef')!==lotteryRef){
+         let changed=false;
+         for(const reward of lotteryRewards){if(!['character','limited_character'].includes(String(reward?.type||'')))continue;const idx=cards.findIndex(c=>c.name===String(reward.value||''));if(idx>=0&&!ownedFlags[idx]){ownedFlags[idx]=true;changed=true}}
+         if(changed){owned=ownedFlags.filter(Boolean).length;save();if(typeof renderOwnedStart==='function')renderOwnedStart();if(typeof renderCards==='function')renderCards()}
+         storage.setItem('kinoshitaLastLotteryRewardRef',lotteryRef);
+         await fetch(PLAYER_RANKINGS_URL+'?player_id=eq.'+encodeURIComponent(playerRankingId),{method:'PATCH',headers:supabaseHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({operator_pending_lottery_rewards:[],operator_pending_lottery_ref:''}),cache:'no-store'});
        }
      }
      await loadPublicPlayerRankings();
@@ -5349,7 +5358,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
    if(!payload.message){setStatus('告知メッセージを入力してください。',false);return}
    if(payload.message.length>300){setStatus('告知は300文字以内にしてください。',false);return}
   }else if(action==='grant'){
-   payload.target=el('operatorRewardTarget').value;payload.targetIds=String(el('operatorRewardPlayerId').value||'').split(/[\\n,，;；]+/).map(x=>x.trim()).filter(Boolean);
+   payload.target=el('operatorRewardTarget').value;payload.targetIds=String(el('operatorRewardPlayerId').value||'').split(/[\n,，;；]+/).map(x=>x.trim()).filter(Boolean);
    payload.playerId=payload.targetIds[0]||'';
    payload.coins=Number(el('operatorRewardCoins').value||0);payload.xp=Number(el('operatorRewardXp').value||0);
    if(['single','multiple'].includes(payload.target)&&!payload.targetIds.length){setStatus('対象アカウントのID・登録名・AI番号を入力してください。',false);return}
