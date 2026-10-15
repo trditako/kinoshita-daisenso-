@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.83';
+const GAME_VERSION='v1.8.84';
 const UPDATE_LOG=[
+ {date:'2026-10-15',version:'v1.8.84',title:'🛠️ ワールドイベント自由作成エディター',items:['ステージ名・城距離・敵城体力・BGM・背景を自由設定','敵の種類・出現時刻・倍率・同時出現数・ボス種別を複数行で設定','既存ステージのテンプレート方式も引き続き利用可能']},
  {date:'2026-10-15',version:'v1.8.83',title:'🎪 開催更新中のイベント戦闘ステージを固定',items:['戦闘開始時のワールドイベントステージを記録し、一覧更新で別ステージへずれる問題を防止']},
  {date:'2026-10-15',version:'v1.8.82',title:'🎪 運営ワールドイベントステージを追加',items:['運営パネルから複数のイベントステージを作成・開催・停止可能','既存ステージをテンプレートにしてタイトルと開催時間を設定','対象ステージの初回クリア時のみ、サーバーで重複を防いで宝くじチケット1枚を発行']},
  {date:'2026-10-15',version:'v1.8.81',title:'🎲 宝くじのランダム抽選・発表をワンボタン化',items:['報酬を設定してランダム抽選・発表ボタンを押すと、安全な乱数で当選番号を生成','発表前に確認ダイアログを表示し、承認後に既存の抽選・報酬配布処理を実行','番号生成のみのボタンも残し、手動確認にも対応']},
@@ -466,8 +467,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 <p style="font-size:12px;margin:6px 0">既存ステージの敵編成をテンプレートとして使い、複数のワールドイベントを作成できます。開催中のステージは全プレイヤーに表示されます。</p>
 <label for="operatorWorldStageTitle" style="display:block;font-weight:900;margin:8px 0 4px">ステージ名</label>
 <input id="operatorWorldStageTitle" maxlength="60" placeholder="例：運営記念・宝くじチャレンジ" style="width:100%;box-sizing:border-box;padding:10px;border:2px solid #a78bfa;border-radius:9px;background:#fff;color:#111;font:inherit">
-<label for="operatorWorldStageTemplate" style="display:block;font-weight:900;margin:8px 0 4px">敵編成テンプレート</label>
+<label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-weight:900"><input id="operatorWorldStageCustomMode" type="checkbox"> ゼロから自由に作成する</label>
+<div id="operatorWorldStageTemplateWrap"><label for="operatorWorldStageTemplate" style="display:block;font-weight:900;margin:8px 0 4px">敵編成テンプレート</label>
 <select id="operatorWorldStageTemplate" style="width:100%;padding:10px;border:2px solid #a78bfa;border-radius:9px;background:#fff;color:#111;font:inherit"></select>
+</div>
+<div id="operatorWorldStageCustomFields" style="display:none;padding:10px;margin:8px 0;background:#fff;border:1px solid #c4b5fd;border-radius:9px">
+<b>ステージ基本設定</b>
+<label style="display:block;margin:8px 0 4px;font-weight:800">城までの距離（ステージ幅 px）</label><input id="operatorWorldStageWidth" type="number" min="600" max="12000" value="1800" style="width:100%;box-sizing:border-box;padding:8px">
+<label style="display:block;margin:8px 0 4px;font-weight:800">敵城体力</label><input id="operatorWorldStageCastleHp" type="number" min="100" max="1000000000" value="100000" style="width:100%;box-sizing:border-box;padding:8px">
+<label style="display:block;margin:8px 0 4px;font-weight:800">クリア経験値</label><input id="operatorWorldStageXp" type="number" min="0" max="10000000" value="1000" style="width:100%;box-sizing:border-box;padding:8px">
+<label style="display:block;margin:8px 0 4px;font-weight:800">BGM</label><select id="operatorWorldStageBgm" style="width:100%;padding:8px"><option value="event">イベント</option><option value="event_rage">イベント・激戦</option><option value="event_perfect">イベント・宇宙</option><option value="rage">激戦</option><option value="menu">メニュー</option></select>
+<label style="display:block;margin:8px 0 4px;font-weight:800">背景</label><select id="operatorWorldStageBackground" style="width:100%;padding:8px"><option value="field">草原</option><option value="night">夜</option><option value="space">宇宙</option><option value="volcano">火山</option><option value="ocean">海</option></select>
+<hr style="margin:10px 0;border-color:#ddd"><b>敵の出現スケジュール</b><p style="font-size:12px">敵ごとに出現時刻・倍率・出現数を設定できます。出現数は最大50体／行です。</p><div id="operatorWorldStageEnemyRows"></div><button id="operatorWorldStageAddEnemy" type="button" class="formationBtn" style="width:100%;background:#475569!important;color:#fff!important;margin-top:6px">＋ 敵の出現条件を追加</button>
+</div>
 <label for="operatorWorldStageDuration" style="display:block;font-weight:900;margin:8px 0 4px">開催時間</label>
 <select id="operatorWorldStageDuration" style="width:100%;padding:10px;border:2px solid #a78bfa;border-radius:9px;background:#fff;color:#111;font:inherit"><option value="300">5分</option><option value="1800">30分</option><option value="3600" selected>1時間</option><option value="21600">6時間</option><option value="86400">24時間</option></select>
 <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:900"><input id="operatorWorldStageLottery" type="checkbox" checked> 初回クリア報酬：宝くじチケット1枚</label>
@@ -2409,6 +2421,8 @@ function stageVisualInfo(){
  if(selectedMode==='daily')return {name:'異次元戦線',bg:'linear-gradient(180deg,#1e1b4b 0%,#4338ca 42%,#312e81 58%,#111827 100%),radial-gradient(circle at 70% 20%,#c4b5fd77 0 8%,transparent 9%)',bgm:'event_rage'};if(selectedMode==='bossrush')return {name:'ボスラッシュ闘技場',bg:'linear-gradient(180deg,#1f1235 0%,#581c87 40%,#7f1d1d 59%,#17110d 100%),radial-gradient(circle at 78% 18%,#fbbf2466 0 7%,transparent 8%)',bgm:'event_rage'};
  if(selectedMode==='halloween')return {name:'ハロウィンナイト',bg:'linear-gradient(180deg,#1e1033 0%,#581c87 40%,#7c2d12 59%,#1c1018 100%),radial-gradient(circle at 78% 18%,#fbbf2466 0 7%,transparent 8%),radial-gradient(circle at 22% 28%,#c084fc55 0 5%,transparent 6%)',bgm:'event'};
  if(selectedMode==='event'||selectedMode==='growth'){
+  const customStage=currentStage();
+  if(customStage?.customWorldEvent){const backgrounds={field:'linear-gradient(180deg,#7dd3fc 0%,#38bdf8 55%,#65a30d 56%,#365314 100%)',night:'linear-gradient(180deg,#0f172a 0%,#312e81 55%,#334155 56%,#111827 100%)',space:'linear-gradient(180deg,#020617 0%,#1e1b4b 55%,#111827 56%,#030712 100%)',volcano:'linear-gradient(180deg,#450a0a 0%,#991b1b 55%,#292524 56%,#0c0a09 100%)',ocean:'linear-gradient(180deg,#0c4a6e 0%,#38bdf8 55%,#0e7490 56%,#164e63 100%)'};return {name:customStage.name,bg:backgrounds[customStage.customBackground]||backgrounds.field,bgm:customStage.customBgm||'event'};}
   const eventName=String(currentStage()?.name||'');
   if(eventName.includes('狂乱'))return {name:'狂乱の荒野',bg:'linear-gradient(180deg,#3b0764 0%,#7f1d1d 52%,#3f2a1d 53%,#17110d 100%),radial-gradient(circle at 78% 20%,#f59e0b55 0 7%,transparent 8%)',bgm:'event_rage'};
   if(eventName.includes('パーフェクト'))return {name:'宇宙研究都市',bg:'linear-gradient(180deg,#020617 0%,#172554 58%,#1e293b 59%,#0f172a 100%),radial-gradient(circle at 18% 20%,#fff 0 1px,transparent 2px),radial-gradient(circle at 72% 32%,#c4b5fd 0 1px,transparent 2px)',bgm:'event_perfect'};
@@ -5590,6 +5604,21 @@ const WORLD_EVENT_REST='https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1/world_e
 const WORLD_EVENT_HEADERS={'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'};
 const worldStageEsc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 let worldStageLoadBusy=false;
+function worldStageBuildEnemyRow(index){
+ const enemies=Object.keys(enemyTypes||{}).sort((a,b)=>a.localeCompare(b,'ja'));
+ const opts=enemies.map(n=>'<option value="'+worldStageEsc(n)+'">'+worldStageEsc(n)+'</option>').join('');
+ return '<div class="world-stage-enemy-row" style="padding:8px;margin:8px 0;border:1px solid #c4b5fd;border-radius:8px;background:#faf5ff"><b>出現条件 '+(index+1)+'</b><button type="button" data-remove-world-enemy="'+index+'" style="float:right">削除</button><label style="display:block;margin:6px 0 3px">敵キャラクター</label><select data-field="enemy" style="width:100%;padding:8px">'+opts+'</select><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><label>出現時刻（秒）<input data-field="t" type="number" min="0" max="3600" value="'+(index*5+2)+'" style="width:100%;box-sizing:border-box;padding:7px"></label><label>敵倍率<input data-field="mult" type="number" min="0.1" max="100000" step="0.1" value="2" style="width:100%;box-sizing:border-box;padding:7px"></label><label>出現数<input data-field="count" type="number" min="1" max="50" value="1" style="width:100%;box-sizing:border-box;padding:7px"></label><label>敵の役割<select data-field="role" style="width:100%;padding:7px"><option value="normal">通常</option><option value="midboss">中ボス</option><option value="boss">ボス</option></select></label></div></div>';
+}
+function worldStageCustomConfig(){
+ const rows=[...document.querySelectorAll('#operatorWorldStageEnemyRows .world-stage-enemy-row')],schedule=[],enemies=[];
+ for(const row of rows){const get=f=>row.querySelector('[data-field="'+f+'"]')?.value;const enemy=String(get('enemy')||''),t=Number(get('t')),mult=Number(get('mult')),count=Number(get('count')),role=String(get('role')||'normal');
+ if(!enemy||!Number.isFinite(t)||t<0||t>3600||!Number.isFinite(mult)||mult<0.1||mult>100000||!Number.isInteger(count)||count<1||count>50)throw new Error('敵の出現条件を確認してください（時刻・倍率・出現数）。');
+ enemies.push(enemy);for(let i=0;i<count;i++)schedule.push({t:t+i*0.12,enemy,mult,fixedMultiplier:true,role});}
+ if(!schedule.length)throw new Error('敵の出現条件を1つ以上追加してください。');schedule.sort((a,b)=>a.t-b.t);
+ const width=Number(document.getElementById('operatorWorldStageWidth')?.value),baseHp=Number(document.getElementById('operatorWorldStageCastleHp')?.value),xp=Number(document.getElementById('operatorWorldStageXp')?.value);
+ if(!Number.isInteger(width)||width<600||width>12000||!Number.isInteger(baseHp)||baseHp<100||baseHp>1000000000||!Number.isInteger(xp)||xp<0||xp>10000000)throw new Error('ステージ幅・敵城体力・経験値を確認してください。');
+ return {customWorldEvent:true,width,baseHp,xp,enemies:[...new Set(enemies)],schedule,customBgm:document.getElementById('operatorWorldStageBgm')?.value||'event',customBackground:document.getElementById('operatorWorldStageBackground')?.value||'field'};
+}
 function worldStageTemplateOptions(){
  const sel=document.getElementById('operatorWorldStageTemplate');if(!sel||typeof eventStages==='undefined')return;
  const templates=eventStages.filter(st=>!st.itemReward&&!st.halloweenEvent&&!st.worldEventId&&Array.isArray(st.schedule)&&st.schedule.length);
@@ -5625,9 +5654,10 @@ async function loadWorldEventStages(refresh){
   for(let i=eventStages.length-1;i>=0;i--){if(eventStages[i]?.worldEventId&&!activeWorldIds.has(String(eventStages[i].worldEventId)))eventStages.splice(i,1);}
   for(const row of rows||[]){
    if(eventStages.some(st=>st.worldEventId===row.id))continue;
+   const config=row.stage_config&&typeof row.stage_config==='object'?row.stage_config:{};
    const template=eventStages.find(st=>st.name===row.template_name&&!st.worldEventId);
-   if(!template)continue;
-   eventStages.push({...template,...(row.stage_config&&typeof row.stage_config==='object'?row.stage_config:{}),name:row.title,eventReward:undefined,rewardCharacter:undefined,itemReward:undefined,halloweenEvent:false,worldEventId:row.id,worldEventLotteryTicket:row.lottery_ticket_reward===true,worldEventExpiresAt:row.expires_at});
+   if(!template&&row.template_name!=='__custom__')continue;
+   eventStages.push({... (template||{}),...config,name:row.title,eventReward:undefined,rewardCharacter:undefined,itemReward:undefined,halloweenEvent:false,worldEventId:row.id,worldEventLotteryTicket:row.lottery_ticket_reward===true,worldEventExpiresAt:row.expires_at});
   }
   if(refresh||rows?.length)renderStageSelect();
  }catch(e){console.warn('World event stages unavailable:',e);}
@@ -5656,16 +5686,22 @@ showResult=function(win){
 };
 function initWorldEventTools(){
  worldStageTemplateOptions();
+ const customToggle=document.getElementById('operatorWorldStageCustomMode'),templateWrap=document.getElementById('operatorWorldStageTemplateWrap'),customFields=document.getElementById('operatorWorldStageCustomFields');
+ const syncWorldStageMode=()=>{if(templateWrap)templateWrap.style.display=customToggle?.checked?'none':'block';if(customFields)customFields.style.display=customToggle?.checked?'block':'none';};
+ customToggle?.addEventListener('change',syncWorldStageMode);syncWorldStageMode();
+ const enemyRows=document.getElementById('operatorWorldStageEnemyRows');
+ if(enemyRows){enemyRows.innerHTML=worldStageBuildEnemyRow(0);enemyRows.addEventListener('click',e=>{const b=e.target.closest('[data-remove-world-enemy]');if(!b)return;b.closest('.world-stage-enemy-row')?.remove();[...enemyRows.querySelectorAll('.world-stage-enemy-row')].forEach((r,i)=>{const title=r.querySelector('b');if(title)title.textContent='出現条件 '+(i+1);});});}
+ document.getElementById('operatorWorldStageAddEnemy')?.addEventListener('click',()=>{if(enemyRows)enemyRows.insertAdjacentHTML('beforeend',worldStageBuildEnemyRow(enemyRows.querySelectorAll('.world-stage-enemy-row').length));});
  document.getElementById('operatorWorldStageCreate')?.addEventListener('click',async()=>{
   const title=String(document.getElementById('operatorWorldStageTitle')?.value||'').trim();
   const templateName=String(document.getElementById('operatorWorldStageTemplate')?.value||'');
   const durationSeconds=Number(document.getElementById('operatorWorldStageDuration')?.value||3600);
   const lotteryTicketReward=!!document.getElementById('operatorWorldStageLottery')?.checked;
   if(!title){alert('ステージ名を入力してください。');return}
-  if(!templateName){alert('敵編成テンプレートを選択してください。');return}
+  if(!customToggle?.checked&&!templateName){alert('敵編成テンプレートを選択してください。');return}
   if(!confirm('「'+title+'」を'+Math.round(durationSeconds/60)+'分間開催しますか？'+(lotteryTicketReward?' 初回クリア報酬は宝くじチケット1枚です。':'')))return;
   const btn=document.getElementById('operatorWorldStageCreate');btn.disabled=true;
-  try{await worldStageRequest({action:'world_event_stage_create',title,templateName,durationSeconds,lotteryTicketReward});document.getElementById('operatorWorldStageTitle').value='';await loadWorldEventStages(true);await refreshWorldStageAdmin();alert('イベントステージを作成し、開催しました。');}
+  try{const customMode=!!customToggle?.checked;const stageConfig=customMode?worldStageCustomConfig():null;await worldStageRequest({action:'world_event_stage_create',title,templateName:customMode?'__custom__':templateName,durationSeconds,lotteryTicketReward,stageConfig});document.getElementById('operatorWorldStageTitle').value='';await loadWorldEventStages(true);await refreshWorldStageAdmin();alert('イベントステージを作成し、開催しました。');}
   catch(e){alert('作成できませんでした：'+e.message)}
   finally{btn.disabled=false}
  });
