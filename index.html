@@ -5620,6 +5620,8 @@ async function loadWorldEventStages(refresh){
   const res=await fetch(WORLD_EVENT_REST+'?select=id,title,template_name,stage_config,active,starts_at,expires_at,lottery_ticket_reward&active=eq.true&starts_at=lte.'+encodeURIComponent(new Date().toISOString())+'&expires_at=gt.'+encodeURIComponent(new Date().toISOString())+'&order=created_at.asc',{headers:WORLD_EVENT_HEADERS,cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
   const rows=await res.json();
+  const activeWorldIds=new Set((rows||[]).map(row=>String(row.id)));
+  for(let i=eventStages.length-1;i>=0;i--){if(eventStages[i]?.worldEventId&&!activeWorldIds.has(String(eventStages[i].worldEventId)))eventStages.splice(i,1);}
   for(const row of rows||[]){
    if(eventStages.some(st=>st.worldEventId===row.id))continue;
    const template=eventStages.find(st=>st.name===row.template_name&&!st.worldEventId);
