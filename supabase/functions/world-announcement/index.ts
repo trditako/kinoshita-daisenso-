@@ -319,20 +319,21 @@ Deno.serve(async (req: Request) => {
       const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
       const allowed = ['coins', 'xp', 'item', 'character', 'limited_character']
       const items = ['power_chest', 'wooden_chest', 'silver_chest', 'golden_chest', 'skill_crystal', 'ability_core', 'operator_chest', 'special_operator_chest']
+      const legacyMode = !(body.winningNumbers && typeof body.winningNumbers === 'object')
       const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
       const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
       const winningNumbers: Record<string, string> = {
         '1': String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, ''),
         '2': String(suppliedNumbers['2'] || legacyNumber.slice(-4)).replace(/[^0-9]/g, ''),
         '3': String(suppliedNumbers['3'] || legacyNumber.slice(-2)).replace(/[^0-9]/g, ''),
-        '4Start': String(suppliedNumbers['4Start'] || '').replace(/[^0-9]/g, ''),
-        '4End': String(suppliedNumbers['4End'] || '').replace(/[^0-9]/g, '')
+        '4Start': String(suppliedNumbers['4Start'] || (legacyMode ? '999900' : '')).replace(/[^0-9]/g, ''),
+        '4End': String(suppliedNumbers['4End'] || (legacyMode ? '999999' : '')).replace(/[^0-9]/g, '')
       }
       if (!title || title.length > 60 || !/^[0-9]{6}$/.test(winningNumbers['1']) || !/^[0-9]{4}$/.test(winningNumbers['2']) || !/^[0-9]{2}$/.test(winningNumbers['3']) || !/^[0-9]{6}$/.test(winningNumbers['4Start']) || !/^[0-9]{6}$/.test(winningNumbers['4End']) || Number(winningNumbers['4End']) - Number(winningNumbers['4Start']) !== 99) {
         return respond({ ok: false, error: 'Enter a six-digit first-prize number, four-digit second-prize number, two-digit third-prize number, and an inclusive 100-number fourth-prize range' }, 400)
       }
       const prizes: Record<string, {type:string;value:string;amount:number}[]> = {}
-      for (const tier of ['1', '2', '3', '4']) {
+      for (const tier of (legacyMode ? ['1', '2', '3'] : ['1', '2', '3', '4'])) {
         const raw = input[tier]
         const rows = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : []
         if (!rows.length || rows.length > 10) return respond({ ok: false, error: 'Set 1-10 rewards for tier ' + tier }, 400)
@@ -346,6 +347,7 @@ Deno.serve(async (req: Request) => {
           prizes[tier].push({ type, value, amount })
         }
       }
+      if (legacyMode) prizes['4'] = []
       const storedPrizes = { ...prizes, _winningNumbers: winningNumbers }
       const { data: draw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id').single()
       if (de || !draw) return respond({ ok: false, error: 'Could not create draw' }, 500)
@@ -356,7 +358,7 @@ Deno.serve(async (req: Request) => {
       const rangeStart = Number(winningNumbers['4Start']), rangeEnd = Number(winningNumbers['4End'])
       for (const t of tickets || []) {
         const n = String(t.ticket_number || ''), numeric = Number(n)
-        const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
+        const tier = n === winningNumbers['1'] ? '1' : n.slice(-4) === winningNumbers['2'] ? '2' : n.slice(-2) === winningNumbers['3'] ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
         if (tier !== 'none') counts[tier]++
       }
@@ -419,7 +421,9 @@ Deno.serve(async (req: Request) => {
         }
       }
       await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
-      const announcement = '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。アイテムバッグでチケット番号を確認してください。'
+      const announcement = legacyMode
+        ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。アイテムバッグでチケット番号を確認してください。'
+        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '／2等 下4桁 ' + winningNumbers['2'] + '／3等 下2桁 ' + winningNumbers['3'] + '／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。アイテムバッグでチケット番号を確認してください.'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
       return respond({ ok: true, action, title, drawId: draw.id, winners: counts['1'] + counts['2'] + counts['3'] + counts['4'], prizeCounts: counts, awarded })
     }
