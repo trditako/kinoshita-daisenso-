@@ -319,13 +319,12 @@ Deno.serve(async (req: Request) => {
       const first = pick(), firstFour = first.slice(-4), firstTwo = first.slice(-2)
       const uniqueSuffixes = (digits: number, excluded: Set<string>) => [...new Set(numbers.map(n => n.slice(-digits)).filter(suffix => !excluded.has(suffix))) ]
       const secondCandidates = uniqueSuffixes(4, new Set([firstFour])).filter(suffix => suffix.slice(-2) !== firstTwo)
-      if (secondCandidates.length < 2) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for two 2nd-prize numbers' }, 409)
+      const byEnding = new Map<string, string>()
+      for (const suffix of secondCandidates) if (!byEnding.has(suffix.slice(-2))) byEnding.set(suffix.slice(-2), suffix)
+      const secondPool = [...byEnding.values()]
+      if (secondPool.length < 2) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for two 2nd-prize numbers' }, 409)
       const secondNumbers: string[] = []
-      while (secondNumbers.length < 2) {
-        const picked = secondCandidates.splice(pickIndex(secondCandidates.length), 1)[0]
-        secondNumbers.push(picked)
-        for (let i = secondCandidates.length - 1; i >= 0; i--) if (secondCandidates[i].slice(-2) === picked.slice(-2)) secondCandidates.splice(i, 1)
-      }
+      while (secondNumbers.length < 2) secondNumbers.push(secondPool.splice(pickIndex(secondPool.length), 1)[0])
       const excludedThird = new Set<string>([firstTwo, ...secondNumbers.map(suffix => suffix.slice(-2))])
       const thirdCandidates = uniqueSuffixes(2, excludedThird)
       if (thirdCandidates.length < 10) return respond({ ok: false, error: 'Not enough distinct ticket suffixes for ten 3rd-prize numbers' }, 409)
