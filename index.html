@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.74';
+const GAME_VERSION='v1.8.75';
 const UPDATE_LOG=[
- {date:'2026-10-15',version:'v1.8.74',title:'✨ 真髄番号を連番方式に変更',items:['真髄1～3の次は4～6、その次は7～9と番号をリセットせず順番に開催','同時開催は3種類ずつに整理し、所持品と真髄ポイントは保持']},
+ {date:'2026-10-15',version:'v1.8.75',title:'✨ 真髄の先行解放を修正',items:['シーズン切替前に次の真髄が解放される問題を修正','真髄番号はリセットせず、4・5・6…と順番に追加']},
  {date:'2026-10-15',version:'v1.8.72',title:'🎁 報酬処理を改善',items:['ステージクリア時の報酬計算を調整']},
  {date:'2026-10-15',version:'v1.8.71',title:'🔧 キャラクター詳細画面の表示条件を修正',items:['進化関連の表示条件を調整','解放状態の判定をサーバー側の最新情報に統一']}, 
 
@@ -4764,8 +4764,9 @@ function getShinjuSeasonState(){
  const day=86400000;
  const seasonNumber=Math.max(10,currentRankSeason()+1);
  const elapsed=seasonNumber-10;
- const essenceCount=elapsed+1;
- // 真髄は3種類ずつのグループで開催するが、番号は1へ戻さず4～6、7～9…と続ける。
+ // 現シーズンで解放する番号。新しい真髄はシーズン切替後に1つずつ増やし、先の番号を先行解放しない。
+ const essenceCount=Math.max(1,elapsed);
+ // 真髄は3種類ずつのグループで開催し、番号は4～6、7～9…と連番で続ける。
  const themeCycle=Math.floor((essenceCount-1)/SHINJU_ESSENCES.length)+1;
  const cycle=Math.floor((essenceCount-1)/3)+1;
  const phase=((essenceCount-1)%3)+1;
