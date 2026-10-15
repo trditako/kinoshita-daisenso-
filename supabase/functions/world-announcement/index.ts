@@ -354,7 +354,7 @@ Deno.serve(async (req: Request) => {
       const suppliedNumbers = body.winningNumbers && typeof body.winningNumbers === 'object' ? body.winningNumbers : {}
       const legacyNumber = String(body.winningNumber || '').replace(/[^0-9]/g, '')
       const parseNumberList = (value: unknown, fallback: string, digits: number): string[] => {
-        const raw = Array.isArray(value) ? value : String(value || fallback).split(/[\\s,，]+/)
+        const raw = Array.isArray(value) ? value : String(value || fallback).split(/[\s,，]+/)
         return raw.map((x: unknown) => String(x || '').replace(/[^0-9]/g, '')).filter((x: string) => new RegExp('^[0-9]{' + digits + '}$').test(x))
       }
       const firstNumber = String(suppliedNumbers['1'] || legacyNumber).replace(/[^0-9]/g, '')
@@ -399,6 +399,10 @@ Deno.serve(async (req: Request) => {
           const { data: recentDraws, error: pendingError } = await client.from('world_lottery_draws').select('id,prizes,created_at').order('created_at', { ascending: false }).limit(50)
           if (pendingError) return respond({ ok: false, error: 'Could not check pending lottery announcements' }, 500)
           if ((recentDraws || []).some((d: any) => d?.prizes?._status === 'announced')) return respond({ ok: false, error: 'A lottery announcement is already waiting for reward distribution. Distribute its rewards first.' }, 409)
+          const { data: availableTickets, error: ticketError } = await client.from('world_lottery_tickets').select('ticket_number').is('draw_id', null).limit(10000)
+          if (ticketError) return respond({ ok: false, error: 'Could not validate winning ticket numbers' }, 500)
+          const ticketNumbers = (availableTickets || []).map((t: any) => String(t.ticket_number || ''))
+          if (!ticketNumbers.includes(winningNumbers['1']) || winningNumbers['2'].some((suffix: string) => !ticketNumbers.some((n: string) => n.endsWith(suffix))) || winningNumbers['3'].some((suffix: string) => !ticketNumbers.some((n: string) => n.endsWith(suffix)))) return respond({ ok: false, error: 'Each 1st-3rd prize number must match at least one issued, unclaimed ticket' }, 409)
         }
         const storedPrizes = { ...prizes, _winningNumbers: winningNumbers, _status: action === 'lottery_announce' ? 'announced' : 'awarding' }
         const { data: createdDraw, error: de } = await client.from('world_lottery_draws').insert({ title, winning_number: winningNumbers['1'], prizes: storedPrizes, published_by: OPERATOR_PLAYER_ID }).select('id,title,prizes').single()
@@ -423,7 +427,7 @@ Deno.serve(async (req: Request) => {
         const tier = n === winningNumbers['1'] ? '1' : winningNumbers['2'].includes(n.slice(-4)) ? '2' : winningNumbers['3'].includes(n.slice(-2)) ? '3' : !legacyMode && numeric >= rangeStart && numeric <= rangeEnd ? '4' : 'none'
         buckets[tier].push(t)
       }
-      // Enforce ticket-count caps: 1st max 1, 2nd max 2, 3rd max 10. Extra matching tickets do not become lower numbered prizes.
+      // Award one ticket per published suffix so 2nd and 3rd prizes have exactly 2 and 10 winners when the announced numbers were validated.
       const drawRandomIndex = (max: number): number => {
         const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / max) * max
         do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
@@ -435,9 +439,22 @@ Deno.serve(async (req: Request) => {
         buckets.none.push(...pool)
         return selected
       }
+      const takeOnePerSuffix = (source: any[], suffixes: string[], digits: number): any[] => {
+        const pool = source.slice(), selected: any[] = []
+        for (const suffix of suffixes) {
+          const matching = pool.filter((t: any) => String(t.ticket_number || '').slice(-digits) === suffix)
+          if (!matching.length) continue
+          const chosen = matching[drawRandomIndex(matching.length)]
+          selected.push(chosen)
+          const index = pool.findIndex((t: any) => String(t.id) === String(chosen.id))
+          if (index >= 0) pool.splice(index, 1)
+        }
+        buckets.none.push(...pool)
+        return selected
+      }
       buckets['1'] = takeRandomUpTo(buckets['1'], 1)
-      buckets['2'] = takeRandomUpTo(buckets['2'], 2)
-      buckets['3'] = takeRandomUpTo(buckets['3'], 10)
+      buckets['2'] = takeOnePerSuffix(buckets['2'], winningNumbers['2'], 4)
+      buckets['3'] = takeOnePerSuffix(buckets['3'], winningNumbers['3'], 2)
       // Randomly select distinct 5th- and 6th-prize tickets only from tickets that missed 1st-4th.
       const lowerPrizeCandidates = buckets.none
       for (const tier of ['5', '6']) {
