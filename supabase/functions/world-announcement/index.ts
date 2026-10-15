@@ -503,7 +503,7 @@ Deno.serve(async (req: Request) => {
       await client.from('world_lottery_draws').update({ ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
       const announcement = legacyMode
         ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
-        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。2・3等は該当候補から上限口数までランダム選出。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
+        : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'].join('・') + '（最大2口）／3等 下2桁 ' + winningNumbers['3'].join('・') + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。2・3等は該当候補から上限口数までランダム選出。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
       await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
       return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded }
     }
