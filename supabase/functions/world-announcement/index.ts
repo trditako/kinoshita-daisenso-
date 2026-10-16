@@ -139,30 +139,70 @@ Deno.serve(async (req: Request) => {
       const xp = integerInRange(body.xp, 0, 1000000)
       if (coins === null || xp === null || (coins === 0 && xp === 0))
         return respond({ ok: false, error: 'Enter coins and/or XP from 1 to 1,000,000' }, 400)
-      let query = client.from('player_rankings').select('player_id,operator_pending_coins,operator_pending_xp')
       const target = String(body.target || '')
-      if (target === 'single') {
-        const id = String(body.playerId || '')
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))
-          return respond({ ok: false, error: 'A valid player UUID is required' }, 400)
-        query = query.eq('player_id', id) as typeof query
-      } else if (target !== 'all') return respond({ ok: false, error: 'Invalid reward target' }, 400)
-      const { data: players, error: listError } = await query.limit(target === 'all' ? 1000 : 1)
-      if (listError) { console.error('reward recipient lookup failed:', listError.message); return respond({ ok: false, error: 'Could not load reward recipients' }, 500) }
-      if (!players?.length) return respond({ ok: false, error: 'No matching registered player was found' }, 404)
-      let granted = 0
-      for (const player of players) {
-        const patch = {
-          operator_pending_coins: Number(player.operator_pending_coins || 0) + coins,
-          operator_pending_xp: Number(player.operator_pending_xp || 0) + xp,
-          operator_pending_ref: crypto.randomUUID(),
-          updated_at: now,
-        }
-        const { error } = await client.from('player_rankings').update(patch).eq('player_id', player.player_id)
-        if (error) { console.error('reward write failed:', error.message); return respond({ ok: false, error: 'Reward delivery stopped after ' + granted + ' players' }, 500) }
-        granted++
+      const ids = Array.isArray(body.targetIds) ? body.targetIds.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 100) : []
+      if (!['single','multiple','all','all_players','all_ai'].includes(target)) return respond({ ok: false, error: 'Invalid reward target' }, 400)
+      if ((target === 'single' && ids.length !== 1) || (target === 'multiple' && ids.length < 1)) return respond({ ok: false, error: 'Invalid recipient list' }, 400)
+      const recipients: { kind: 'player'|'ai'; id: string|number }[] = []
+      if (target === 'all' || target === 'all_players') {
+        const { data, error } = await client.from('player_rankings').select('player_id').limit(2000)
+        if (error) return respond({ ok: false, error: 'Could not load player recipients' }, 500)
+        for (const p of data || []) recipients.push({ kind: 'player', id: String(p.player_id) })
       }
-      return respond({ ok: true, action, granted, coins, xp })
+      if (target === 'all' || target === 'all_ai') {
+        const { data, error } = await client.from('ai_accounts').select('account_id').limit(2000)
+        if (error) return respond({ ok: false, error: 'Could not load AI recipients' }, 500)
+        for (const a of data || []) recipients.push({ kind: 'ai', id: Number(a.account_id) })
+      }
+      if (target === 'single' || target === 'multiple') {
+        for (const ident of ids) {
+          const ai = ident.match(/^AI[-_ ]?([0-9]{1,6})$/i)
+          if (ai) {
+            const { data, error } = await client.from('ai_accounts').select('account_id').eq('account_id', Number(ai[1])).maybeSingle()
+            if (error) return respond({ ok: false, error: 'Could not resolve AI recipient' }, 500)
+            if (data) recipients.push({ kind: 'ai', id: Number(data.account_id) })
+            continue
+          }
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ident)
+          let q = client.from('player_rankings').select('player_id')
+          q = isUuid ? q.eq('player_id', ident) : q.eq('name', ident)
+          const { data, error } = await q.limit(1).maybeSingle()
+          if (error) return respond({ ok: false, error: 'Could not resolve player recipient' }, 500)
+          if (data) recipients.push({ kind: 'player', id: String(data.player_id) })
+          else if (!isUuid) {
+            const { data: a, error: ae } = await client.from('ai_accounts').select('account_id').eq('name', ident).limit(1).maybeSingle()
+            if (ae) return respond({ ok: false, error: 'Could not resolve AI recipient' }, 500)
+            if (a) recipients.push({ kind: 'ai', id: Number(a.account_id) })
+          }
+        }
+      }
+      const unique = [...new Map(recipients.map(r => [r.kind + ':' + r.id, r])).values()]
+      if (!unique.length) return respond({ ok: false, error: 'No matching account found' }, 404)
+      if (unique.length > 2000) return respond({ ok: false, error: 'Limit is 2,000 recipients per operation' }, 400)
+      let grantedPlayers = 0, grantedAi = 0
+      for (const recipient of unique) {
+        if (recipient.kind === 'ai') {
+          const { data: a, error } = await client.from('ai_accounts').select('coins,player_xp').eq('account_id', Number(recipient.id)).maybeSingle()
+          if (error || !a) return respond({ ok: false, error: 'Reward delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          const { error: updateError } = await client.from('ai_accounts').update({
+            coins: Math.min(2147483647, Number(a.coins || 0) + coins),
+            player_xp: Math.min(2147483647, Number(a.player_xp || 0) + xp),
+            updated_at: now
+          }).eq('account_id', Number(recipient.id))
+          if (updateError) return respond({ ok: false, error: 'Reward delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          grantedAi++
+        } else {
+          const { data: p, error } = await client.from('player_rankings').select('operator_pending_coins,operator_pending_xp').eq('player_id', String(recipient.id)).maybeSingle()
+          if (error || !p) return respond({ ok: false, error: 'Reward delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          const patch: Record<string, unknown> = { updated_at: now, operator_pending_ref: crypto.randomUUID() }
+          if (coins) patch.operator_pending_coins = Number(p.operator_pending_coins || 0) + coins
+          if (xp) patch.operator_pending_xp = Number(p.operator_pending_xp || 0) + xp
+          const { error: updateError } = await client.from('player_rankings').update(patch).eq('player_id', String(recipient.id))
+          if (updateError) return respond({ ok: false, error: 'Reward delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          grantedPlayers++
+        }
+      }
+      return respond({ ok: true, action, granted: grantedPlayers + grantedAi, grantedPlayers, grantedAi, coins, xp })
     }
 
     if (action === 'grant_item') {
