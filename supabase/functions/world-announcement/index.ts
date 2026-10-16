@@ -234,6 +234,100 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, action, itemId, amount, granted: grantedPlayers + grantedAi, grantedPlayers, grantedAi })
     }
 
+    if (action === 'maintenance_stop') {
+      const { error } = await client.from('world_operator_state').upsert({ id: 1, maintenance_active: false, updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (error) return respond({ ok: false, error: 'Could not stop maintenance notice' }, 500)
+      return respond({ ok: true, action })
+    }
+
+    if (action === 'player_lookup' || action === 'rp_adjust' || action === 'limited_character_grant') {
+      const resolve = async (ident: string) => {
+        const ai = ident.match(/^AI[-_ ]?([0-9]{1,6})$/i)
+        if (ai) {
+          const { data, error } = await client.from('ai_accounts').select('account_id,name,rp,wins,losses,limited_character_owned').eq('account_id', Number(ai[1])).maybeSingle()
+          if (error) throw new Error('Could not resolve AI account')
+          return data ? { kind: 'ai' as const, id: Number(data.account_id), name: String(data.name || ident), rp: Number(data.rp || 0), wins: Number(data.wins || 0), losses: Number(data.losses || 0), limited: Boolean(data.limited_character_owned) } : null
+        }
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ident)
+        let q = client.from('player_rankings').select('player_id,name,rp,wins,losses,limited_character_owned')
+        q = isUuid ? q.eq('player_id', ident) : q.eq('name', ident)
+        const { data, error } = await q.limit(1).maybeSingle()
+        if (error) throw new Error('Could not resolve player account')
+        if (data) return { kind: 'player' as const, id: String(data.player_id), name: String(data.name || ident), rp: Number(data.rp || 0), wins: Number(data.wins || 0), losses: Number(data.losses || 0), limited: Boolean(data.limited_character_owned) }
+        if (!isUuid) {
+          const { data: a, error: ae } = await client.from('ai_accounts').select('account_id,name,rp,wins,losses,limited_character_owned').eq('name', ident).limit(1).maybeSingle()
+          if (ae) throw new Error('Could not resolve AI account')
+          if (a) return { kind: 'ai' as const, id: Number(a.account_id), name: String(a.name || ident), rp: Number(a.rp || 0), wins: Number(a.wins || 0), losses: Number(a.losses || 0), limited: Boolean(a.limited_character_owned) }
+        }
+        return null
+      }
+      const input = String(body.accountId || body.playerId || '').trim()
+      if (action === 'player_lookup') {
+        if (!input) return respond({ ok: false, error: 'Account ID, AI number, or registered name is required' }, 400)
+        const account = await resolve(input)
+        if (!account) return respond({ ok: false, error: 'No matching account found' }, 404)
+        return respond({ ok: true, action, accountType: account.kind === 'ai' ? 'AI' : 'プレイヤー', accountId: String(account.id), name: account.name, rp: account.rp, wins: account.wins, losses: account.losses, limitedCharacterOwned: account.limited })
+      }
+      const target = String(body.target || 'single')
+      const ids = Array.isArray(body.targetIds) ? body.targetIds.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 100) : []
+      if (!['single','multiple','all','all_players','all_ai'].includes(target)) return respond({ ok: false, error: 'Invalid account target' }, 400)
+      const recipients: Awaited<ReturnType<typeof resolve>>[] = []
+      if (target === 'single' || target === 'multiple') {
+        const list = ids.length ? ids : input ? [input] : []
+        if (!list.length || (target === 'single' && list.length !== 1)) return respond({ ok: false, error: 'Invalid recipient list' }, 400)
+        for (const ident of list) {
+          const account = await resolve(ident)
+          if (account) recipients.push(account)
+        }
+      } else {
+        if (target === 'all' || target === 'all_players') {
+          const { data, error } = await client.from('player_rankings').select('player_id,name,rp,wins,losses,limited_character_owned').limit(2000)
+          if (error) return respond({ ok: false, error: 'Could not load player recipients' }, 500)
+          for (const p of data || []) recipients.push({ kind: 'player', id: String(p.player_id), name: String(p.name || ''), rp: Number(p.rp || 0), wins: Number(p.wins || 0), losses: Number(p.losses || 0), limited: Boolean(p.limited_character_owned) })
+        }
+        if (target === 'all' || target === 'all_ai') {
+          const { data, error } = await client.from('ai_accounts').select('account_id,name,rp,wins,losses,limited_character_owned').limit(2000)
+          if (error) return respond({ ok: false, error: 'Could not load AI recipients' }, 500)
+          for (const a of data || []) recipients.push({ kind: 'ai', id: Number(a.account_id), name: String(a.name || ''), rp: Number(a.rp || 0), wins: Number(a.wins || 0), losses: Number(a.losses || 0), limited: Boolean(a.limited_character_owned) })
+        }
+      }
+      const unique = [...new Map(recipients.filter((x): x is NonNullable<typeof x> => !!x).map(x => [x.kind + ':' + x.id, x])).values()]
+      if (!unique.length) return respond({ ok: false, error: 'No matching account found' }, 404)
+      if (unique.length > 2000) return respond({ ok: false, error: 'Limit is 2,000 recipients per operation' }, 400)
+      const results: Record<string, unknown>[] = []
+      if (action === 'rp_adjust') {
+        const delta = integerInRange(body.delta, -100000, 100000)
+        if (delta === null || delta === 0) return respond({ ok: false, error: 'RP change must be a non-zero integer from -100,000 to 100,000' }, 400)
+      }
+      for (const account of unique) {
+        const patch: Record<string, unknown> = { updated_at: now }
+        if (action === 'rp_adjust') patch.rp = Math.max(0, Math.min(2147483647, account.rp + Number(body.delta)))
+        else patch.limited_character_owned = true
+        const table = account.kind === 'ai' ? 'ai_accounts' : 'player_rankings'
+        const key = account.kind === 'ai' ? 'account_id' : 'player_id'
+        const { error } = await client.from(table).update(patch).eq(key, account.id)
+        if (error) return respond({ ok: false, error: 'Operation stopped after ' + results.length + ' accounts' }, 500)
+        results.push({ accountType: account.kind === 'ai' ? 'AI' : 'プレイヤー', name: account.name, rp: action === 'rp_adjust' ? patch.rp : account.rp, id: String(account.id) })
+      }
+      return respond({ ok: true, action, updated: results.length, results })
+    }
+
+    if (action === 'second_form_unlock') {
+      const characterName = typeof body.characterName === 'string' ? body.characterName.trim() : ''
+      const formName = typeof body.formName === 'string' ? body.formName.trim() : ''
+      const message = typeof body.message === 'string' ? body.message.trim() : ''
+      if (!characterName || characterName.length > 100 || !formName || formName.length > 120 || !message || message.length > 300) return respond({ ok: false, error: 'Invalid second-form unlock settings' }, 400)
+      const { data: current, error: readError } = await client.from('world_operator_state').select('second_form_unlocks').eq('id', 1).maybeSingle()
+      if (readError) return respond({ ok: false, error: 'Could not load second-form unlocks' }, 500)
+      const unlocks = Array.isArray(current?.second_form_unlocks) ? current.second_form_unlocks.filter((x: unknown) => x && typeof x === 'object') as Record<string, unknown>[] : []
+      const next = [...unlocks.filter(x => String(x.characterName || '') !== characterName), { characterName, formName, message, unlockedAt: now }]
+      const { error } = await client.from('world_operator_state').upsert({ id: 1, second_form_unlocks: next, second_form_unlock_character: characterName, second_form_unlock_form_name: formName, second_form_unlock_message: message, second_form_unlock_updated_at: now, updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (error) return respond({ ok: false, error: 'Could not publish second-form unlock' }, 500)
+      const { error: announceError } = await client.from('world_announcements').upsert({ id: 1, message, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (announceError) console.error('second form announcement failed:', announceError.message)
+      return respond({ ok: true, action, characterName, formName })
+    }
+
     if (action === 'clear_bonus_start' || action === 'clear_bonus_stop') {
       let row: Record<string, unknown> = { id: 1, updated_at: now, updated_by: OPERATOR_PLAYER_ID }
       if (action === 'clear_bonus_start') {
