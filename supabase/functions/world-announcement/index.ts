@@ -122,13 +122,18 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'publish' || action === 'clear') {
       let row: Record<string, unknown>
+      // Make each announcement revision unique even when several posts land in the same millisecond.
+      const { data: previousAnnouncement, error: previousAnnouncementError } = await client.from('world_announcements').select('updated_at').eq('id', 1).maybeSingle()
+      if (previousAnnouncementError) return respond({ ok: false, error: 'Could not read previous announcement state' }, 500)
+      const previousUpdatedAt = Date.parse(String(previousAnnouncement?.updated_at || ''))
+      const announcementUpdatedAt = new Date(Math.max(Date.now(), Number.isFinite(previousUpdatedAt) ? previousUpdatedAt + 1 : 0)).toISOString()
       if (action === 'publish') {
         const message = typeof body.message === 'string' ? body.message.trim() : ''
         const duration = integerInRange(body.durationSeconds, 30, 3600)
         if (!message || message.length > 300) return respond({ ok: false, error: 'Message must be 1-300 characters' }, 400)
         if (![30,60,300,600,1800,3600].includes(duration ?? -1)) return respond({ ok: false, error: 'Invalid announcement duration' }, 400)
-        row = { id: 1, message, active: true, expires_at: new Date(Date.now() + duration! * 1000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }
-      } else row = { id: 1, message: '', active: false, expires_at: null, updated_at: now, updated_by: OPERATOR_PLAYER_ID }
+        row = { id: 1, message, active: true, expires_at: new Date(Date.now() + duration! * 1000).toISOString(), updated_at: announcementUpdatedAt, updated_by: OPERATOR_PLAYER_ID }
+      } else row = { id: 1, message: '', active: false, expires_at: null, updated_at: announcementUpdatedAt, updated_by: OPERATOR_PLAYER_ID }
       const { error } = await client.from('world_announcements').upsert(row, { onConflict: 'id' })
       if (error) { console.error('announcement write failed:', error.message); return respond({ ok: false, error: 'Announcement could not be saved' }, 500) }
       return respond({ ok: true, action, expiresAt: row.expires_at || null })
