@@ -5582,7 +5582,7 @@ el('glossaryModal')?.addEventListener('click',e=>{if(e.target===el('glossaryModa
   }catch(e){/* keep gameplay usable if global status is unavailable */}
  }
  refresh();refreshWorldState();
- setInterval(refresh,300000);setInterval(refreshWorldState,120000);
+ setInterval(refresh,20000);setInterval(refreshWorldState,30000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refresh();refreshWorldState()}});
 })();
 </script>
