@@ -165,6 +165,75 @@ Deno.serve(async (req: Request) => {
       return respond({ ok: true, action, granted, coins, xp })
     }
 
+    if (action === 'grant_item') {
+      const itemId = typeof body.itemId === 'string' ? body.itemId.trim() : ''
+      const amount = integerInRange(body.amount, 1, 1000000)
+      const allowedItems = new Set(['skill_crystal','ability_core','power_chest','wooden_chest','silver_chest','golden_chest','operator_chest','special_operator_chest'])
+      if (!allowedItems.has(itemId) || amount === null) return respond({ ok: false, error: 'Invalid item ID or amount' }, 400)
+      const target = String(body.target || '')
+      const ids = Array.isArray(body.targetIds) ? body.targetIds.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 100) : []
+      if (['single','multiple'].includes(target) && (!ids.length || (target === 'single' && ids.length !== 1))) return respond({ ok: false, error: 'Invalid recipient list' }, 400)
+      if (!['single','multiple','all','all_players','all_ai'].includes(target)) return respond({ ok: false, error: 'Invalid item recipient target' }, 400)
+      const recipients: { kind: 'player'|'ai'; id: string|number }[] = []
+      if (['all','all_players'].includes(target)) {
+        const { data, error } = await client.from('player_rankings').select('player_id').limit(2000)
+        if (error) return respond({ ok: false, error: 'Could not load player recipients' }, 500)
+        for (const p of data || []) recipients.push({ kind: 'player', id: String(p.player_id) })
+      }
+      if (['all','all_ai'].includes(target)) {
+        const { data, error } = await client.from('ai_accounts').select('account_id').limit(2000)
+        if (error) return respond({ ok: false, error: 'Could not load AI recipients' }, 500)
+        for (const a of data || []) recipients.push({ kind: 'ai', id: Number(a.account_id) })
+      }
+      if (['single','multiple'].includes(target)) {
+        for (const ident of ids) {
+          const ai = ident.match(/^AI[-_ ]?([0-9]{1,6})$/i)
+          if (ai) {
+            const accountId = Number(ai[1])
+            const { data, error } = await client.from('ai_accounts').select('account_id').eq('account_id', accountId).maybeSingle()
+            if (error) return respond({ ok: false, error: 'Could not resolve AI recipient' }, 500)
+            if (data) recipients.push({ kind: 'ai', id: Number(data.account_id) })
+            continue
+          }
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ident)
+          let query = client.from('player_rankings').select('player_id')
+          query = isUuid ? query.eq('player_id', ident) : query.eq('name', ident)
+          const { data, error } = await query.limit(1).maybeSingle()
+          if (error) return respond({ ok: false, error: 'Could not resolve player recipient' }, 500)
+          if (data) recipients.push({ kind: 'player', id: String(data.player_id) })
+          else if (!isUuid) {
+            const { data: aiData, error: aiError } = await client.from('ai_accounts').select('account_id').eq('name', ident).limit(1).maybeSingle()
+            if (aiError) return respond({ ok: false, error: 'Could not resolve AI recipient' }, 500)
+            if (aiData) recipients.push({ kind: 'ai', id: Number(aiData.account_id) })
+          }
+        }
+      }
+      const unique = [...new Map(recipients.map(r => [r.kind + ':' + r.id, r])).values()]
+      if (!unique.length) return respond({ ok: false, error: 'No matching account found' }, 404)
+      if (unique.length > 2000) return respond({ ok: false, error: 'Limit is 2,000 recipients per operation' }, 400)
+      let grantedPlayers = 0, grantedAi = 0
+      for (const recipient of unique) {
+        if (recipient.kind === 'ai') {
+          const { data: a, error } = await client.from('ai_accounts').select('inventory_items').eq('account_id', Number(recipient.id)).maybeSingle()
+          if (error || !a) return respond({ ok: false, error: 'Item delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          const inventory = { ...(a.inventory_items && typeof a.inventory_items === 'object' && !Array.isArray(a.inventory_items) ? a.inventory_items : {}) } as Record<string, number>
+          inventory[itemId] = Math.max(0, Number(inventory[itemId] || 0)) + amount
+          const { error: updateError } = await client.from('ai_accounts').update({ inventory_items: inventory, updated_at: now }).eq('account_id', Number(recipient.id))
+          if (updateError) return respond({ ok: false, error: 'Item delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          grantedAi++
+        } else {
+          const { data: p, error } = await client.from('player_rankings').select('operator_pending_items').eq('player_id', String(recipient.id)).maybeSingle()
+          if (error || !p) return respond({ ok: false, error: 'Item delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          const inventory = { ...(p.operator_pending_items && typeof p.operator_pending_items === 'object' && !Array.isArray(p.operator_pending_items) ? p.operator_pending_items : {}) } as Record<string, number>
+          inventory[itemId] = Math.max(0, Number(inventory[itemId] || 0)) + amount
+          const { error: updateError } = await client.from('player_rankings').update({ operator_pending_items: inventory, operator_pending_items_ref: crypto.randomUUID(), updated_at: now }).eq('player_id', String(recipient.id))
+          if (updateError) return respond({ ok: false, error: 'Item delivery stopped after ' + (grantedPlayers + grantedAi) + ' accounts' }, 500)
+          grantedPlayers++
+        }
+      }
+      return respond({ ok: true, action, itemId, amount, granted: grantedPlayers + grantedAi, grantedPlayers, grantedAi })
+    }
+
     if (action === 'clear_bonus_start' || action === 'clear_bonus_stop') {
       let row: Record<string, unknown> = { id: 1, updated_at: now, updated_by: OPERATOR_PLAYER_ID }
       if (action === 'clear_bonus_start') {
