@@ -570,6 +570,7 @@ Deno.serve(async (req: Request) => {
     if (action === 'lottery_publish') {
       const { data: recentDraws, error: recentDrawError } = await client.from('world_lottery_draws').select('id,title,winning_number,prizes').order('created_at', { ascending: false }).limit(50)
       if (recentDrawError) return respond({ ok: false, error: 'Could not check pending lottery draws' }, 500)
+      if ((recentDraws || []).some((d: any) => d?.prizes?._status === 'awarding')) return respond({ ok: false, error: 'A lottery draw is already being processed. Do not start another draw; check the existing draw status first.' }, 409)
       const pendingDraw: any = (recentDraws || []).find((d: any) => d?.prizes?._status === 'announced') || null
       const title = pendingDraw ? String(pendingDraw.title || '') : (typeof body.title === 'string' ? body.title.trim() : '')
       const input = body.prizes && typeof body.prizes === 'object' ? body.prizes : {}
