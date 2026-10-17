@@ -1168,11 +1168,12 @@ const eventStages=[{name:"ノーマルキャラの金",width:1100,baseHp:18000,x
  ],repeats:[{delay:19,interval:25,enemy:"ワープ木下",mult:20,fixedMultiplier:true}]},knockbackAll:true
  },
  {name:'ワイバーン襲来',width:2350,baseHp:300000,xp:9000,eventReward:'ワイバーン',rewardCharacter:'ワイバーン',enemies:['青龍神','酒呑童子','ワイバーン','古代カエル','めっちゃ木下','玄武神'],schedule:[
-   {t:0,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:2,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:4,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:6,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:8,enemy:'青龍神',mult:2.5,fixedMultiplier:true}
-  ],repeatSpawns:[{start:7,interval:22,enemy:'酒呑童子',mult:7.5,fixedMultiplier:true}],triggerSpawns:{threshold:.99,spawns:[
-   {delay:0,enemy:'ワイバーン',mult:1,fixedMultiplier:true,role:'boss'},
-   {delay:5,enemy:'古代カエル',mult:15,fixedMultiplier:true},{delay:8,enemy:'古代カエル',mult:15,fixedMultiplier:true},{delay:11,enemy:'古代カエル',mult:15,fixedMultiplier:true}
-  ],repeats:[{delay:7,interval:15,enemy:'めっちゃ木下',mult:3,fixedMultiplier:true},{delay:17,interval:22,enemy:'玄武神',mult:3,fixedMultiplier:true}]},knockbackAll:true
+   {t:0,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:0,enemy:'ワイバーン',mult:1,fixedMultiplier:true,role:'boss'},
+   {t:2,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:4,enemy:'青龍神',mult:2.5,fixedMultiplier:true},
+   {t:5,enemy:'古代カエル',mult:15,fixedMultiplier:true},{t:6,enemy:'青龍神',mult:2.5,fixedMultiplier:true},
+   {t:8,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:8,enemy:'古代カエル',mult:15,fixedMultiplier:true},
+   {t:11,enemy:'古代カエル',mult:15,fixedMultiplier:true}
+  ],repeatSpawns:[{start:7,interval:22,enemy:'酒呑童子',mult:7.5,fixedMultiplier:true},{start:7,interval:15,enemy:'めっちゃ木下',mult:3,fixedMultiplier:true},{start:17,interval:22,enemy:'玄武神',mult:3,fixedMultiplier:true}],triggerSpawns:{threshold:.99,spawns:[],repeats:[]},knockbackAll:true
   }
 ];
 // 🎃 ハロウィンナイト2026（期間限定イベント）
