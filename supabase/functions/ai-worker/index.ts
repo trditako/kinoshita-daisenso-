@@ -203,7 +203,7 @@ return{coins:Math.max(500,Math.min(150000,Math.round(n*factor))),xp:Math.max(200
 }
 function processAIAchievements(ai:any,deltas:any={}){
 const state=obj(ai.activity),saved=obj(state.aiAchievementState),stats=obj(saved.stats),unlocked=new Set<string>(arr<string>(saved.unlocked)),claimed=new Set<string>(arr<string>(saved.claimed));
-for(const key of ['stageWins','levelUps','evolutions','gachaBuys','rankWins','eventWins'])stats[key]=clamp(Math.floor(num(stats[key])+Math.max(0,Math.floor(num(deltas[key]))),0),0,1000000000);
+for(const key of ['stageWins','levelUps','evolutions','gachaBuys','rankWins','eventWins'])stats[key]=clamp(Math.floor(num(stats[key]))+Math.max(0,Math.floor(num(deltas[key]))),0,1000000000);
 stats.owned=Math.max(Math.floor(num(stats.owned)),arr<number>(ai.owned_characters).length);
 const clears=arr<any>(ai.chapter_clears);
 stats.japanChapter1=clears[0]>=48?1:0;stats.japanChapter2=clears[1]>=48?1:0;stats.japanChapter3=clears[2]>=48?1:0;
@@ -219,7 +219,7 @@ const reward=aiAchievementReward(d);ai.coins=Math.min(999999999,Math.max(0,num(a
 log(ai,'🏅 実績「'+d.title+'」達成・報酬獲得（コイン+'+reward.coins+'・XP+'+reward.xp+'）')
 }
 }
-ai.activity={...state,aiAchievementState:{stats,unlocked:[...unlocked],claimed:[...claimed],equippedTitle}}
+const latestActivity=obj(ai.activity);ai.activity={...latestActivity,aiAchievementState:{stats,unlocked:[...unlocked],claimed:[...claimed],equippedTitle}}
 }
 function processAIMissions(ai:any,deltas:any={}){const state=obj(ai.activity),mission=obj(state.aiMissionState),periods=aiExchangePeriodKeys();for(const type of ['daily','weekly','monthly']){const key=periods[type];let section=obj(mission[type]);if(String(section.period||'')!==key)section={period:key,items:{}};const items=obj(section.items);for(const def of AI_MISSION_DEFS[type]){const item=obj(items[def.id]);const progress=clamp(Math.floor(num(item.progress))+Math.max(0,Math.floor(num(deltas[def.stat]))),0,def.target);if(progress>=def.target&&item.claimed!==true){ai.coins=Math.min(999999999,Math.max(0,num(ai.coins))+def.coins);ai.player_xp=Math.min(999999999,Math.max(0,num(ai.player_xp))+def.xp);item.claimed=true;log(ai,'🎯 '+type+'ミッション達成：'+def.id+'（コイン+'+def.coins+'・XP+'+def.xp+'）')}item.progress=progress;items[def.id]=item}section.items=items;mission[type]=section}ai.activity={...state,aiMissionState:mission}}
 function countEvolutions(ai:any){const state=obj(ai.activity),normal=arr<any>(state.aiNormalEvolved).filter(Boolean).length,special=Object.values(obj(state.aiChapterRewardEvolved)).filter(Boolean).length;return normal+special}
