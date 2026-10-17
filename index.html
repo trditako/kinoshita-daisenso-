@@ -3984,7 +3984,7 @@ let gachaShopMode='normal';
 function renderGacha(){
  const coin=document.getElementById('gachaCoinText'),tabs=document.getElementById('gachaTabs'),banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  if(coin)coin.textContent='🪙 木下コイン：'+gachaCoins.toLocaleString()+'枚';
- if(tabs){tabs.style.display=gachaShopMode==='special'?'none':'';tabs.innerHTML=gachaShopMode==='special'?'':'<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">機械防衛隊！木下s</button>';}
+ if(tabs){tabs.style.display=gachaShopMode==='special'?'none':'';tabs.innerHTML=gachaShopMode==='special'?'':'<button class="gachaTab '+(gachaShopMode==='normal'?'active':'')+'" data-gacha-mode="normal">通常交換所</button><button class="gachaTab '+(gachaShopMode==='limited'?'active':'')+'" data-gacha-mode="limited">期間限定交換所（歴代シリーズ）</button>';}
  tabs?.querySelectorAll('[data-gacha-mode]').forEach(b=>b.onclick=()=>{gachaShopMode=b.dataset.gachaMode;renderGacha();});
  if(gachaShopMode==='special'){renderSpecialShinju();return;}
  if(gachaShopMode==='limited'){renderLimitedExchangeShop();return;}
@@ -4042,12 +4042,17 @@ function showSpecialShinjuReveal(rewards){
 function limitedExchangeCost(c){return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const series='機械防衛隊！木下s';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🤖 '+series+'</h2><p>機械防衛隊！木下sのキャラクターを木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：30,000コイン／伝説レア：150,000コイン</p></div>';
+ const seriesOrder=['エレメンタル木下s','呪いの木下達','聖なる偉人達','機械防衛隊！木下s'];
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🌟 期間限定交換所・歴代シリーズ復刻</h2><p>これまで期間限定交換所で登場したシリーズをまとめて復刻。シリーズごとにキャラクターを選んで木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">通常シリーズ：超激レア10,000コイン／伝説レア50,000コイン　・　機械防衛隊！木下s：超激レア30,000コイン／伝説レア150,000コイン</p></div>';
  if(!result)return;
- const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange&&x.c.limitedExchangeSeries===series);
+ const available=cards.map((c,i)=>({c,i,series:c.limitedExchangeSeries||c.series||'その他'})).filter(x=>x.c.limitedExchange===true);
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
- result.innerHTML='<div style="font-size:15px;margin-bottom:7px">機械防衛隊！木下sのキャラクターを選んでください</div><div class="gachaChars">'+available.map(({c,i})=>{const cost=limitedExchangeCost(c),can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+ (ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足') +'</button></div>';}).join('')+'</div>';
+ const groups=[...new Set([...seriesOrder,...available.map(x=>x.series)])].filter(series=>available.some(x=>x.series===series));
+ result.innerHTML=groups.map(series=>{
+  const items=available.filter(x=>x.series===series);
+  const isMachine=series==='機械防衛隊！木下s';
+  return '<section style="margin:12px 0;padding:10px;border:2px solid '+(isMachine?'#60a5fa':'#c4b5fd')+';border-radius:12px;background:'+(isMachine?'#eff6ff':'#faf5ff')+';color:#1e1b4b"><h3 style="margin:0 0 5px;font-size:17px">'+(isMachine?'🤖 ':'✨ ')+series+'（'+items.length+'体）</h3><p style="margin:0 0 8px;font-size:12px;font-weight:800">'+(isMachine?'超激レア30,000コイン／伝説レア150,000コイン':'超激レア10,000コイン／伝説レア50,000コイン')+'</p><div class="gachaChars">'+items.map(({c,i})=>{const cost=limitedExchangeCost(c),can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+(ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div></section>';
+ }).join('');
  result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
 }
 function buyLimitedExchangeCharacter(i){
@@ -5203,7 +5208,7 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
  function writeDynamic(items){try{localStorage.setItem(DYNAMIC_NEWS_KEY,JSON.stringify(items.slice(-30)))}catch(e){}}
  function currentShinjuSignature(){try{if(typeof getShinjuSeasonState!=='function')return '';const state=getShinjuSeasonState();return JSON.stringify({seasonNumber:state.seasonNumber,cycle:state.cycle,phase:state.phase,active:(state.active||[]).map(x=>({id:x.id,name:x.name}))})}catch(e){return ''}}
  function currentShopSignature(){
-  try{const list=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.limitedExchange===true&&c.limitedExchangeSeries==='機械防衛隊！木下s').map(c=>({name:c.name,rarity:c.rarity,cost:typeof limitedExchangeCost==='function'?limitedExchangeCost(c):null})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ja'));return JSON.stringify({series:'機械防衛隊！木下s',items:list})}catch(e){return ''}
+  try{const list=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.limitedExchange===true).map(c=>({name:c.name,series:c.limitedExchangeSeries||c.series||'その他',rarity:c.rarity,cost:typeof limitedExchangeCost==='function'?limitedExchangeCost(c):null})).sort((a,b)=>String(a.series).localeCompare(String(b.series),'ja')||String(a.name).localeCompare(String(b.name),'ja'));return JSON.stringify({series:'歴代期間限定交換所',items:list})}catch(e){return ''}
  }
  function addDynamicNews(item){const items=readDynamic();items.push(item);writeDynamic(items)}
  function dateToday(){return new Date().toISOString().slice(0,10)}
@@ -5213,7 +5218,7 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
    if(oldShop&&oldShop!==shopSig){
     let detail={items:[]};try{detail=JSON.parse(shopSig)}catch(e){}
     const names=(detail.items||[]).map(x=>x.name+'（'+x.rarity+'・'+(Number(x.cost)||0).toLocaleString()+'コイン）');
-    addDynamicNews({id:'limited-shop-update-'+Date.now(),date:dateToday(),title:'🤖 期間限定交換所が更新されました',summary:'機械防衛隊！木下sのラインナップ・交換価格が変更',body:['期間限定交換所の内容が更新されました。',...(names.length?['現在の交換対象：'+names.join('、')]:['現在の交換対象や価格は期間限定交換所で確認してください。']),'ホーム画面の「機械防衛隊！木下s」から内容を確認してください。']});
+    addDynamicNews({id:'limited-shop-update-'+Date.now(),date:dateToday(),title:'🤖 期間限定交換所が更新されました',summary:'歴代シリーズのラインナップ・交換価格が変更',body:['期間限定交換所の内容が更新されました。',...(names.length?['現在の交換対象：'+names.join('、')]:['現在の交換対象や価格は期間限定交換所で確認してください。']),'ホーム画面の「木下交換」→「期間限定交換所（歴代シリーズ）」から内容を確認してください。']});
    }
    localStorage.setItem(SHOP_STATE_KEY,shopSig);
   }
