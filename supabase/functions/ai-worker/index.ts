@@ -18,7 +18,88 @@ function farmAncientGrowth(ai:any,tick:number){const p=prof(ai);if(rnd(String(ai
 function evolveChapterRewardCharacters(ai:any,tick:number){const state=obj(ai.activity),powers=obj(state.aiColorPowers),items=obj(ai.inventory_items),maxLevels=arr<any>(state.aiCharMaxLevel),evolved=obj(state.aiChapterRewardEvolved);const specs:any={20:{name:'突撃ハーランド木下',colors:15,ancient:0,rarity:'SR'},21:{name:'異常木下',colors:10,ancient:5,rarity:'SSR'},22:{name:'吉田',colors:100,ancient:30,rarity:'SR'},64:{name:'富豪木下',colors:50,ancient:15,rarity:'伝説レア'}};for(const id of [20,21,22,64]){const s=specs[id];if(!arr<number>(ai.owned_characters).includes(id)||evolved[String(id)]===true||(ai.char_levels[id]||1)<30||clamp(Math.floor(num(maxLevels[id],20)),20,30)<30)continue;if(!['赤','青','黄','緑','紫'].every(color=>num(powers[color])>=s.colors)||num(items.ancient_power)<s.ancient)continue;for(const color of ['赤','青','黄','緑','紫'])powers[color]=Math.max(0,num(powers[color])-s.colors);items.ancient_power=Math.max(0,num(items.ancient_power)-s.ancient);evolved[String(id)]=true;const forms=arr<any>(state.aiCharForm);forms[id]=2;ai.inventory_items=items;ai.activity={...state,aiColorPowers:powers,aiChapterRewardEvolved:evolved,aiCharForm:forms};log(ai,'✨ '+s.name+'が第二形態へ進化（色パワー各'+s.colors+'・古代のパワー'+s.ancient+'を消費）');return true}return false}
 function farmRarityGold(ai:any,tick:number){const owned=arr<number>(ai.owned_characters),maxLevels=arr<any>(obj(ai.activity).aiCharMaxLevel),need=owned.includes(64)&&clamp(Math.floor(num(maxLevels[64],20)),20,30)<30?'伝説レア':owned.some(id=>[20,22].includes(id)&&clamp(Math.floor(num(maxLevels[id],20)),20,30)<30)?'SR':owned.includes(21)&&clamp(Math.floor(num(maxLevels[21],20)),20,30)<30?'SSR':'SR';const p=prof(ai);if(rnd(String(ai.account_id)+':rarity-gold:'+tick)>.42+p.skill*.16){log(ai,'🪙 '+p.p+'：'+need+'の金集めに挑戦したが失敗');return false}const items=obj(ai.inventory_items),gold=obj(items.rarity_gold);gold[need]=Math.max(0,num(gold[need]))+1;items.rarity_gold=gold;ai.inventory_items=items;ai.coins+=40;ai.player_xp+=25;log(ai,'🪙 '+p.p+'：'+need+'の金集めをクリア（'+need+'の金×1）');return true}
 function aiExchangePeriodKeys(){const now=new Date(Date.now()+9*60*60*1000),y=now.getUTCFullYear(),m=String(now.getUTCMonth()+1).padStart(2,'0'),d=String(now.getUTCDate()).padStart(2,'0');const monday=new Date(Date.UTC(y,now.getUTCMonth(),now.getUTCDate()));monday.setUTCDate(monday.getUTCDate()-((monday.getUTCDay()+6)%7));return{daily:y+'-'+m+'-'+d,weekly:monday.getUTCFullYear()+'-'+String(monday.getUTCMonth()+1).padStart(2,'0')+'-'+String(monday.getUTCDate()).padStart(2,'0'),monthly:y+'-'+m}}
-function exchangeItems(ai:any,tick:number){const state=obj(ai.activity),items=obj(ai.inventory_items),powers=obj(state.aiColorPowers),gold=obj(items.rarity_gold),ex=obj(state.aiItemExchangeState),keys=aiExchangePeriodKeys();const offers:any[]=[{id:'daily_chest',period:'daily',limit:1,costType:'coins',cost:5000,type:'item',key:'power_chest',amount:1},{id:'daily_red',period:'daily',limit:2,costType:'coins',cost:2500,type:'color',key:'赤',amount:5},{id:'daily_normal_gold',period:'daily',limit:2,costType:'xp',cost:300,type:'item',key:'normal_gold',amount:1},{id:'weekly_ancient',period:'weekly',limit:1,costType:'coins',cost:25000,type:'ancient',amount:1},{id:'weekly_wooden_chest',period:'weekly',limit:2,costType:'coins',cost:8000,type:'item',key:'wooden_chest',amount:3},{id:'weekly_silver_chest',period:'weekly',limit:1,costType:'coins',cost:35000,type:'item',key:'silver_chest',amount:2},{id:'weekly_skill_crystal',period:'weekly',limit:2,costType:'coins',cost:40000,type:'item',key:'skill_crystal',amount:1},{id:'monthly_ancient',period:'monthly',limit:1,costType:'coins',cost:70000,type:'ancient',amount:3},{id:'monthly_power_chest',period:'monthly',limit:1,costType:'xp',cost:5000,type:'item',key:'power_chest',amount:5},{id:'monthly_super_gold',period:'monthly',limit:1,costType:'coins',cost:50000,type:'rarityGold',key:'超激レア',amount:1}];const eligible=offers.filter(o=>{const periodKey=keys[o.period];const record=obj(ex[o.id]);const used=String(record.period||'')===periodKey?Math.max(0,Math.floor(num(record.count))):0;return used<o.limit&&num(o.costType==='coins'?ai.coins:ai.player_xp)>=o.cost});if(!eligible.length)return false;eligible.sort((a,b)=>{const aScore=(a.type==='ancient'&&num(items.ancient_power)<5?2:0)+(a.type==='color'&&num(powers[a.key])<15?1:0)+(a.type==='item'&&['power_chest','wooden_chest','silver_chest'].includes(a.key)?0.5:0)+rnd(String(ai.account_id)+':item-shop:'+tick+':'+a.id)*.2;const bScore=(b.type==='ancient'&&num(items.ancient_power)<5?2:0)+(b.type==='color'&&num(powers[b.key])<15?1:0)+(b.type==='item'&&['power_chest','wooden_chest','silver_chest'].includes(b.key)?0.5:0)+rnd(String(ai.account_id)+':item-shop:'+tick+':'+b.id)*.2;return bScore-aScore});const o=eligible[0];if(o.costType==='coins')ai.coins=Math.max(0,num(ai.coins)-o.cost);else ai.player_xp=Math.max(0,num(ai.player_xp)-o.cost);if(o.type==='item')items[o.key]=Math.max(0,num(items[o.key]))+o.amount;else if(o.type==='ancient')items.ancient_power=Math.max(0,num(items.ancient_power))+o.amount;else if(o.type==='color')powers[o.key]=Math.max(0,num(powers[o.key]))+o.amount;else if(o.type==='rarityGold')gold[o.key]=Math.max(0,num(gold[o.key]))+o.amount;const periodKey=keys[o.period],prev=obj(ex[o.id]),used=String(prev.period||'')===periodKey?Math.max(0,Math.floor(num(prev.count))):0;ex[o.id]={period:periodKey,count:used+1};items.rarity_gold=gold;ai.inventory_items=items;ai.activity={...state,aiColorPowers:powers,aiItemExchangeState:ex};log(ai,'🛒 '+prof(ai).p+'：'+o.id+'を交換（'+o.cost+(o.costType==='coins'?'コイン':'XP')+'消費）');return true}
+function exchangeItems(ai:any,tick:number){
+const state=obj(ai.activity),items=obj(ai.inventory_items),powers=obj(state.aiColorPowers),gold=obj(items.rarity_gold),ex=obj(state.aiItemExchangeState),keys=aiExchangePeriodKeys();
+const colors=['赤','青','黄','緑','紫'];
+const offers:any[]=[
+{id:'daily_chest',period:'daily',limit:1,costType:'coins',cost:5000,rewardType:'item',rewardId:'power_chest',amount:1},
+{id:'daily_red',period:'daily',limit:2,costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'赤',amount:5},
+{id:'daily_normal_gold',period:'daily',limit:2,costType:'xp',cost:300,rewardType:'gold',rewardId:'ノーマル',amount:1},
+{id:'daily_xp',period:'daily',limit:2,costType:'coins',cost:2000,rewardType:'xp',amount:500},
+{id:'daily_blue_power',period:'daily',limit:2,costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'青',amount:5},
+{id:'daily_yellow_power',period:'daily',limit:2,costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'黄',amount:5},
+{id:'daily_green_power',period:'daily',limit:2,costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'緑',amount:5},
+{id:'daily_purple_power',period:'daily',limit:2,costType:'coins',cost:2500,rewardType:'colorPower',rewardId:'紫',amount:5},
+{id:'daily_chest_x2',period:'daily',limit:1,costType:'xp',cost:900,rewardType:'item',rewardId:'power_chest',amount:2},
+{id:'weekly_ancient',period:'weekly',limit:1,costType:'coins',cost:25000,rewardType:'ancientPower',amount:1},
+{id:'weekly_chests',period:'weekly',limit:2,costType:'xp',cost:1800,rewardType:'item',rewardId:'power_chest',amount:2},
+{id:'weekly_xp',period:'weekly',limit:2,costType:'coins',cost:6000,rewardType:'xp',amount:2000},
+{id:'weekly_rare_gold',period:'weekly',limit:1,costType:'coins',cost:12000,rewardType:'gold',rewardId:'レア',amount:1},
+{id:'weekly_red_power',period:'weekly',limit:2,costType:'coins',cost:18000,rewardType:'colorPower',rewardId:'赤',amount:20},
+{id:'weekly_power_chest5',period:'weekly',limit:1,costType:'xp',cost:4000,rewardType:'item',rewardId:'power_chest',amount:5},
+{id:'weekly_epic_gold',period:'weekly',limit:1,costType:'coins',cost:30000,rewardType:'gold',rewardId:'激レア',amount:1},
+{id:'weekly_ancient2',period:'weekly',limit:1,costType:'coins',cost:45000,rewardType:'ancientPower',amount:2},
+{id:'weekly_coins',period:'weekly',limit:1,costType:'xp',cost:4000,rewardType:'coins',amount:20000},
+{id:'weekly_wooden_chest',period:'weekly',limit:2,costType:'coins',cost:8000,rewardType:'item',rewardId:'wooden_chest',amount:3},
+{id:'weekly_silver_chest',period:'weekly',limit:1,costType:'coins',cost:35000,rewardType:'item',rewardId:'silver_chest',amount:2},
+{id:'weekly_skill_crystal',period:'weekly',limit:2,costType:'coins',cost:40000,rewardType:'item',rewardId:'skill_crystal',amount:1},
+{id:'monthly_ancient',period:'monthly',limit:1,costType:'coins',cost:70000,rewardType:'ancientPower',amount:3},
+{id:'monthly_chests',period:'monthly',limit:1,costType:'xp',cost:5000,rewardType:'item',rewardId:'power_chest',amount:5},
+{id:'monthly_super_gold',period:'monthly',limit:1,costType:'coins',cost:50000,rewardType:'gold',rewardId:'超激レア',amount:1},
+{id:'monthly_coins',period:'monthly',limit:2,costType:'xp',cost:1000,rewardType:'coins',amount:5000},
+{id:'monthly_power_chest10',period:'monthly',limit:1,costType:'xp',cost:12000,rewardType:'item',rewardId:'power_chest',amount:10},
+{id:'monthly_skill_crystals',period:'monthly',limit:2,costType:'coins',cost:90000,rewardType:'item',rewardId:'skill_crystal',amount:3},
+{id:'monthly_ability_core',period:'monthly',limit:2,costType:'coins',cost:100000,rewardType:'item',rewardId:'ability_core',amount:1},
+{id:'monthly_ancient10',period:'monthly',limit:1,costType:'coins',cost:220000,rewardType:'ancientPower',amount:10},
+{id:'monthly_legend_gold',period:'monthly',limit:1,costType:'coins',cost:500000,rewardType:'gold',rewardId:'伝説レア',amount:1},
+{id:'monthly_super_gold5',period:'monthly',limit:1,costType:'coins',cost:180000,rewardType:'gold',rewardId:'超激レア',amount:5},
+{id:'monthly_power_mix',period:'monthly',limit:1,costType:'coins',cost:100000,rewardType:'powerBundle',amount:10},
+{id:'monthly_xp10k',period:'monthly',limit:1,costType:'coins',cost:75000,rewardType:'xp',amount:10000},
+{id:'monthly_coins50k',period:'monthly',limit:1,costType:'xp',cost:10000,rewardType:'coins',amount:50000},
+{id:'monthly_golden_chest',period:'monthly',limit:1,costType:'coins',cost:150000,rewardType:'item',rewardId:'golden_chest',amount:3},
+{id:'monthly_silver_chest5',period:'monthly',limit:1,costType:'coins',cost:80000,rewardType:'item',rewardId:'silver_chest',amount:5}
+];
+const eligible=offers.filter(o=>{
+const periodKey=keys[o.period],record=obj(ex[o.id]),used=String(record.period||'')===periodKey?Math.max(0,Math.floor(num(record.count))):0;
+return used<o.limit&&num(o.costType==='coins'?ai.coins:ai.player_xp)>=o.cost;
+});
+if(!eligible.length)return false;
+const needsAncient=arr<number>(ai.owned_characters).some(id=>[21,22,64].includes(id)&&!obj(state.aiChapterRewardEvolved)[String(id)]);
+const needsSkill=arr<number>(ai.owned_characters).some(id=>id>=0&&id<10);
+eligible.sort((a,b)=>{
+const score=(o:any)=>{
+let s=rnd(String(ai.account_id)+':item-shop:'+tick+':'+o.id)*.12;
+if(o.rewardType==='ancientPower'&&needsAncient&&num(items.ancient_power)<20)s+=3.2;
+if(o.rewardType==='colorPower'&&num(powers[o.rewardId])<20)s+=2.4;
+if(o.rewardType==='powerBundle'&&colors.some(c=>num(powers[c])<20))s+=2.8;
+if(o.rewardType==='item'&&o.rewardId==='power_chest'&&colors.some(c=>num(powers[c])<15))s+=1.6;
+if(o.rewardType==='item'&&o.rewardId==='skill_crystal'&&needsSkill)s+=num(items.skill_crystal)<1?2.6:0.8;
+if(o.rewardType==='item'&&o.rewardId==='ability_core'&&needsSkill&&num(items.ability_core)<1)s+=2.8;
+if(o.rewardType==='gold'&&o.rewardId==='ノーマル'&&arr<number>(ai.owned_characters).some(id=>id<10&&num(arr<any>(state.aiCharMaxLevel)[id],20)<30)&&num(items.normal_gold)<2)s+=2.6;
+if(o.rewardType==='gold'&&o.rewardId==='伝説レア'&&arr<number>(ai.owned_characters).includes(64)&&num(obj(items.rarity_gold)['伝説レア'])<1)s+=1.2;
+if(o.rewardType==='coins')s+=0.25;
+const costRatio=o.costType==='coins'?o.cost/Math.max(1,num(ai.coins)):o.cost/Math.max(1,num(ai.player_xp));
+s-=Math.min(1.5,costRatio*.18);
+return s;
+};
+return score(b)-score(a);
+});
+const o=eligible[0];
+if(o.costType==='coins')ai.coins=Math.max(0,num(ai.coins)-o.cost);else ai.player_xp=Math.max(0,num(ai.player_xp)-o.cost);
+if(o.rewardType==='item')items[o.rewardId]=Math.max(0,num(items[o.rewardId]))+o.amount;
+else if(o.rewardType==='ancientPower')items.ancient_power=Math.max(0,num(items.ancient_power))+o.amount;
+else if(o.rewardType==='colorPower')powers[o.rewardId]=Math.max(0,num(powers[o.rewardId]))+o.amount;
+else if(o.rewardType==='gold'){if(o.rewardId==='ノーマル')items.normal_gold=Math.max(0,num(items.normal_gold))+o.amount;else gold[o.rewardId]=Math.max(0,num(gold[o.rewardId]))+o.amount;}
+else if(o.rewardType==='powerBundle')for(const color of colors)powers[color]=Math.max(0,num(powers[color]))+o.amount;
+else if(o.rewardType==='xp')ai.player_xp=Math.min(999999999,num(ai.player_xp)+o.amount);
+else if(o.rewardType==='coins')ai.coins=Math.min(999999999,num(ai.coins)+o.amount);
+const periodKey=keys[o.period],prev=obj(ex[o.id]),used=String(prev.period||'')===periodKey?Math.max(0,Math.floor(num(prev.count))):0;
+ex[o.id]={period:periodKey,count:used+1};
+items.rarity_gold=gold;ai.inventory_items=items;
+ai.activity={...state,aiColorPowers:powers,aiItemExchangeState:ex};
+log(ai,'🛒 '+prof(ai).p+'：'+o.id+'を交換（'+o.cost.toLocaleString()+(o.costType==='coins'?'コイン':'XP')+'消費）');
+return true
+}
 function exchangeCost(id:number){if(EXCHANGE_R.includes(id))return 1000;if(EXCHANGE_SR.includes(id))return 6000;if(id===51)return 15000;if(EXCHANGE_SSR.includes(id)||LIMITED_SSR.includes(id))return 10000;if(id===LIMITED_LR)return 50000;return Infinity}
 function gacha(ai:any){const regular=[...EXCHANGE_R,...EXCHANGE_SR,...EXCHANGE_SSR],limited=[...LIMITED_SSR,LIMITED_LR];const cursed=[53,54,55,56,57,58].filter(id=>id<MAX_CHARS);const missingCursed=cursed.filter(id=>!ai.owned_characters.includes(id)),missingLimited=limited.filter(id=>!ai.owned_characters.includes(id)&&!cursed.includes(id)),missingRegular=regular.filter(id=>!ai.owned_characters.includes(id)&&id<MAX_CHARS);const affordableCursed=missingCursed.filter(id=>ai.coins>=exchangeCost(id)),affordableLimited=missingLimited.filter(id=>ai.coins>=exchangeCost(id)),affordableMachine=[...MACHINE_SSR,MACHINE_LR].filter(id=>!ai.owned_characters.includes(id)&&ai.coins>=exchangeCost(id)),affordableRegular=missingRegular.filter(id=>ai.coins>=exchangeCost(id));if(!affordableMachine.length&&!affordableCursed.length&&!affordableLimited.length&&!affordableRegular.length)return false;const p=prof(ai);let pool:number[];if(affordableMachine.length){pool=affordableMachine;}else if(affordableCursed.length){pool=affordableCursed;}else if(affordableLimited.length){pool=affordableLimited;}else{pool=affordableRegular;}const ctx=tacticalContext(ai,Math.floor(Date.now()/120000));const ranked=pool.map(id=>{const t=CARD_TACTICS_BY_ID.get(id)||{};let score=rnd(String(ai.account_id)+':shop:'+String(id)+':'+String(Math.floor(Date.now()/120000)))*.35+(id%7)*.03;score+=tacticalScore(id,[],ctx)*3.2;score+=Math.max(0,20-num(ai.char_levels?.[id],1))*.025;if(ctx.traits.has(t.t))score+=.35;if(limited.includes(id))score+=1.15;if(id>=53&&id<=58)score+=2;return{id,score}}).sort((a,b)=>b.score-a.score||a.id-b.id);const id=ranked[0].id,cost=exchangeCost(id);ai.coins-=cost;if(!ai.owned_characters.includes(id))ai.owned_characters.push(id);ai.char_levels[id]=Math.max(1,Math.floor(num(ai.char_levels[id],1)));log(ai,'🪙 '+p.p+'：'+(id>=59&&id<=64?'機械防衛隊！木下sを優先交換':id>=53&&id<=58?'呪いの木下シリーズを優先交換':LIMITED_SSR.includes(id)||id===LIMITED_LR?'期間限定交換所':'通常交換所')+'でキャラ#'+(id+1)+'を'+cost.toLocaleString()+'コインで交換');return true}
 async function createAIJoinRequests(ais:any[],tick:number){const {data:alliances,error}=await db.from('alliances').select('id,name,owner_id,owner_type,members,max_members,join_min_rp,join_max_rank,join_min_stage').limit(100);if(error||!Array.isArray(alliances)||!alliances.length)return;const {data:reqs}=await db.from('alliance_join_requests').select('alliance_id,requester_id').eq('status','pending').limit(500);const pending=new Set(arr<any>(reqs).map(r=>String(r.alliance_id)+':'+String(r.requester_id)));const {data:players}=await db.from('player_rankings').select('player_id,rp,wins').limit(1000);const rankRows=[...arr<any>(players).map(p=>({id:String(p.player_id),rp:num(p.rp,0),wins:num(p.wins,0)})),...ais.map(x=>({id:'AI-'+String(x.account_id).padStart(3,'0'),rp:num(x.rp,0),wins:num(x.wins,0)}))].sort((a,b)=>b.rp-a.rp||b.wins-a.wins);const rankMap=new Map(rankRows.map((x,i)=>[x.id,i+1]));const memberIds=new Set(alliances.flatMap(a=>arr<any>(a.members).map(m=>String(m.id))));for(const ai of ais){const rid='AI-'+String(ai.account_id).padStart(3,'0');if(memberIds.has(rid)||rnd('ai-join-request:'+ai.account_id+':'+tick)>.20)continue;const candidates=alliances.filter(a=>arr<any>(a.members).length<Math.max(1,Math.floor(num(a.max_members,20)))&&String(a.owner_id)!==rid&&!pending.has(String(a.id)+':'+rid)&&num(ai.rp,0)>=num(a.join_min_rp,0)&&(num(a.join_max_rank,0)===0||(Number(rankMap.get(rid)||0)>0&&Number(rankMap.get(rid)||0)<=num(a.join_max_rank,0)))&&num(ai.stage_clears,0)>=num(a.join_min_stage,0));if(!candidates.length)continue;const playerTargets=candidates.filter(a=>String(a.owner_type)==='player');const pool=playerTargets.length&&rnd('ai-player-alliance:'+ai.account_id+':'+tick)<.65?playerTargets:candidates;const target=pool[Math.abs(hash('ai-target:'+ai.account_id+':'+tick))%pool.length];const {error:ie}=await db.from('alliance_join_requests').insert({alliance_id:Number(target.id),requester_id:rid,requester_type:'ai',requester_name:String(ai.name||rid),status:'pending'});if(!ie)log(ai,'🤝 同盟「'+String(target.name||'同盟')+'」へ参加リクエストを送信');}}
