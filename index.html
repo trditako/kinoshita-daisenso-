@@ -1630,7 +1630,7 @@ for(let si=0;si<Math.min(unlocked,stages.length);si++){if(si<unlocked-1){(stages
 for(let ch=0;ch<6;ch++){const clear=chapterClears[ch]||0;for(let si=0;si<clear;si++){(chapterStages[ch][si]?.schedule||[]).forEach(x=>enemyEncountered[x.enemy]=true)}}
 saveEnemyEncountered();
 const DAILY_DIMENSIONAL_CHARACTER_INDEX=cards.length;
-cards.push({name:"異次元木下",cost:1800,hp:9800,atk:2250,range:175,spd:.85,interval:1.4,recharge:38,icon:"🌀",motion:"king",attackType:"area",kb:3,trait:"浮・黒",rarity:"UR",series:"日替わり異次元戦線",limitedExchange:true,limitedExchangeSeries:"日替わり異次元戦線",ability:{name:"異次元の加護",desc:"浮いている敵・黒い敵にめっぽう強い。",strong:{浮:1.5,黒:1.5},resist:{浮:.5,黒:.5}}});
+cards.push({name:"異次元木下",cost:1800,hp:9800,atk:2250,range:175,spd:.85,interval:1.4,recharge:38,icon:"🌀",motion:"king",attackType:"area",kb:3,trait:"浮・黒",rarity:"UR",series:"日替わり異次元戦線",limitedExchange:false,limitedExchangeSeries:"日替わり異次元戦線",ability:{name:"異次元の加護",desc:"浮いている敵・黒い敵にめっぽう強い。",strong:{浮:1.5,黒:1.5},resist:{浮:.5,黒:.5}}});
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
 while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;
