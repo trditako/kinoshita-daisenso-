@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.89';
+const GAME_VERSION='v1.8.90';
 const UPDATE_LOG=[
+ {date:'2026-10-17',version:'v1.8.90',title:'🐉 ワイバーン襲来の出現時刻を修正',items:['ワイバーン本体と古代カエルを指定秒数に出現するよう修正','城HP99%以下の全敵吹っ飛ばしを、敵の出現スケジュールから分離']},
  {date:'2026-10-16',version:'v1.8.89',title:'📉 Supabase通信・ログ負荷を軽減',items:['ワールドイベント一覧の自動同期を45秒ごとから180秒ごとに変更','ワールド状態の自動確認を45秒ごとから120秒ごとに変更','機能を削除せず、画面を開いた際の即時更新は維持']},
  {date:'2026-10-15',version:'v1.8.88',title:'🎟️ 宝くじの当選口数を調整',items:['1等1口・2等2口・3等10口に対応','2等は下4桁2種類、3等は下2桁10種類の番号を設定・先行発表可能']},
  {date:'2026-10-15',version:'v1.8.87',title:'🎟️ 宝くじ番号を連番化・4等を追加',items:['チケット番号を発行順の連番に変更し、既存番号と重複しないようサーバーで一元採番','1等6桁・2等下4桁・3等下2桁の当選番号を個別設定可能','4等は開始〜終了の100番号範囲で判定し、1〜3等優先で当選判定','ランダム抽選は発行済みの未抽選チケット番号を基に生成']},
@@ -1167,11 +1168,12 @@ const eventStages=[{name:"ノーマルキャラの金",width:1100,baseHp:18000,x
  ],repeats:[{delay:19,interval:25,enemy:"ワープ木下",mult:20,fixedMultiplier:true}]},knockbackAll:true
  },
  {name:'ワイバーン襲来',width:2350,baseHp:300000,xp:9000,eventReward:'ワイバーン',rewardCharacter:'ワイバーン',enemies:['青龍神','酒呑童子','ワイバーン','古代カエル','めっちゃ木下','玄武神'],schedule:[
-   {t:0,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:2,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:4,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:6,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:8,enemy:'青龍神',mult:2.5,fixedMultiplier:true}
-  ],repeatSpawns:[{start:7,interval:22,enemy:'酒呑童子',mult:7.5,fixedMultiplier:true}],triggerSpawns:{threshold:.99,spawns:[
-   {delay:0,enemy:'ワイバーン',mult:1,fixedMultiplier:true,role:'boss'},
-   {delay:5,enemy:'古代カエル',mult:15,fixedMultiplier:true},{delay:8,enemy:'古代カエル',mult:15,fixedMultiplier:true},{delay:11,enemy:'古代カエル',mult:15,fixedMultiplier:true}
-  ],repeats:[{delay:7,interval:15,enemy:'めっちゃ木下',mult:3,fixedMultiplier:true},{delay:17,interval:22,enemy:'玄武神',mult:3,fixedMultiplier:true}]},knockbackAll:true
+   {t:0,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:0,enemy:'ワイバーン',mult:1,fixedMultiplier:true,role:'boss'},
+   {t:2,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:4,enemy:'青龍神',mult:2.5,fixedMultiplier:true},
+   {t:5,enemy:'古代カエル',mult:15,fixedMultiplier:true},{t:6,enemy:'青龍神',mult:2.5,fixedMultiplier:true},
+   {t:8,enemy:'青龍神',mult:2.5,fixedMultiplier:true},{t:8,enemy:'古代カエル',mult:15,fixedMultiplier:true},
+   {t:11,enemy:'古代カエル',mult:15,fixedMultiplier:true}
+  ],repeatSpawns:[{start:7,interval:22,enemy:'酒呑童子',mult:7.5,fixedMultiplier:true},{start:7,interval:15,enemy:'めっちゃ木下',mult:3,fixedMultiplier:true},{start:17,interval:22,enemy:'玄武神',mult:3,fixedMultiplier:true}],triggerSpawns:{threshold:.99,spawns:[],repeats:[]},knockbackAll:true
   }
 ];
 // 🎃 ハロウィンナイト2026（期間限定イベント）
