@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
         const ownerName = String(player?.name || 'プレイヤー').slice(0, 80)
         const { data: existingClaim } = await client.from('world_event_stage_claims').select('ticket_number').eq('stage_id', stageId).eq('player_id', playerId).maybeSingle()
         if (existingClaim) return respond({ ok: true, action: publicBody.action, granted: false, alreadyClaimed: true, ticketNumber: existingClaim.ticket_number || null })
-        const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('created_at', { ascending: false }).limit(50)
+        const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('published_at', { ascending: false }).limit(50)
         if (pendingDrawError) return respond({ ok: false, error: 'Could not verify lottery status' }, 500)
         if ((pendingDraws || []).some((d: any) => ['announced', 'awarding'].includes(String(d?.prizes?._status || '')))) return respond({ ok: false, error: 'Lottery ticket issuance is paused until the announced draw is awarded' }, 409)
         const allocateTicketNumber = async () => {
@@ -477,7 +477,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'lottery_issue') {
-      const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('created_at', { ascending: false }).limit(50)
+      const { data: pendingDraws, error: pendingDrawError } = await client.from('world_lottery_draws').select('id,prizes').order('published_at', { ascending: false }).limit(50)
       if (pendingDrawError) return respond({ ok: false, error: 'Could not verify lottery status' }, 500)
       if ((pendingDraws || []).some((d: any) => ['announced', 'awarding'].includes(String(d?.prizes?._status || '')))) return respond({ ok: false, error: 'Lottery ticket issuance is paused until the announced draw is awarded' }, 409)
       const target=String(body.target||''), amount=integerInRange(body.amount,1,100)
@@ -551,7 +551,7 @@ Deno.serve(async (req: Request) => {
       if (!title || title.length > 60 || !/^[0-9]{6}$/.test(first) || second.length !== 2 || new Set(second).size !== 2 || third.length !== 10 || new Set(third).size !== 10 || overlaps) {
         return respond({ ok: false, error: 'Require non-overlapping 1st-3rd prize numbers: 1 six-digit number, 2 distinct four-digit suffixes, and 10 distinct two-digit suffixes' }, 400)
       }
-      const { data: pendingDraws, error: pendingError } = await client.from('world_lottery_draws').select('id,prizes').order('created_at', { ascending: false }).limit(50)
+      const { data: pendingDraws, error: pendingError } = await client.from('world_lottery_draws').select('id,prizes').order('published_at', { ascending: false }).limit(50)
       if (pendingError) return respond({ ok: false, error: 'Could not verify pending lottery draws' }, 500)
       if ((pendingDraws || []).some((d: any) => ['announced', 'awarding'].includes(String(d?.prizes?._status || '')))) return respond({ ok: false, error: 'A lottery draw is already announced and must be awarded first' }, 409)
       const { data: availableTickets, error: ticketsError } = await client.from('world_lottery_tickets').select('ticket_number').is('draw_id', null).limit(10000)
@@ -568,7 +568,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'lottery_publish') {
-      const { data: recentDraws, error: recentDrawError } = await client.from('world_lottery_draws').select('id,title,winning_number,prizes').order('created_at', { ascending: false }).limit(50)
+      const { data: recentDraws, error: recentDrawError } = await client.from('world_lottery_draws').select('id,title,winning_number,prizes').order('published_at', { ascending: false }).limit(50)
       if (recentDrawError) return respond({ ok: false, error: 'Could not check pending lottery draws' }, 500)
       if ((recentDraws || []).some((d: any) => d?.prizes?._status === 'awarding')) return respond({ ok: false, error: 'A lottery draw is already being processed. Do not start another draw; check the existing draw status first.' }, 409)
       const pendingDraw: any = (recentDraws || []).find((d: any) => d?.prizes?._status === 'announced') || null
@@ -740,11 +740,13 @@ Deno.serve(async (req: Request) => {
           awarded++
         }
       }
-      await client.from('world_lottery_draws').update({ prizes: { ...prizes, _winningNumbers: winningNumbers, _status: 'awarded' }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
+      const { error: completeDrawError } = await client.from('world_lottery_draws').update({ prizes: { ...prizes, _winningNumbers: winningNumbers, _status: 'awarded' }, ticket_count: (tickets || []).length, winner_counts: counts, awarded_count: awarded }).eq('id', draw.id)
+      if (completeDrawError) return respond({ ok: false, error: 'Rewards were processed but the draw completion state could not be saved; manual reconciliation is required', drawId: draw.id, awarded }, 500)
       const announcement = legacyMode
         ? '🎟️ ' + title + ' 当選発表！番号 ' + winningNumbers['1'].slice(0, 2) + '-' + winningNumbers['1'].slice(2) + '／1等6桁・2等下4桁・3等下2桁一致。5・6等は残りチケットから各1口を抽選、その他は7等参加賞。アイテムバッグで確認してください。'
         : '🎟️ ' + title + ' 当選発表！ 1等 ' + winningNumbers['1'] + '（1口）／2等 下4桁 ' + winningNumbers['2'] + '（最大2口）／3等 下2桁 ' + winningNumbers['3'] + '（最大10口）／4等 ' + winningNumbers['4Start'] + '〜' + winningNumbers['4End'] + '。2・3等は該当候補から上限口数までランダム選出。5・6等は1〜4等に外れたチケットから各1口をランダム抽選、残りは7等参加賞です。アイテムバッグで確認してください。'
-      await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      const { error: resultAnnouncementError } = await client.from('world_announcements').upsert({ id: 1, message: announcement, active: true, expires_at: new Date(Date.now() + 3600000).toISOString(), updated_at: now, updated_by: OPERATOR_PLAYER_ID }, { onConflict: 'id' })
+      if (resultAnnouncementError) return respond({ ok: false, error: 'Draw was awarded but the public result announcement could not be saved', drawId: draw.id, awarded }, 500)
       return respond({ ok: true, action, title, drawId: draw.id, winners: Object.values(counts).reduce((sum, count) => sum + count, 0), prizeCounts: counts, awarded })
     }
     return respond({ ok: false, error: 'Unknown action' }, 400)
