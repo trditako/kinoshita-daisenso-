@@ -705,6 +705,34 @@ WYVERN_REWARD_CARD.id=cards.length-1;
 const IVY_REWARD_CARD={name:'アイヴィ',cost:2800,hp:35000,atk:9500,range:95,spd:.9,interval:1.6,recharge:42,icon:'🌿',motion:'super',attackType:'area',kb:2,trait:'黒',rarity:'超激レア',specialReward:true,eventReward:'アイヴィ降臨',ability:{name:'感情転移・魂喰い・烈波蓄積',desc:'感情転移、魂喰い、烈波蓄積。呪い・停止・攻撃力低下・鈍足・烈波・波動無効。',ivyTransfer:true,ivyTransferInterval:60,ivyTransferOnFirstContact:true,ivySoulAtk:.03,ivySoulHeal:0,ivySurgeStack:true,ivySurgeStackRequired:5,ivySpecialSurgeIgnoresSurgeImmune:true,curseImmune:true,stopImmune:true,attackDownImmune:true,slowImmune:true,surgeImmune:true,waveImmune:true}};
 cards.push(IVY_REWARD_CARD);
 IVY_REWARD_CARD.id=cards.length-1;
+
+// アイヴィの感情転移：戦闘ループに副作用を持ち込まず、移動停止と状態表示だけを管理する。
+function ivyIsEntity(v){return !!v&&(v.name==='アイヴィ'||v.key==='アイヴィ'||v.characterName==='アイヴィ');}
+function processIvyTransfer(ivy,now){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ const ability=ivy.ability||{},interval=Math.max(1,Number(ability.ivyTransferInterval||30));
+ if(ivy.ivyTransferUntil&&now>=ivy.ivyTransferUntil){
+  ivy.ivyTransferUntil=0;ivy.ivyTransferTarget=null;
+  if(ivy.ivyOriginalSpd!=null){ivy.spd=ivy.ivyOriginalSpd;delete ivy.ivyOriginalSpd;}
+  if(ivy.state==='ivyTransfer')ivy.state='move';
+ }
+ if(ivy.ivyTransferUntil&&now<ivy.ivyTransferUntil){ivy.spd=0;ivy.state='ivyTransfer';return;}
+ const ally=units.includes(ivy),opponents=ally?enemies:units;
+ let target=null;
+ if(!ivy.ivyFirstTransferDone&&ability.ivyTransferOnFirstContact){
+  target=opponents.find(t=>t&&t.hp>0&&Math.abs(Number(t.x||0)-Number(ivy.x||0))<=Math.max(28,Number(ivy.range||0)+28));
+  if(target)ivy.ivyFirstTransferDone=true;
+ }
+ if(!target&&now>=Number(ivy.ivyNextTransferAt||0)){
+  target=opponents.find(t=>t&&t.hp>0);
+  ivy.ivyNextTransferAt=now+interval;
+ }
+ if(!target)return;
+ ivy.ivyOriginalSpd=Number(ivy.spd||0);ivy.ivyTransferTarget=target;ivy.ivyTransferUntil=now+3;ivy.spd=0;ivy.state='ivyTransfer';
+ target.ivyYabayabaUntil=now+3;target.ivyYabayaba=true;
+ if(typeof setStatusMark==='function')setStatusMark(target,'🌿','ヤバヤバ化',3,'ivyYabayaba');
+ if(typeof popup==='function')popup('🌿 感情転移！',Number(target.x||0),Math.max(25,field.clientHeight-165));
+}
 const RICH_KINOSHITA_CARD={name:'富豪木下',cost:1500,hp:30000,atk:1500,range:70,spd:.2,interval:1.5,recharge:150,icon:'💰',motion:'super',attackType:'single',kb:2,trait:'浮・赤',rarity:'LR',series:'特別真髄',specialGachaOnly:true,curseImmune:true,ability:{name:'富豪の資産運用',desc:'場にいる間、敵撃破時のお金2倍・2秒ごとに150円獲得（各効果最大2体分まで重複）。呪い無効。',curseImmune:true}};
 RICH_KINOSHITA_CARD.secondForm={name:'大富豪木下',icon:'💎',cost:4500,hp:85000,atk:300000,range:140,spd:1.3,interval:20,recharge:150,kb:2,attackType:'single',trait:'赤',ability:{name:'大富豪の超臨界',desc:'50%でクリティカル（ダメージ2倍、メタルにも通常ダメージを通す）。浮・天使・神話に5倍ダメージ。呪い・波動・烈波・停止・攻撃力低下無効。HP50%未満で攻撃力300%増加。',criticalChance:.5,criticalMultiplier:2,wyvernStrongTraits:['浮','天使','神話'],wyvernStrongMultiplier:5,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true,hpBelowThreshold:.5,hpBelowThresholdMultiplier:4},curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true};
 cards.push(RICH_KINOSHITA_CARD);RICH_KINOSHITA_CARD.id=cards.length-1;CURRENT_CHARACTER_COUNT=cards.length;
@@ -3653,6 +3681,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
  applyPhoenixAura();
+ for(const ivy of [...units,...enemies])processIvyTransfer(ivy,performance.now()/1000);
  for(let ui=units.length-1;ui>=0;ui--){const u=units[ui];if(!u||u.hp<=0)continue;u.cd-=dt;
    const isThousandStep=Number(u.chargeTime||0)>0;
    let target=u.target;
