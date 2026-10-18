@@ -3648,7 +3648,7 @@ function finishRank(win){
 }
 
 function spawnYabayabaClone(deadUnit,level,asAlly=false){
- if(!deadUnit)return;
+ if(!deadUnit||deadUnit.ivyYabayaba)return;
  const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));
  const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));
  // ヤバヤバ複製は元のキャラの能力を引き継ぐ。味方ヤバすぎ木下による撃破時は味方側として生成する。
