@@ -702,6 +702,75 @@ HALLOWEEN_REWARD_CARD.id=cards.length-1;
 const WYVERN_REWARD_CARD={name:'ワイバーン',cost:3500,hp:22000,atk:8700,range:150,spd:1.3,interval:1.5,recharge:45,icon:'🐉',motion:'super',attackType:'area',kb:2,trait:'浮',rarity:'超激レア',specialReward:true,eventReward:'ワイバーン襲来',airAttack:true,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,ability:{name:'竜王の天翔',desc:'攻撃時100%で烈波Lv2。全属性へ3秒間の呪い・停止・鈍足。赤・天使・鋼・浮に4倍ダメージ、該当属性からの被ダメージ0.25倍。空中攻撃可能。呪い・停止・鈍足・波動・烈波無効。',phoenixSurgeLevel:2,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:1,curseDuration:3,stopChance:1,stopDuration:3,slowChance:1,slowFactor:.5,slowDuration:3,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,wyvernStrongTraits:['赤','天使','鋼','メタル','浮'],wyvernStrongMultiplier:4,wyvernResistTraits:['赤','天使','鋼','メタル','浮'],wyvernResistMultiplier:.25,strong:{赤:4,天使:4,鋼:4,メタル:4,浮:4},resist:{赤:.25,天使:.25,鋼:.25,メタル:.25,浮:.25}}};
 cards.push(WYVERN_REWARD_CARD);
 WYVERN_REWARD_CARD.id=cards.length-1;
+const IVY_REWARD_CARD={name:'アイヴィ',cost:2800,hp:35000,atk:9500,range:95,spd:.9,interval:1.6,recharge:42,icon:'🌿',motion:'super',attackType:'area',kb:2,trait:'黒',rarity:'超激レア',specialReward:true,eventReward:'アイヴィ降臨',ability:{name:'感情転移・魂喰い・烈波蓄積',desc:'感情転移、魂喰い、烈波蓄積。呪い・停止・攻撃力低下・鈍足・烈波・波動無効。',ivyTransfer:true,ivyTransferInterval:60,ivyTransferOnFirstContact:true,ivySoulAtk:.03,ivySoulHeal:0,ivySurgeStack:true,ivySurgeStackRequired:5,ivySpecialSurgeIgnoresSurgeImmune:true,curseImmune:true,stopImmune:true,attackDownImmune:true,slowImmune:true,surgeImmune:true,waveImmune:true}};
+cards.push(IVY_REWARD_CARD);
+IVY_REWARD_CARD.id=cards.length-1;
+
+// アイヴィの感情転移：戦闘ループに副作用を持ち込まず、移動停止と状態表示だけを管理する。
+function ivyIsEntity(v){return !!v&&(v.name==='アイヴィ'||v.key==='アイヴィ'||v.characterName==='アイヴィ');}
+
+// アイヴィの烈波蓄積。5回目で通常の烈波無効を無視する専用攻撃を発生させる。
+function ivySpecialSurge(ivy){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ const ally=units.includes(ivy),opponents=ally?enemies:units,radius=200;
+ const fx=document.createElement('div');fx.className='socratesSurgeEffect';fx.style.left=Number(ivy.x||0)+'px';fx.style.bottom='105px';fx.style.setProperty('--surge-height','200px');fx.style.setProperty('--surge-duration','.55s');effects.appendChild(fx);setTimeout(()=>fx.remove(),600);
+ for(const t of [...opponents]){
+  if(!t||t.hp<=0||Math.abs(Number(t.x||0)-Number(ivy.x||0))>radius)continue;
+  const dealt=Math.max(1,Math.round(Number(damageAgainst(ivy,t))||Number(ivy.atk)||1));
+  hit(t,dealt,ivy);
+  if(t.hp<=0)(ally?removeEnemy(t):removeUnit(t));
+ }
+}
+function ivySurgeContact(ivy){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ ivy.ivySurgeStacks=Number(ivy.ivySurgeStacks||0)+1;
+ if(typeof popup==='function')popup('🌿 烈波蓄積 '+ivy.ivySurgeStacks+'/5',Number(ivy.x||0),Math.max(25,field.clientHeight-145));
+ if(ivy.ivySurgeStacks>=5){ivy.ivySurgeStacks=0;ivySpecialSurge(ivy);}
+}
+// アイヴィの魂喰い：撃破確定後にのみ、敵側・味方側のアイヴィへ加算する。
+function processIvySoulGain(dead,isEnemySide){
+ const owners=isEnemySide?enemies:units;
+ for(const ivy of owners){
+  if(!ivyIsEntity(ivy)||ivy.hp<=0)continue;
+  const a=ivy.ability||{},gain=Math.max(0,Number(a.ivySoulAtk||0));
+  if(gain>0){
+   ivy.ivySoulKills=Number(ivy.ivySoulKills||0)+1;
+   ivy.ivyBaseAtk=Number(ivy.ivyBaseAtk??ivy.atk);
+   ivy.atk=Math.max(1,Math.round(ivy.ivyBaseAtk*(1+gain*ivy.ivySoulKills)));
+  }
+  const heal=Math.max(0,Number(a.ivySoulHeal||0));
+  if(heal>0){
+   const maxhp=Math.max(1,Number(ivy.maxhp||ivy.hp)),amount=Math.max(1,Math.round(maxhp*heal));
+   ivy.hp=Math.min(maxhp,ivy.hp+amount);
+   const bar=ivy.el?.querySelector('.hp i');if(bar)bar.style.width=Math.max(0,ivy.hp/maxhp*100)+'%';
+  }
+ }
+}
+function processIvyTransfer(ivy,now){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ const ability=ivy.ability||{},interval=Math.max(1,Number(ability.ivyTransferInterval||30));
+ if(ivy.ivyTransferUntil&&now>=ivy.ivyTransferUntil){
+  ivy.ivyTransferUntil=0;ivy.ivyTransferTarget=null;
+  if(ivy.ivyOriginalSpd!=null){ivy.spd=ivy.ivyOriginalSpd;delete ivy.ivyOriginalSpd;}
+  if(ivy.state==='ivyTransfer')ivy.state='move';
+ }
+ if(ivy.ivyTransferUntil&&now<ivy.ivyTransferUntil){ivy.spd=0;ivy.state='ivyTransfer';return;}
+ const ally=units.includes(ivy),opponents=ally?enemies:units;
+ let target=null;
+ if(!ivy.ivyFirstTransferDone&&ability.ivyTransferOnFirstContact){
+  target=opponents.find(t=>t&&t.hp>0&&Math.abs(Number(t.x||0)-Number(ivy.x||0))<=Math.max(28,Number(ivy.range||0)+28));
+  if(target)ivy.ivyFirstTransferDone=true;
+ }
+ if(!target&&now>=Number(ivy.ivyNextTransferAt||0)){
+  target=opponents.find(t=>t&&t.hp>0);
+  ivy.ivyNextTransferAt=now+interval;
+ }
+ if(!target)return;
+ ivy.ivyOriginalSpd=Number(ivy.spd||0);ivy.ivyTransferTarget=target;ivy.ivyTransferUntil=now+3;ivy.spd=0;ivy.state='ivyTransfer';
+ target.ivyYabayabaUntil=now+3;target.ivyYabayaba=true;
+ if(typeof setStatusMark==='function')setStatusMark(target,'🌿','ヤバヤバ化',3,'ivyYabayaba');
+ if(typeof popup==='function')popup('🌿 感情転移！',Number(target.x||0),Math.max(25,field.clientHeight-165));
+}
 const RICH_KINOSHITA_CARD={name:'富豪木下',cost:1500,hp:30000,atk:1500,range:70,spd:.2,interval:1.5,recharge:150,icon:'💰',motion:'super',attackType:'single',kb:2,trait:'浮・赤',rarity:'LR',series:'特別真髄',specialGachaOnly:true,curseImmune:true,ability:{name:'富豪の資産運用',desc:'場にいる間、敵撃破時のお金2倍・2秒ごとに150円獲得（各効果最大2体分まで重複）。呪い無効。',curseImmune:true}};
 RICH_KINOSHITA_CARD.secondForm={name:'大富豪木下',icon:'💎',cost:4500,hp:85000,atk:300000,range:140,spd:1.3,interval:20,recharge:150,kb:2,attackType:'single',trait:'赤',ability:{name:'大富豪の超臨界',desc:'50%でクリティカル（ダメージ2倍、メタルにも通常ダメージを通す）。浮・天使・神話に5倍ダメージ。呪い・波動・烈波・停止・攻撃力低下無効。HP50%未満で攻撃力300%増加。',criticalChance:.5,criticalMultiplier:2,wyvernStrongTraits:['浮','天使','神話'],wyvernStrongMultiplier:5,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true,hpBelowThreshold:.5,hpBelowThresholdMultiplier:4},curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true};
 cards.push(RICH_KINOSHITA_CARD);RICH_KINOSHITA_CARD.id=cards.length-1;CURRENT_CHARACTER_COUNT=cards.length;
@@ -809,6 +878,7 @@ Object.assign(enemyTypes,{
 
 // ===== 宇宙編 第1章：専用敵・新能力 =====
 Object.assign(enemyTypes,{メタル木下:{name:"メタル木下",icon:"🤖",trait:"メタル",hp:100,atk:95,range:55,spd:.75,interval:.9,attackType:"single",kb:8,money:90,metal:true},メタル巨木下:{name:"メタル巨木下",icon:"🦾",trait:"メタル",hp:200,atk:420,range:80,spd:.28,interval:1.6,attackType:"area",kb:4,money:500,metal:true},ワープ木下:{name:"ワープ木下",icon:"🌀",trait:"宇宙",hp:1800,atk:260,range:110,spd:.55,interval:1.35,attackType:"single",kb:5,money:180,ability:{name:"ワープ",desc:"40%で後方へワープ",warpChance:.4,warpDistance:180,curseImmune:true}},呪縛木下:{name:"呪縛木下",icon:"🔒",trait:"宇宙",hp:2600,atk:310,range:135,spd:.38,interval:1.5,attackType:"area",kb:4,money:230,ability:{name:"能力封印",desc:"35%で能力封印",sealChance:.35,sealDuration:4}},ヤバすぎ木下:{name:"ヤバすぎ木下",icon:"👽",trait:"宇宙",hp:20000,atk:850,range:75,spd:.3,interval:.8,attackType:"single",kb:4,money:2200,ability:{name:"ヤバヤバLv5・停止無効",desc:"ヤバヤバLv5。停止を無効化する。",yabayaba:5},stopImmune:true},停止木下:{name:"停止木下",icon:"⏸️",trait:"宇宙",hp:3100,atk:360,range:120,spd:.34,interval:1.7,attackType:"area",kb:3,money:260,ability:{name:"時間停止",desc:"25%で1.5秒停止",stopChance:.25,stopDuration:1.5}},崩壊木下:{name:"崩壊木下",icon:"☄️",trait:"宇宙",hp:4800,atk:520,range:95,spd:.5,interval:1.25,attackType:"area",kb:4,money:350,ability:{name:"攻撃力低下",desc:"35%で攻撃力80%低下",attackDownChance:.35,attackDownDuration:4,attackDownFactor:.2}},ヤバ木下:{name:"ヤバ木下",icon:"👾",trait:"宇宙",hp:3600,atk:430,range:105,spd:.62,interval:1.2,attackType:"single",kb:5,money:300},ヤバヤバ木下:{name:"ヤバヤバ木下",icon:"👿",trait:"宇宙",hp:5200,atk:650,range:115,spd:.5,interval:1.35,attackType:"area",kb:5,money:500,ability:{name:"ヤバヤバLv2",desc:"倒した味方を40%で複製",yabayaba:2}},ヤバヤバ星人:{name:"ヤバヤバ星人",icon:"👽",trait:"宇宙",hp:7600,atk:900,range:145,spd:.42,interval:1.5,attackType:"area",kb:6,money:800,ability:{name:"ヤバヤバLv3",desc:"倒した味方を60%で複製",yabayaba:3}},ヤバヤバ皇帝:{name:"ヤバヤバ皇帝",icon:"👑",trait:"宇宙",hp:15000,atk:1800,range:180,spd:.3,interval:1.8,attackType:"area",kb:7,money:2000,ability:{name:"ヤバヤバLv5",desc:"倒した味方を100%で複製",yabayaba:5},boss:true},終焉ヤバヤバ木下:{name:"終焉ヤバヤバ木下",icon:"🌌",trait:"宇宙",hp:32000,atk:4200,range:220,spd:.22,interval:2,attackType:"area",kb:8,money:5000,ability:{name:"ヤバヤバLv5",desc:"倒した味方を100%で複製",yabayaba:5},boss:true}});
+Object.assign(enemyTypes,{アイヴィ:{name:'アイヴィ',icon:'🌿',trait:'黒',hp:5500000,atk:5500,range:125,spd:.6,interval:1.2,attackType:'area',kb:2,money:18000,boss:true,curseImmune:true,stopImmune:true,attackDownImmune:true,slowImmune:true,surgeImmune:true,waveImmune:true,ability:{name:'感情転移・魂喰い・烈波蓄積・距離装甲',desc:'感情転移、魂喰い、烈波蓄積、距離装甲。攻撃時50%で停止または攻撃力低下。各種妨害無効。',ivyTransfer:true,ivyTransferInterval:30,ivyTransferOnFirstContact:true,ivySoulAtk:.30,ivySoulHeal:.01,ivySurgeStack:true,ivySurgeStackRequired:5,ivySpecialSurgeIgnoresSurgeImmune:true,distanceArmor:.9,distanceThreshold:145,stopChance:.5,stopDuration:2,attackDownChance:.5,attackDownFactor:.2,attackDownDuration:2,curseImmune:true,stopImmune:true,attackDownImmune:true,slowImmune:true,surgeImmune:true,waveImmune:true,ivyRandomDebuff:true}},終末ヤバヤバ木下:{name:'終末ヤバヤバ木下',icon:'🌌',trait:'宇宙',hp:32000,atk:4200,range:220,spd:.22,interval:2,attackType:'area',kb:8,money:5000,boss:true,ability:{name:'ヤバヤバLv5',desc:'倒した味方を100%で複製',yabayaba:5}}});
 // パーフェクト木下降臨・専用敵/能力
 Object.assign(enemyTypes,{
  パーフェクト木下:{name:"パーフェクト木下",icon:"🌟",trait:"宇宙",hp:750000,atk:8600,range:75,spd:1.3,interval:1.7,attackType:"single",kb:2,money:12000,stopImmune:true,attackDownImmune:true,curseImmune:true,waveImmune:true,waveReflect:true,ability:{name:"完全反射・三属性特効",desc:"呪い無効・停止無効・攻撃力低下無効・波動無効・波動反射。攻撃時75%で波動Lv3・ヤバヤバLv4・呪い5秒。無/宇宙/赤に与えるダメージ5倍。波動にも効果が乗る。",waveLevel:3,waveChance:.75,waveCarriesEffects:true,waveReflect:true,yabayaba:4,yabayabaChance:.75,curseChance:.75,curseDuration:5,strong:{"無":5,"宇宙":5,"赤":5},curseOnWave:true}},
@@ -1183,6 +1253,7 @@ eventStages.push(
  {name:"👑 ジャック・オー・木下降臨",width:1900,baseHp:180000,xp:5000,halloweenEvent:true,eventReward:"パンプキン木下",rewardCharacter:"パンプキン木下",enemies:["赤鬼木下","呪王木下","ジャック・オー・木下"],schedule:[{t:2,enemy:"赤鬼木下",mult:12,fixedMultiplier:true},{t:8,enemy:"呪王木下",mult:5,fixedMultiplier:true},{t:15,enemy:"ジャック・オー・木下",mult:1,fixedMultiplier:true,role:"boss"},{t:28,enemy:"ジャック・オー・木下",mult:1.35,fixedMultiplier:true,role:"boss"}]}
 );
 
+eventStages.push({name:'アイヴィ降臨',width:2350,baseHp:350000,xp:12000,eventReward:'アイヴィ降臨',rewardCharacter:'アイヴィ',enemies:['酒呑童子','アイヴィ','古代神木下','風神獣','終末ヤバヤバ木下'],schedule:[{t:0,enemy:'酒呑童子',mult:5,fixedMultiplier:true},{t:10,enemy:'アイヴィ',mult:1,fixedMultiplier:true,role:'boss'},{t:13,enemy:'古代神木下',mult:1.5,fixedMultiplier:true},{t:15,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:16,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:17,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:18,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:19,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:20,enemy:'風神獣',mult:3.33,fixedMultiplier:true}],repeatSpawns:[{start:29,interval:40,enemy:'酒呑童子',mult:2,fixedMultiplier:true},{start:33,interval:32,enemy:'終末ヤバヤバ木下',mult:15,fixedMultiplier:true}]});
 // ===== 日本編 第2章・第3章 =====
 function cloneChapterStage(base, stageNo, chapter){
   const out=JSON.parse(JSON.stringify(base));
@@ -2072,6 +2143,11 @@ function damageTakenBy(u,attacker){
  const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
  const ua={...(u||{}),...(u.ability||{})};
  const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
+ if(ivyIsEntity(u)){
+  const threshold=Math.max(0,Number(ua.distanceThreshold??145));
+  const armor=Math.max(0,Math.min(.99,Number(ua.distanceArmor??.9)));
+  if(Math.abs(Number(u.x||0)-Number(attacker.x||0))>=threshold)mult*=1-armor;
+ }
  if(u.metal){
   let metalAtk=effectiveAtk;
   if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)metalAtk*=Number(attacker.cursedAttackFactor)||1;
@@ -2738,8 +2814,8 @@ function spawnEnemy(key,role='normal',multOverride=null,fixedMultiplier=false,sp
  if(!t)return null;if(selectedMode==='bossrush')bossRushBossSpawned=true;if(role==='boss')playSE('boss');enemyEncountered[key]=true;saveEnemyEncountered();const scale=multOverride!=null?multOverride:((selectedMode==='event'||selectedMode==='halloween')?1:chapterScale(selectedChapter,selectedStage,key));const roleMul=fixedMultiplier?1:(role==='boss'?1.45:role==='midboss'?1.22:1);const e={...t,key,hp:Math.round(t.hp*scale*roleMul),maxhp:Math.round(t.hp*scale*roleMul),atk:Math.round(t.atk*scale*roleMul),x:spawnX!=null?Math.max(120,Math.min(worldWidth-178,Number(spawnX)||120)):120,cd:.15,id:Math.random(),state:'move',slowUntil:0,slowFactor:1,barrier:t.barrier||0,barrierMax:t.barrier||0,stageMultiplier:scale*roleMul,kbRemaining:t.kb,kb:t.kb,isEnemy:true,role,waveLevel:Number(t.waveLevel??t.ability?.waveLevel??0),waveReflect:!!(t.waveReflect??t.ability?.waveReflect),yabayaba:Number(t.yabayaba??t.ability?.yabayaba??0),yabayabaChance:Number(t.yabayabaChance??t.ability?.yabayabaChance??0),curseChance:Number(t.curseChance??t.ability?.curseChance??0),curseDuration:Number(t.curseDuration??t.ability?.curseDuration??0)};if(e.ability?.wyvernFlight){e.wyvernGroundSpd=e.spd;e.flightNextAt=stageTime+Number(e.ability.flightInterval||17);}const isMythBarrier=!!(e.isEnemy&&Array.isArray(e.ability?.mythologyV2)&&e.ability.mythologyV2.includes('barrier'));if(isMythBarrier){e.mythBarrierMax=Number(e.ability?.barrier||10000);e.mythBarrier=e.mythBarrierMax;}const displayBarrierMax=isMythBarrier?e.mythBarrierMax:e.barrierMax;const displayBarrier=isMythBarrier?e.mythBarrier:e.barrier;const d=document.createElement('div');d.className=`unit enemy motion-enemy ${role==='boss'?'bossEnemy':role==='midboss'?'midbossEnemy':''}`;d.innerHTML=`${displayBarrierMax>0?`<div class="barrierBar" title="${isMythBarrier?'結界':'バリア'}"><i style="width:${Math.max(0,displayBarrier/displayBarrierMax*100)}%"></i></div><div class="barrierLabel">🛡 ${isMythBarrier?'結界':'バリア'} ${Math.ceil(displayBarrier).toLocaleString()} / ${Math.ceil(displayBarrierMax).toLocaleString()}</div>`:""}<div class="unitNameLabel">${e.name||e.key||"敵"}</div><div class="hp"><i></i></div>${role==='boss'?'<div class="bossTag">BOSS</div>':role==='midboss'?'<div class="midbossTag">中ボス</div>':''}<div>${e.icon}</div><div class="typeTag">${e.attackType==='area'?'範囲':'単体'}</div>`;unitsEl.appendChild(d);e.el=d;updateStatusMark(e);enemies.push(e);return e}
 function applyPhoenixAura(){const active=enemies.find(e=>e&&e.phoenixForm==='awakened'&&e.hp>0),factor=active?.ability?.phoenixAura??1;for(const u of units){if(!u||u.isEnemy)continue;const old=Number(u.phoenixAuraFactor||1);if(Math.abs(old-factor)<.0001)continue;const ratio=factor/old;u.maxhp=Math.max(1,Math.round(u.maxhp*ratio));u.hp=Math.max(0,Math.min(u.maxhp,Math.round(u.hp*ratio)));u.phoenixBaseAtk=u.phoenixBaseAtk??u.atk;u.atk=Math.max(1,Math.round(u.phoenixBaseAtk*factor));u.phoenixAuraFactor=factor;}}
 function revivePhoenix(e){if(!e||e.key!=='フェニックス'||e.phoenixRevived)return false;const x=Math.max(120,Number(e.x)||120);e.phoenixRevived=true;const ash=document.createElement('div');ash.className='enemyWaveEffect';ash.style.position='absolute';ash.style.left=x+'px';ash.style.bottom='105px';ash.style.zIndex='30';ash.style.pointerEvents='none';ash.textContent='灰';ash.style.fontSize='28px';ash.style.fontWeight='1000';ash.style.color='#777';effects.appendChild(ash);setTimeout(()=>{ash.remove();if(running){const revived=spawnEnemy('フェニックス(覚醒)','boss',1,true,x);if(revived)revived.phoenixRevived=true;}},3000);return true;}
-function removeUnit(u){mythologyV2OnUnitDeath(u);u.el?.remove();units=units.filter(x=>x!==u);if(pvpMode&&u.owner==='local')pvpSend({type:'death',id:u.id})}
-function removeEnemy(e,noReward=false){if(mythologyV2OnDeath(e))return;if(e?.ability?.mythicNew==='deathExplosion'&&!e.mythicDeathHandled){e.mythicDeathHandled=true;const rr=Number(e.ability.radius||150),dd=Math.max(1,Math.round(Number(e.atk||1)*Number(e.ability.explosionFactor||.5)));for(const u of [...units]){if(u&&u.hp>0&&Math.abs(u.x-e.x)<=rr){hit(u,dd,e);if(u.hp<=0)removeUnit(u);}}mythicPopup('💥 死亡爆発',e);}if(e?.ability?.mythicNew==='split'&&!e.mythicDeathHandled){e.mythicDeathHandled=true;const k=e.ability.splitInto;if(enemyTypes[k])for(let i=0;i<Number(e.ability.splitCount||2);i++)spawnEnemy(k,'normal',Math.max(.45,Number(e.stageMultiplier||1)*Number(e.ability.splitScale||.28)),true,Math.max(135,e.x-40-i*18));mythicPopup('🧬 分裂',e);}if(e&&e.key==="フェニックス"&&!e.phoenixRevived&&!noReward){revivePhoenix(e);noReward=true;}e.el?.remove();enemies=enemies.filter(x=>x!==e);if(pvpMode){if(e.isRemote)pvpSend({type:'death',id:e.id});playSE('enemyDefeat');return;}const baseReward=noReward?0:Math.max(0,Math.floor(e.money??e.dropMoney??0));const richCount=Math.min(2,units.filter(u=>u&&u.hp>0&&(u.name==='富豪木下'||u.name==='大富豪木下')).length);const reward=baseReward*Math.pow(2,richCount);money=Math.min(workerMax,money+reward);if(reward>0){playSE('enemyDefeat');playSE('money');}if(reward>0)popup('+'+reward+'円',e.x,Math.max(25,field.clientHeight-145));}
+function removeUnit(u){processIvySoulGain(u,true);mythologyV2OnUnitDeath(u);u.el?.remove();units=units.filter(x=>x!==u);if(pvpMode&&u.owner==='local')pvpSend({type:'death',id:u.id})}
+function removeEnemy(e,noReward=false){if(mythologyV2OnDeath(e))return;processIvySoulGain(e,false);if(e?.ability?.mythicNew==='deathExplosion'&&!e.mythicDeathHandled){e.mythicDeathHandled=true;const rr=Number(e.ability.radius||150),dd=Math.max(1,Math.round(Number(e.atk||1)*Number(e.ability.explosionFactor||.5)));for(const u of [...units]){if(u&&u.hp>0&&Math.abs(u.x-e.x)<=rr){hit(u,dd,e);if(u.hp<=0)removeUnit(u);}}mythicPopup('💥 死亡爆発',e);}if(e?.ability?.mythicNew==='split'&&!e.mythicDeathHandled){e.mythicDeathHandled=true;const k=e.ability.splitInto;if(enemyTypes[k])for(let i=0;i<Number(e.ability.splitCount||2);i++)spawnEnemy(k,'normal',Math.max(.45,Number(e.stageMultiplier||1)*Number(e.ability.splitScale||.28)),true,Math.max(135,e.x-40-i*18));mythicPopup('🧬 分裂',e);}if(e&&e.key==="フェニックス"&&!e.phoenixRevived&&!noReward){revivePhoenix(e);noReward=true;}e.el?.remove();enemies=enemies.filter(x=>x!==e);if(pvpMode){if(e.isRemote)pvpSend({type:'death',id:e.id});playSE('enemyDefeat');return;}const baseReward=noReward?0:Math.max(0,Math.floor(e.money??e.dropMoney??0));const richCount=Math.min(2,units.filter(u=>u&&u.hp>0&&(u.name==='富豪木下'||u.name==='大富豪木下')).length);const reward=baseReward*Math.pow(2,richCount);money=Math.min(workerMax,money+reward);if(reward>0){playSE('enemyDefeat');playSE('money');}if(reward>0)popup('+'+reward+'円',e.x,Math.max(25,field.clientHeight-145));}
 function hit(target,damage,source,abilitySource){if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack))return;const before=target.hp;let dealt=damage;if(target.isEnemy&&target.ability?.mythologyV2){const pre=mythologyV2PreHit(target,dealt,source);if(pre?.handled)return 0;dealt=Number(pre?.damage??dealt);}if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}target.hp=Math.max(0,target.hp-dealt);if(target.el){target.el.classList.remove('hit');void target.el.offsetWidth;target.el.classList.add('hit');setTimeout(()=>target.el?.classList.remove('hit'),170)}if(dealt>0)popup('-'+Math.round(dealt),target.x,Math.max(25,field.clientHeight-115));triggerKnockback(target,source,before);if(abilitySource)applyAbility(abilitySource,target,dealt);else if(source&&source.ability)applyAbility(source,target,dealt);return before-target.hp;}
 let paused=false;
 let gameSpeed=1;
@@ -3572,7 +3648,7 @@ function finishRank(win){
 }
 
 function spawnYabayabaClone(deadUnit,level,asAlly=false){
- if(!deadUnit)return;
+ if(!deadUnit||deadUnit.ivyYabayaba)return;
  const ratio=Math.min(1,Math.max(.2,Number(level||1)*.2));
  const hp=Math.max(1,Math.round(deadUnit.maxhp*ratio)),atk=Math.max(1,Math.round((deadUnit.atk||0)*ratio));
  // ヤバヤバ複製は元のキャラの能力を引き継ぐ。味方ヤバすぎ木下による撃破時は味方側として生成する。
@@ -3648,6 +3724,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  const enemyBaseStop=118;
  const playerBaseStop=worldWidth-178;
  applyPhoenixAura();
+ for(const ivy of [...units,...enemies])processIvyTransfer(ivy,performance.now()/1000);
  for(let ui=units.length-1;ui>=0;ui--){const u=units[ui];if(!u||u.hp<=0)continue;u.cd-=dt;
    const isThousandStep=Number(u.chargeTime||0)>0;
    let target=u.target;
@@ -3774,10 +3851,13 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   const origin=Number(targets[i]?.x??center);
   const lo=isAlly?origin-max:origin+min;
   const hi=isAlly?origin-min:origin+max;
+  const ivyContacts=new Set();
   const applySurgeHit=()=>{
+   const ivyTargets=(isAlly?enemies:units).filter(v=>ivyIsEntity(v)&&v.hp>0&&v.x>=lo&&v.x<=hi&&!ivyContacts.has(v));
+   for(const ivy of ivyTargets){ivyContacts.add(ivy);ivySurgeContact(ivy);}
    const affected=isAlly
-    ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&e.x>=lo&&e.x<=hi)
-    : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&u.x>=lo&&u.x<=hi);
+    ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&!ivyIsEntity(e)&&e.x>=lo&&e.x<=hi)
+    : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&!ivyIsEntity(u)&&u.x>=lo&&u.x<=hi);
    for(const t of affected){
     const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
     hit(t,dealt,source);
@@ -3814,6 +3894,13 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  if(!sourceSealed){
    if(ea.barrierBreak){if(Number(t.barrier||0)>0)t.barrier=0;if(Number(t.mythBarrier||0)>0)t.mythBarrier=0;updateBarrierDisplay(t);}
    if(ea.curseChance)applyCurseStatus(e,t);
+   if(ea.ivyRandomDebuff&&Math.random()<.5){
+    if(Math.random()<.5){
+     if(!hasAbilityFlag(t,'stopImmune')){t.stopUntil=Math.max(Number(t.stopUntil||0),now2+Number(ea.stopDuration||2));setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||2),'stop');}
+    }else if(!hasAbilityFlag(t,'attackDownImmune')){
+     t.attackDownUntil=Math.max(Number(t.attackDownUntil||0),now2+Number(ea.attackDownDuration||2));t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||2),'attackDown');
+    }
+   }
    if(ea.stopChance&&!t.stopImmune&&!t.ability?.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');} if(ea.slowChance&&!hasAbilityFlag(t,'slowImmune')&&Math.random()<Number(ea.slowChance)){t.slowUntil=now2+Number(ea.slowDuration||2);t.slowFactor=Number(ea.slowFactor||.5);setStatusMark(t,'🐌','速度低下',Number(ea.slowDuration||2),'slow');}
    if(ea.slow&&!ea.slow.all&&!hasAbilityFlag(t,'slowImmune')&&(ea.slow.trait==='*'||entityHasTrait(t,ea.slow.trait))&&Math.random()<Number(ea.slow.chance||0)){t.slowUntil=now2+Number(ea.slow.duration||2);t.slowFactor=Number(ea.slow.factor||.6);setStatusMark(t,'🐌','速度低下',Number(ea.slow.duration||2),'slow');}
    if(ea.sealChance&&!hasAbilityFlag(t,'sealImmune')&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=Math.max(Number(t.abilitySealedUntil||0),now2+Number(ea.sealDuration||4));setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}
