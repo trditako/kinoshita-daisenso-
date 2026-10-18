@@ -2125,6 +2125,11 @@ function damageTakenBy(u,attacker){
  const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
  const ua={...(u||{}),...(u.ability||{})};
  const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
+ if(ivyIsEntity(u)){
+  const threshold=Math.max(0,Number(ua.distanceThreshold??145));
+  const armor=Math.max(0,Math.min(.99,Number(ua.distanceArmor??.9)));
+  if(Math.abs(Number(u.x||0)-Number(attacker.x||0))>=threshold)mult*=1-armor;
+ }
  if(u.metal){
   let metalAtk=effectiveAtk;
   if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)metalAtk*=Number(attacker.cursedAttackFactor)||1;
@@ -3868,6 +3873,13 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  if(!sourceSealed){
    if(ea.barrierBreak){if(Number(t.barrier||0)>0)t.barrier=0;if(Number(t.mythBarrier||0)>0)t.mythBarrier=0;updateBarrierDisplay(t);}
    if(ea.curseChance)applyCurseStatus(e,t);
+   if(ea.ivyRandomDebuff&&Math.random()<.5){
+    if(Math.random()<.5){
+     if(!hasAbilityFlag(t,'stopImmune')){t.stopUntil=Math.max(Number(t.stopUntil||0),now2+Number(ea.stopDuration||2));setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||2),'stop');}
+    }else if(!hasAbilityFlag(t,'attackDownImmune')){
+     t.attackDownUntil=Math.max(Number(t.attackDownUntil||0),now2+Number(ea.attackDownDuration||2));t.attackDownFactor=Number(ea.attackDownFactor||.2);setStatusMark(t,'⬇️','攻撃力低下',Number(ea.attackDownDuration||2),'attackDown');
+    }
+   }
    if(ea.stopChance&&!t.stopImmune&&!t.ability?.stopImmune&&Math.random()<Number(ea.stopChance)){t.stopUntil=now2+Number(ea.stopDuration||1);t.spdOriginal=t.spdOriginal??t.spd;setStatusMark(t,'⏸️','停止',Number(ea.stopDuration||1),'stop');} if(ea.slowChance&&!hasAbilityFlag(t,'slowImmune')&&Math.random()<Number(ea.slowChance)){t.slowUntil=now2+Number(ea.slowDuration||2);t.slowFactor=Number(ea.slowFactor||.5);setStatusMark(t,'🐌','速度低下',Number(ea.slowDuration||2),'slow');}
    if(ea.slow&&!ea.slow.all&&!hasAbilityFlag(t,'slowImmune')&&(ea.slow.trait==='*'||entityHasTrait(t,ea.slow.trait))&&Math.random()<Number(ea.slow.chance||0)){t.slowUntil=now2+Number(ea.slow.duration||2);t.slowFactor=Number(ea.slow.factor||.6);setStatusMark(t,'🐌','速度低下',Number(ea.slow.duration||2),'slow');}
    if(ea.sealChance&&!hasAbilityFlag(t,'sealImmune')&&Math.random()<Number(ea.sealChance)){t.abilitySealedUntil=Math.max(Number(t.abilitySealedUntil||0),now2+Number(ea.sealDuration||4));setStatusMark(t,'🔒','能力封印',Number(ea.sealDuration||4),'seal');}
