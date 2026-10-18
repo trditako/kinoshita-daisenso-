@@ -709,6 +709,24 @@ IVY_REWARD_CARD.id=cards.length-1;
 // アイヴィの感情転移：戦闘ループに副作用を持ち込まず、移動停止と状態表示だけを管理する。
 function ivyIsEntity(v){return !!v&&(v.name==='アイヴィ'||v.key==='アイヴィ'||v.characterName==='アイヴィ');}
 
+// アイヴィの烈波蓄積。5回目で通常の烈波無効を無視する専用攻撃を発生させる。
+function ivySpecialSurge(ivy){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ const ally=units.includes(ivy),opponents=ally?enemies:units,radius=200;
+ const fx=document.createElement('div');fx.className='socratesSurgeEffect';fx.style.left=Number(ivy.x||0)+'px';fx.style.bottom='105px';fx.style.setProperty('--surge-height','200px');fx.style.setProperty('--surge-duration','.55s');effects.appendChild(fx);setTimeout(()=>fx.remove(),600);
+ for(const t of [...opponents]){
+  if(!t||t.hp<=0||Math.abs(Number(t.x||0)-Number(ivy.x||0))>radius)continue;
+  const dealt=Math.max(1,Math.round(Number(damageAgainst(ivy,t))||Number(ivy.atk)||1));
+  hit(t,dealt,ivy);
+  if(t.hp<=0)(ally?removeEnemy(t):removeUnit(t));
+ }
+}
+function ivySurgeContact(ivy){
+ if(!ivyIsEntity(ivy)||ivy.hp<=0)return;
+ ivy.ivySurgeStacks=Number(ivy.ivySurgeStacks||0)+1;
+ if(typeof popup==='function')popup('🌿 烈波蓄積 '+ivy.ivySurgeStacks+'/5',Number(ivy.x||0),Math.max(25,field.clientHeight-145));
+ if(ivy.ivySurgeStacks>=5){ivy.ivySurgeStacks=0;ivySpecialSurge(ivy);}
+}
 // アイヴィの魂喰い：撃破確定後にのみ、敵側・味方側のアイヴィへ加算する。
 function processIvySoulGain(dead,isEnemySide){
  const owners=isEnemySide?enemies:units;
@@ -3833,10 +3851,13 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   const origin=Number(targets[i]?.x??center);
   const lo=isAlly?origin-max:origin+min;
   const hi=isAlly?origin-min:origin+max;
+  const ivyContacts=new Set();
   const applySurgeHit=()=>{
+   const ivyTargets=(isAlly?enemies:units).filter(v=>ivyIsEntity(v)&&v.hp>0&&v.x>=lo&&v.x<=hi&&!ivyContacts.has(v));
+   for(const ivy of ivyTargets){ivyContacts.add(ivy);ivySurgeContact(ivy);}
    const affected=isAlly
-    ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&e.x>=lo&&e.x<=hi)
-    : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&u.x>=lo&&u.x<=hi);
+    ? enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||source.airAttack)&&!isSurgeImmuneEntity(e)&&!ivyIsEntity(e)&&e.x>=lo&&e.x<=hi)
+    : units.filter(u=>u&&u.hp>0&&!isSurgeImmuneEntity(u)&&!ivyIsEntity(u)&&u.x>=lo&&u.x<=hi);
    for(const t of affected){
     const dealt=Math.max(1,Math.round(Number(damageAgainst(source,t))||Number(source.atk)||1));
     hit(t,dealt,source);
