@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.98';
+const GAME_VERSION='v1.8.99';
 const UPDATE_LOG=[
+ {date:'2026-10-21',version:'v1.8.99',title:'🤖 AIアカウント管理で所持キャラ数を最新化',items:['AIアカウント管理を開くたびにSupabaseから最新の所持キャラクター・アイテム・活動履歴を再取得','宝箱使用後の所持キャラ数が起動時の古い表示データに残る問題を修正']},
  {date:'2026-10-21',version:'v1.8.98',title:'🤖 AIの最新キャラ交換宝箱の使用・履歴を修正',items:['宝箱を所持しているAIは未所持の最新キャラがいる場合に優先使用','獲得キャラクター・使用時刻をAIの活動履歴へ保存し、管理画面で宝箱名を表示']},
  {date:'2026-10-21',version:'v1.8.97',title:'🎁 最新キャラ交換宝箱を追加',items:['最新キャラ交換宝箱を所持アイテムに追加し、未所持の「聖なる偉人達」から好きな1体を選んで獲得可能に','運営パネルのアイテム配布対象に追加し、プレイヤーとAIアカウントへの配布に対応']},
  {date:'2026-10-21',version:'v1.8.96',title:'🤖 AIアカウント管理を見やすく改善',items:['AI詳細画面に7区分のステージ進行・イベントクリア・所持アイテムを追加','AIサーバーから所持アイテム・対戦履歴・活動履歴・最高RPなどを取得して表示','衣装・携帯品は保存データがある場合に一覧化し、未保存の場合は未記録と明示','スマートフォンでも読みやすいよう一覧・詳細画面をレスポンシブ化']},
@@ -3464,7 +3465,7 @@ function renderAIAccountList(){
  };
  requestAnimationFrame(renderChunk);
 }
-function openAIManager(){document.getElementById('rankLobby').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
+async function openAIManager(){document.getElementById('rankLobby').style.display='none';document.getElementById('aiManager').style.display='flex';const list=document.getElementById('aiAccountList');if(list)list.innerHTML='<div style="padding:14px;text-align:center;font-weight:900">☁️ AIの最新データを取得中...</div>';const refreshed=await loadAIServerProfiles(true);renderAIAccountList();if(!refreshed&&!aiServerConnected){const note=document.createElement('div');note.style.cssText='padding:8px;color:#9a3412;font-size:12px;font-weight:800';note.textContent='⚠️ サーバーの最新データを取得できませんでした。表示内容が古い可能性があります。通信状態を確認して再度開いてください。';list?.prepend(note);}}
 function aiAdminEscape(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function aiAdminInventoryRows(value,prefix='',depth=0){
  if(depth>2||value==null)return [];
