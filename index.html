@@ -3481,7 +3481,7 @@ function aiAdminCosmeticRows(ai){
  const add=(id,kind,count=1,meta=null)=>{if(!id||seen.has(String(id)))return;seen.add(String(id));found.push({id:String(id),kind,count,meta});};
  for(const field of ['ownedCosmetics','cosmetics','ownedCostumes','costumes','ownedAccessories','accessories']){
   const value=ai[field];
-  if(Array.isArray(value))value.forEach(x=>add(typeof x==='string'?x:(x.id||x.itemId||x.name),field,Number(x.count||1),x));
+  if(Array.isArray(value))value.forEach(x=>{if(x)add(typeof x==='string'?x:(x.id||x.itemId||x.name),field,Number(x.count||1),typeof x==='object'?x:null)});
   else if(value&&typeof value==='object')Object.entries(value).forEach(([id,v])=>{if(v)add(id,field,typeof v==='number'?v:Number(v.count||1),typeof v==='object'?v:null)});
  }
  for(const [id,count] of Object.entries(ai.inventoryItems||{})){
@@ -3497,7 +3497,7 @@ function openAIDetail(index){
  const allChars=cards.map((c,i)=>'<div class="aiCharRow"><b>'+aiAdminEscape((ownedSet.has(i)?(c.icon||'🌳'):'🔒')+' '+c.name)+'</b>　'+(ownedSet.has(i)?'Lv.'+Number(ai.charLevels?.[i]||1):'未入手')+'</div>').join('');
  const hist=(ai.matchHistory||[]).slice(-30).reverse().map(x=>'<div>'+aiAdminEscape(typeof x==='string'?x:JSON.stringify(x))+'</div>').join('')||'最近の対戦記録はありません。';
  const activityHist=(ai.activityHistory||[]).slice(-30).reverse().map(x=>'<div>'+aiAdminEscape(typeof x==='string'?x:JSON.stringify(x))+'</div>').join('')||'活動記録はありません。';
- const chapterNames=['日本編 第1章','日本編 第2章','日本編 第3章','未来編','宇宙編','神話編','その他の章進行'];
+ const chapterNames=['日本編 第1章','日本編 第2章','日本編 第3章','未来編','宇宙編','レジェンド編','神話編'];
  const chapters=chapterNames.map((name,i)=>'<div class="aiStatBox">'+aiAdminEscape(name)+'<br><b>'+(Number(ai.chapterClears?.[i])||0)+'/48</b><div class="aiProgressTrack"><span style="width:'+Math.max(0,Math.min(100,(Number(ai.chapterClears?.[i])||0)/48*100))+'%"></span></div></div>').join('');
  const events=Object.entries(ai.eventClears||{}).filter(([,v])=>v===true||Number(v)>0).map(([name,value])=>'<div class="aiDataChip">🏁 '+aiAdminEscape(name)+(value===true?'：クリア':'：'+aiAdminEscape(value))+'</div>').join('')||'<div class="aiEmpty">クリア記録のあるイベントはありません。</div>';
  const itemRows=aiAdminInventoryRows(ai.inventoryItems||{}).map(x=>'<div class="aiInventoryRow"><span>'+aiAdminEscape(x.label)+'</span><b>'+aiAdminEscape(x.value)+'</b></div>').join('');
@@ -3513,7 +3513,7 @@ function openAIDetail(index){
  '<div class="aiDetailSection"><div class="aiSection">🧩 現在の編成</div><div class="aiFormation">'+formationHtml+'</div></div>'+
  '<details class="aiDetailSection"><summary class="aiSection">📈 キャラクター所持・レベル（'+ownedSet.size+'/'+cards.length+'）</summary><div class="aiFormation">'+allChars+'</div></details>'+
  '<details class="aiDetailSection"><summary class="aiSection">🕒 最近の対戦結果（最大30件）</summary><div class="aiRecent">'+hist+'</div></details>'+
- '<details class="aiDetailSection"><summary class="aiSection">🤖 最近の活動（最大30件）</summary><div class="aiRecent">'+activityHist+'</div><div class="aiStatBox" style="margin-top:7px">現在の活動：'+aiAdminEscape(ai.activity||'待機中')+'</div><div class="aiRecent">保存状態：'+aiAdminEscape(JSON.stringify(ai.activityState||{}))+'</div></details>';
+ '<details class="aiDetailSection"><summary class="aiSection">🤖 最近の活動（最大30件）</summary><div class="aiRecent">'+activityHist+'</div><div class="aiStatBox" style="margin-top:7px">現在の活動：'+aiAdminEscape(ai.activity||'待機中')+'</div><details><summary>詳細な保存状態（最大24項目）</summary><div class="aiInventoryList">'+aiAdminInventoryRows(ai.activityState||{}).slice(0,24).map(x=>'<div class="aiInventoryRow"><span>'+aiAdminEscape(x.label)+'</span><b>'+aiAdminEscape(x.value)+'</b></div>').join('')+'</div></details></details>';
  document.getElementById('aiManager').style.display='none';document.getElementById('aiDetailModal').style.display='flex';
 }
 function closeAIDetail(){document.getElementById('aiDetailModal').style.display='none';document.getElementById('aiManager').style.display='flex';renderAIAccountList();}
