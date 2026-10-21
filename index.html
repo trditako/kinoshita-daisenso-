@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.99';
+const GAME_VERSION='v1.9.0';
 const UPDATE_LOG=[
+ {date:'2026-10-21',version:'v1.9.0',title:'🏛️ 聖なる偉人達のAI所持キャラIDを修正',items:['キャラクターの配列位置と内部IDのずれを解消し、ゾクラテスなどの所持状態・編成・図鑑表示を統一','AIが最新キャラ交換宝箱で正しいキャラクターを獲得するようID対応を修正']},
  {date:'2026-10-21',version:'v1.8.99',title:'🤖 AIアカウント管理で所持キャラ数を最新化',items:['AIアカウント管理を開くたびにSupabaseから最新の所持キャラクター・アイテム・活動履歴を再取得','宝箱使用後の所持キャラ数が起動時の古い表示データに残る問題を修正']},
  {date:'2026-10-21',version:'v1.8.98',title:'🤖 AIの最新キャラ交換宝箱の使用・履歴を修正',items:['宝箱を所持しているAIは未所持の最新キャラがいる場合に優先使用','獲得キャラクター・使用時刻をAIの活動履歴へ保存し、管理画面で宝箱名を表示']},
  {date:'2026-10-21',version:'v1.8.97',title:'🎁 最新キャラ交換宝箱を追加',items:['最新キャラ交換宝箱を所持アイテムに追加し、未所持の「聖なる偉人達」から好きな1体を選んで獲得可能に','運営パネルのアイテム配布対象に追加し、プレイヤーとAIアカウントへの配布に対応']},
@@ -696,8 +697,7 @@ cards.push(
 );
 // 既存キャラのIDを変更せず、今回の6体だけをカード配列の最新6枠へ割り当てる。
 const SACRED_GREAT_NAMES=['哲学の賢者ゾクラテス','発明の賢者アルキメデェス','星空の賢者ガリレオ・ガリレェン','重力の賢者ニュトーン','芸術の賢者レオナルド・ダ・ピンチ','教えの賢者コウシィ'];
-const SACRED_GREAT_ID_BASE=cards.length-7;
-SACRED_GREAT_NAMES.forEach((name,offset)=>{const card=cards.find(x=>x.name===name);if(card)card.id=SACRED_GREAT_ID_BASE+offset;});
+SACRED_GREAT_NAMES.forEach(name=>{const card=cards.find(x=>x.name===name);if(card)card.id=cards.indexOf(card);});
 CURRENT_CHARACTER_COUNT=cards.length;
 
 // フェニックスを全キャラクター登録後の末尾へ追加。
