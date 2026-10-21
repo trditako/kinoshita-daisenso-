@@ -3470,7 +3470,8 @@ function aiAdminInventoryRows(value,prefix='',depth=0){
  if(typeof value!=='object')return [{label:prefix||'項目',value:String(value)}];
  const out=[];
  for(const [key,val] of Object.entries(value)){
-  const label=prefix?prefix+' / '+key:key;
+  const displayKey=key==='latest_character_exchange_chest'?'🎁✨ 最新キャラ交換宝箱':key;
+  const label=prefix?prefix+' / '+displayKey:displayKey;
   if(val&&typeof val==='object'&&!Array.isArray(val))out.push(...aiAdminInventoryRows(val,label,depth+1));
   else if(Array.isArray(val))out.push({label,value:val.length?val.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join('、'):'なし'});
   else if(Number(val)!==0||typeof val!=='number')out.push({label,value:String(val)});
