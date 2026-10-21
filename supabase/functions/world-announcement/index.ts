@@ -216,7 +216,7 @@ Deno.serve(async (req: Request) => {
     if (action === 'grant_item') {
       const itemId = typeof body.itemId === 'string' ? body.itemId.trim() : ''
       const amount = integerInRange(body.amount, 1, 1000000)
-      const allowedItems = new Set(['skill_crystal','ability_core','power_chest','wooden_chest','silver_chest','golden_chest','operator_chest','special_operator_chest'])
+      const allowedItems = new Set(['skill_crystal','ability_core','power_chest','wooden_chest','silver_chest','golden_chest','operator_chest','special_operator_chest','latest_character_exchange_chest'])
       if (!allowedItems.has(itemId) || amount === null) return respond({ ok: false, error: 'Invalid item ID or amount' }, 400)
       const target = String(body.target || '')
       const ids = Array.isArray(body.targetIds) ? body.targetIds.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 100) : []
