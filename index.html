@@ -8,9 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.8.94';
+const GAME_VERSION='v1.8.95';
 const UPDATE_LOG=[
  {date:'2026-10-21',version:'v1.8.94',title:'🤖 AIランク戦の更新・キャラクターID上限を修正',items:['AIランク戦の実行間隔を見直し、各AIが次の対戦サイクルへ戻るまでの待ち時間を短縮','シーズン切替時のサーバーRPリセット失敗を見逃さないよう監視を強化','AI側のキャラクターID上限を66枠に拡張し、末尾のキャラクターがAIデータから除外されないよう修正','更新ログ・画面キャッシュを新バージョンへ更新']},
+ {date:'2026-10-21',version:'v1.8.95',title:'🏆 最新キャラクターボーナスを期間限定交換所に同期',items:['ランク戦の最新キャラクターボーナス対象を「聖なる偉人達」の6体へ更新','哲学の賢者ゾクラテス、発明の賢者アルキメデェス、星空の賢者ガリレオ・ガリレェン、重力の賢者ニュトーン、芸術の賢者レオナルド・ダ・ピンチ、教えの賢者コウシィを対象化','各キャラクターのボーナスは重複編成でも1体分として計算']},
  {date:'2026-10-18',version:'v1.8.93',title:'🌿 アイヴィの特殊烈波・感情転移と呪い統一を修正',items:['烈波蓄積5回で専用エフェクトと範囲攻撃が確実に発生するよう修正','感情転移で対象の陣営・表示・ターゲット参照を更新し、3秒後に元の陣営へ戻す','能力封印を独立状態として扱わず、呪いに統一。呪い中は特殊能力を封じ、表示も「呪い」に統一','アイヴィを全キャラクター登録の末尾へ移動し、既存キャラクターIDを維持']},
  {date:'2026-10-18',version:'v1.8.91',title:'🌿 アイヴィの感情転移・烈波蓄積とキャラクターIDを修正',items:['感情転移の対象をアイヴィ側の陣営へ一時的に移し、3秒後に元の陣営へ戻す処理を追加','烈波の発生経路を追加監査し、アイヴィの蓄積判定を各烈波の接触単位で管理','アイヴィをキャラクター登録の末尾へ移し、既存キャラクターの配列IDを維持','今回の修正内容をアップデートログの最上段に追加']},
  {date:'2026-10-17',version:'v1.8.90',title:'🐉 ワイバーン襲来の出現時刻を修正',items:['ワイバーン本体と古代カエルを指定秒数に出現するよう修正','城HP99%以下の全敵吹っ飛ばしを、敵の出現スケジュールから分離']},
@@ -814,7 +815,7 @@ const NORMAL_SECOND_FORMS={
 for(const [key,form] of Object.entries(NORMAL_SECOND_FORMS)){const i=Number(key);if(cards[i])cards[i].secondForm=form;}
 
 // ランク戦・最新キャラクター出撃RPボーナス対象。現在の最新9体を固定IDで管理し、既存IDを変更しない。
-const LATEST_RANK_BONUS_NAMES=['前衛木下','突撃木下','連撃木下','機甲前線木下','電磁砲木下','高速機動木下','古代掃討砲木下','超装甲木下','機神木下'];
+const LATEST_RANK_BONUS_NAMES=['哲学の賢者ゾクラテス','発明の賢者アルキメデェス','星空の賢者ガリレオ・ガリレェン','重力の賢者ニュトーン','芸術の賢者レオナルド・ダ・ピンチ','教えの賢者コウシィ'];
 const LATEST_RANK_BONUS_IDS=LATEST_RANK_BONUS_NAMES.map(name=>cards.findIndex(c=>c.name===name)).filter(i=>i>=0);
 const LATEST_RANK_BONUS_PER_CHARACTER=15;
 function latestRankBonusCharacters(list){const seen=new Set();for(const i of (list||[])){const n=Number(i);if(LATEST_RANK_BONUS_IDS.includes(n))seen.add(n);}return [...seen];}
