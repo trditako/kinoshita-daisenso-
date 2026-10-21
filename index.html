@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.0';
+const GAME_VERSION='v1.9.1';
 const UPDATE_LOG=[
+ {date:'2026-10-21',version:'v1.9.1',title:'🤖 AI管理画面の最新データ取得を修正',items:['実際のSupabaseテーブルに存在しない列を取得対象から除外し、AI管理画面がサーバーの最新所持キャラを読み込めるよう修正','ゾクラテスなどの所持状況をサーバーデータに基づいて表示']},
  {date:'2026-10-21',version:'v1.9.0',title:'🏛️ 聖なる偉人達のAI所持キャラIDを修正',items:['キャラクターの配列位置と内部IDのずれを解消し、ゾクラテスなどの所持状態・編成・図鑑表示を統一','AIが最新キャラ交換宝箱で正しいキャラクターを獲得するようID対応を修正']},
  {date:'2026-10-21',version:'v1.8.99',title:'🤖 AIアカウント管理で所持キャラ数を最新化',items:['AIアカウント管理を開くたびにSupabaseから最新の所持キャラクター・アイテム・活動履歴を再取得','宝箱使用後の所持キャラ数が起動時の古い表示データに残る問題を修正']},
  {date:'2026-10-21',version:'v1.8.98',title:'🤖 AIの最新キャラ交換宝箱の使用・履歴を修正',items:['宝箱を所持しているAIは未所持の最新キャラがいる場合に優先使用','獲得キャラクター・使用時刻をAIの活動履歴へ保存し、管理画面で宝箱名を表示']},
@@ -1472,7 +1473,7 @@ async function loadAIServerProfiles(force=false){
  if(aiServerProfilesLoadBusy)return false;
  aiServerProfilesLoadBusy=true;
  try{
-  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=account_id,name,rp,skill,wins,losses,generation,strategy,aggression,save_rate,coins,player_xp,worker_level,stage_clears,chapter_clears,owned_characters,formation,char_levels,event_clears,training_xp,matches,last_result,activity,activity_history,match_history,population,reward_rank,reward_cycle,rank_badge,limited_character_owned,inventory_items,best_rp,best_rank,rank_matches,current_rank_matches,rank_streak,formation_presets&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
+  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=account_id,name,rp,skill,wins,losses,generation,strategy,aggression,save_rate,coins,player_xp,worker_level,stage_clears,chapter_clears,owned_characters,formation,char_levels,event_clears,training_xp,matches,last_result,activity,activity_history,match_history,reward_rank,reward_cycle,rank_badge,limited_character_owned,inventory_items,best_rp,best_rank,rank_matches,current_rank_matches,rank_streak,formation_presets&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
   const rows=await res.json();
   if(!Array.isArray(rows)||rows.length===0)throw new Error('AIデータが空です');
