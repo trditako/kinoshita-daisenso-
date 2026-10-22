@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.5';
+const GAME_VERSION='v1.9.6';
 const UPDATE_LOG=[
+ {date:'2026-10-22',version:'v1.9.6',title:'🔥 覚醒吉田の詳細表示を修正',items:['進化後の詳細画面が第一形態のデータを参照する問題を修正','覚醒吉田の名前・アイコン・HP・攻撃力・射程・攻撃間隔・固有能力を進化後データに連動']},
  {date:'2026-10-22',version:'v1.9.5',title:'📈 吉田の最大レベル解放を修正',items:['吉田の詳細画面に激レアの金を使った最大Lv解放欄を追加','最大Lv20から30まで、他の進化対象キャラと同じ手順で上限を引き上げ可能に修正']},
  {date:'2026-10-22',version:'v1.9.4',title:'🍬 ハロウィンキャンディで第二弾ガチャ',items:['ハロウィンキャンディを第一弾交換所と第二弾限定ガチャの共通通貨に変更','強化素材と低確率の限定ハロウィン亜種キャラクター5体を追加','既存キャラクターのIDを維持したまま、第二弾キャラクターを末尾へ追加']},
  {date:'2026-10-22',version:'v1.9.2',title:'🏆 ランク戦の対戦AI選択を修正',items:['プレイヤーとAIのRP差が大きくても、現在RPが最も近いAIを選んでランク戦を開始できるよう改善','段位差を狙って選ぶ格差マッチを停止し、RP差による対戦相手選択の偏りを解消']},
@@ -2429,8 +2430,8 @@ function evolveNormalCharacter(i){if(running||!normalEvolutionReady(i))return;fo
 function toggleNormalForm(i){if(running||i<0||i>=10||!cards[i]?.secondForm||!normalEvolved[i])return;charForm[i]=charForm[i]===2?1:2;save();showCharacterDetail(i);renderCards();}
 
 function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=cards[i];if(!form||!base)return '';const growth=Math.pow(1.04,29);const hp=Math.round(form.hp*growth);const atk=Math.round(form.atk*growth);const ability=formatAbilityInfo({ability:form.ability},{trait:base.trait||'無',attackType:base.attackType});return '<div style="margin-top:10px;background:#0f172a;border:2px solid #38bdf8;border-radius:10px;padding:10px;color:#f8fafc;text-align:left"><b style="color:#7dd3fc;font-size:16px">✨ 進化後プレビュー（Lv30）</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:13px"><div>❤️ HP</div><b>'+hp+'</b><div>⚔️ 攻撃力</div><b>'+atk+'</b><div>🎯 射程</div><b>'+form.range+'</b><div>💨 移動速度</div><b>'+form.spd+'</b><div>⏱️ 攻撃間隔</div><b>'+Number(form.interval).toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+Number(form.recharge).toFixed(1)+'秒</b><div>💥 ヒットバック</div><b>'+form.kb+'回</b></div><div style="margin-top:8px;padding:8px;background:#1e293b;border-radius:8px"><b>⭐ 性能</b><div style="margin-top:4px;font-size:13px;line-height:1.5">'+ability+'</div></div></div>'}function showCharacterDetail(i){
- const c=cards[i]?.name==='吉田'?cards[i]:activeCard(i);if(!c)return;
- const base=cards[i],lv=charLevel[i]||1,maxLv=charMaxLevel[i]||20,need=xpNeed(i),can=lv<maxLv,detailStat=(key)=>{if(base.name==='吉田'){const raw=Number(base[key]||0);return key==='hp'||key==='atk'?Math.round(raw*Math.pow(1.04,Math.max(0,lv-1))):raw;}return statAt(i,key);},bookNo=String(base===PHOENIX_REWARD_CARD?cards.length:Number(base.id??i+1)).padStart(3,'0');
+ const c=activeCard(i);if(!c)return;
+ const base=cards[i],lv=charLevel[i]||1,maxLv=charMaxLevel[i]||20,need=xpNeed(i),can=lv<maxLv,detailStat=(key)=>{if(base.name==='吉田'){const raw=Number(c[key]||0);return key==='hp'||key==='atk'?Math.round(raw*Math.pow(1.04,Math.max(0,lv-1))):raw;}return statAt(i,key);},bookNo=String(base===PHOENIX_REWARD_CARD?cards.length:Number(base.id??i+1)).padStart(3,'0');
  const isNormal=i<10,isHarland=base.name==='突撃ハーランド木下',isAnomalous=base.name==='異常木下',isRich=base.name==='富豪木下',isYoshida=base.name==='吉田',req=normalPowerRequirements(i),reqText=Object.entries(req).map(([color,n])=>color+'×'+n+'（所持 '+(colorPowers[color]||0)+'）').join('　');
  let extra='';
  if(isNormal){
