@@ -8,9 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.1';
+const GAME_VERSION='v1.9.2';
 const UPDATE_LOG=[
- {date:'2026-10-21',version:'v1.9.1',title:'🤖 AI管理画面の最新データ取得を修正',items:['実際のSupabaseテーブルに存在しない列を取得対象から除外し、AI管理画面がサーバーの最新所持キャラを読み込めるよう修正','ゾクラテスなどの所持状況をサーバーデータに基づいて表示']},
+ {date:'2026-10-22',version:'v1.9.2',title:'🏆 ランク戦の対戦AI選択を修正',items:['プレイヤーとAIのRP差が大きくても、現在RPが最も近いAIを選んでランク戦を開始できるよう改善','段位差を狙って選ぶ格差マッチを停止し、RP差による対戦相手選択の偏りを解消']},
+  {date:'2026-10-21',version:'v1.9.1',title:'🤖 AI管理画面の最新データ取得を修正',items:['実際のSupabaseテーブルに存在しない列を取得対象から除外し、AI管理画面がサーバーの最新所持キャラを読み込めるよう修正','ゾクラテスなどの所持状況をサーバーデータに基づいて表示']},
  {date:'2026-10-21',version:'v1.9.0',title:'🏛️ 聖なる偉人達のAI所持キャラIDを修正',items:['キャラクターの配列位置と内部IDのずれを解消し、ゾクラテスなどの所持状態・編成・図鑑表示を統一','AIが最新キャラ交換宝箱で正しいキャラクターを獲得するようID対応を修正']},
  {date:'2026-10-21',version:'v1.8.99',title:'🤖 AIアカウント管理で所持キャラ数を最新化',items:['AIアカウント管理を開くたびにSupabaseから最新の所持キャラクター・アイテム・活動履歴を再取得','宝箱使用後の所持キャラ数が起動時の古い表示データに残る問題を修正']},
  {date:'2026-10-21',version:'v1.8.98',title:'🤖 AIの最新キャラ交換宝箱の使用・履歴を修正',items:['宝箱を所持しているAIは未所持の最新キャラがいる場合に優先使用','獲得キャラクター・使用時刻をAIの活動履歴へ保存し、管理画面で宝箱名を表示']},
@@ -3168,20 +3169,17 @@ function isRankChaser(ai){const n=Number(String(ai?.accountId||'0').replace(/\D/
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
 let rankMatchIsGap=false,rankMatchBonus=0,rankMatchRankGap=0;
 function chooseRankAI(){
- const pi=rankIndex(rankPoints);let best=null,bestD=Infinity,bestGap=Infinity;
- rankMatchIsGap=Math.random()<.20;rankMatchBonus=0;rankMatchRankGap=0;
- if(rankMatchIsGap){
-  const gapCandidates=aiProfiles.filter(a=>Math.abs(rankIndex(a.rp)-pi)>=2&&Math.abs(rankIndex(a.rp)-pi)<=4);
-  if(gapCandidates.length){best=gapCandidates[Math.floor(Math.random()*gapCandidates.length)];rankMatchRankGap=Math.abs(rankIndex(best.rp)-pi);rankMatchBonus=Math.min(260,80+rankMatchRankGap*45);}
-  else rankMatchIsGap=false;
+ // RP差が大きいAIを意図的に選ぶ格差マッチを停止し、常に現在RPが最も近いAIを優先する。
+ // RPが離れていても候補を拒否せず、開始不能にならないよう全AIから必ず選択する。
+ rankMatchIsGap=false;rankMatchBonus=0;rankMatchRankGap=0;
+ const profiles=Array.isArray(aiProfiles)?aiProfiles.filter(a=>a&&Number.isFinite(Number(a.rp))):[];
+ if(!profiles.length)throw new Error('対戦AIデータがありません。ランク戦画面を開き直してください。');
+ let best=profiles[0],bestGap=Math.abs(Number(best.rp||0)-Number(rankPoints||0)),bestTierGap=Math.abs(rankIndex(Number(best.rp||0))-rankIndex(Number(rankPoints||0)));
+ for(let i=1;i<profiles.length;i++){
+  const a=profiles[i],gap=Math.abs(Number(a.rp||0)-Number(rankPoints||0)),tierGap=Math.abs(rankIndex(Number(a.rp||0))-rankIndex(Number(rankPoints||0)));
+  if(gap<bestGap||(gap===bestGap&&tierGap<bestTierGap)){best=a;bestGap=gap;bestTierGap=tierGap;}
  }
- if(!best){
-  for(const a of aiProfiles){
-   const d=Math.abs(rankIndex(a.rp)-pi),gap=Math.abs(Number(a.rp||0)-rankPoints);
-   if(d<bestD||(d===bestD&&gap<bestGap)||(d===bestD&&gap===bestGap&&Math.random()<.5)){best=a;bestD=d;bestGap=gap;}
-  }
- }
- return best||aiProfiles[0];
+ return best;
 }
 function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;const chaser=isRankChaser(ai);return {patience:Math.max(.45,.55+h(1)*.9-(chaser?.08:0)),aggression:Math.min(1,.55+h(2)*1.15+(chaser?.12:0)),cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:Math.max(.05,h(9)-(chaser?.10:0)),pressure:Math.min(1,h(10)+(chaser?.12:0))};}
 
