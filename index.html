@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.6';
+const GAME_VERSION='v1.9.7';
 const UPDATE_LOG=[
+ {date:'2026-10-22',version:'v1.9.7',title:'🏆 ランク戦の対戦相手をローテーション',items:['直近に対戦したAIを候補から一時除外し、同じ相手ばかり選ばれる問題を修正','RPが近い相手を優先しながら複数のAIへ対戦相手を分散']},
  {date:'2026-10-22',version:'v1.9.6',title:'🔥 覚醒吉田の詳細表示を修正',items:['進化後の詳細画面が第一形態のデータを参照する問題を修正','覚醒吉田の名前・アイコン・HP・攻撃力・射程・攻撃間隔・固有能力を進化後データに連動']},
  {date:'2026-10-22',version:'v1.9.5',title:'📈 吉田の最大レベル解放を修正',items:['吉田の詳細画面に激レアの金を使った最大Lv解放欄を追加','最大Lv20から30まで、他の進化対象キャラと同じ手順で上限を引き上げ可能に修正']},
  {date:'2026-10-22',version:'v1.9.4',title:'🍬 ハロウィンキャンディで第二弾ガチャ',items:['ハロウィンキャンディを第一弾交換所と第二弾限定ガチャの共通通貨に変更','強化素材と低確率の限定ハロウィン亜種キャラクター5体を追加','既存キャラクターのIDを維持したまま、第二弾キャラクターを末尾へ追加']},
@@ -3193,16 +3194,27 @@ function isRankChaser(ai){const n=Number(String(ai?.accountId||'0').replace(/\D/
 function strategyOf(ai){return aiStrategies.find(x=>x.key===ai.strategy)||aiStrategies[3];}
 let rankMatchIsGap=false,rankMatchBonus=0,rankMatchRankGap=0;
 function chooseRankAI(){
- // RP差が大きいAIを意図的に選ぶ格差マッチを停止し、常に現在RPが最も近いAIを優先する。
- // RPが離れていても候補を拒否せず、開始不能にならないよう全AIから必ず選択する。
+ // RPが近いAIを優先しつつ、直近の対戦相手を避けて同じAIへの固定化を防ぐ。
  rankMatchIsGap=false;rankMatchBonus=0;rankMatchRankGap=0;
  const profiles=Array.isArray(aiProfiles)?aiProfiles.filter(a=>a&&Number.isFinite(Number(a.rp))):[];
  if(!profiles.length)throw new Error('対戦AIデータがありません。ランク戦画面を開き直してください。');
- let best=profiles[0],bestGap=Math.abs(Number(best.rp||0)-Number(rankPoints||0)),bestTierGap=Math.abs(rankIndex(Number(best.rp||0))-rankIndex(Number(rankPoints||0)));
- for(let i=1;i<profiles.length;i++){
-  const a=profiles[i],gap=Math.abs(Number(a.rp||0)-Number(rankPoints||0)),tierGap=Math.abs(rankIndex(Number(a.rp||0))-rankIndex(Number(rankPoints||0)));
-  if(gap<bestGap||(gap===bestGap&&tierGap<bestTierGap)){best=a;bestGap=gap;bestTierGap=tierGap;}
- }
+ const historyKey='kinoshitaRankOpponentHistoryV1';
+ let history=[];try{const raw=JSON.parse(storage.getItem(historyKey)||'[]');if(Array.isArray(raw))history=raw.map(String).slice(-12)}catch(e){history=[]}
+ const recent=new Set(history);
+ let pool=profiles.filter(a=>!recent.has(String(a.accountId||'')));
+ if(!pool.length){history=[];pool=profiles.slice()}
+ const playerRp=Number(rankPoints||0);
+ const gapOf=a=>Math.abs(Number(a.rp||0)-playerRp);
+ const tierGapOf=a=>Math.abs(rankIndex(Number(a.rp||0))-rankIndex(playerRp));
+ let minGap=Infinity,minTierGap=Infinity;
+ for(const a of pool){const g=gapOf(a),tg=tierGapOf(a);if(g<minGap)minGap=g;if(tg<minTierGap)minTierGap=tg}
+ // 完全一致の相手が1体だけでも、RP差1,500以内の近い相手へ分散する。
+ const close=pool.filter(a=>gapOf(a)<=minGap+1500&&tierGapOf(a)<=minTierGap+1);
+ close.sort((a,b)=>gapOf(a)-gapOf(b)||tierGapOf(a)-tierGapOf(b)||String(a.accountId).localeCompare(String(b.accountId)));
+ const candidates=close.slice(0,Math.min(40,close.length));
+ let cursor=0;try{cursor=Math.max(0,Number(storage.getItem('kinoshitaRankOpponentCursorV1')||0)||0)}catch(e){}
+ const best=candidates[cursor%candidates.length]||pool[0];
+ try{storage.setItem('kinoshitaRankOpponentCursorV1',String(cursor+1));history.push(String(best.accountId||''));storage.setItem(historyKey,JSON.stringify(history.slice(-12)))}catch(e){}
  return best;
 }
 function aiPersonality(ai){const n=Number(String(ai.accountId||'0').replace(/\D/g,''))||0;const h=x=>((n*1103515245+x*12345)>>>0)/4294967296;const chaser=isRankChaser(ai);return {patience:Math.max(.45,.55+h(1)*.9-(chaser?.08:0)),aggression:Math.min(1,.55+h(2)*1.15+(chaser?.12:0)),cheapBias:h(3),tankBias:h(4),rangeBias:h(5),burstBias:h(6),counterBias:h(7),randomness:.12+h(8)*.42,save:Math.max(.05,h(9)-(chaser?.10:0)),pressure:Math.min(1,h(10)+(chaser?.12:0))};}
