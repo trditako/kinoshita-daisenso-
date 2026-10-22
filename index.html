@@ -3633,7 +3633,39 @@ function rankAIThink(dt){
  renderUnitElement(e);enemies.push(e);rankAITimer=0;
  const jitter=.72+((Number(String(rankAI.accountId||'0').replace(/\D/g,''))%13)/20);rankAICooldown=Math.max(.72,stRate(rankAI)*jitter);
 }
-function startRankBattle(){savePlayerName();gameSpeed=1;updateGameSpeedButton();rankAI=chooseRankAI();if(rankAI)rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;document.getElementById('rankLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=playerCastleMaxHp();setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name}`;document.getElementById('field').appendChild(tag);if(audioEnabled){if(audioStarted)startBGM('rank');else initAudio();}playSE('boss');requestAnimationFrame(loop);}
+function startRankBattle(){
+ const lobby=document.getElementById('rankLobby'),btn=document.getElementById('rankMatchBtn');
+ if(btn){btn.disabled=true;btn.textContent='⚔️ ランク戦を準備中…';}
+ try{
+  // 画面状態やAI選択の失敗を開始前に検出し、無反応にならないようにする。
+  if(!lobby||!document.getElementById('field')||!unitsEl)throw new Error('戦闘画面の初期化に必要な要素が見つかりません。');
+  savePlayerName();
+  rankAI=chooseRankAI();
+  if(!rankAI)throw new Error('対戦AIを選択できませんでした。ランク戦画面を開き直してください。');
+  gameSpeed=1;updateGameSpeedButton();
+  rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;
+  lobby.style.display='none';
+  document.getElementById('battlePauseBtn').style.display='none';
+  document.getElementById('start').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('rankResultOverlay')?.remove();
+  document.getElementById('rankModeTag')?.remove();
+  units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=playerCastleMaxHp();setupWorld();
+  level=1;workerMax=6000;workerIncome=120;money=1500;rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);
+  running=true;paused=false;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];
+  const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent=`🏆 ${playerName} VS 🤖 ${rankAI.name||'AI'}`;document.getElementById('field').appendChild(tag);
+  if(audioEnabled){if(audioStarted)startBGM('rank');else initAudio();}
+  playSE('boss');requestAnimationFrame(loop);
+ }catch(err){
+  console.error('ランク戦開始エラー:',err);
+  rankMode=false;running=false;paused=false;
+  if(lobby)lobby.style.display='flex';
+  if(btn){btn.disabled=false;btn.textContent='⚔️ ランク戦を開始';}
+  alert('ランク戦を開始できませんでした。\n'+String(err&&err.message||err));
+ }finally{
+  if(running&&btn){btn.disabled=false;btn.textContent='⚔️ ランク戦を開始';}
+ }
+}
 function finishRank(win){
  if(!rankMode && document.getElementById('rankResultOverlay')) return;
  // ランク戦の終了処理は「結果画面を先に確実に表示」してから、保存などを行う。
@@ -4251,7 +4283,7 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('button');
  if(b && b.id!=='audioToggle' && !b.disabled)playSE('click');
 },{capture:true});
-document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankRewardInfoBtn').onclick=openRankRewardInfo;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=startRankBattle;document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
+document.getElementById('rankBtn').onclick=openRank;document.getElementById('rankClose').onclick=closeRank;document.getElementById('rankMetaBtn').onclick=openRankMeta;document.getElementById('rankRewardInfoBtn').onclick=openRankRewardInfo;document.getElementById('rankMetaClose').onclick=closeRankMeta;document.getElementById('rankMatchBtn').onclick=()=>{try{startRankBattle();}catch(err){console.error('ランク戦ボタン処理エラー:',err);alert('ランク戦を開始できませんでした。\\n'+String(err&&err.message||err));}};document.getElementById('aiManageBtn').onclick=openAIManager;document.getElementById('aiManageBtn').textContent='🤖 1000AIアカウントを確認';document.getElementById('aiManagerClose').onclick=closeAIManager;document.getElementById('aiDetailClose').onclick=closeAIDetail;document.getElementById('aiSearchInput').addEventListener('input',renderAIAccountList);document.getElementById('aiSortSelect').addEventListener('change',renderAIAccountList);document.getElementById('rankSelfPlayBtn').onclick=()=>{runAISelfPlay(100);renderRankLobby();};document.getElementById('playerNameInput').addEventListener('change',savePlayerName);document.getElementById('playerNameInput').addEventListener('blur',savePlayerName);document.getElementById('pvpBtn').onclick=openPvp;document.getElementById('pvpCreate').onclick=()=>pvpBuildForm('host');document.getElementById('pvpJoin').onclick=()=>pvpBuildForm('guest');document.getElementById('friendsOpen').onclick=openFriends;document.getElementById('friendClose').onclick=closeFriends;document.getElementById('friendAddBtn').onclick=addFriend;
 document.getElementById('editFriendProfile').onclick=async()=>{const old=storage.getItem('kinoshitaPlayerBio')||'';const v=prompt('プロフィール文（80文字以内）',old);if(v===null)return;storage.setItem('kinoshitaPlayerBio',v.slice(0,80));document.getElementById('myFriendProfileText').textContent=v.slice(0,80)||'プロフィール文はありません。';await ensureMyPlayerProfile();};document.getElementById('copyPlayerId').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(playerRankingId);};document.getElementById('pvpClose').onclick=()=>{closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();};
 /* AI自動処理はUIイベント登録を止めないよう安全に開始 */
 (async()=>{try{await loadAIServerProfiles();await loadAIServerWorkerState();}catch(e){} try{startAutoAISelfPlay();setTimeout(()=>{try{runAISelfPlay(12);runAIActivities(50);}catch(e){console.warn("AI初期処理をスキップ:",e)}},120);setInterval(async()=>{if(document.visibilityState==='hidden'||document.getElementById('rankLobby').style.display==='none')return;try{await loadAIServerWorkerState();renderRankLobby();}catch(e){}},60000);}catch(e){console.warn("AI自動処理を開始できません:",e)}})();
