@@ -151,7 +151,9 @@ function aiCharacterQuality(id:number){
   const interval=Math.min(.05,Math.max(0,1.2-num(c.i,1))/1.2*.05);
   const ability=Math.min(.18,arr<any>(c.g).length*.026);
   const area=c.a?.06:0;
-  return rarity+damage+range+speed+interval+ability+area;
+  // 新規追加キャラは旧戦術メタ一覧にない場合でも選考対象に残す。
+  const extraCharacterFallback=CARD_TACTICS_BY_ID.has(id)?0:.48;
+  return rarity+damage+range+speed+interval+ability+area+extraCharacterFallback;
 }
 function aiFormationPower(ai:any){const owned=[...new Set(arr<any>(ai.owned_characters).map(x=>Math.floor(num(x))).filter(x=>x>=0&&x<MAX_CHARS))];const formation=[...new Set(arr<any>(ai.formation).map(x=>Math.floor(num(x))).filter(x=>owned.includes(x)))];const ids=(formation.length>=10?formation:owned).sort((a,b)=>{const qa=aiCharacterQuality(a)+Math.max(1,num(ai.char_levels?.[a],1))/MAX_LEVEL*.25,qb=aiCharacterQuality(b)+Math.max(1,num(ai.char_levels?.[b],1))/MAX_LEVEL*.25;return qb-qa}).slice(0,10);if(!ids.length)return 0;const avg=ids.reduce((sum,id)=>sum+aiCharacterQuality(id)+Math.max(1,num(ai.char_levels?.[id],1))/MAX_LEVEL*.25,0)/ids.length;return avg+aiSkillTreeCombatBonus(ai,ids)*.30+aiEvolutionCombatBonus(ai,ids)*.30}
 function thousandStepAttackValue(ctx:any){const traits=ctx.traits||new Set<string>();let mult=1;for(const t of ['無','赤','黒'])if(traits.has(t)){mult=4;break}return mult}
