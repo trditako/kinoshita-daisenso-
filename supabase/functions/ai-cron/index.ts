@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Run one 250-account batch every 10 minutes instead of every 2 minutes.
-    // Rotate by the same 10-minute interval as pg_cron so all four batches are covered.
-    const batchIndex = Math.floor(Date.now() / 600000) % 4
+    // Run one 250-account batch every 30 minutes to preserve log quota until reset.
+    // Rotate by the same 30-minute interval as pg_cron so all four batches are covered.
+    const batchIndex = Math.floor(Date.now() / 1800000) % 4
     const batchStart = batchIndex * 250 + 1
     const batchEnd = batchStart + 249
 
