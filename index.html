@@ -3157,7 +3157,9 @@ function saveRank(){
  storage.setItem('kinoshitaRankWins',playerRankWins);
  storage.setItem('kinoshitaRankLosses',playerRankLosses);
  storage.setItem('kinoshitaRankStreak',playerRankStreak);
- storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));
+ // AIプロフィール全件は容量が大きく、スマートフォンのlocalStorage上限を超える場合がある。
+ // ここで例外を投げるとランク戦開始まで中断されるため、保存失敗は対戦処理を止めない。
+ try{storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}catch(storageError){console.warn('AIプロフィールのローカル保存をスキップしました。サーバー側のAIデータを優先します。',storageError);}
 }
 function rankIndex(rp){let idx=0;for(let i=0;i<rankDefs.length;i++)if(rp>=rankDefs[i].need)idx=i;return idx;}
 function rankName(rp){return rankDefs[rankIndex(rp)].name;}
