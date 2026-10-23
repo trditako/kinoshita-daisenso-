@@ -4317,10 +4317,10 @@ cards.push(
 function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='超木下祭')return c.rarity==='LR'?500000:100000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const seriesOrder=['超木下祭','エレメンタル木下s','呪いの木下達','聖なる偉人達','機械防衛隊！木下s'];
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🌌 超木下祭</h2><p>最強クラスの限定シリーズ。超激レア3体・伝説レア1体を木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">通常シリーズ：超激レア10,000コイン／伝説レア50,000コイン　・　機械防衛隊！木下s：超激レア30,000コイン／伝説レア150,000コイン</p></div>';
+ const seriesOrder=['超木下祭'];
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🌌 超木下祭</h2><p>今回の更新で交換できる期間限定シリーズは「超木下祭」のみです。超激レア3体・伝説レア1体を木下コインで確定交換できます。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：100,000コイン／伝説レア：500,000コイン</p></div>';
  if(!result)return;
- const available=cards.map((c,i)=>({c,i,series:c.limitedExchangeSeries||c.series||'その他'})).filter(x=>x.c.limitedExchange===true);
+ const available=cards.map((c,i)=>({c,i,series:c.limitedExchangeSeries||c.series||'その他'})).filter(x=>x.c.limitedExchange===true&&x.series==='超木下祭');
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
  const groups=[...new Set([...seriesOrder,...available.map(x=>x.series)])].filter(series=>available.some(x=>x.series===series));
  result.innerHTML=groups.map(series=>{
@@ -5488,7 +5488,7 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
  function writeDynamic(items){try{localStorage.setItem(DYNAMIC_NEWS_KEY,JSON.stringify(items.slice(-30)))}catch(e){}}
  function currentShinjuSignature(){try{if(typeof getShinjuSeasonState!=='function')return '';const state=getShinjuSeasonState();return JSON.stringify({seasonNumber:state.seasonNumber,cycle:state.cycle,phase:state.phase,active:(state.active||[]).map(x=>({id:x.id,name:x.name}))})}catch(e){return ''}}
  function currentShopSignature(){
-  try{const list=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.limitedExchange===true).map(c=>({name:c.name,series:c.limitedExchangeSeries||c.series||'その他',rarity:c.rarity,cost:typeof limitedExchangeCost==='function'?limitedExchangeCost(c):null})).sort((a,b)=>String(a.series).localeCompare(String(b.series),'ja')||String(a.name).localeCompare(String(b.name),'ja'));return JSON.stringify({series:'歴代期間限定交換所',items:list})}catch(e){return ''}
+  try{const list=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.limitedExchange===true&&(c.limitedExchangeSeries||c.series)==='超木下祭').map(c=>({name:c.name,series:'超木下祭',rarity:c.rarity,cost:typeof limitedExchangeCost==='function'?limitedExchangeCost(c):null})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ja'));return JSON.stringify({series:'今回の期間限定交換所',items:list})}catch(e){return ''}
  }
  function addDynamicNews(item){const items=readDynamic();items.push(item);writeDynamic(items)}
  function dateToday(){return new Date().toISOString().slice(0,10)}
