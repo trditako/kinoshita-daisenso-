@@ -2157,7 +2157,7 @@ function damageAgainst(u,target,baseAtk){
  const a0=isAbilitySealed(u)?{}:{...(u||{}),...(u?.ability||{})};
  const baseAttack=Math.max(1,Number(baseAtk??u?.atk??1)||1);
  const now=performance.now()/1000;
- let effectiveAttack=baseAttack;if(target?.festivalVoidUntil&&performance.now()/1000<target.festivalVoidUntil)effectiveAttack*=Number(target.festivalVoidAttackFactor||.55);
+ let effectiveAttack=baseAttack;if(u?.festivalVoidUntil&&performance.now()/1000<u.festivalVoidUntil)effectiveAttack*=Number(u.festivalVoidAttackFactor||.55);
  if(u?.attackDownUntil&&now<u.attackDownUntil)effectiveAttack*=Number(u.attackDownFactor||.01);
  if(u?.cursedUntil&&now<u.cursedUntil&&u.cursedAttackFactor)effectiveAttack*=Number(u.cursedAttackFactor)||1;
  if(target?.metal){
@@ -2320,7 +2320,7 @@ let lastImpactSE=0;function applyChokinoshitaFestivalAbility(source,target,dealt
  if(a.dimensionalRend&&target?.isEnemy&&target.hp>0){
   const extra=Math.min(Number(a.dimensionalRend.bossCap||8000),Math.max(1,Math.round(target.hp*Number(a.dimensionalRend.factor||.02))));
   target.hp=Math.max(0,target.hp-extra);popup('🌀 次元断裂 -'+extra,target.x,Math.max(25,field.clientHeight-155),'criticalDamagePop');
-  if(target.hp<=0)removeEnemy(target);
+  
  }
  if(a.voidField&&target?.isEnemy&&target.hp>0){
   target.festivalVoidUntil=now+3;target.festivalVoidAttackFactor=.55;target.festivalVoidSpeedFactor=.65;
@@ -3967,7 +3967,7 @@ if(waveLevel>0&&!isAbilitySealed(u)){
 }
 u.cd=u.interval}}
    else if(u.x<=enemyBaseStop&&selectedMode==='bossrush'){u.state='idle';}else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const slowNow=nowMove<(u.slowUntil||0);const rawSlowSf=Number(u.slowFactor??1);const slowSf=slowNow?Math.max(.05,Math.min(1,Number.isFinite(rawSlowSf)?rawSlowSf:1)):1;const cursedNow=nowMove<(u.cursedUntil||0);const rawCurseSf=Number(u.cursedSpeedFactor??1);const curseSf=cursedNow?Math.max(.05,Math.min(1,Number.isFinite(rawCurseSf)?rawCurseSf:1)):1;if(!isThousandStep&&!stopNow)u.x-=u.spd*slowSf*curseSf*60*dt;if(!slowNow)u.slowFactor=1;}
+   else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const slowNow=nowMove<(u.slowUntil||0);const rawSlowSf=Number(u.slowFactor??1);const slowSf=slowNow?Math.max(.05,Math.min(1,Number.isFinite(rawSlowSf)?rawSlowSf:1)):1;const cursedNow=nowMove<(u.cursedUntil||0);const rawCurseSf=Number(u.cursedSpeedFactor??1);const curseSf=cursedNow?Math.max(.05,Math.min(1,Number.isFinite(rawCurseSf)?rawCurseSf:1)):1;const voidSf=(u.festivalVoidUntil&&nowMove<u.festivalVoidUntil)?Number(u.festivalVoidSpeedFactor||.65):1;if(!isThousandStep&&!stopNow)u.x-=u.spd*slowSf*curseSf*voidSf*60*dt;if(!slowNow)u.slowFactor=1;}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';updateBarrierDisplay(u);
  }
 function applyAreaAttackDown(source){const a=source?.ability||{};if(!source||source.isEnemy||isAbilitySealed(source)||!a.areaAttackDownChance||Math.random()>=Number(a.areaAttackDownChance))return;const duration=Number(a.areaAttackDownDuration||20),factor=Number(a.areaAttackDownFactor||.01),now=performance.now()/1000;for(const e of enemies){if(!e||e.hp<=0||hasAbilityFlag(e,'attackDownImmune')||!entityTraitMatch(e,['宇宙','赤']))continue;e.attackDownUntil=now+duration;e.attackDownFactor=factor;setStatusMark(e,'⬇️','攻撃力低下',duration,'attackDown');}}
