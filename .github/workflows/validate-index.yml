@@ -1,0 +1,41 @@
+name: Validate game JavaScript
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - '.github/workflows/validate-index.yml'
+  push:
+    branches:
+      - main
+      - feat/chokinoshita-festival-and-growth-ability
+    paths:
+      - 'index.html'
+      - '.github/workflows/validate-index.yml'
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check inline JavaScript syntax in index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script\b([^>]*)>([\s\S]*?)</script\s*>', html, re.I)
+          inline = [(attrs, body) for attrs, body in scripts if not re.search(r'\bsrc\s*=', attrs, re.I) and body.strip()]
+          if not inline:
+              raise SystemExit('No inline JavaScript blocks found')
+          Path('/tmp/inline-js').mkdir(exist_ok=True)
+          for i, (_, body) in enumerate(inline):
+              Path(f'/tmp/inline-js/script-{i}.js').write_text(body, encoding='utf-8')
+          print(f'Checking {len(inline)} inline JavaScript block(s)')
+          PY
+          for file in /tmp/inline-js/*.js; do
+            echo "node --check $file"
+            node --check "$file"
+          done
