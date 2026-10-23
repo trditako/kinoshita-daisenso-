@@ -2200,7 +2200,7 @@ function damageTakenBy(u,attacker){
  if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;
  if(!isAbilitySealed(attacker)&&attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;
  const now=performance.now()/1000;
- const effectiveAtk=attacker.attackDownUntil&&now<attacker.attackDownUntil?attacker.atk*(attacker.attackDownFactor||.01):attacker.atk;
+ let effectiveAtk=Number(attacker.atk||1);if(attacker.attackDownUntil&&now<attacker.attackDownUntil)effectiveAtk*=Number(attacker.attackDownFactor||.01);if(attacker.festivalVoidUntil&&now<attacker.festivalVoidUntil)effectiveAtk*=Number(attacker.festivalVoidAttackFactor||.55);
  const ua={...(u||{}),...(u.ability||{})};
  const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
  if(ivyIsEntity(u)){
@@ -4074,9 +4074,10 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
 }
 }function enemyAttackTarget(e,t,ea,now2,sourceSealed){
  if(!e||!t||t.hp<=0)return;
+ const attackNow=Number(now2||performance.now()/1000);if(t.causalityInvulnUntil&&attackNow<t.causalityInvulnUntil)return;
  const raw=Math.max(1,Number(damageTakenBy(t,e))||1),before=t.hp;let dealt=raw;
  if(Number(t.barrier||0)>0){const absorbed=Math.min(t.barrier,dealt);t.barrier-=absorbed;dealt-=absorbed;const bi=t.el?.querySelector('.barrierBar i'),bl=t.el?.querySelector('.barrierLabel');if(bi&&t.barrierMax>0)bi.style.width=Math.max(0,t.barrier/t.barrierMax*100)+'%';if(bl&&t.barrierMax>0)bl.textContent=t.barrier>0?'🛡 バリア '+Math.ceil(t.barrier).toLocaleString()+' / '+Math.ceil(t.barrierMax).toLocaleString():'🛡 バリア破壊！';if(absorbed>0)popup('🛡️-'+absorbed,t.x,Math.max(25,field.clientHeight-145));}
- t.hp=Math.max(0,t.hp-dealt);if(t.el){t.el.classList.remove('hit');t.el.classList.add('hit');setTimeout(()=>t.el?.classList.remove('hit'),170);const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}
+ t.hp=Math.max(0,t.hp-dealt);if(!t.isEnemy&&t.hp<=0&&t.ability?.causalityReversal&&!t.causalityReversed){t.causalityReversed=true;t.hp=Math.max(1,Math.min(t.maxhp,Math.round(t.maxhp*Number(t.ability.causalityReversal.heal??t.ability.causalityReversal.revivePercent??.4))));t.causalityInvulnUntil=attackNow+Number(t.ability.causalityReversal.invulnerable||3);popup('⏳ 因果反転！',t.x,90,'criticalPop');}if(t.el){t.el.classList.remove('hit');t.el.classList.add('hit');setTimeout(()=>t.el?.classList.remove('hit'),170);const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}
  playSE('impact');popup('-'+raw,t.x,Math.max(25,field.clientHeight-115));if(t.hp>0)triggerKnockback(t,e,before);if(t.hp>0&&ea.knockbackChance&&Math.random()<Number(ea.knockbackChance)){const distance=42;t.x=t.isEnemy?Math.max(120,t.x-distance):Math.min(worldWidth-178,t.x+distance);t.cd=Math.max(Number(t.cd||0),.22);t.hitbackUntil=now2+.22;t.el?.classList.remove('hitback');t.el?.classList.add('hitback');setTimeout(()=>t.el?.classList.remove('hitback'),220);}
  if(!sourceSealed){
    if(ea.barrierBreak){if(Number(t.barrier||0)>0)t.barrier=0;if(Number(t.mythBarrier||0)>0)t.mythBarrier=0;updateBarrierDisplay(t);}
