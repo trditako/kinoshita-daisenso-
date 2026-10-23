@@ -1776,6 +1776,9 @@ for(let i=0;i<cards.length;i++){
 }
 let formation;try{formation=JSON.parse(storage.getItem('kinoshitaFormation')||'[]')}catch(e){formation=[]}
 if(!Array.isArray(formation))formation=[];
+/* 起動時の名前キーを、後続の初期化save()が上書きする前に退避する。 */
+let formationCharacterNamesAtBoot=null;try{const v=JSON.parse(storage.getItem('kinoshitaFormationCharacterNamesV1')||'null');if(Array.isArray(v))formationCharacterNamesAtBoot=v.filter(name=>typeof name==='string');}catch(e){}
+let ownedCharacterNamesAtBoot=null;try{const v=JSON.parse(storage.getItem('kinoshitaOwnedCharacterNamesV1')||'null');if(Array.isArray(v))ownedCharacterNamesAtBoot=v.filter(name=>typeof name==='string');}catch(e){};
 if(storage.getItem('kinoshitaCharacterIndexMigrationV4')!=='done'){
  try{
   // 旧版の実配列IDを確認済み:
@@ -1886,9 +1889,9 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
 }
 /* キャラクター配列の添字が更新で変わっても、所持状態は名前を基準に復元する。 */
 try{
- const savedNames=JSON.parse(storage.getItem('kinoshitaOwnedCharacterNamesV1')||'null');
+ const savedNames=ownedCharacterNamesAtBoot;
  if(Array.isArray(savedNames)){
-  const ownedNameSet=new Set(savedNames.filter(name=>typeof name==='string'));
+  const ownedNameSet=new Set(savedNames);
   ownedFlags=cards.map((card,i)=>i===0||ownedNameSet.has(card.name));
   owned=ownedFlags.filter(Boolean).length;
  }
@@ -4349,7 +4352,7 @@ cards.push(
 {name:"超越木下・時空王",cost:5200,hp:90000,atk:14500,range:330,spd:.62,interval:1.1,recharge:75,icon:"⏳",motion:"scientist",attackType:"area",kb:4,rarity:"SSR",series:"超木下祭",limitedExchange:true,limitedExchangeSeries:"超木下祭",growth:true,trait:"浮",growthDesc:"成長1段階：HP・攻撃力を1.8倍、射程+35、移動速度×1.12、攻撃間隔×0.86。\n成長2段階：HP・攻撃力をさらに2.2倍、射程+50、移動速度×1.12、攻撃間隔×0.86。\n成長3段階：HP・攻撃力をさらに2.8倍、射程+75、移動速度×1.12、攻撃間隔×0.86。因果反転自体は最大HPの40%で復活し、3秒無敵。",ability:{name:"因果反転",desc:"戦闘中に初めて致命傷を受けたとき、1回だけ戦闘不能を回避し、HPを最大HPの40%まで回復する。その後3秒間は無敵状態となり、無敵時間中のダメージを受けない。発動済みの因果反転は同じ出撃中に再発動しない。成長しても復活HP40%と無敵3秒の設定は変わらない。",causalityReversal:{once:true,heal:.4,invulnerable:3}}},
 {name:"超越木下・創世神",cost:6000,hp:280000,atk:42000,range:360,spd:.38,interval:2.1,recharge:100,icon:"✨",motion:"super",attackType:"allrange",kb:2,minRange:-90,maxRange:360,rarity:"LR",series:"超木下祭",limitedExchange:true,limitedExchangeSeries:"超木下祭",growth:true,trait:"神話",growthDesc:"成長1段階：HP・攻撃力×1.8、射程+35、速度×1.12、攻撃間隔×0.86。12秒ごとの味方回復が5%、敵全体ダメージが攻撃力の30%に上昇。\n成長2段階：味方回復7%、敵全体ダメージ40%。\n成長3段階：味方回復9%、敵全体ダメージ50%。設定上の上限は回復15%、敵全体ダメージ60%。",ability:{name:"創世律動",desc:"12秒ごとに1回発動する。生存している味方全員のHPを各自の最大HPの3%回復し、生存している敵全員に創世神の攻撃力の20%分の追加ダメージを与える。通常攻撃とは別に発動し、敵を倒した場合は通常の撃破処理を行う。成長で回復率と敵全体への追加ダメージ率が上がる。",genesisPulse:{cooldown:12,allyHeal:.03,enemyDamage:.2}}}
 );
-/* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=JSON.parse(storage.getItem('kinoshitaOwnedCharacterNamesV1')||'null');if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames.filter(name=>typeof name==='string'));ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=JSON.parse(storage.getItem('kinoshitaFormationCharacterNamesV1')||'null');const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===name)).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 古い空の名前キーや解決不能な名前一覧で、数値編成まで空に上書きしない。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を名前キー付きで直ちに正規保存する。 */save();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='超木下祭')return c.rarity==='LR'?500000:100000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
+/* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=ownedCharacterNamesAtBoot;if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames);ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=formationCharacterNamesAtBoot;const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===name)).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 保存済み名前キーは起動直後に退避済み。初期化途中のsave()で空にされても、退避した編成を優先して復元する。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を名前キー付きで直ちに正規保存する。 */save();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='超木下祭')return c.rarity==='LR'?500000:100000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  const seriesOrder=['超木下祭'];
