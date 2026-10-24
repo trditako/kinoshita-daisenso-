@@ -4236,7 +4236,7 @@ function renderCards(){
        const disabled=!running||!hasCharacter(i)||money<c.cost||!ready||isRankCharacterBanned(i);
        x.classList.toggle('disabled',disabled);x.classList.toggle('ready',!disabled);
        const status=x.querySelector('.cardState'),fill=x.querySelector('.rechargeFill'),costState=x.querySelector('.costState');
-       if(status)status.textContent=!running?'出撃前':isRankCharacterBanned(i)?'今季禁止':!hasCharacter(i)?'未所持':aliveGrowth?'出撃中':remaining>.01?`再生産 ${remaining.toFixed(1)}秒`:ready?'生産可能':'待機中';
+       if(status)status.textContent=!running?'出撃前':isRankCharacterBanned(i)?'今季禁止':!hasCharacter(i)?'未所持':aliveGrowth?'出撃中':remaining>.01?`再生産 ${remaining.toFixed(1)}秒`:money<c.cost?'資金不足':ready?'生産可能':'待機中';
        if(fill)fill.style.width=(Math.max(0,Math.min(100,(1-remaining/cooldown)*100)))+'%';
        if(costState)costState.textContent=money<c.cost?`あと ${(c.cost-money).toLocaleString()}円`:'資金OK';
      });
@@ -4256,7 +4256,7 @@ function renderCards(){
    const liveGrowth=units.find(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0&&u.growth),aliveGrowth=!!(c.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0));
    const ready=remaining<=0.01&&!aliveGrowth;
    const disabled=!running||!hasCharacter(i)||money<c.cost||!ready;
-   const status=!running?'出撃前':!hasCharacter(i)?'未所持':aliveGrowth?'出撃中':remaining>.01?`再生産 ${remaining.toFixed(1)}秒`:'生産可能';
+   const status=!running?'出撃前':!hasCharacter(i)?'未所持':aliveGrowth?'出撃中':remaining>.01?`再生産 ${remaining.toFixed(1)}秒`:money<c.cost?'資金不足':'生産可能';
    const progress=Math.max(0,Math.min(100,(1-remaining/cooldown)*100));
    return `<div class="card ${disabled?'disabled':'ready'}" data-i="${i}"><div class="face">${c.growth&&liveGrowth?'✨':c.icon}</div><b>${c.name}</b><span class="cardCost">${Number(c.cost||0).toLocaleString()}円</span><small>Lv.${charLevel[i]||1}</small><div class="cardState">${status}</div><div class="rechargeTrack" aria-label="再生産進捗"><div class="rechargeFill" style="width:${progress}%"></div></div><div class="costState">${money<c.cost?'あと '+(c.cost-money).toLocaleString()+'円':'資金OK'}</div>${c.growth?(isGrowthInUpperFormationRow(i)?(liveGrowth?'<button type="button" class="growthButton" data-growth="'+i+'">成長 '+liveGrowth.growthStage+'/3 · '+([2500,5000,8500][liveGrowth.growthStage]||'MAX')+'円</button>':'<small>成長：出撃中のみ</small>'):'<small>成長：編成上段（1〜5番）のみ</small>'):''}</div>`;
  });
