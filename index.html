@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.13';
+const GAME_VERSION='v1.9.14';
 const UPDATE_LOG=[
+ {date:'2026-10-26',version:'v1.9.14',title:'🔧 第二形態の進化条件判定を修正',items:['初期キャラクター6体の進化判定から不要な最大レベル・全体解放チェックを除去','レベル30と所持素材を正しく数値比較し、条件を満たすキャラクターが進化できるよう修正']},
  {date:'2026-10-26',version:'v1.9.13',title:'🌟 初期キャラクター6体に第二形態を追加',items:['森の守護木下・木下（電脳）・星読み木下に役割特化の第二形態を追加','森の杖木下・木下（ドローン）・流星木下に高難度でも活躍できる第二形態を追加','既存のキャラクターID・所持データを維持し、Lv30と対応パワー素材で進化可能に']},
  {date:'2026-10-26',version:'v1.9.12',title:'👕 真髄限定衣装の対象キャラクターを拡大',items:['真髄10〜18のUR・SSR衣装を、博士・忍者・電脳・ドローン・森の守護者・星読み・流星・日本編報酬キャラなど幅広い味方へ再配分','衣装名・説明・対象キャラクターを一致させ、既存の衣装IDと所持データを維持']},
  {date:'2026-10-26',version:'v1.9.11',title:'✨ 真髄13〜18を追加',items:['真髄13〜18の限定シリーズを追加し、真髄の先行制作範囲を拡張','各真髄にUR衣装・UR携帯品・SSR衣装3種の限定報酬を用意','真髄番号とシーズン連動の解放対象を整理']},
@@ -2494,7 +2495,7 @@ function evolveYoshidaCharacter(i){if(running||!yoshidaEvolutionReady(i))return;
 function toggleYoshidaForm(i){if(running||cards[i]?.name!=='吉田'||!chapterRewardEvolved[cards[i].name])return;charForm[i]=charForm[i]===2?1:2;save();showCharacterDetail(i);renderCards();}
 function evolveRichCharacter(i){if(running||!richEvolutionReady(i))return;for(const color of ['赤','青','黄','緑','紫'])colorPowers[color]-=50;ancientPower-=15;chapterRewardEvolved[cards[i].name]=true;charForm[i]=2;save();showCharacterDetail(i);renderCards();renderStageSelect();renderNormalGrowthInventory();}
 function evolveAnomalousCharacter(i){if(running||!anomalousEvolutionReady(i))return;for(const color of ['赤','青','黄','緑','紫'])colorPowers[color]-=10;ancientPower-=5;chapterRewardEvolved[cards[i].name]=true;charForm[i]=2;save();showCharacterDetail(i);renderCards();renderStageSelect();renderNormalGrowthInventory();}
-function earlySecondFormEvolutionReady(i){const base=cards[i],config=EARLY_SECOND_FORM_CONFIG[base?.name];return !!config&&isSecondFormGloballyUnlocked(i)&&hasCharacter(i)&&charLevel[i]>=30&&charMaxLevel[i]>=30&&!chapterRewardEvolved[base.name]&&Object.entries(config.materials).every(([color,n])=>(colorPowers[color]||0)>=n)}
+function earlySecondFormEvolutionReady(i){const base=cards[i],config=EARLY_SECOND_FORM_CONFIG[base?.name];return !!config&&hasCharacter(i)&&Number(charLevel[i]||0)>=30&&!chapterRewardEvolved[base.name]&&Object.entries(config.materials).every(([color,n])=>Number(colorPowers[color]||0)>=n)}
 function evolveEarlySecondForm(i){const base=cards[i],config=EARLY_SECOND_FORM_CONFIG[base?.name];if(running||!config||!earlySecondFormEvolutionReady(i))return;for(const [color,n] of Object.entries(config.materials))colorPowers[color]-=n;chapterRewardEvolved[base.name]=true;charForm[i]=2;save();showCharacterDetail(i);renderCards();renderStageSelect();renderNormalGrowthInventory();}
 function toggleChapterRewardForm(i){if(running||i<10||!cards[i]?.secondForm||!chapterRewardEvolved[cards[i].name])return;charForm[i]=charForm[i]===2?1:2;save();showCharacterDetail(i);renderCards();}
 function useNormalGold(i){useRarityGold(i,'ノーマル')}function useRarityGold(i,r){if(running||i<0||i>=cards.length||!hasCharacter(i)||displayCharacterRarity(cards[i])!==r||goldForRarity(r)<=0||charMaxLevel[i]>=30)return;if(r==='ノーマル')normalGold--;else rarityGold[r]--;charMaxLevel[i]++;save();showCharacterDetail(i);renderCards();}
