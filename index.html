@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.9';
+const GAME_VERSION='v1.9.10';
 const UPDATE_LOG=[
+ {date:'2026-10-26',version:'v1.9.10',title:'✨ 真髄10〜12を追加',items:['真髄10「時空回廊」・真髄11「神話と竜焔」・真髄12「終焉と再生」を追加','各真髄にUR衣装・UR携帯品・SSR衣装3種の限定報酬を用意','真髄は従来どおりシーズンに合わせて3種類ずつ順番に解放']},
  {date:'2026-10-22',version:'v1.9.7',title:'🏆 ランク戦の対戦相手をローテーション',items:['直近に対戦したAIを候補から一時除外し、同じ相手ばかり選ばれる問題を修正','RPが近い相手を優先しながら複数のAIへ対戦相手を分散']},
  {date:'2026-10-22',version:'v1.9.6',title:'🔥 覚醒吉田の詳細表示を修正',items:['進化後の詳細画面が第一形態のデータを参照する問題を修正','覚醒吉田の名前・アイコン・HP・攻撃力・射程・攻撃間隔・固有能力を進化後データに連動']},
  {date:'2026-10-22',version:'v1.9.5',title:'📈 吉田の最大レベル解放を修正',items:['吉田の詳細画面に激レアの金を使った最大Lv解放欄を追加','最大Lv20から30まで、他の進化対象キャラと同じ手順で上限を引き上げ可能に修正']},
@@ -5118,6 +5119,22 @@ const SHINJU_S9_SSR_A={id:'shinju_s9_ssr_costume_king_illusion',type:'costume',r
 const SHINJU_S9_SSR_B={id:'shinju_s9_ssr_costume_ai_mirror',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・鏡界演算衣',emoji:'🪞',color:'#a5b4fc',desc:'木下（AI）専用の第9真髄限定SSR衣装。鏡のような光沢と幾何学模様を持つ演算装束。'};
 const SHINJU_S9_SSR_C={id:'shinju_s9_ssr_costume_forest_phantom',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・幻影花冠の王衣',emoji:'🦚',color:'#86efac',desc:'森王木下専用の第9真髄限定SSR衣装。幻影の花冠と翠色の羽飾りをまとった王衣。'};
 
+const SHINJU_S10_UR_COSTUME={id:'shinju_s10_ur_costume_time_traveler',type:'costume',rarity:'UR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・時空旅人の外套',emoji:'🌀',color:'#38bdf8',desc:'木下（AI）専用の第10真髄限定UR衣装。時空の裂け目を渡る旅人の外套。'};
+const SHINJU_S10_UR_ACCESSORY={id:'shinju_s10_ur_accessory_chronometer',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・永劫の懐中時計',emoji:'⏳',desc:'木下（覚醒）専用の第10真髄限定UR携帯品。時の流れを封じた神秘の時計。'};
+const SHINJU_S10_SSR_A={id:'shinju_s10_ssr_costume_starlight',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・星界観測装',emoji:'🔭',color:'#60a5fa',desc:'星王木下専用の第10真髄限定SSR衣装。時空の星図を刻んだ観測装束。'};
+const SHINJU_S10_SSR_B={id:'shinju_s10_ssr_costume_rift_ninja',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（忍者）',name:'木下（忍者）・次元裂きの影装',emoji:'🥷',color:'#818cf8',desc:'木下（忍者）専用の第10真髄限定SSR衣装。次元を切り裂く青紫の忍装束。'};
+const SHINJU_S10_SSR_C={id:'shinju_s10_ssr_costume_clockwork',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（ロボ）',name:'木下（ロボ）・クロノ機甲',emoji:'🤖',color:'#7dd3fc',desc:'木下（ロボ）専用の第10真髄限定SSR衣装。時空機構を組み込んだ特別な機甲服。'};
+const SHINJU_S11_UR_COSTUME={id:'shinju_s11_ur_costume_dragon_emperor',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・神竜皇の焔翼',emoji:'🐉',color:'#fb923c',desc:'フェニックス専用の第11真髄限定UR衣装。神竜の焔を宿した黄金の翼。'};
+const SHINJU_S11_UR_ACCESSORY={id:'shinju_s11_ur_accessory_dragon_orb',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・竜神の宝珠',emoji:'🔴',desc:'木下（王）専用の第11真髄限定UR携帯品。古代竜の力を秘めた宝珠。'};
+const SHINJU_S11_SSR_A={id:'shinju_s11_ssr_costume_flame_dragon',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（超覚醒）',name:'木下（超覚醒）・竜焔の守護鎧',emoji:'🔥',color:'#f97316',desc:'木下（超覚醒）専用の第11真髄限定SSR衣装。竜の炎をまとった守護鎧。'};
+const SHINJU_S11_SSR_B={id:'shinju_s11_ssr_costume_mythic_king',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・神話の翠冠',emoji:'🌿',color:'#4ade80',desc:'森王木下専用の第11真髄限定SSR衣装。神話の森に伝わる翠色の冠装束。'};
+const SHINJU_S11_SSR_C={id:'shinju_s11_ssr_costume_ember_warrior',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・竜炎の豪打者',emoji:'⚾',color:'#fca5a5',desc:'木下（野球）専用の第11真髄限定SSR衣装。竜焔を思わせる赤金の特別ユニフォーム。'};
+const SHINJU_S12_UR_COSTUME={id:'shinju_s12_ur_costume_rebirth_phoenix',type:'costume',rarity:'UR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・終焉再生の神鳥',emoji:'🌅',color:'#fda4af',desc:'フェニックス専用の第12真髄限定UR衣装。世界の終わりから新たな命を運ぶ神鳥の姿。'};
+const SHINJU_S12_UR_ACCESSORY={id:'shinju_s12_ur_accessory_genesis_core',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・創世の心核',emoji:'💠',desc:'木下（覚醒）専用の第12真髄限定UR携帯品。終焉の先に新世界を生む心核。'};
+const SHINJU_S12_SSR_A={id:'shinju_s12_ssr_costume_dusk_king',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・黄昏の終王衣',emoji:'👑',color:'#c084fc',desc:'木下（王）専用の第12真髄限定SSR衣装。黄昏と再生を象徴する終王の衣。'};
+const SHINJU_S12_SSR_B={id:'shinju_s12_ssr_costume_ashes_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・灰燼再構築装',emoji:'♻️',color:'#94a3b8',desc:'木下（AI）専用の第12真髄限定SSR衣装。灰から再構築される未来型装束。'};
+const SHINJU_S12_SSR_C={id:'shinju_s12_ssr_costume_world_tree',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・世界樹の再生衣',emoji:'🌳',color:'#86efac',desc:'森王木下専用の第12真髄限定SSR衣装。世界樹の新芽をあしらった再生の衣。'};
+
 const SHINJU_ESSENCES=[
  {id:1,name:'真髄1：覚醒の火',desc:'普通の木下の第二形態実装記念真髄。',items:[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C]},
  {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
@@ -5127,7 +5144,10 @@ const SHINJU_ESSENCES=[
  {id:6,name:'真髄6：深海と極光',desc:'深海と極光をテーマにした限定真髄。',items:[SHINJU_S6_UR_COSTUME,SHINJU_S6_UR_ACCESSORY,SHINJU_S6_SSR_A,SHINJU_S6_SSR_B,SHINJU_S6_SSR_C]},
  {id:7,name:'真髄7：星蝕と深淵',desc:'星蝕と深淵の力をテーマにした限定真髄。',items:[SHINJU_S7_UR_COSTUME,SHINJU_S7_UR_ACCESSORY,SHINJU_S7_SSR_A,SHINJU_S7_SSR_B,SHINJU_S7_SSR_C]},
  {id:8,name:'真髄8：桜華と雷霆',desc:'桜華と雷霆の力をテーマにした限定真髄。',items:[SHINJU_S8_UR_COSTUME,SHINJU_S8_UR_ACCESSORY,SHINJU_S8_SSR_A,SHINJU_S8_SSR_B,SHINJU_S8_SSR_C]},
- {id:9,name:'真髄9：天狼と幻影',desc:'天狼と幻影の力をテーマにした限定真髄。',items:[SHINJU_S9_UR_COSTUME,SHINJU_S9_UR_ACCESSORY,SHINJU_S9_SSR_A,SHINJU_S9_SSR_B,SHINJU_S9_SSR_C]}
+ {id:9,name:'真髄9：天狼と幻影',desc:'天狼と幻影の力をテーマにした限定真髄。',items:[SHINJU_S9_UR_COSTUME,SHINJU_S9_UR_ACCESSORY,SHINJU_S9_SSR_A,SHINJU_S9_SSR_B,SHINJU_S9_SSR_C]},
+ {id:10,name:'真髄10：時空回廊',desc:'時空と次元の力をテーマにした限定真髄。',items:[SHINJU_S10_UR_COSTUME,SHINJU_S10_UR_ACCESSORY,SHINJU_S10_SSR_A,SHINJU_S10_SSR_B,SHINJU_S10_SSR_C]},
+ {id:11,name:'真髄11：神話と竜焔',desc:'神話の竜と不滅の焔をテーマにした限定真髄。',items:[SHINJU_S11_UR_COSTUME,SHINJU_S11_UR_ACCESSORY,SHINJU_S11_SSR_A,SHINJU_S11_SSR_B,SHINJU_S11_SSR_C]},
+ {id:12,name:'真髄12：終焉と再生',desc:'世界の終焉と新たな創世をテーマにした限定真髄。',items:[SHINJU_S12_UR_COSTUME,SHINJU_S12_UR_ACCESSORY,SHINJU_S12_SSR_A,SHINJU_S12_SSR_B,SHINJU_S12_SSR_C]}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
 SHINJU_ITEMS.push({id:'daily_dimensional_ur_costume',type:'costume',rarity:'UR',characterIndex:0,name:'普通の木下・異次元の旅装',emoji:'🌀',color:'#6366f1',desc:'日替わり異次元戦線の累計ポイント交換限定UR衣装。'});
@@ -5183,7 +5203,7 @@ function getShinjuSeasonState(){
  const elapsed=seasonNumber-10;
  // 現シーズンで解放する番号。新しい真髄はシーズン切替後に1つずつ増やし、先の番号を先行解放しない。
  const essenceCount=Math.max(1,elapsed);
- // 真髄は3種類ずつのグループで開催し、番号は4～6、7～9…と連番で続ける。
+ // 真髄は3種類ずつのグループで開催し、番号は4～6、7～9、10～12…と連番で続ける。
  const themeCycle=Math.floor((essenceCount-1)/SHINJU_ESSENCES.length)+1;
  const cycle=Math.floor((essenceCount-1)/3)+1;
  const phase=((essenceCount-1)%3)+1;
