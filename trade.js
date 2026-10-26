@@ -92,7 +92,7 @@ function panel(){
  el('ktRefresh').onclick=()=>refresh().catch(showError);
  el('ktAddGive').addEventListener('click',()=>{try{addSelectedAsset('give');el('ktStatus').textContent='渡すものに追加しました。';}catch(e){showError(e)}});
  el('ktAddWant').addEventListener('click',()=>{try{addSelectedAsset('want');el('ktStatus').textContent='求めるものに追加しました。';}catch(e){showError(e)}});
- el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=renderPriceChart;
+ el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=()=>loadPriceHistory().catch(showError);
  el('ktWantNoItems').onchange=()=>{const off=el('ktWantNoItems').checked;el('ktWantAsset').disabled=off;el('ktWantQty').disabled=off;if(off){chosen.want.items={};chosen.want.cosmetics={};renderChosen('want');}else fillAssetSelect('want');};
  el('ktCreate').onclick=()=>createOffer().catch(showError);
  el('ktLink').onclick=()=>linkAccount().catch(showError);
@@ -152,7 +152,7 @@ function gameCatalog(){
  }
  let allCosmetics=[];
  try{if(typeof SHINJU_ITEMS!=='undefined')allCosmetics=SHINJU_ITEMS.map(x=>({kind:'cosmetic',id:String(x.id),name:(x.emoji||'✨')+' '+x.name+'（'+(x.rarity||'未設定')+' '+(x.type==='costume'?'衣装':'携帯品')+'）',rarity:String(x.rarity||'未設定'),source:String(x.source||x.origin||'真髄'),type:String(x.type||'accessory'),qty:Math.max(0,Math.floor(Number(cosmetics[x.id])||0))}))}catch{}
- return {all:[...allItems,...allCosmetics],owned:[...allItems,...allCosmetics].filter(x=>x.qty>0)};
+ const merged=new Map();for(const x of [...allItems,...allCosmetics]){const key=x.kind+':'+x.id,old=merged.get(key);merged.set(key,old?{...old,...x,qty:Math.max(old.qty||0,x.qty||0)}:x);}const all=[...merged.values()];return {all,owned:all.filter(x=>x.qty>0)};
 }
 function assetLabel(kind,id){return gameCatalog().all.find(x=>x.kind===kind&&x.id===id)?.name||String(id)}
 function assetMeta(kind,id){const x=gameCatalog().all.find(v=>v.kind===kind&&v.id===String(id));return {rarity:x?.rarity||String(x?.name||'').match(/(ノーマル|レア|激レア|超激レア|伝説レア)/)?.[1]||'未設定',source:x?.source||'ゲーム内'}}
@@ -222,14 +222,34 @@ function renderHistory(){
 }
 function fillFilterAssetSelect(){const select=el('ktFilterAsset');if(!select)return;const previous=select.value;const rows=gameCatalog().all;select.innerHTML='<option value="all">すべてのアイテム</option>'+rows.map(x=>'<option value="'+esc(x.kind+':'+x.id)+'">'+esc(x.name)+'</option>').join('');if([...select.options].some(o=>o.value===previous))select.value=previous;}
 
+async function loadPriceHistory(){
+ const select=el('ktChartAsset');if(!select)return;
+ const key=select.value;
+ if(!key){priceHistory=[];renderPriceChart();return;}
+ const split=key.indexOf(':'),kind=key.slice(0,split),id=key.slice(split+1);
+ if(!['item','cosmetic'].includes(kind)||!id){priceHistory=[];renderPriceChart();return;}
+ el('ktPriceChart').innerHTML='<p class="kt-muted">価格履歴を読み込んでいます…</p>';
+ const result=await api('market_history',{asset_type:kind,asset_id:id});
+ priceHistory=Array.isArray(result.price_history)?result.price_history:[];
+ renderPriceChart();
+}
 function renderPriceChart(){
  const box=el('ktPriceChart'),select=el('ktChartAsset');if(!box||!select)return;
- const key=select.value;if(!key){box.innerHTML='<p class="kt-muted">グラフに表示する品目を選んでください。</p>';return;}
- const split=key.indexOf(':'),kind=key.slice(0,split),id=key.slice(split+1),rows=priceHistory.filter(x=>x.asset_type===kind&&x.asset_id===id).sort((a,b)=>new Date(a.snapshot_date)-new Date(b.snapshot_date));
- if(rows.length<2){box.innerHTML='<p class="kt-muted">日別の記録がまだ十分にありません（現在 '+rows.length+' 件）。バザーを開いて記録を蓄積してください。</p>'+(rows.length?'<p>最新参考価値: <b>'+Number(rows[rows.length-1].estimated_value||0).toLocaleString()+' コイン相当</b> · '+esc(rows[rows.length-1].snapshot_date)+'</p>':'');return;}
- const w=640,h=220,pad=34,vals=rows.map(x=>Number(x.estimated_value)||0),lo=Math.min(...vals),hi=Math.max(...vals),range=Math.max(1,hi-lo),px=i=>pad+i*(w-2*pad)/(rows.length-1),py=v=>h-pad-(v-lo)*(h-2*pad)/range;
+ const key=select.value;
+ if(!key){box.innerHTML='<p class="kt-muted">グラフに表示する品目を選んでください。</p>';return;}
+ const split=key.indexOf(':'),kind=key.slice(0,split),id=key.slice(split+1);
+ const rows=priceHistory.filter(x=>x.asset_type===kind&&x.asset_id===id).sort((a,b)=>String(a.snapshot_date).localeCompare(String(b.snapshot_date)));
+ const name=gameCatalog().all.find(x=>x.kind===kind&&x.id===id)?.name||id;
+ if(!rows.length){box.innerHTML='<p><b>'+esc(name)+'</b></p><p class="kt-muted">価格履歴はまだありません。修正後にバザーを開いた日から日別の記録が蓄積されます。過去の記録は存在しないため復元できません。</p>';return;}
+ const vals=rows.map(x=>Number(x.estimated_value)||0),lo=Math.min(...vals),hi=Math.max(...vals),first=vals[0],last=vals[vals.length-1],change=first>0?((last-first)/first)*100:0;
+ const w=760,h=280,padL=72,padR=24,padT=28,padB=48,plotW=w-padL-padR,plotH=h-padT-padB,range=Math.max(1,hi-lo);
+ const px=i=>padL+(rows.length===1?plotW/2:i*plotW/(rows.length-1));
+ const py=v=>padT+plotH-(v-lo)*plotH/range;
  const points=rows.map((r,i)=>px(i).toFixed(1)+','+py(Number(r.estimated_value)||0).toFixed(1)).join(' ');
- box.innerHTML='<div style="overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="参考価値の時系列グラフ" style="width:100%;min-width:320px;max-width:640px;background:#0f172a;border-radius:8px"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="#64748b"/><line x1="'+pad+'" y1="'+pad+'" x2="'+pad+'" y2="'+(h-pad)+'" stroke="#64748b"/><polyline fill="none" stroke="#a78bfa" stroke-width="3" points="'+points+'"/>'+rows.map((r,i)=>'<circle cx="'+px(i).toFixed(1)+'" cy="'+py(Number(r.estimated_value)||0).toFixed(1)+'" r="3" fill="#c4b5fd"><title>'+esc(r.snapshot_date)+': '+Number(r.estimated_value||0).toLocaleString()+'コイン相当</title></circle>').join('')+'<text x="'+pad+'" y="18" fill="#e2e8f0" font-size="12">'+hi.toLocaleString()+'</text><text x="'+pad+'" y="'+(h-8)+'" fill="#e2e8f0" font-size="12">'+lo.toLocaleString()+'</text><text x="'+pad+'" y="'+(h-20)+'" fill="#cbd5e1" font-size="10">'+esc(rows[0].snapshot_date)+'</text><text x="'+(w-pad)+'" y="'+(h-20)+'" text-anchor="end" fill="#cbd5e1" font-size="10">'+esc(rows[rows.length-1].snapshot_date)+'</text></svg></div><p class="kt-muted">記録 '+rows.length+' 日分 · 最低 '+lo.toLocaleString()+' / 最高 '+hi.toLocaleString()+' コイン相当 · 各点は日別参考評価</p>';
+ const grid=[0,.25,.5,.75,1].map(t=>{const y=padT+plotH*t,v=hi-(hi-lo)*t;return '<line x1="'+padL+'" y1="'+y+'" x2="'+(w-padR)+'" y2="'+y+'" stroke="#334155" stroke-dasharray="3 4"/><text x="'+(padL-9)+'" y="'+(y+4)+'" text-anchor="end" fill="#cbd5e1" font-size="12">'+Math.round(v).toLocaleString()+'</text>'}).join('');
+ const chart='<div style="overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(name)+'の参考価値推移グラフ" style="width:100%;min-width:340px;background:#0f172a;border-radius:8px">'+grid+'<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(h-padB)+'" stroke="#64748b"/><line x1="'+padL+'" y1="'+(h-padB)+'" x2="'+(w-padR)+'" y2="'+(h-padB)+'" stroke="#64748b"/>'+(rows.length>1?'<polyline fill="none" stroke="#a78bfa" stroke-width="3" points="'+points+'"/>':'')+rows.map((r,i)=>'<circle cx="'+px(i).toFixed(1)+'" cy="'+py(Number(r.estimated_value)||0).toFixed(1)+'" r="4" fill="#c4b5fd"><title>'+esc(r.snapshot_date)+': '+Number(r.estimated_value||0).toLocaleString()+' コイン相当</title></circle>').join('')+'<text x="'+padL+'" y="'+(h-17)+'" fill="#cbd5e1" font-size="12">'+esc(rows[0].snapshot_date)+'</text><text x="'+(w-padR)+'" y="'+(h-17)+'" text-anchor="end" fill="#cbd5e1" font-size="12">'+esc(rows[rows.length-1].snapshot_date)+'</text><text x="'+(w/2)+'" y="17" text-anchor="middle" fill="#e2e8f0" font-size="12">参考価値（木下コイン相当）</text></svg></div>';
+ const daily=rows.slice().reverse().map(r=>'<div class="kt-value-row"><span>'+esc(r.snapshot_date)+'<span class="kt-muted"> · 需要係数 '+Number(r.demand_multiplier||1).toFixed(2)+'×</span></span><b>'+Number(r.estimated_value||0).toLocaleString()+' コイン</b></div>').join('');
+ box.innerHTML='<p><b>'+esc(name)+'</b></p><div class="kt-grid"><div class="kt-offer"><div class="kt-muted">最新参考価値</div><b>'+last.toLocaleString()+' コイン</b><div class="kt-muted">'+esc(rows[rows.length-1].snapshot_date)+'</div></div><div class="kt-offer"><div class="kt-muted">期間内の変化</div><b>'+((change>0)?'+':'')+change.toFixed(1)+'%</b><div class="kt-muted">初日 '+first.toLocaleString()+' → 最新 '+last.toLocaleString()+'</div></div><div class="kt-offer"><div class="kt-muted">期間内の最低値</div><b>'+lo.toLocaleString()+' コイン</b></div><div class="kt-offer"><div class="kt-muted">期間内の最高値</div><b>'+hi.toLocaleString()+' コイン</b></div></div>'+chart+'<p class="kt-muted">記録 '+rows.length+' 日分 · 日別の参考評価です。実際の成立価格や売却保証ではありません。</p><details class="kt-offer"><summary style="cursor:pointer;font-weight:700">日別データをすべて見る（新しい順）</summary>'+daily+'</details>';
 }
 function fillChartAssetSelect(){
  const select=el('ktChartAsset');if(!select)return;const previous=select.value;
@@ -284,7 +304,7 @@ async function refresh(){
   const appliedVersion=localStorage.getItem('kinoshitaTradeWalletVersion');
   if(synced.imported||!appliedVersion||(profile?.updated_at&&String(profile.updated_at)!==appliedVersion)) applyProfileToGame(profile);
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
-  const catalog=gameCatalog().all.map(x=>({kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity}));const stats=await api('market_stats',{catalog});marketStats=stats.stats||{items:{},cosmetics:{}};priceHistory=stats.price_history||[];
+  const catalog=gameCatalog().all.map(x=>({kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity}));const stats=await api('market_stats',{catalog});marketStats=stats.stats||{items:{},cosmetics:{}};priceHistory=[];
   const list=await api('list');offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   fillFilterAssetSelect();
   const completed=await api('history');history=completed.history||[];
