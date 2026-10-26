@@ -12,6 +12,7 @@ on:
       - "supabase/migrations/*trade*.sql"
       - "supabase/migrations/*game_wallet*.sql"
       - "trade.js"
+      - "scripts/test-trading-security.mjs"
   push:
     branches: [main]
     paths:
@@ -24,6 +25,7 @@ on:
       - "supabase/migrations/*trade*.sql"
       - "supabase/migrations/*game_wallet*.sql"
       - "trade.js"
+      - "scripts/test-trading-security.mjs"
 
 permissions:
   contents: read
@@ -40,6 +42,8 @@ jobs:
           node-version: 22
       - name: Validate trading UI JavaScript
         run: node --check trade.js
+      - name: Test trading account-link security guards
+        run: node --test scripts/test-trading-security.mjs
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
