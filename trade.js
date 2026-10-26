@@ -170,7 +170,7 @@ function renderHistory(){
   const mine=h.seller_id===session?.user?.id;
   const give=mine?h.offered_assets:h.requested_assets;
   const receive=mine?h.requested_assets:h.offered_assets;
-  return '<article class="kt-offer"><div><b>'+esc(new Date(h.completed_at).toLocaleString('ja-JP'))+'</b> · '+(mine?'自分が募集':'自分が承諾')+'</div><div class="kt-muted">受け渡し: '+esc(formatAssets(give||{}))+'（目安 '+estimateAssets(give||{}).toLocaleString()+'）</div><div class="kt-muted">受取: '+esc(formatAssets(receive||{}))+'（目安 '+estimateAssets(receive||{}).toLocaleString()+'）</div><div class="kt-muted">募集ID: '+esc(String(h.offer_id||'').slice(0,8))+'</div></article>'
+  return '<article class="kt-offer"><div><b>'+esc(new Date(h.completed_at).toLocaleString('ja-JP'))+'</b> · '+(mine?'自分が募集':'自分が承諾')+'</div><div class="kt-muted">受け渡し: '+formatAssets(give||{})+'（目安 '+estimateAssets(give||{}).toLocaleString()+'）</div><div class="kt-muted">受取: '+formatAssets(receive||{})+'（目安 '+estimateAssets(receive||{}).toLocaleString()+'）</div><div class="kt-muted">募集ID: '+esc(String(h.offer_id||'').slice(0,8))+'</div></article>'
  }).join('');
 }
 function renderOffers(){
@@ -179,7 +179,7 @@ function renderOffers(){
  box.innerHTML=offers.map(o=>{
   const mine=o.seller_id===session?.user?.id;
   const canAccept=!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
-  return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+esc(formatAssets(o.offered_assets))+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+esc(formatAssets(o.requested_assets))+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
+  return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
  }).join('');
  box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh();await syncGameFromProfile(profile);if(confirm('取引を反映しました。ゲームの所持数を更新するため、ページを再読み込みしますか？'))location.reload()}catch(e){showError(e)}});
  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{try{await api('cancel',{offer_id:b.dataset.cancel});await refresh()}catch(e){showError(e)}});
@@ -220,8 +220,7 @@ async function createOffer(){
  const buyer=el('ktBuyer').value.trim();
  await api('create_offer',{offered_assets:offered,requested_assets:requested,buyer_id:buyer||null});
  el('ktStatus').innerHTML='<span class="kt-good">募集を作成しました。</span>';
-  chosen.give.items={};chosen.give.cosmetics={};chosen.want.items={};chosen.want.cosmetics={};renderChosen('give');renderChosen('want');
-  await refresh();
+ await refresh();
 }
 async function linkAccount(){
  const email=el('ktEmail').value.trim(),password=el('ktPassword').value;
