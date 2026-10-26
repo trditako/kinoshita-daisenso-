@@ -41,7 +41,7 @@ with open_counts as (
   set offered_assets=jsonb_build_object('coins',0,'xp',0,'items',jsonb_build_object(c.item_id,1),'cosmetics','{}'::jsonb),
       requested_assets=jsonb_build_object('coins',greatest(1,round(c.base_value*(0.9+c.price_factor*0.35))::bigint),'xp',0,'items','{}'::jsonb,'cosmetics','{}'::jsonb),
       estimated_offered_value=c.base_value,
-      estimated_requested_value=greatest(1,round(c.base_value*(0.9+random()*0.35))::bigint)
+      estimated_requested_value=greatest(1,round(c.base_value*(0.9+c.price_factor*0.35))::bigint)
   from candidates c
   where o.id=c.id
   returning o.id
