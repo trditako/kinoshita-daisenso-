@@ -2,7 +2,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists public.trade_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  player_id uuid unique,
+  player_id uuid,
   display_name text not null default 'プレイヤー',
   coins bigint not null default 0 check (coins >= 0),
   xp bigint not null default 0 check (xp >= 0),
