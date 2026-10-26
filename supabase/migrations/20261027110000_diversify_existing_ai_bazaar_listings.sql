@@ -23,7 +23,8 @@ with open_counts as (
       when 'rarity_gold:超激レア' then 6000
       when 'rarity_gold:伝説レア' then 18000
       else 150
-    end::bigint as base_value
+    end::bigint as base_value,
+    random() as price_factor
   from public.ai_trade_offers o
   join open_counts c on c.seller_ai_id=o.seller_ai_id and c.offer_count=1
   join public.ai_accounts a on a.account_id=o.seller_ai_id
@@ -38,7 +39,7 @@ with open_counts as (
 ), changed as (
   update public.ai_trade_offers o
   set offered_assets=jsonb_build_object('coins',0,'xp',0,'items',jsonb_build_object(c.item_id,1),'cosmetics','{}'::jsonb),
-      requested_assets=jsonb_build_object('coins',greatest(1,round(c.base_value*(0.9+random()*0.35))::bigint),'xp',0,'items','{}'::jsonb,'cosmetics','{}'::jsonb),
+      requested_assets=jsonb_build_object('coins',greatest(1,round(c.base_value*(0.9+c.price_factor*0.35))::bigint),'xp',0,'items','{}'::jsonb,'cosmetics','{}'::jsonb),
       estimated_offered_value=c.base_value,
       estimated_requested_value=greatest(1,round(c.base_value*(0.9+random()*0.35))::bigint)
   from candidates c
