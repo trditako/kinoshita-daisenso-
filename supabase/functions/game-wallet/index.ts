@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return response({ ok: false, error: 'POST_ONLY' }, 405)
   try {
-    const token = (req.headers.get('authorization') || '').match(/^Bearer\\s+(.+)$/i)?.[1]
+    const token = (req.headers.get('authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1]
     if (!token) return response({ ok: false, error: 'AUTH_REQUIRED' }, 401)
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
     const { data: authData, error: authError } = await admin.auth.getUser(token)
