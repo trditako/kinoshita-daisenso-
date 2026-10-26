@@ -278,5 +278,5 @@ async function linkAccount(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
  const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ステージ|ランク戦|対戦|ホーム|キャラ|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
- const observer=new MutationObserver(watchHome);observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});watchHome();
+ const observer=new MutationObserver(watchHome);observer.observe(document.documentElement,{childList:true,subtree:true});watchHome();
 })();
