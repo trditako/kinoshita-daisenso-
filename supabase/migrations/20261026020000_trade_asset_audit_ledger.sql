@@ -51,10 +51,10 @@ begin
   loop
     v_before := case
       when coalesce(old.inventory->>v_asset_id, '0') ~ '^-?[0-9]+$'
-        then (old.inventory->>v_asset_id)::bigint else 0 end;
+        then coalesce((old.inventory->>v_asset_id)::bigint, 0) else 0 end;
     v_after := case
       when coalesce(new.inventory->>v_asset_id, '0') ~ '^-?[0-9]+$'
-        then (new.inventory->>v_asset_id)::bigint else 0 end;
+        then coalesce((new.inventory->>v_asset_id)::bigint, 0) else 0 end;
     if v_before is distinct from v_after then
       insert into public.trade_asset_ledger(user_id, asset_type, asset_id, delta, balance_after)
       values (new.user_id, 'item', v_asset_id, v_after - v_before, v_after);
@@ -70,10 +70,10 @@ begin
   loop
     v_before := case
       when coalesce(old.cosmetics->>v_asset_id, '0') ~ '^-?[0-9]+$'
-        then (old.cosmetics->>v_asset_id)::bigint else 0 end;
+        then coalesce((old.cosmetics->>v_asset_id)::bigint, 0) else 0 end;
     v_after := case
       when coalesce(new.cosmetics->>v_asset_id, '0') ~ '^-?[0-9]+$'
-        then (new.cosmetics->>v_asset_id)::bigint else 0 end;
+        then coalesce((new.cosmetics->>v_asset_id)::bigint, 0) else 0 end;
     if v_before is distinct from v_after then
       insert into public.trade_asset_ledger(user_id, asset_type, asset_id, delta, balance_after)
       values (new.user_id, 'cosmetic', v_asset_id, v_after - v_before, v_after);
