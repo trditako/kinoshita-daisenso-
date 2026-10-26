@@ -69,7 +69,7 @@ function shuffle<T>(values: T[]): T[] {
 function availableAssets(ai: AI) {
   return flatten(ai.inventory_items)
 }
-function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; currency: 'coins' | 'xp' } | null {
+function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; value: number; currency: 'coins' | 'xp' } | null {
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
   const candidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) =>
@@ -88,6 +88,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
         requested: { coins: price, xp: 0, items: {} },
         itemId,
         price,
+        value: price,
         currency: 'coins',
       }
     }
@@ -102,7 +103,8 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
         offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
         requested: { coins: 0, xp: xpPrice, items: {} },
         itemId,
-        price: Math.round(xpPrice / xpPerCoin),
+        price: xpPrice,
+        value: Math.round(xpPrice / xpPerCoin),
         currency: 'xp',
       }
     }
@@ -146,7 +148,7 @@ Deno.serve(async (req: Request) => {
           offered_assets: offer.offered,
           requested_assets: offer.requested,
           estimated_offered_value: marketValue(offer.itemId),
-          estimated_requested_value: offer.price,
+          estimated_requested_value: offer.value,
           status: 'open',
         }).select('id').single()
         if (insertError || !inserted) { failures++; continue }
@@ -168,11 +170,11 @@ Deno.serve(async (req: Request) => {
           seller.coins = int(seller.coins) + offer.price
           buyer.coins = Math.max(0, int(buyer.coins) - offer.price)
         } else {
-          seller.player_xp = int(seller.player_xp) + offer.price * 20
-          buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price * 20)
+          seller.player_xp = int(seller.player_xp) + offer.price
+          buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price)
         }
         completed++
-        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, [offer.currency]: offer.currency === 'coins' ? offer.price : offer.price * 20 })
+        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, [offer.currency]: offer.price })
         didTrade = true
         break
       }
