@@ -1,0 +1,36 @@
+name: Validate trading Edge Functions
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/player-trading/**"
+      - "supabase/functions/ai-trading/**"
+      - "supabase/functions/ai-cron/**"
+      - "supabase/migrations/*trade*.sql"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/player-trading/**"
+      - "supabase/functions/ai-trading/**"
+      - "supabase/functions/ai-cron/**"
+      - "supabase/migrations/*trade*.sql"
+
+permissions:
+  contents: read
+
+jobs:
+  deno-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check trading Edge Functions
+        run: >-
+          deno check
+          supabase/functions/player-trading/index.ts
+          supabase/functions/ai-trading/index.ts
+          supabase/functions/ai-cron/index.ts
