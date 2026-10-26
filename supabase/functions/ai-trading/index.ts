@@ -149,20 +149,37 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
     const [{ data: playerTrades, error: playerTradeError }, { data: aiHistory, error: aiHistoryError }] = await Promise.all([
       admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
-      admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+      admin.from('ai_trade_offers').select('offered_assets,requested_assets,completed_at,created_at').eq('status', 'completed').order('completed_at', { ascending: false }).limit(500),
     ])
     if (playerTradeError) throw playerTradeError
     if (aiHistoryError) throw aiHistoryError
     const demand: Record<string, { requested: number; offered: number }> = {}
+    const realized: Record<string, { sum: number; count: number }> = {}
+    const baseItemValue = (id: string) => ({normal_gold:250,power_chest:1200,golden_chest:2400,ability_core:1800,ancient_power:900,latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000}[id] ?? 150)
     const countAssets = (trade: any) => {
       const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
       for (const [kind, key] of [['item', 'items'], ['cosmetic', 'cosmetics']] as const) {
         for (const [id, qty] of Object.entries(object(requested[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.requested++; demand[kind + ':' + id] = row }
         for (const [id, qty] of Object.entries(object(offered[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.offered++; demand[kind + ':' + id] = row }
       }
+      const cashValue = int(requested.coins) + Math.round(int(requested.xp) / 20)
+      if (cashValue <= 0) return
+      const assets: Array<{ key: string; value: number; qty: number }> = []
+      for (const [id, qty] of Object.entries(object(offered.items))) if (int(qty) > 0) assets.push({key:'item:'+id,value:baseItemValue(id),qty:int(qty)})
+      for (const [id, qty] of Object.entries(object(offered.cosmetics))) if (qty === true || int(qty) > 0) assets.push({key:'cosmetic:'+id,value:5000,qty:qty===true?1:int(qty)})
+      const totalBase=assets.reduce((sum,a)=>sum+a.value*a.qty,0)
+      if(totalBase<=0)return
+      const ratio=Math.max(0.5,Math.min(2,cashValue/totalBase))
+      for(const a of assets){const row=realized[a.key]||{sum:0,count:0};row.sum+=ratio;row.count++;realized[a.key]=row}
     }
     for (const trade of [...(playerTrades || []), ...(aiHistory || [])]) countAssets(trade)
-    marketMultipliers = Object.fromEntries(Object.entries(demand).map(([id, row]) => [id, Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.requested) * 0.35 - Math.log1p(row.offered) * 0.12))]))
+    marketMultipliers = Object.fromEntries([...new Set([...Object.keys(demand),...Object.keys(realized)])].map(id => {
+      const row=demand[id]||{requested:0,offered:0}
+      const demandFactor=Math.max(0.65,Math.min(2.5,0.8+Math.log1p(row.requested)*0.35-Math.log1p(row.offered)*0.12))
+      const sale=realized[id]
+      const realizedFactor=sale&&sale.count?Math.max(0.75,Math.min(1.35,Math.pow(sale.sum/sale.count,0.35))):1
+      return [id,Math.max(0.65,Math.min(2.5,demandFactor*realizedFactor))]
+    }))
     const { data, error } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,strategy,skill,activity')
       .order('account_id', { ascending: true })
@@ -225,13 +242,28 @@ Deno.serve(async (req: Request) => {
 
     // Publish a small, bounded set of AI-owned items into the same public bazaar.
     const { data: activeAiListings, error: activeListingError } = await admin.from('ai_trade_offers')
-      .select('seller_ai_id,offered_assets').eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
+      .select('id,seller_ai_id,offered_assets,requested_assets,estimated_offered_value,created_at').eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
     if(activeListingError) throw activeListingError
     const activeByAi = new Map<number, Set<string>>()
+    let aiListingsRepriced=0
     for(const listing of (activeAiListings||[])){
       const ids=activeByAi.get(listing.seller_ai_id)||new Set<string>()
-      for(const id of Object.keys(object(object(listing.offered_assets).items)))ids.add('item:'+id)
-      for(const id of Object.keys(object(object(listing.offered_assets).cosmetics)))ids.add('cosmetic:'+id)
+      const offered=object(listing.offered_assets), requested=object(listing.requested_assets)
+      const ageHours=Math.max(0,(Date.now()-Date.parse(String(listing.created_at||new Date().toISOString())))/3600000)
+      const targetFactor=ageHours<1?null:ageHours<3?1.08:ageHours<6?1.00:ageHours<12?0.93:ageHours<18?0.87:ageHours<24?0.82:0.75
+      const itemEntries=Object.entries(object(offered.items)).filter(([,qty])=>int(qty)>0)
+      const cosmeticEntries=Object.entries(object(offered.cosmetics)).filter(([,qty])=>qty===true||int(qty)>0)
+      if(targetFactor!==null&&(itemEntries.length+cosmeticEntries.length)===1&&int(requested.coins)>0&&!int(requested.xp)&&!Object.keys(object(requested.items)).length&&!Object.keys(object(requested.cosmetics)).length){
+        const isCosmetic=cosmeticEntries.length===1, assetId=isCosmetic?cosmeticEntries[0][0]:itemEntries[0][0]
+        const base=Math.max(1,Number(listing.estimated_offered_value)||(isCosmetic?Math.round(5000*demandMultiplier('cosmetic',assetId)):marketValue(assetId)))
+        const nextPrice=Math.max(1,Math.round(base*targetFactor))
+        if(nextPrice<int(requested.coins)){
+          const {error:priceError}=await admin.from('ai_trade_offers').update({requested_assets:{...requested,coins:nextPrice},estimated_requested_value:nextPrice}).eq('id',listing.id).eq('status','open').is('buyer_ai_id',null)
+          if(!priceError)aiListingsRepriced++
+        }
+      }
+      for(const id of Object.keys(object(offered.items)))ids.add('item:'+id)
+      for(const id of Object.keys(object(offered.cosmetics)))ids.add('cosmetic:'+id)
       activeByAi.set(listing.seller_ai_id,ids)
     }
     const { data: freshRows, error: freshError } = await admin.from('ai_accounts')
@@ -251,14 +283,15 @@ Deno.serve(async (req: Request) => {
       const candidate=candidates[Math.floor(Math.random()*candidates.length)]
       if(!candidate)continue
       const itemId=candidate.id,cosmetic=candidate.cosmetic
-      const price=Math.max(1,Math.round((cosmetic?5000:marketValue(itemId))*(0.9+Math.random()*0.35)))
+      const referenceValue=cosmetic?Math.round(5000*demandMultiplier('cosmetic',itemId)):marketValue(itemId)
+      const price=Math.max(1,Math.round(referenceValue*(1.08+Math.random()*0.10)))
       const offered:Assets=cosmetic
         ? {coins:0,xp:0,items:{},cosmetics:{[itemId]:true}}
         : {coins:0,xp:0,items:{[itemId]:1},cosmetics:{}}
       const {error:insertError}=await admin.from('ai_trade_offers').insert({
         seller_ai_id:row.account_id,buyer_ai_id:null,offered_assets:offered,
         requested_assets:{coins:price,xp:0,items:{},cosmetics:{}},
-        estimated_offered_value:cosmetic?5000:marketValue(itemId),estimated_requested_value:price,status:'open'
+        estimated_offered_value:referenceValue,estimated_requested_value:price,status:'open'
       })
       if(!insertError){activeIds.add((cosmetic?'cosmetic:':'item:')+itemId);activeByAi.set(row.account_id,activeIds);aiListingsCreated++}else{failures++}
     }
@@ -376,7 +409,7 @@ Deno.serve(async (req: Request) => {
       })
       if(!buyOrderError){activeBuyers.add(row.account_id);aiBuyOrdersCreated++}else{failures++}
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated })
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
