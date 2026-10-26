@@ -222,7 +222,7 @@ function renderOffers(){
   const priceOnly=Number(o.requested_assets?.coins||0)>0||Number(o.requested_assets?.xp||0)>0;const buyOrder=(Number(o.offered_assets?.coins||0)>0||Number(o.offered_assets?.xp||0)>0)&&!Object.keys(o.offered_assets?.items||{}).length&&!Object.keys(o.offered_assets?.cosmetics||{}).length&&(Object.keys(o.requested_assets?.items||{}).length+Object.keys(o.requested_assets?.cosmetics||{}).length)>0;
   const button=isAI
    ? (priceOnly?'<button class="kt-primary" data-buy-ai="'+esc(o.id)+'">購入する</button>':'<span class="kt-muted">交換不可</span>')
-   : (canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件で交換</button>':'');
+   : (canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">'+(buyOrder?'買い注文に応じる':'条件で交換')+'</button>':'');
   return '<article class="kt-offer"><div><b>'+(isAI?'🤖 AIバザー':buyOrder?'🛒 プレイヤー買い注文':'📦 プレイヤー売り出し・交換募集')+'</b> · '+esc(o.id.slice(0,8))+' · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">出品者: '+esc(isAI?(o.seller_name||('AI '+o.seller_ai_id)):o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開出品')+'</div><div class="kt-muted">出品: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">'+rarityLine(o.offered_assets)+'</div><div>希望: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">'+rarityLine(o.requested_assets)+'</div><div class="kt-muted">'+(isAI?'AI出品（AI同士の取引は参考相場に反映しません）':buyOrder?'買い注文':'売り出し・交換募集')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+button+(mine?'<button class="kt-secondary" data-edit="'+esc(o.id)+'">内容を編集</button><button class="kt-secondary" data-cancel="'+esc(o.id)+'">出品取消</button>':'')+'</div></article>'
  }).join('');
  box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});applyProfileToGame(wallet.profile);el('ktStatus').innerHTML='<span class="kt-good">取引成立。ゲーム内の所持数を更新しています…</span>';setTimeout(()=>location.reload(),250)}catch(e){showError(e)}});
@@ -257,6 +257,7 @@ async function refresh(){
 async function createOffer(){
  const offered=selectedAssets('give');
   const requested=selectedAssets('want');
+  if(el('ktOfferMode').value==='buy'){if(Object.keys(offered.items||{}).length||Object.keys(offered.cosmetics||{}).length)throw new Error('買い注文ではコイン・XPだけを提示してください。');if(!offered.coins&&!offered.xp)throw new Error('買い注文には提示するコインまたはXPが必要です。');if(!Object.keys(requested.items||{}).length&&!Object.keys(requested.cosmetics||{}).length)throw new Error('買い注文では希望するアイテム・衣装・携帯品を指定してください。');}
   if(!offered.coins&&!offered.xp&&!Object.keys(offered.items).length&&!Object.keys(offered.cosmetics).length)throw new Error('渡すものを1つ以上選んでください。');
   if(el('ktWantNoItems').checked){requested.items={};requested.cosmetics={};}
   if(!requested.coins&&!requested.xp&&!Object.keys(requested.items).length&&!Object.keys(requested.cosmetics).length)throw new Error('求めるものが空です。コイン・XPを指定するか、求める品目を追加してください。');
