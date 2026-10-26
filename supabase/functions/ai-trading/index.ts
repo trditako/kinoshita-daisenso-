@@ -80,7 +80,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   const buyerCosmetics = new Set(availableCosmetics(buyer))
   const sellerCosmetics = new Set(availableCosmetics(seller))
   const cosmeticCandidates = shuffle(availableCosmetics(seller).filter(id => !buyerCosmetics.has(id)))
-  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !buyerItems[id]))
+  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 1 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !buyerItems[id]))
   // AI wish lists may request surplus items and cosmetics, not only currency.
   const buyerBarterItems = shuffle(Object.entries(buyerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !sellerItems[id]))
   const buyerBarterCosmetics = shuffle(availableCosmetics(buyer).filter(id => !sellerCosmetics.has(id)))
@@ -225,34 +225,42 @@ Deno.serve(async (req: Request) => {
 
     // Publish a small, bounded set of AI-owned items into the same public bazaar.
     const { data: activeAiListings, error: activeListingError } = await admin.from('ai_trade_offers')
-      .select('seller_ai_id').eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
+      .select('seller_ai_id,offered_assets').eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
     if(activeListingError) throw activeListingError
-    const listedAiIds = new Set((activeAiListings||[]).map(x=>x.seller_ai_id))
+    const activeByAi = new Map<number, Set<string>>()
+    for(const listing of (activeAiListings||[])){
+      const ids=activeByAi.get(listing.seller_ai_id)||new Set<string>()
+      for(const id of Object.keys(object(object(listing.offered_assets).items)))ids.add('item:'+id)
+      for(const id of Object.keys(object(object(listing.offered_assets).cosmetics)))ids.add('cosmetic:'+id)
+      activeByAi.set(listing.seller_ai_id,ids)
+    }
     const { data: freshRows, error: freshError } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,name')
       .order('account_id',{ascending:true})
     if(freshError) throw freshError
     let aiListingsCreated=0
-    for(const row of (freshRows||[]) as AI[]){
-      if(aiListingsCreated>=Math.min(20,batchSize)||listedAiIds.has(row.account_id))continue
+    for(const row of shuffle((freshRows||[]) as AI[])){
+      if(aiListingsCreated>=Math.min(20,batchSize))break
+      const activeIds=activeByAi.get(row.account_id)||new Set<string>()
+      if(activeIds.size>=3)continue
       const itemMap=availableAssets(row)
       const cosmeticIds=availableCosmetics(row)
-      const itemCandidates=shuffle(Object.entries(itemMap).filter(([id,qty])=>qty>=2&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
-      const cosmeticCandidates=shuffle(cosmeticIds)
-      const useCosmetic=cosmeticCandidates.length>0&&(itemCandidates.length===0||Math.random()<0.25)
-      const itemId=useCosmetic?cosmeticCandidates[0]:itemCandidates[0]?.[0]
-      if(!itemId)continue
-      const cosmetic=useCosmetic
-      const price=Math.max(1,Math.round(marketValue(itemId)*(0.9+Math.random()*0.35)))
+      const itemCandidates=shuffle(Object.entries(itemMap).filter(([id,qty])=>qty>=1&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)&&!activeIds.has('item:'+id)))
+      const cosmeticCandidates=shuffle(cosmeticIds.filter(id=>!activeIds.has('cosmetic:'+id)))
+      const candidates=[...itemCandidates.map(([id])=>({id,cosmetic:false})),...cosmeticCandidates.map(id=>({id,cosmetic:true}))]
+      const candidate=candidates[Math.floor(Math.random()*candidates.length)]
+      if(!candidate)continue
+      const itemId=candidate.id,cosmetic=candidate.cosmetic
+      const price=Math.max(1,Math.round((cosmetic?5000:marketValue(itemId))*(0.9+Math.random()*0.35)))
       const offered:Assets=cosmetic
         ? {coins:0,xp:0,items:{},cosmetics:{[itemId]:true}}
         : {coins:0,xp:0,items:{[itemId]:1},cosmetics:{}}
       const {error:insertError}=await admin.from('ai_trade_offers').insert({
         seller_ai_id:row.account_id,buyer_ai_id:null,offered_assets:offered,
         requested_assets:{coins:price,xp:0,items:{},cosmetics:{}},
-        estimated_offered_value:marketValue(itemId),estimated_requested_value:price,status:'open'
+        estimated_offered_value:cosmetic?5000:marketValue(itemId),estimated_requested_value:price,status:'open'
       })
-      if(!insertError){listedAiIds.add(row.account_id);aiListingsCreated++}else{failures++}
+      if(!insertError){activeIds.add((cosmetic?'cosmetic:':'item:')+itemId);activeByAi.set(row.account_id,activeIds);aiListingsCreated++}else{failures++}
     }
 
     // AI buyers also shop public AI listings. Claim each listing conditionally before
@@ -338,7 +346,7 @@ Deno.serve(async (req: Request) => {
     for(const row of shuffle((freshRows||[]) as AI[])) {
       if(aiBuyOrdersCreated>=Math.min(20,batchSize)||activeBuyers.has(row.account_id))continue
       const ownItems=availableAssets(row), ownCosmetics=new Set(availableCosmetics(row))
-      const itemWishes=shuffle([...ownedItemIds].filter(id=>!ownItems[id]&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const itemWishes=shuffle([...ownedItemIds].filter(id=>id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
       const cosmeticWishes=shuffle([...ownedCosmeticIds].filter(id=>!ownCosmetics.has(id)&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
       if(!itemWishes.length&&!cosmeticWishes.length)continue
       const useCosmetic=cosmeticWishes.length>0&&(itemWishes.length===0||Math.random()<0.35)
