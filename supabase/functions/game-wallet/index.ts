@@ -43,10 +43,18 @@ Deno.serve(async (req) => {
         .eq('user_id', userId).maybeSingle()
       if (readError) throw readError
       if (existing) return response({ ok: true, profile: existing })
-      const { data, error } = await admin.from('trade_profiles')
-        .insert({ user_id: userId, display_name: displayName })
-        .select('user_id,coins,xp,inventory,cosmetics,updated_at').single()
-      if (error) throw error
+      // Two tabs can request the first wallet simultaneously. Ignore a duplicate
+      // insert, then read the canonical row instead of returning a spurious 500.
+      const { error: createError } = await admin.from('trade_profiles')
+        .upsert({ user_id: userId, display_name: displayName }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: true,
+        })
+      if (createError) throw createError
+      const { data, error: finalReadError } = await admin.from('trade_profiles')
+        .select('user_id,coins,xp,inventory,cosmetics,updated_at')
+        .eq('user_id', userId).single()
+      if (finalReadError) throw finalReadError
       return response({ ok: true, profile: data })
     }
 
