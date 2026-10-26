@@ -101,16 +101,23 @@ Deno.serve(async (req) => {
       const requested = cleanAssets(body.requested_assets)
       const buyerId = typeof body.buyer_id === 'string' && /^[0-9a-f-]{36}$/i.test(body.buyer_id) ? body.buyer_id : null
       if (buyerId === userId) return response({ ok: false, error: 'CANNOT_TRADE_WITH_SELF' }, 400)
-      const { data: profile, error: profileError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).single()
-      if (profileError || !profile) return response({ ok: false, error: 'PROFILE_REQUIRED' }, 400)
       const { count: activeOffers, error: countError } = await admin.from('trade_offers').select('id', { count: 'exact', head: true }).eq('seller_id', userId).eq('status', 'open').gt('expires_at', new Date().toISOString())
       if (countError) throw countError
       if ((activeOffers || 0) >= 10) return response({ ok: false, error: 'ACTIVE_OFFER_LIMIT' }, 429)
-      if (Number(profile.coins) < offered.coins || Number(profile.xp) < offered.xp) return response({ ok: false, error: 'INSUFFICIENT_CURRENCY' }, 400)
-      for (const [id, qty] of Object.entries(offered.items)) if (Number(profile.inventory?.[id] || 0) < qty) return response({ ok: false, error: 'INSUFFICIENT_ITEM', item_id: id }, 400)
-      for (const id of Object.keys(offered.cosmetics)) if (Number(profile.cosmetics?.[id] || 0) < 1) return response({ ok: false, error: 'INSUFFICIENT_COSMETIC', item_id: id }, 400)
-      const { data, error } = await admin.from('trade_offers').insert({ seller_id: userId, buyer_id: buyerId, offered_assets: offered, requested_assets: requested }).select('*').single()
-      if (error) throw error
+      // The database locks the seller profile and treats open offers as reservations,
+      // preventing concurrent offers from promising the same assets twice.
+      const { data, error } = await admin.rpc('create_trade_offer', {
+        p_seller_id: userId,
+        p_buyer_id: buyerId,
+        p_offered_assets: offered,
+        p_requested_assets: requested,
+      })
+      if (error) {
+        const message = String(error.message || '')
+        const known = ['INVALID_TRADE_PARTICIPANTS','INVALID_TRADE_ASSETS','EMPTY_TRADE_ASSETS','INVALID_ASSET_AMOUNT','TRADE_PROFILE_MISSING','ACTIVE_OFFER_LIMIT','INSUFFICIENT_UNRESERVED_CURRENCY','INVALID_ITEM_AMOUNT','INVALID_COSMETIC_AMOUNT']
+        const matched = known.find(k => message.includes(k))
+        return response({ ok: false, error: matched || (message.startsWith('INSUFFICIENT_UNRESERVED_ITEM') ? 'INSUFFICIENT_ITEM' : message.startsWith('COSMETIC_ALREADY_RESERVED') ? 'COSMETIC_ALREADY_RESERVED' : 'TRADE_CREATE_FAILED') }, 400)
+      }
       return response({ ok: true, offer: data })
     }
     if (action === 'accept') {
