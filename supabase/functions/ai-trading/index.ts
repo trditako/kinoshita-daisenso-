@@ -346,7 +346,7 @@ Deno.serve(async (req: Request) => {
     for(const row of shuffle((freshRows||[]) as AI[])) {
       if(aiBuyOrdersCreated>=Math.min(20,batchSize)||activeBuyers.has(row.account_id))continue
       const ownItems=availableAssets(row), ownCosmetics=new Set(availableCosmetics(row))
-      const itemWishes=shuffle([...ownedItemIds].filter(id=>!ownItems[id]&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const itemWishes=shuffle([...ownedItemIds].filter(id=>id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
       const cosmeticWishes=shuffle([...ownedCosmeticIds].filter(id=>!ownCosmetics.has(id)&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
       if(!itemWishes.length&&!cosmeticWishes.length)continue
       const useCosmetic=cosmeticWishes.length>0&&(itemWishes.length===0||Math.random()<0.35)
