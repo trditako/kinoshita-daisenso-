@@ -69,7 +69,7 @@ function shuffle<T>(values: T[]): T[] {
 function availableAssets(ai: AI) {
   return flatten(ai.inventory_items)
 }
-function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number } | null {
+function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; currency: 'coins' | 'xp' } | null {
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
   const candidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) =>
@@ -80,14 +80,31 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
     // Sellers trade duplicates at a discount; buyers pay a premium for an item they do not own.
     const sellerFloor = Math.max(1, Math.round(base * 0.65))
     const buyerCeiling = Math.max(sellerFloor, Math.round(base * 1.2))
-    const affordable = int(buyer.coins)
-    const price = Math.min(buyerCeiling, affordable)
-    if (price < sellerFloor) continue
-    return {
-      offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
-      requested: { coins: price, xp: 0, items: {} },
-      itemId,
-      price,
+    const coinBalance = int(buyer.coins)
+    if (coinBalance >= sellerFloor) {
+      const price = Math.min(buyerCeiling, coinBalance)
+      return {
+        offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
+        requested: { coins: price, xp: 0, items: {} },
+        itemId,
+        price,
+        currency: 'coins',
+      }
+    }
+    // If coins are scarce, XP can be exchanged at a transparent internal reference rate.
+    const xpPerCoin = 20
+    const xpFloor = sellerFloor * xpPerCoin
+    const xpCeiling = buyerCeiling * xpPerCoin
+    const xpBalance = int(buyer.player_xp)
+    if (xpBalance >= xpFloor) {
+      const xpPrice = Math.min(xpCeiling, xpBalance)
+      return {
+        offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
+        requested: { coins: 0, xp: xpPrice, items: {} },
+        itemId,
+        price: Math.round(xpPrice / xpPerCoin),
+        currency: 'xp',
+      }
     }
   }
   return null
@@ -116,7 +133,7 @@ Deno.serve(async (req: Request) => {
       if (used.has(seller.account_id)) continue
       const buyerCandidates = shuffle(accounts.filter(ai =>
         ai.account_id !== seller.account_id && !used.has(ai.account_id) &&
-        int(ai.coins) > 0 && Object.keys(availableAssets(ai)).length < 50
+        (int(ai.coins) > 0 || int(ai.player_xp) > 0)
       ))
       let didTrade = false
       for (const buyer of buyerCandidates.slice(0, 30)) {
@@ -147,10 +164,15 @@ Deno.serve(async (req: Request) => {
         // Keep the in-memory snapshots approximately current so a single batch cannot overspend.
         seller.inventory_items = object(seller.inventory_items)
         buyer.inventory_items = object(buyer.inventory_items)
-        seller.coins = int(seller.coins) + offer.price
-        buyer.coins = Math.max(0, int(buyer.coins) - offer.price)
+        if (offer.currency === 'coins') {
+          seller.coins = int(seller.coins) + offer.price
+          buyer.coins = Math.max(0, int(buyer.coins) - offer.price)
+        } else {
+          seller.player_xp = int(seller.player_xp) + offer.price * 20
+          buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price * 20)
+        }
         completed++
-        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, coins: offer.price })
+        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, [offer.currency]: offer.currency === 'coins' ? offer.price : offer.price * 20 })
         didTrade = true
         break
       }
