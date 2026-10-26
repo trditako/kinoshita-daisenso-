@@ -88,8 +88,14 @@ begin
   if p_actor = o.seller_id then raise exception 'CANNOT_ACCEPT_OWN_TRADE'; end if;
   if o.buyer_id is not null and o.buyer_id <> p_actor then raise exception 'TRADE_NOT_FOR_YOU'; end if;
 
-  select * into s from public.trade_profiles where user_id = o.seller_id for update;
-  select * into b from public.trade_profiles where user_id = p_actor for update;
+  -- Lock both profiles in a stable order so opposite-direction trades cannot deadlock.
+  perform user_id from public.trade_profiles
+    where user_id in (o.seller_id, p_actor)
+    order by user_id
+    for update;
+  select * into s from public.trade_profiles where user_id = o.seller_id;
+  if not found then raise exception 'TRADE_PROFILE_MISSING'; end if;
+  select * into b from public.trade_profiles where user_id = p_actor;
   if not found then raise exception 'TRADE_PROFILE_MISSING'; end if;
 
   -- Validate both sides before changing any balance.
