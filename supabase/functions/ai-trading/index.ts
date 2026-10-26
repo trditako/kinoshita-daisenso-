@@ -77,7 +77,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   const buyerItems = availableAssets(buyer)
   const buyerCosmetics = new Set(availableCosmetics(buyer))
   const cosmeticCandidates = shuffle(availableCosmetics(seller).filter(id => !buyerCosmetics.has(id)))
-  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\u0000-\\u001f]/.test(id) && !buyerItems[id]))
+  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\x00-\x1f]/.test(id) && !buyerItems[id]))
   const candidates = [
     ...cosmeticCandidates.map(id => ({ id, cosmetic: true })),
     ...itemCandidates.map(([id]) => ({ id, cosmetic: false })),
