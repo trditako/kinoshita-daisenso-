@@ -1,4 +1,7 @@
--- Atomic AI-to-AI trading for server-owned AI balances and inventory.
+-- Atomic AI-to-AI trading for server-owned AI balances, inventory, and unique cosmetics.
+alter table public.ai_accounts add column if not exists trade_cosmetics jsonb not null default '{}'::jsonb;
+alter table public.ai_accounts drop constraint if exists ai_accounts_trade_cosmetics_object;
+alter table public.ai_accounts add constraint ai_accounts_trade_cosmetics_object check (jsonb_typeof(trade_cosmetics) = 'object');
 create or replace function public.trade_jsonb_adjust(p_doc jsonb, p_path text[], p_delta bigint)
 returns jsonb
 language plpgsql
@@ -86,6 +89,12 @@ declare
   requested_items jsonb;
   s_inventory jsonb;
   b_inventory jsonb;
+  s_cosmetics jsonb;
+  b_cosmetics jsonb;
+  offered_cosmetics jsonb;
+  requested_cosmetics jsonb;
+  cosmetic_id text;
+  cosmetic_owned jsonb;
 begin
   select * into o from public.ai_trade_offers where id = p_offer_id for update;
   if not found then raise exception 'AI_TRADE_NOT_FOUND'; end if;
@@ -111,12 +120,15 @@ begin
   requested_xp := coalesce((o.requested_assets->>'xp')::bigint, 0);
   offered_items := coalesce(o.offered_assets->'items', '{}'::jsonb);
   requested_items := coalesce(o.requested_assets->'items', '{}'::jsonb);
+  offered_cosmetics := coalesce(o.offered_assets->'cosmetics', '{}'::jsonb);
+  requested_cosmetics := coalesce(o.requested_assets->'cosmetics', '{}'::jsonb);
   if offered_coins < 0 or offered_xp < 0 or requested_coins < 0 or requested_xp < 0
-     or jsonb_typeof(offered_items) <> 'object' or jsonb_typeof(requested_items) <> 'object' then
+     or jsonb_typeof(offered_items) <> 'object' or jsonb_typeof(requested_items) <> 'object'
+     or jsonb_typeof(offered_cosmetics) <> 'object' or jsonb_typeof(requested_cosmetics) <> 'object' then
     raise exception 'AI_TRADE_INVALID_ASSETS';
   end if;
-  if (offered_coins + offered_xp = 0 and offered_items = '{}'::jsonb)
-     or (requested_coins + requested_xp = 0 and requested_items = '{}'::jsonb) then
+  if (offered_coins + offered_xp = 0 and offered_items = '{}'::jsonb and offered_cosmetics = '{}'::jsonb)
+     or (requested_coins + requested_xp = 0 and requested_items = '{}'::jsonb and requested_cosmetics = '{}'::jsonb) then
     raise exception 'AI_TRADE_EMPTY_ASSETS';
   end if;
   if s.coins < offered_coins or s.player_xp < offered_xp
@@ -126,6 +138,8 @@ begin
 
   s_inventory := coalesce(s.inventory_items, '{}'::jsonb);
   b_inventory := coalesce(b.inventory_items, '{}'::jsonb);
+  s_cosmetics := coalesce(s.trade_cosmetics, '{}'::jsonb);
+  b_cosmetics := coalesce(b.trade_cosmetics, '{}'::jsonb);
   -- Validate both sides against pre-trade ownership before applying any transfer.
   for k,n in select key, value::text::bigint from jsonb_each_text(offered_items) loop
     if length(k) < 1 or length(k) > 120 or k ~ '[[:cntrl:]]' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
@@ -134,6 +148,16 @@ begin
   for k,n in select key, value::text::bigint from jsonb_each_text(requested_items) loop
     if length(k) < 1 or length(k) > 120 or k ~ '[[:cntrl:]]' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
     if coalesce((b_inventory #>> string_to_array(k, ':'))::bigint, 0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+  end loop;
+  for cosmetic_id,cosmetic_owned in select key,value from jsonb_each(offered_cosmetics) loop
+    if length(cosmetic_id) < 1 or length(cosmetic_id) > 120 or cosmetic_id ~ '[[:cntrl:]]' or cosmetic_owned <> 'true'::jsonb then raise exception 'AI_TRADE_INVALID_COSMETIC'; end if;
+    if coalesce(s_cosmetics -> cosmetic_id, 'false'::jsonb) <> 'true'::jsonb then raise exception 'AI_TRADE_MISSING_COSMETIC:%', cosmetic_id; end if;
+    if coalesce(b_cosmetics -> cosmetic_id, 'false'::jsonb) = 'true'::jsonb then raise exception 'AI_TRADE_DUPLICATE_COSMETIC:%', cosmetic_id; end if;
+  end loop;
+  for cosmetic_id,cosmetic_owned in select key,value from jsonb_each(requested_cosmetics) loop
+    if length(cosmetic_id) < 1 or length(cosmetic_id) > 120 or cosmetic_id ~ '[[:cntrl:]]' or cosmetic_owned <> 'true'::jsonb then raise exception 'AI_TRADE_INVALID_COSMETIC'; end if;
+    if coalesce(b_cosmetics -> cosmetic_id, 'false'::jsonb) <> 'true'::jsonb then raise exception 'AI_TRADE_MISSING_COSMETIC:%', cosmetic_id; end if;
+    if coalesce(s_cosmetics -> cosmetic_id, 'false'::jsonb) = 'true'::jsonb then raise exception 'AI_TRADE_DUPLICATE_COSMETIC:%', cosmetic_id; end if;
   end loop;
 
   for k,n in select key, value::text::bigint from jsonb_each_text(offered_items) loop
@@ -145,16 +169,27 @@ begin
     s_inventory := public.trade_jsonb_adjust(s_inventory, string_to_array(k, ':'), n);
   end loop;
 
+  for cosmetic_id in select key from jsonb_each(offered_cosmetics) loop
+    s_cosmetics := s_cosmetics - cosmetic_id;
+    b_cosmetics := jsonb_set(b_cosmetics, array[cosmetic_id], 'true'::jsonb, true);
+  end loop;
+  for cosmetic_id in select key from jsonb_each(requested_cosmetics) loop
+    b_cosmetics := b_cosmetics - cosmetic_id;
+    s_cosmetics := jsonb_set(s_cosmetics, array[cosmetic_id], 'true'::jsonb, true);
+  end loop;
+
   update public.ai_accounts set
     coins = coins - offered_coins + requested_coins,
     player_xp = player_xp - offered_xp + requested_xp,
     inventory_items = s_inventory,
+    trade_cosmetics = s_cosmetics,
     updated_at = now()
   where account_id = o.seller_ai_id;
   update public.ai_accounts set
     coins = coins + offered_coins - requested_coins,
     player_xp = player_xp + offered_xp - requested_xp,
     inventory_items = b_inventory,
+    trade_cosmetics = b_cosmetics,
     updated_at = now()
   where account_id = p_buyer_ai_id;
   update public.ai_trade_offers set status = 'completed', completed_at = now() where id = o.id;
