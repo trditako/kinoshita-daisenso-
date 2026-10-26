@@ -72,6 +72,37 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, profile: data })
     }
+    if (action === 'legacy_import') {
+      const assets = object(body.assets)
+      const coins = int(assets.coins ?? 0, 1_000_000_000)
+      const xp = int(assets.xp ?? 0, 1_000_000_000)
+      const itemsIn = object(assets.items)
+      const cosmeticsIn = object(assets.cosmetics)
+      const items: Record<string, number> = {}
+      const cosmetics: Record<string, number> = {}
+      for (const [id, qty] of Object.entries(itemsIn)) {
+        if (!id || id.length > 100 || /[\\x00-\\x1f]/.test(id)) throw new Error('INVALID_ITEM_ID')
+        const n = int(qty, 100_000)
+        if (n > 0) items[id] = n
+      }
+      for (const [id, qty] of Object.entries(cosmeticsIn)) {
+        if (!id || id.length > 120 || /[\\x00-\\x1f]/.test(id)) throw new Error('INVALID_COSMETIC_ID')
+        if (int(qty, 1) !== 1) throw new Error('COSMETICS_MUST_BE_UNIQUE')
+        cosmetics[id] = 1
+      }
+      const { data, error } = await admin.rpc('claim_legacy_trade_assets', {
+        p_user_id: userId,
+        p_assets: { coins, xp, items, cosmetics },
+      })
+      if (error) {
+        const message = String(error.message || '')
+        const known = ['LEGACY_ALREADY_CLAIMED','TRADE_PROFILE_NOT_EMPTY','TRADE_PROFILE_MISSING','INVALID_LEGACY_ASSETS']
+        return response({ ok: false, error: known.find(k => message.includes(k)) || 'LEGACY_IMPORT_FAILED' }, 400)
+      }
+      const { data: imported, error: readError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).single()
+      if (readError) throw readError
+      return response({ ok: true, profile: imported, result: data })
+    }
     if (action === 'ledger') {
       const { data, error } = await admin.from('trade_asset_ledger')
         .select('id,asset_type,asset_id,delta,balance_after,source,created_at')
