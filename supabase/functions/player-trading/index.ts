@@ -38,8 +38,8 @@ function cleanAssets(input: unknown) {
   }
   for (const [id, qty] of Object.entries(cosmeticsIn)) {
     if (id.length < 1 || id.length > 120 || /[\x00-\x1f]/.test(id)) throw new Error('INVALID_COSMETIC_ID')
-    if (int(qty, 1) !== 1) throw new Error('COSMETICS_MUST_BE_UNIQUE')
-    cosmetics[id] = 1
+    const n = int(qty, 100_000)
+    if (n > 0) cosmetics[id] = n
   }
   const assets = { coins: int(a.coins ?? 0), xp: int(a.xp ?? 0), items, cosmetics }
   if (!assets.coins && !assets.xp && !Object.keys(items).length && !Object.keys(cosmetics).length) throw new Error('EMPTY_TRADE_ASSETS')
@@ -88,8 +88,8 @@ Deno.serve(async (req) => {
       }
       for (const [id, qty] of Object.entries(cosmeticsIn)) {
         if (!id || id.length > 120) throw new Error('INVALID_COSMETIC_ID')
-        if (int(qty, 1) !== 1) throw new Error('COSMETICS_MUST_BE_UNIQUE')
-        cosmetics[id] = 1
+        const n = int(qty, 100_000)
+        if (n > 0) cosmetics[id] = n
       }
       const { data: current, error: currentError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).maybeSingle()
       if (currentError) throw currentError
