@@ -12,6 +12,8 @@ const cors = {
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors })
 type Assets = { coins: number; xp: number; items: Record<string, number>; cosmetics: Record<string, boolean> }
 type AI = { account_id: number; coins: number; player_xp: number; inventory_items: Record<string, unknown>; trade_cosmetics: Record<string, boolean>; strategy?: string; skill?: number; activity?: Record<string, unknown> }
+let marketMultipliers: Record<string, number> = {}
+function demandMultiplier(kind: 'item' | 'cosmetic', id: string) { return Math.max(0.65, Math.min(2.5, marketMultipliers[kind + ':' + id] || 1)) }
 
 function serviceKey() {
   let key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -56,7 +58,7 @@ function marketValue(id: string): number {
     'rarity_gold:超激レア': 6000,
     'rarity_gold:伝説レア': 18000,
   }
-  return fixed[id] ?? fixed[key] ?? 150
+  return Math.round((fixed[id] ?? fixed[key] ?? 150) * demandMultiplier('item', id))
 }
 function shuffle<T>(values: T[]): T[] {
   const a = values.slice()
@@ -84,7 +86,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   ]
   for (const candidate of candidates) {
     const itemId = candidate.id
-    const base = candidate.cosmetic ? 5000 : marketValue(itemId)
+    const base = candidate.cosmetic ? Math.round(5000 * demandMultiplier('cosmetic', itemId)) : marketValue(itemId)
     const offeredAssets: Assets = candidate.cosmetic
       ? { coins: 0, xp: 0, items: {}, cosmetics: { [itemId]: true } }
       : { coins: 0, xp: 0, items: { [itemId]: 1 }, cosmetics: {} }
@@ -133,6 +135,22 @@ Deno.serve(async (req: Request) => {
     const requestedBatch = Number(body.batch_size ?? 40)
     const batchSize = Number.isInteger(requestedBatch) ? Math.max(1, Math.min(100, requestedBatch)) : 40
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+    const [{ data: playerTrades, error: playerTradeError }, { data: aiHistory, error: aiHistoryError }] = await Promise.all([
+      admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
+      admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+    ])
+    if (playerTradeError) throw playerTradeError
+    if (aiHistoryError) throw aiHistoryError
+    const demand: Record<string, { requested: number; offered: number }> = {}
+    const countAssets = (trade: any) => {
+      const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
+      for (const [kind, key] of [['item', 'items'], ['cosmetic', 'cosmetics']] as const) {
+        for (const [id, qty] of Object.entries(object(requested[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.requested++; demand[kind + ':' + id] = row }
+        for (const [id, qty] of Object.entries(object(offered[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.offered++; demand[kind + ':' + id] = row }
+      }
+    }
+    for (const trade of [...(playerTrades || []), ...(aiHistory || [])]) countAssets(trade)
+    marketMultipliers = Object.fromEntries(Object.entries(demand).map(([id, row]) => [id, Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.requested) * 0.35 - Math.log1p(row.offered) * 0.12))]))
     const { data, error } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,strategy,skill,activity')
       .order('account_id', { ascending: true })
