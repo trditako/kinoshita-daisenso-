@@ -72,6 +72,13 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, profile: data })
     }
+    if (action === 'ledger') {
+      const { data, error } = await admin.from('trade_asset_ledger')
+        .select('id,asset_type,asset_id,delta,balance_after,source,created_at')
+        .eq('user_id', userId).order('created_at', { ascending: false }).limit(50)
+      if (error) throw error
+      return response({ ok: true, entries: data || [] })
+    }
     if (action === 'list') {
       const { data, error } = await admin.from('trade_offers')
         .select('id,seller_id,buyer_id,offered_assets,requested_assets,status,created_at,expires_at')
