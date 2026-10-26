@@ -149,11 +149,13 @@ Deno.serve(async (req) => {
       // Aggregate completed trades into a bounded demand/supply index.
       const [{ data: playerTrades, error: playerTradeError }, { data: aiTrades, error: aiTradeError }] = await Promise.all([
         admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
-        admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+        admin.from('ai_trade_offers').select('offered_assets,requested_assets,completed_at,created_at').eq('status', 'completed').order('completed_at', { ascending: false }).limit(500),
       ])
       if (playerTradeError) throw playerTradeError
       if (aiTradeError) throw aiTradeError
       const stats: Record<string, Record<string, { demand: number; supply: number }>> = { items: {}, cosmetics: {} }
+      const realized: Record<string, { sum: number; count: number }> = {}
+      const fixed: Record<string, number> = {normal_gold:250,power_chest:1200,golden_chest:2400,ability_core:1800,ancient_power:900,latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000}
       const add = (kind: 'items' | 'cosmetics', id: string, side: 'demand' | 'supply') => {
         if (!id || id.length > 120) return
         const row = (stats[kind] as any)[id] || { demand: 0, supply: 0 }
@@ -166,12 +168,24 @@ Deno.serve(async (req) => {
         for (const [id, qty] of Object.entries(object(requested.items))) if (int(qty) > 0) add('items', id, 'demand')
         for (const [id, qty] of Object.entries(object(offered.cosmetics))) if (qty === true || int(qty) > 0) add('cosmetics', id, 'supply')
         for (const [id, qty] of Object.entries(object(requested.cosmetics))) if (qty === true || int(qty) > 0) add('cosmetics', id, 'demand')
+        const price=int(requested.coins)+Math.round(int(requested.xp)/20)
+        if(price<=0)return
+        const assets:Array<{kind:'items'|'cosmetics';id:string;base:number;qty:number}>=[]
+        for(const [id,qty] of Object.entries(object(offered.items)))if(int(qty)>0)assets.push({kind:'items',id,base:fixed[id]??fixed[id.toLowerCase()]??150,qty:int(qty)})
+        for(const [id,qty] of Object.entries(object(offered.cosmetics)))if(qty===true||int(qty)>0)assets.push({kind:'cosmetics',id,base:5000,qty:qty===true?1:int(qty)})
+        const total=assets.reduce((sum,a)=>sum+a.base*a.qty,0)
+        if(total<=0)return
+        const ratio=Math.max(0.5,Math.min(2,price/total))
+        for(const a of assets){const key=a.kind+':'+a.id,row=realized[key]||{sum:0,count:0};row.sum+=ratio;row.count++;realized[key]=row}
       }
       for (const trade of [...(playerTrades || []), ...(aiTrades || [])]) scan(trade)
       const normalized: Record<string, Record<string, number>> = { items: {}, cosmetics: {} }
       for (const kind of ['items', 'cosmetics'] as const) {
         for (const [id, row] of Object.entries(stats[kind]) as [string, { demand: number; supply: number }][]) {
-          normalized[kind][id] = Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.demand) * 0.35 - Math.log1p(row.supply) * 0.12))
+          const demandFactor=Math.max(0.65,Math.min(2.5,0.8+Math.log1p(row.demand)*0.35-Math.log1p(row.supply)*0.12))
+          const priceData=realized[kind+':'+id]
+          const realizedFactor=priceData&&priceData.count?Math.max(0.75,Math.min(1.35,Math.pow(priceData.sum/priceData.count,0.35))):1
+          normalized[kind][id]=Math.max(0.65,Math.min(2.5,demandFactor*realizedFactor))
         }
       }
       const catalog = Array.isArray(body.catalog) ? body.catalog.slice(0, 2500) : []
