@@ -59,8 +59,8 @@ function panel(){
    <button id="ktLink" class="kt-primary">引き継ぎ用ログインを追加</button>
   </details>
   <h3>取引を募集する</h3>
-  <p class="kt-muted">IDやJSONの入力は不要です。所持一覧からアイテムを選び、渡す個数を指定してください。衣装・携帯品は重複不可のため1点単位です。</p>
-  <p class="kt-muted">初回引き継ぎではブラウザに保存された現在の所持データを一度だけサーバーへ登録します。引き継ぎ後はサーバー残高を取引の基準にします。</p>
+  <p class="kt-muted">IDやJSONの入力は不要です。サーバーで確認できる所持品から選び、渡す個数を指定してください。衣装・携帯品は重複不可のため1点単位です。ブラウザ保存データの自動取り込みは安全性のため行いません。</p>
+  <p class="kt-muted">取引に使えるのはサーバー側で検証された残高のみです。ゲーム報酬のサーバー移行が完了するまでは、現在のブラウザ所持品は取引可能残高に含まれません。</p>
   <div class="kt-grid">
    <label>渡すコイン<input id="ktGiveCoins" type="number" min="0" step="1" value="0"></label><label>渡すXP<input id="ktGiveXp" type="number" min="0" step="1" value="0"></label>
    <label>求めるコイン<input id="ktWantCoins" type="number" min="0" step="1" value="0"></label><label>求めるXP<input id="ktWantXp" type="number" min="0" step="1" value="0"></label>
@@ -91,9 +91,8 @@ function renderLedger(entries){
  }).join('');
 }
 function showError(e){const s=el('ktStatus');if(s)s.innerHTML='<span class="kt-error">'+esc(e?.message||e)+'</span>'}
-function safeStoredObject(key){try{const v=JSON.parse(localStorage.getItem(key)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch{return{}}}
 function gameCatalog(){
- const items=profile?.legacy_claimed_at?(profile.inventory||{}):safeStoredObject('kinoshitaInventoryItems'), cosmetics=profile?.legacy_claimed_at?(profile.cosmetics||{}):safeStoredObject('kinoshitaShinjuInventory');
+ const items=profile?.inventory||{}, cosmetics=profile?.cosmetics||{};
  const defs=typeof KINOSHITA_INVENTORY_ITEM_DEFS!=='undefined'?KINOSHITA_INVENTORY_ITEM_DEFS:{};
  const allItems=Object.entries(defs).map(([id,d])=>({kind:'item',id,name:(d.emoji||'🎁')+' '+d.name,qty:Math.max(0,Math.floor(Number(items[id])||0))}));
  for(const [index,[id,qty]] of Object.entries(items).entries())if(!allItems.some(x=>x.id===id))allItems.push({kind:'item',id,name:'🎁 その他の所持アイテム '+(index+1),qty:Math.max(0,Math.floor(Number(qty)||0))});
@@ -127,42 +126,13 @@ function addSelectedAsset(side){
 }
 function integerInput(id){const n=Number(el(id).value||0);if(!Number.isSafeInteger(n)||n<0||n>1000000000)throw new Error('コイン・XPは0以上1,000,000,000以下の整数にしてください。');return n;}
 function selectedAssets(side){return {coins:integerInput(side==='give'?'ktGiveCoins':'ktWantCoins'),xp:integerInput(side==='give'?'ktGiveXp':'ktWantXp'),items:{...chosen[side].items},cosmetics:{...chosen[side].cosmetics}}}
-function legacySnapshot(){
- const items=safeStoredObject('kinoshitaInventoryItems'),cosmetics=safeStoredObject('kinoshitaShinjuInventory'),cleanItems={},cleanCosmetics={};
- for(const [id,v] of Object.entries(items)){const n=Math.floor(Number(v)||0);if(n>0&&n<=100000)cleanItems[id]=n}
- for(const [id,v] of Object.entries(cosmetics)){const n=Math.floor(Number(v)||0);if(n>0)cleanCosmetics[id]=1}
- const amount=(v,fallback=0)=>Math.max(0,Math.min(1000000000,Math.floor(Number(v??fallback)||0)));
- return {coins:amount(localStorage.getItem('kinoshitaGachaCoins'),900),xp:amount(localStorage.getItem('kinoshitaPlayerXP')),items:cleanItems,cosmetics:cleanCosmetics};
-}
 function formatAssets(a){
  const out=[];if(Number(a?.coins||0))out.push('🪙 '+Number(a.coins).toLocaleString());if(Number(a?.xp||0))out.push('⭐ XP '+Number(a.xp).toLocaleString());
  for(const [id,n] of Object.entries(a?.items||{}))out.push(assetLabel('item',id)+' × '+n);
  for(const id of Object.keys(a?.cosmetics||{}))out.push(assetLabel('cosmetic',id));
  return out.length?out.map(esc).join('、'):'なし';
 }
-async function syncGameFromProfile(p){
- if(!p)return;
- if(typeof gachaCoins==='number')gachaCoins=Number(p.coins||0);
- if(typeof playerXP==='number')playerXP=Number(p.xp||0);
- if(typeof saveInventoryItems==='function')saveInventoryItems(p.inventory||{});
- if(typeof shinjuInventory!=='undefined'){
-  for(const key of Object.keys(shinjuInventory))delete shinjuInventory[key];
-  Object.assign(shinjuInventory,p.cosmetics||{});
-  if(typeof saveShinjuState==='function')saveShinjuState();
- }
- if(typeof characterCosmeticState!=='undefined'&&typeof saveCharacterCosmetics==='function'){
-  for(const key of Object.keys(characterCosmeticState)){
-   const i=Number(key);
-   if(typeof getCharacterCosmeticState==='function')getCharacterCosmeticState(i);
-  }
-  saveCharacterCosmetics();
- }
- if(typeof save==='function')save();
- if(typeof renderOwnedStart==='function')renderOwnedStart();
- if(typeof renderInventory==='function')renderInventory();
- if(typeof renderCards==='function')renderCards();
- if(typeof renderStageSelect==='function')renderStageSelect();
-}
+
 function marketValue(id){
  const key=String(id).toLowerCase();
  const fixed={
@@ -197,7 +167,7 @@ function renderOffers(){
   const canAccept=!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
   return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
  }).join('');
- box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh();await syncGameFromProfile(profile);el('ktStatus').innerHTML='<span class="kt-good">取引が成立し、ゲーム内の所持数にも反映しました。</span>'}catch(e){showError(e)}});
+ box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh();el('ktStatus').innerHTML='<span class="kt-good">取引サーバー上で取引が成立しました。</span><div class="kt-muted">ゲーム内の報酬・所持データはまだブラウザ側に保存されているため、サーバー側の報酬移行が完了するまでは自動同期されません。未検証のブラウザデータは取引資産として取り込みません。</div>'}catch(e){showError(e)}});
  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{try{await api('cancel',{offer_id:b.dataset.cancel});await refresh()}catch(e){showError(e)}});
 }
 async function refresh(){
@@ -208,21 +178,12 @@ async function refresh(){
   const playerId=localStorage.getItem('kinoshitaPlayerRankingId')||null;
   const d=await api('profile',{display_name:name,player_id:playerId});
   profile=d.profile;
-  if(!profile.legacy_claimed_at){
-   const snapshot=legacySnapshot();
-   if(!confirm('初回のみ、現在のブラウザに保存されているコイン・XP・アイテム・衣装を取引サーバーへ引き継ぎます。続けますか？')){
-    el('ktStatus').innerHTML='<span class="kt-error">初回引き継ぎが未完了です。取引するには再読み込み後、引き継ぎに同意してください。</span>';
-    return;
-   }
-   const imported=await api('legacy_import',{assets:snapshot});
-   profile=imported.profile;
-  }
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
   const list=await api('list');offers=list.offers||[];
   const completed=await api('history');history=completed.history||[];
   el('ktStatus').innerHTML='<span class="kt-good">匿名ログイン済み</span> · ユーザーID: <code>'+esc(session.user?.id||'')+'</code>';
   el('ktBody').style.display='block';
-  el('ktWallet').innerHTML='<b>サーバー所持状況</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+formatAssets({items:profile.inventory||{}})+'</div><div class="kt-muted">衣装・携帯品: '+formatAssets({cosmetics:profile.cosmetics||{}})+'</div>';
+  el('ktWallet').innerHTML='<b>サーバー所持状況（取引の正本）</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+formatAssets({items:profile.inventory||{}})+'</div><div class="kt-muted">衣装・携帯品: '+formatAssets({cosmetics:profile.cosmetics||{}})+'</div><p class="kt-error">安全のため、ブラウザ内の所持データは取引残高に自動取り込みしていません。ゲームの報酬・消費をサーバー管理へ移行するまで、ゲーム内の所持品とは別管理です。</p>';
   renderOffers();
   const ledger=await api('ledger');renderLedger(ledger.entries||[]);
    renderHistory();
