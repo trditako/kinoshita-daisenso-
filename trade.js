@@ -143,10 +143,12 @@ function gameCatalog(){
  const items=flattenInventory(profile?.inventory||{}), cosmetics=profile?.cosmetics||{};
  const defs=typeof KINOSHITA_INVENTORY_ITEM_DEFS!=='undefined'?KINOSHITA_INVENTORY_ITEM_DEFS:{};
  const rarityLabels={'ノーマル':'ノーマル金','レア':'レア金','激レア':'激レア金','超激レア':'超激レア金','伝説レア':'伝説レア金'};
+ const itemLabels={normal_gold:'ノーマル金塊',power_chest:'パワー宝箱',golden_chest:'黄金宝箱',ability_core:'能力コア',ancient_power:'古代のパワー',latest_character_exchange_chest:'最新キャラ交換宝箱',skill_crystal:'スキル結晶'};
  const allItems=Object.entries(defs).map(([id,d])=>({kind:'item',id,name:(d.emoji||'🎁')+' '+d.name,rarity:String(d.rarity||d.rarityName||d.tier||'未設定'),source:String(d.source||d.origin||'ゲーム内'),qty:Math.max(0,Math.floor(Number(items[id])||0))}));
  for(const [id,qty] of Object.entries(items))if(!allItems.some(x=>x.id===id)) {
   const rarity=id.startsWith('rarity_gold:')?id.slice('rarity_gold:'.length):'';
-  allItems.push({kind:'item',id,name:rarity?'🪙 '+(rarityLabels[rarity]||rarity+'金'):('🎁 アイテム名未登録（識別子: '+id+'）'),rarity:rarity||'未設定',source:rarity?'ガチャ・ゲーム内':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0)});
+  const known=itemLabels[id];
+  allItems.push({kind:'item',id,name:rarity?'🪙 '+(rarityLabels[rarity]||rarity+'金'):(known?'🎁 '+known:'🎁 アイテム（'+id+'）'),rarity:rarity||'未設定',source:rarity?'ガチャ・ゲーム内':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0)});
  }
  let allCosmetics=[];
  try{if(typeof SHINJU_ITEMS!=='undefined')allCosmetics=SHINJU_ITEMS.map(x=>({kind:'cosmetic',id:String(x.id),name:(x.emoji||'✨')+' '+x.name+'（'+(x.rarity||'未設定')+' '+(x.type==='costume'?'衣装':'携帯品')+'）',rarity:String(x.rarity||'未設定'),source:String(x.source||x.origin||'真髄'),type:String(x.type||'accessory'),qty:Math.max(0,Math.floor(Number(cosmetics[x.id])||0))}))}catch{}
