@@ -164,8 +164,7 @@ function formatAssets(a){
 }
 
 function cosmeticValue(id){
- const x=gameCatalog().all.find(v=>v.kind==='cosmetic'&&v.id===String(id));const rarity=String(x?.name||'').match(/(ノーマル|レア|激レア|超激レア|伝説レア)/)?.[1];
- return ({'ノーマル':500,'レア':1500,'激レア':4000,'超激レア':12000,'伝説レア':30000}[rarity]||5000);
+ const x=gameCatalog().all.find(v=>v.kind==='cosmetic'&&v.id===String(id));const rarity=String(x?.name||'').match(/(ノーマル|レア|激レア|超激レア|伝説レア)/)?.[1];const base=({'ノーマル':500,'レア':1500,'激レア':4000,'超激レア':12000,'伝説レア':30000}[rarity]||5000);return Math.round(base*(Number(marketStats.cosmetics?.[id])||1));
 }
 function marketValue(id){
  const key=String(id).toLowerCase();
@@ -174,7 +173,7 @@ function marketValue(id){
   latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,
   'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000
  };
- const base=fixed[id]??fixed[key]??150;const d=Number(marketStats.items?.[id]||marketStats.cosmetics?.[id]||0);const multiplier=Math.max(0.65,Math.min(2.5,1+Math.log1p(Math.max(0,d))*0.16));return Math.max(1,Math.round(base*multiplier));
+ const base=fixed[id]??fixed[key]??150;const multiplier=Number(marketStats.items?.[id]||marketStats.cosmetics?.[id]||1);return Math.max(1,Math.round(base*Math.max(0.65,Math.min(2.5,multiplier))));
 }
 function estimateAssets(assets){
  const a=assets&&typeof assets==='object'?assets:{};
