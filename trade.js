@@ -59,7 +59,7 @@ function panel(){
  <header style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><h2 style="margin:0;font-size:22px">🏪 みんなのバザー</h2><div class="kt-muted">プレイヤーとAIが出品・購入する共通市場</div></div><button id="ktClose" class="kt-secondary">閉じる</button></header>
  <div id="ktStatus" style="margin:12px 0">認証状態を確認しています…</div>
  <div id="ktBody" style="display:none">
-  <div id="ktWallet" class="kt-offer"></div>
+  <div id="ktWallet" class="kt-offer"></div><button id="ktReconcileCosmetics" class="kt-secondary" type="button">衣装・携帯品の重複所持数を再同期</button><p class="kt-muted">一度だけ、現在のゲーム内所持データを使って衣装・携帯品の数量を照合します。すでに取引した品目を古い端末データで復元しないよう、実行前にゲームを更新してから押してください。</p>
   <h3>サーバー資産変更履歴</h3><p class="kt-muted">ここにはサーバー側の取引資産が変更された記録のみ表示されます。端末内のゲーム報酬履歴ではありません。</p><div id="ktLedger"></div>
   <details class="kt-offer"><summary style="cursor:pointer;font-weight:700">アカウント引き継ぎ設定</summary>
    <p class="kt-muted">まずメールアドレスを登録して確認メールのリンクを開き、その後ゲームに戻ってもう一度ボタンを押すとパスワードを設定できます。</p>
@@ -90,6 +90,7 @@ function panel(){
  root.addEventListener('click',e=>{if(e.target===root)root.style.display='none'});document.body.appendChild(root);
  el('ktClose').onclick=()=>root.style.display='none';
  el('ktRefresh').onclick=()=>refresh().catch(showError);
+ el('ktReconcileCosmetics').onclick=async()=>{try{if(!confirm('現在のゲーム内データにある衣装・携帯品の個数を、バザーの所持数に一度だけ反映します。ゲームを更新した後の最新データであることを確認してください。続けますか？'))return;const result=await api('reconcile_cosmetics',{snapshot:localGameSnapshot()});profile=result.profile;applyProfileToGame(profile);el('ktStatus').innerHTML='<span class="kt-good">衣装・携帯品の重複所持数を再同期しました。</span>';await refresh()}catch(e){showError(e)}};
  el('ktAddGive').addEventListener('click',()=>{try{addSelectedAsset('give');el('ktStatus').textContent='渡すものに追加しました。';}catch(e){showError(e)}});
  el('ktAddWant').addEventListener('click',()=>{try{addSelectedAsset('want');el('ktStatus').textContent='求めるものに追加しました。';}catch(e){showError(e)}});
  el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=()=>loadPriceHistory().catch(showError);
@@ -304,7 +305,7 @@ async function refresh(){
   const appliedVersion=localStorage.getItem('kinoshitaTradeWalletVersion');
   if(synced.imported||!appliedVersion||(profile?.updated_at&&String(profile.updated_at)!==appliedVersion)) applyProfileToGame(profile);
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
-  const catalog=gameCatalog().all.map(x=>({kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity}));const stats=await api('market_stats',{catalog});marketStats=stats.stats||{items:{},cosmetics:{}};priceHistory=[];
+  const catalog=gameCatalog().all.map(x=>({kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity,source:x.source||assetMeta(x.kind,x.id).source,type:x.type||''}));const stats=await api('market_stats',{catalog});marketStats=stats.stats||{items:{},cosmetics:{}};priceHistory=[];
   const list=await api('list');offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   fillFilterAssetSelect();
   const completed=await api('history');history=completed.history||[];
