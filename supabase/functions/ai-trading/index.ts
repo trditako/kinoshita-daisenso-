@@ -73,7 +73,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
   const candidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) =>
-    qty >= 2 && /^[a-zA-Z0-9_:-]{1,120}$/.test(id) && !buyerItems[id]
+    qty >= 2 && /^[\\p{L}\\p{N}_:-]{1,120}$/u.test(id) && !buyerItems[id]
   ))
   for (const [itemId] of candidates) {
     const base = marketValue(itemId)
@@ -125,10 +125,9 @@ Deno.serve(async (req: Request) => {
       .order('account_id', { ascending: true })
     if (error) throw error
     const accounts = (data || []) as AI[]
-    const byId = new Map(accounts.map(ai => [Number(ai.account_id), ai]))
     const sellers = shuffle(accounts.filter(ai => Object.keys(availableAssets(ai)).length > 0))
     let attempted = 0, completed = 0, noMatch = 0, failures = 0
-    const trades: Array<{ seller: number; buyer: number; item: string; coins: number }> = []
+    const trades: Array<{ seller: number; buyer: number; item: string; currency: 'coins' | 'xp'; amount: number }> = []
     const used = new Set<number>()
     for (const seller of sellers) {
       if (completed >= batchSize) break
@@ -174,7 +173,7 @@ Deno.serve(async (req: Request) => {
           buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price)
         }
         completed++
-        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, [offer.currency]: offer.price })
+        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, currency: offer.currency, amount: offer.price })
         didTrade = true
         break
       }
