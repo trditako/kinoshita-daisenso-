@@ -93,9 +93,6 @@ begin
   if not found then raise exception 'TRADE_PROFILE_MISSING'; end if;
 
   -- Validate both sides before changing any balance.
-  for a in select value from jsonb_each(o.offered_assets) loop
-    null;
-  end loop;
   if coalesce((o.offered_assets->>'coins')::bigint,0) < 0
      or coalesce((o.offered_assets->>'xp')::bigint,0) < 0
      or coalesce((o.requested_assets->>'coins')::bigint,0) < 0
@@ -137,13 +134,13 @@ begin
   -- Transfer stackable items, deleting zero-count keys.
   for k,n in select key, value::text::bigint from jsonb_each_text(coalesce(o.offered_assets->'items','{}'::jsonb)) loop
     update public.trade_profiles set inventory =
-      (case when coalesce((inventory->>k)::bigint,0)-n=0 then inventory - k else jsonb_set(inventory,k::text::text[],to_jsonb(coalesce((inventory->>k)::bigint,0)-n),true) end),
+      (case when coalesce((inventory->>k)::bigint,0)-n=0 then inventory - k else jsonb_set(inventory,array[k],to_jsonb(coalesce((inventory->>k)::bigint,0)-n),true) end),
       updated_at=now() where user_id=o.seller_id;
-    update public.trade_profiles set inventory=jsonb_set(inventory,k::text::text[],to_jsonb(coalesce((inventory->>k)::bigint,0)+n),true),updated_at=now() where user_id=p_actor;
+    update public.trade_profiles set inventory=jsonb_set(inventory,array[k],to_jsonb(coalesce((inventory->>k)::bigint,0)+n),true),updated_at=now() where user_id=p_actor;
   end loop;
   for k,n in select key, value::text::bigint from jsonb_each_text(coalesce(o.requested_assets->'items','{}'::jsonb)) loop
-    update public.trade_profiles set inventory=(case when coalesce((inventory->>k)::bigint,0)-n=0 then inventory-k else jsonb_set(inventory,k::text::text[],to_jsonb(coalesce((inventory->>k)::bigint,0)-n),true) end),updated_at=now() where user_id=p_actor;
-    update public.trade_profiles set inventory=jsonb_set(inventory,k::text::text[],to_jsonb(coalesce((inventory->>k)::bigint,0)+n),true),updated_at=now() where user_id=o.seller_id;
+    update public.trade_profiles set inventory=(case when coalesce((inventory->>k)::bigint,0)-n=0 then inventory-k else jsonb_set(inventory,array[k],to_jsonb(coalesce((inventory->>k)::bigint,0)-n),true) end),updated_at=now() where user_id=p_actor;
+    update public.trade_profiles set inventory=jsonb_set(inventory,array[k],to_jsonb(coalesce((inventory->>k)::bigint,0)+n),true),updated_at=now() where user_id=o.seller_id;
   end loop;
 
   -- Cosmetics are unique, non-stackable ownership keys.
