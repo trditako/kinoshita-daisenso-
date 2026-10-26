@@ -7,6 +7,7 @@ on:
       - "supabase/functions/ai-trading/**"
       - "supabase/functions/ai-cron/**"
       - "supabase/migrations/*trade*.sql"
+      - "trade.js"
   push:
     branches: [main]
     paths:
@@ -14,6 +15,7 @@ on:
       - "supabase/functions/ai-trading/**"
       - "supabase/functions/ai-cron/**"
       - "supabase/migrations/*trade*.sql"
+      - "trade.js"
 
 permissions:
   contents: read
@@ -24,6 +26,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check trade.js syntax
+        run: node --check trade.js
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
