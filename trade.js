@@ -6,6 +6,7 @@ const SESSION_KEY='kinoshitaTradeAuthSession';
 const el=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let session=null, profile=null, offers=[], history=[], busy=false;
+const chosen={give:{items:{},cosmetics:{}},want:{items:{},cosmetics:{}}};
 try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}
 function saveSession(){try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY)}catch{}}
 async function authRequest(path,body,method='POST'){
@@ -40,7 +41,7 @@ function panel(){
  #kinoshitaTradeCard input,#kinoshitaTradeCard textarea{box-sizing:border-box;width:100%;padding:9px;margin:4px 0 9px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff}
  #kinoshitaTradeCard button{cursor:pointer;border:0;border-radius:8px;padding:9px 12px;font-weight:700}
  .kt-primary{background:#7c3aed;color:white}.kt-secondary{background:#334155;color:white}.kt-offer{border:1px solid #475569;border-radius:10px;padding:10px;margin:8px 0;background:#1f2937}
- .kt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kt-muted{color:#cbd5e1;font-size:12px}.kt-error{color:#fca5a5}.kt-good{color:#86efac}
+ .kt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kt-offer select{box-sizing:border-box;width:100%;padding:9px;margin:4px 0 9px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff}.kt-selected-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px;border-bottom:1px solid #475569}.kt-selected-row button{padding:4px 7px!important}.kt-muted{color:#cbd5e1;font-size:12px}.kt-error{color:#fca5a5}.kt-good{color:#86efac}
  @media(max-width:480px){.kt-grid{grid-template-columns:1fr}#kinoshitaTradeLaunch{bottom:76px}}
  `;
  document.head.appendChild(style);
@@ -58,14 +59,16 @@ function panel(){
    <button id="ktLink" class="kt-primary">引き継ぎ用ログインを追加</button>
   </details>
   <h3>取引を募集する</h3>
-  <p class="kt-muted">アイテム・携帯品・衣装IDはサーバー所持品に登録済みのものだけ取引できます。現段階では端末内データを自動で所持品として登録しません。</p>
-  <p class="kt-muted">参考評価はコイン・XP換算の暫定目安です。実際の市場価格ではなく、未登録アイテムや衣装の評価は固定の仮値を使用します。</p>
+  <p class="kt-muted">IDやJSONの入力は不要です。サーバーで確認できる所持品から選び、渡す個数を指定してください。衣装・携帯品は重複不可のため1点単位です。ブラウザ保存データの自動取り込みは安全性のため行いません。</p>
+  <p class="kt-muted">初回に現在のコイン・XP・アイテム・衣装を取引残高へ取り込みます。取引成立後は交換結果をゲーム内保存データへ反映します。ゲーム側がブラウザ保存方式のため、初回取り込みは端末データを信頼する方式であり、不正改変を完全には防げません。</p>
   <div class="kt-grid">
-   <label>渡すコイン<input id="ktGiveCoins" type="number" min="0" value="0"></label><label>渡すXP<input id="ktGiveXp" type="number" min="0" value="0"></label>
-   <label>求めるコイン<input id="ktWantCoins" type="number" min="0" value="0"></label><label>求めるXP<input id="ktWantXp" type="number" min="0" value="0"></label>
+   <label>渡すコイン<input id="ktGiveCoins" type="number" min="0" step="1" value="0"></label><label>渡すXP<input id="ktGiveXp" type="number" min="0" step="1" value="0"></label>
+   <label>求めるコイン<input id="ktWantCoins" type="number" min="0" step="1" value="0"></label><label>求めるXP<input id="ktWantXp" type="number" min="0" step="1" value="0"></label>
   </div>
-  <div class="kt-grid"><label>渡すアイテム（JSON）<textarea id="ktGiveItems" rows="2" placeholder='{"item_id":1}'>{}</textarea></label><label>求めるアイテム（JSON）<textarea id="ktWantItems" rows="2" placeholder='{"item_id":1}'>{}</textarea></label></div>
-  <div class="kt-grid"><label>渡す衣装・携帯品ID（JSON）<textarea id="ktGiveCos" rows="2" placeholder='{"cosmetic_id":1}'>{}</textarea></label><label>求める衣装・携帯品ID（JSON）<textarea id="ktWantCos" rows="2" placeholder='{"cosmetic_id":1}'>{}</textarea></label></div>
+  <div class="kt-grid">
+   <section class="kt-offer"><h4>渡すアイテム・衣装</h4><label>所持品<select id="ktGiveAsset"></select></label><label>個数<input id="ktGiveQty" type="number" min="1" step="1" value="1"></label><button id="ktAddGive" class="kt-secondary" type="button">渡すものに追加</button><div id="ktGiveSelected"></div></section>
+   <section class="kt-offer"><h4>求めるアイテム・衣装</h4><label>品目<select id="ktWantAsset"></select></label><label>個数<input id="ktWantQty" type="number" min="1" step="1" value="1"></label><button id="ktAddWant" class="kt-secondary" type="button">求めるものに追加</button><div id="ktWantSelected"></div></section>
+  </div>
   <label>相手のユーザーID（空欄なら公開募集）<input id="ktBuyer" placeholder="特定の相手に限定する場合のみ"></label>
   <button id="ktCreate" class="kt-primary">取引募集を作成</button>
   <h3 style="margin-top:18px">募集中の取引</h3><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div>
@@ -84,11 +87,65 @@ function renderLedger(entries){
  const labels={coins:'木下コイン',xp:'プレイヤーXP',item:'アイテム',cosmetic:'衣装・携帯品'};
  box.innerHTML=entries.map(e=>{
   const delta=Number(e.delta||0),sign=delta>0?'+':'';
-  return '<article class="kt-offer"><div><b>'+esc(labels[e.asset_type]||e.asset_type)+'</b> · '+esc(e.asset_id)+'</div><div>'+esc(sign+delta.toLocaleString())+'（変更後: '+esc(Number(e.balance_after||0).toLocaleString())+'）</div><div class="kt-muted">'+esc(new Date(e.created_at).toLocaleString('ja-JP'))+' · '+esc(e.source||'server')+'</div></article>';
+  return '<article class="kt-offer"><div><b>'+esc(labels[e.asset_type]||e.asset_type)+'</b> · '+esc(e.asset_type==='item'?assetLabel('item',e.asset_id):e.asset_type==='cosmetic'?assetLabel('cosmetic',e.asset_id):e.asset_id)+'</div><div>'+esc(sign+delta.toLocaleString())+'（変更後: '+esc(Number(e.balance_after||0).toLocaleString())+'）</div><div class="kt-muted">'+esc(new Date(e.created_at).toLocaleString('ja-JP'))+' · '+esc(e.source||'server')+'</div></article>';
  }).join('');
 }
 function showError(e){const s=el('ktStatus');if(s)s.innerHTML='<span class="kt-error">'+esc(e?.message||e)+'</span>'}
-function parseJson(id){let v;try{v=JSON.parse(el(id).value||'{}')}catch{throw new Error('アイテム欄は正しいJSONで入力してください')}if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('アイテム欄はJSONオブジェクトで入力してください');return v}
+function localGameSnapshot(){
+ const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||fallback);return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch{return {}}};
+ const cosmeticsRaw=read('kinoshitaShinjuInventory','{}'), cosmetics={};
+ for(const [id,n] of Object.entries(cosmeticsRaw))if(Number(n)>0)cosmetics[id]=1;
+ return {coins:Math.max(0,Math.floor(Number(localStorage.getItem('kinoshitaGachaCoins')||0))),xp:Math.max(0,Math.floor(Number(localStorage.getItem('kinoshitaPlayerXP')||0))),items:read('kinoshitaInventoryItems','{}'),cosmetics};
+}
+function applyProfileToGame(p){
+ if(!p)return;
+ localStorage.setItem('kinoshitaGachaCoins',String(Math.max(0,Number(p.coins)||0)));
+ localStorage.setItem('kinoshitaPlayerXP',String(Math.max(0,Number(p.xp)||0)));
+ localStorage.setItem('kinoshitaInventoryItems',JSON.stringify(p.inventory&&typeof p.inventory==='object'?p.inventory:{}));
+ localStorage.setItem('kinoshitaShinjuInventory',JSON.stringify(p.cosmetics&&typeof p.cosmetics==='object'?p.cosmetics:{}));
+}
+function gameCatalog(){
+ const items=profile?.inventory||{}, cosmetics=profile?.cosmetics||{};
+ const defs=typeof KINOSHITA_INVENTORY_ITEM_DEFS!=='undefined'?KINOSHITA_INVENTORY_ITEM_DEFS:{};
+ const allItems=Object.entries(defs).map(([id,d])=>({kind:'item',id,name:(d.emoji||'🎁')+' '+d.name,qty:Math.max(0,Math.floor(Number(items[id])||0))}));
+ for(const [index,[id,qty]] of Object.entries(items).entries())if(!allItems.some(x=>x.id===id))allItems.push({kind:'item',id,name:'🎁 その他の所持アイテム '+(index+1),qty:Math.max(0,Math.floor(Number(qty)||0))});
+ let allCosmetics=[];
+ try{if(typeof SHINJU_ITEMS!=='undefined')allCosmetics=SHINJU_ITEMS.map(x=>({kind:'cosmetic',id:String(x.id),name:(x.emoji||'✨')+' '+x.name+'（'+(x.rarity||'')+' '+(x.type==='costume'?'衣装':'携帯品')+'）',qty:Math.max(0,Math.floor(Number(cosmetics[x.id])||0))}))}catch{}
+ return {all:[...allItems,...allCosmetics],owned:[...allItems,...allCosmetics].filter(x=>x.qty>0)};
+}
+function assetLabel(kind,id){return gameCatalog().all.find(x=>x.kind===kind&&x.id===id)?.name||String(id)}
+function fillAssetSelect(side){
+ const select=el(side==='give'?'ktGiveAsset':'ktWantAsset');if(!select)return;
+ const c=gameCatalog(),rows=side==='give'?c.owned:c.all;
+ select.innerHTML=rows.length?rows.map(x=>'<option value="'+esc(x.kind+':'+x.id)+'">'+esc(x.name)+(side==='give'?' · 所持 '+x.qty:'')+'</option>').join(''):'<option value="">'+(side==='give'?'渡せる所持品がありません':'品目がありません')+'</option>';
+}
+function renderChosen(side){
+ const box=el(side==='give'?'ktGiveSelected':'ktWantSelected');if(!box)return;
+ const state=chosen[side],rows=[...Object.entries(state.items).map(([id,qty])=>({kind:'item',id,qty})),...Object.entries(state.cosmetics).map(([id,qty])=>({kind:'cosmetic',id,qty}))];
+ box.innerHTML=rows.length?rows.map(x=>'<div class="kt-selected-row"><span>'+esc(assetLabel(x.kind,x.id))+' × '+x.qty+'</span><button type="button" class="kt-secondary" data-remove-side="'+side+'" data-remove-kind="'+x.kind+'" data-remove-id="'+esc(x.id)+'">削除</button></div>').join(''):'<p class="kt-muted">まだ選択されていません。</p>';
+ box.querySelectorAll('[data-remove-side]').forEach(b=>b.onclick=()=>{delete chosen[b.dataset.removeSide][b.dataset.removeKind==='item'?'items':'cosmetics'][b.dataset.removeId];renderChosen(side);});
+}
+function addSelectedAsset(side){
+ const value=el(side==='give'?'ktGiveAsset':'ktWantAsset').value;if(!value)return;
+ const split=value.indexOf(':'),kind=value.slice(0,split),id=value.slice(split+1);
+ const qty=Number(el(side==='give'?'ktGiveQty':'ktWantQty').value);
+ if(!Number.isSafeInteger(qty)||qty<1||qty>100000)throw new Error('個数は1以上100,000以下の整数にしてください。');
+ const target=chosen[side][kind==='item'?'items':'cosmetics'];
+ if(kind==='cosmetic'&&qty!==1)throw new Error('衣装・携帯品は重複できないため個数は1にしてください。');
+ if(kind==='cosmetic'&&target[id])throw new Error('同じ衣装・携帯品は複数回追加できません。');
+ const next=(target[id]||0)+qty;
+ if(side==='give'){const owned=gameCatalog().owned.find(x=>x.kind===kind&&x.id===id);if(!owned||next>owned.qty)throw new Error('現在の所持数を超えて指定できません。');}
+ target[id]=next;renderChosen(side);
+}
+function integerInput(id){const n=Number(el(id).value||0);if(!Number.isSafeInteger(n)||n<0||n>1000000000)throw new Error('コイン・XPは0以上1,000,000,000以下の整数にしてください。');return n;}
+function selectedAssets(side){return {coins:integerInput(side==='give'?'ktGiveCoins':'ktWantCoins'),xp:integerInput(side==='give'?'ktGiveXp':'ktWantXp'),items:{...chosen[side].items},cosmetics:{...chosen[side].cosmetics}}}
+function formatAssets(a){
+ const out=[];if(Number(a?.coins||0))out.push('🪙 '+Number(a.coins).toLocaleString());if(Number(a?.xp||0))out.push('⭐ XP '+Number(a.xp).toLocaleString());
+ for(const [id,n] of Object.entries(a?.items||{}))out.push(assetLabel('item',id)+' × '+n);
+ for(const id of Object.keys(a?.cosmetics||{}))out.push(assetLabel('cosmetic',id));
+ return out.length?out.map(esc).join('、'):'なし';
+}
+
 function marketValue(id){
  const key=String(id).toLowerCase();
  const fixed={
@@ -112,7 +169,7 @@ function renderHistory(){
   const mine=h.seller_id===session?.user?.id;
   const give=mine?h.offered_assets:h.requested_assets;
   const receive=mine?h.requested_assets:h.offered_assets;
-  return '<article class="kt-offer"><div><b>'+esc(new Date(h.completed_at).toLocaleString('ja-JP'))+'</b> · '+(mine?'自分が募集':'自分が承諾')+'</div><div class="kt-muted">受け渡し: '+esc(JSON.stringify(give||{}))+'（目安 '+estimateAssets(give||{}).toLocaleString()+'）</div><div class="kt-muted">受取: '+esc(JSON.stringify(receive||{}))+'（目安 '+estimateAssets(receive||{}).toLocaleString()+'）</div><div class="kt-muted">募集ID: '+esc(String(h.offer_id||'').slice(0,8))+'</div></article>'
+  return '<article class="kt-offer"><div><b>'+esc(new Date(h.completed_at).toLocaleString('ja-JP'))+'</b> · '+(mine?'自分が募集':'自分が承諾')+'</div><div class="kt-muted">受け渡し: '+formatAssets(give||{})+'（目安 '+estimateAssets(give||{}).toLocaleString()+'）</div><div class="kt-muted">受取: '+formatAssets(receive||{})+'（目安 '+estimateAssets(receive||{}).toLocaleString()+'）</div><div class="kt-muted">募集ID: '+esc(String(h.offer_id||'').slice(0,8))+'</div></article>'
  }).join('');
 }
 function renderOffers(){
@@ -121,9 +178,9 @@ function renderOffers(){
  box.innerHTML=offers.map(o=>{
   const mine=o.seller_id===session?.user?.id;
   const canAccept=!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
-  return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+esc(JSON.stringify(o.offered_assets))+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+esc(JSON.stringify(o.requested_assets))+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
+  return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
  }).join('');
- box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh()}catch(e){showError(e)}});
+ box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});applyProfileToGame(wallet.profile);el('ktStatus').innerHTML='<span class="kt-good">取引成立。ゲーム内の所持数を更新しています…</span>';setTimeout(()=>location.reload(),250)}catch(e){showError(e)}});
  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{try{await api('cancel',{offer_id:b.dataset.cancel});await refresh()}catch(e){showError(e)}});
 }
 async function refresh(){
@@ -131,22 +188,27 @@ async function refresh(){
  try{
   el('ktStatus').textContent='認証と取引情報を確認しています…';
   const name=localStorage.getItem('kinoshitaPlayerName')||localStorage.getItem('kinoshitaPlayerDisplayName')||'プレイヤー';
-  const playerId=localStorage.getItem('kinoshitaPlayerRankingId')||null;
-  const d=await api('profile',{display_name:name,player_id:playerId});
+  const d=await api('profile',{display_name:name});
   profile=d.profile;
+  const synced=await api('sync_wallet',{snapshot:localGameSnapshot()});
+  profile=synced.profile||profile;
+  if(synced.imported) applyProfileToGame(profile);
+  fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
   const list=await api('list');offers=list.offers||[];
   const completed=await api('history');history=completed.history||[];
   el('ktStatus').innerHTML='<span class="kt-good">匿名ログイン済み</span> · ユーザーID: <code>'+esc(session.user?.id||'')+'</code>';
   el('ktBody').style.display='block';
-  el('ktWallet').innerHTML='<b>サーバー所持状況</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+esc(JSON.stringify(profile.inventory||{}))+'</div><div class="kt-muted">衣装・携帯品: '+esc(JSON.stringify(profile.cosmetics||{}))+'</div>';
+  el('ktWallet').innerHTML='<b>サーバー所持状況（取引の正本）</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+formatAssets({items:profile.inventory||{}})+'</div><div class="kt-muted">衣装・携帯品: '+formatAssets({cosmetics:profile.cosmetics||{}})+'</div><p class="kt-error">初回同期でゲーム内所持品を取り込み、取引後はサーバーの所持数をゲーム内保存データへ反映します。</p>';
   renderOffers();
   const ledger=await api('ledger');renderLedger(ledger.entries||[]);
    renderHistory();
  }finally{busy=false}
 }
 async function createOffer(){
- const offered={coins:Number(el('ktGiveCoins').value||0),xp:Number(el('ktGiveXp').value||0),items:parseJson('ktGiveItems'),cosmetics:parseJson('ktGiveCos')};
- const requested={coins:Number(el('ktWantCoins').value||0),xp:Number(el('ktWantXp').value||0),items:parseJson('ktWantItems'),cosmetics:parseJson('ktWantCos')};
+ const offered=selectedAssets('give');
+  const requested=selectedAssets('want');
+  if(!offered.coins&&!offered.xp&&!Object.keys(offered.items).length&&!Object.keys(offered.cosmetics).length)throw new Error('渡すものを1つ以上選んでください。');
+  if(!requested.coins&&!requested.xp&&!Object.keys(requested.items).length&&!Object.keys(requested.cosmetics).length)throw new Error('求めるものを1つ以上選んでください。');
  const buyer=el('ktBuyer').value.trim();
  await api('create_offer',{offered_assets:offered,requested_assets:requested,buyer_id:buyer||null});
  el('ktStatus').innerHTML='<span class="kt-good">募集を作成しました。</span>';
