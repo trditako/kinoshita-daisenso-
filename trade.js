@@ -175,8 +175,7 @@ async function refresh(){
  try{
   el('ktStatus').textContent='認証と取引情報を確認しています…';
   const name=localStorage.getItem('kinoshitaPlayerName')||localStorage.getItem('kinoshitaPlayerDisplayName')||'プレイヤー';
-  const playerId=localStorage.getItem('kinoshitaPlayerRankingId')||null;
-  const d=await api('profile',{display_name:name,player_id:playerId});
+  const d=await api('profile',{display_name:name});
   profile=d.profile;
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
   const list=await api('list');offers=list.offers||[];
