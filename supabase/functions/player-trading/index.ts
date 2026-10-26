@@ -56,9 +56,6 @@ Deno.serve(async (req) => {
     const { data: authData, error: authError } = await admin.auth.getUser(token)
     if (authError || !authData.user) return response({ ok: false, error: 'INVALID_SESSION' }, 401)
     const userId = authData.user.id
-    if (authData.user.is_anonymous !== true && authData.user.is_anonymous !== false) {
-      return response({ ok: false, error: 'INVALID_SESSION' }, 401)
-    }
     const body = object(await req.json())
     const action = String(body.action || '')
     if (action === 'profile') {
