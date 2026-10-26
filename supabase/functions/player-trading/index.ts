@@ -88,6 +88,9 @@ Deno.serve(async (req) => {
       if (buyerId === userId) return response({ ok: false, error: 'CANNOT_TRADE_WITH_SELF' }, 400)
       const { data: profile, error: profileError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).single()
       if (profileError || !profile) return response({ ok: false, error: 'PROFILE_REQUIRED' }, 400)
+      const { count: activeOffers, error: countError } = await admin.from('trade_offers').select('id', { count: 'exact', head: true }).eq('seller_id', userId).eq('status', 'open').gt('expires_at', new Date().toISOString())
+      if (countError) throw countError
+      if ((activeOffers || 0) >= 10) return response({ ok: false, error: 'ACTIVE_OFFER_LIMIT' }, 429)
       if (Number(profile.coins) < offered.coins || Number(profile.xp) < offered.xp) return response({ ok: false, error: 'INSUFFICIENT_CURRENCY' }, 400)
       for (const [id, qty] of Object.entries(offered.items)) if (Number(profile.inventory?.[id] || 0) < qty) return response({ ok: false, error: 'INSUFFICIENT_ITEM', item_id: id }, 400)
       for (const id of Object.keys(offered.cosmetics)) if (Number(profile.cosmetics?.[id] || 0) < 1) return response({ ok: false, error: 'INSUFFICIENT_COSMETIC', item_id: id }, 400)
