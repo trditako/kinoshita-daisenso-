@@ -78,8 +78,12 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
   const buyerCosmetics = new Set(availableCosmetics(buyer))
+  const sellerCosmetics = new Set(availableCosmetics(seller))
   const cosmeticCandidates = shuffle(availableCosmetics(seller).filter(id => !buyerCosmetics.has(id)))
-  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\x00-\x1f]/.test(id) && !buyerItems[id]))
+  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !buyerItems[id]))
+  // AI wish lists may request surplus items and cosmetics, not only currency.
+  const buyerBarterItems = shuffle(Object.entries(buyerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !sellerItems[id]))
+  const buyerBarterCosmetics = shuffle(availableCosmetics(buyer).filter(id => !sellerCosmetics.has(id)))
   const candidates = [
     ...cosmeticCandidates.map(id => ({ id, cosmetic: true })),
     ...itemCandidates.map(([id]) => ({ id, cosmetic: false })),
@@ -93,6 +97,14 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
     // Sellers trade duplicates at a discount; buyers pay a premium for an item they do not own.
     const sellerFloor = Math.max(1, Math.round(base * 0.65))
     const buyerCeiling = Math.max(sellerFloor, Math.round(base * 1.2))
+    // Trade surplus inventory only, so AI does not offer its only copy of an item.
+    if (Math.random() < 0.35 && (buyerBarterItems.length || buyerBarterCosmetics.length)) {
+      const useCosmetic = buyerBarterCosmetics.length > 0 && (buyerBarterItems.length === 0 || Math.random() < 0.3)
+      const requested: Assets = useCosmetic
+        ? { coins: 0, xp: 0, items: {}, cosmetics: { [buyerBarterCosmetics[0]]: true } }
+        : { coins: 0, xp: 0, items: { [buyerBarterItems[0][0]]: 1 }, cosmetics: {} }
+      return { offered: offeredAssets, requested, itemId, price: base, value: base, currency: 'coins', cosmetic: candidate.cosmetic }
+    }
     const coinBalance = int(buyer.coins)
     if (coinBalance >= sellerFloor) {
       const price = Math.min(buyerCeiling, coinBalance)
