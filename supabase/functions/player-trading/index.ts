@@ -60,15 +60,16 @@ Deno.serve(async (req) => {
     const action = String(body.action || '')
     if (action === 'profile') {
       const displayName = String(body.display_name || 'プレイヤー').trim().slice(0, 32) || 'プレイヤー'
-      const playerId = typeof body.player_id === 'string' && /^[0-9a-f-]{36}$/i.test(body.player_id) ? body.player_id : null
+      // A client-supplied local ranking ID is not proof of ownership. Keep the
+      // profile unlinked until a server-verified account-link challenge exists.
       const { data: existing, error: readError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).maybeSingle()
       if (readError) throw readError
       if (!existing) {
-        const { data, error } = await admin.from('trade_profiles').insert({ user_id: userId, player_id: playerId, display_name: displayName }).select('*').single()
+        const { data, error } = await admin.from('trade_profiles').insert({ user_id: userId, player_id: null, display_name: displayName }).select('*').single()
         if (error) throw error
         return response({ ok: true, profile: data })
       }
-      const { data, error } = await admin.from('trade_profiles').update({ display_name: displayName, player_id: existing.player_id || playerId, updated_at: new Date().toISOString() }).eq('user_id', userId).select('*').single()
+      const { data, error } = await admin.from('trade_profiles').update({ display_name: displayName, updated_at: new Date().toISOString() }).eq('user_id', userId).select('*').single()
       if (error) throw error
       return response({ ok: true, profile: data })
     }
