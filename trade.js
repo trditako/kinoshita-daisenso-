@@ -58,6 +58,7 @@ function panel(){
   </details>
   <h3>取引を募集する</h3>
   <p class="kt-muted">アイテム・携帯品・衣装IDはサーバー所持品に登録済みのものだけ取引できます。現段階では端末内データを自動で所持品として登録しません。</p>
+  <p class="kt-muted">参考評価はコイン・XP換算の暫定目安です。実際の市場価格ではなく、未登録アイテムや衣装の評価は固定の仮値を使用します。</p>
   <div class="kt-grid">
    <label>渡すコイン<input id="ktGiveCoins" type="number" min="0" value="0"></label><label>渡すXP<input id="ktGiveXp" type="number" min="0" value="0"></label>
    <label>求めるコイン<input id="ktWantCoins" type="number" min="0" value="0"></label><label>求めるXP<input id="ktWantXp" type="number" min="0" value="0"></label>
