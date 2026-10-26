@@ -50,6 +50,7 @@ function panel(){
  <div id="ktStatus" style="margin:12px 0">認証状態を確認しています…</div>
  <div id="ktBody" style="display:none">
   <div id="ktWallet" class="kt-offer"></div>
+  <h3>サーバー資産変更履歴</h3><p class="kt-muted">ここにはサーバー側の取引資産が変更された記録のみ表示されます。端末内のゲーム報酬履歴ではありません。</p><div id="ktLedger"></div>
   <details class="kt-offer"><summary style="cursor:pointer;font-weight:700">アカウント引き継ぎ設定</summary>
    <p class="kt-muted">まずメールアドレスを登録して確認メールのリンクを開き、その後ゲームに戻ってもう一度ボタンを押すとパスワードを設定できます。</p>
    <label>メールアドレス<input id="ktEmail" type="email" autocomplete="email" placeholder="example@example.com"></label>
@@ -75,6 +76,15 @@ function panel(){
  el('ktCreate').onclick=()=>createOffer().catch(showError);
  el('ktLink').onclick=()=>linkAccount().catch(showError);
 }
+function renderLedger(entries){
+ const box=el('ktLedger');if(!box)return;
+ if(!entries?.length){box.innerHTML='<p class="kt-muted">サーバー側の資産変更記録はまだありません。</p>';return}
+ const labels={coins:'木下コイン',xp:'プレイヤーXP',item:'アイテム',cosmetic:'衣装・携帯品'};
+ box.innerHTML=entries.map(e=>{
+  const delta=Number(e.delta||0),sign=delta>0?'+':'';
+  return '<article class="kt-offer"><div><b>'+esc(labels[e.asset_type]||e.asset_type)+'</b> · '+esc(e.asset_id)+'</div><div>'+esc(sign+delta.toLocaleString())+'（変更後: '+esc(Number(e.balance_after||0).toLocaleString())+'）</div><div class="kt-muted">'+esc(new Date(e.created_at).toLocaleString('ja-JP'))+' · '+esc(e.source||'server')+'</div></article>';
+ }).join('');
+}
 function showError(e){const s=el('ktStatus');if(s)s.innerHTML='<span class="kt-error">'+esc(e?.message||e)+'</span>'}
 function parseJson(id){let v;try{v=JSON.parse(el(id).value||'{}')}catch{throw new Error('アイテム欄は正しいJSONで入力してください')}if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('アイテム欄はJSONオブジェクトで入力してください');return v}
 function renderOffers(){
@@ -97,6 +107,7 @@ async function refresh(){
   const d=await api('profile',{display_name:name,player_id:playerId});
   profile=d.profile;
   const list=await api('list');offers=list.offers||[];
+  const ledger=await api('ledger');renderLedger(ledger.entries||[]);
   el('ktStatus').innerHTML='<span class="kt-good">匿名ログイン済み</span> · ユーザーID: <code>'+esc(session.user?.id||'')+'</code>';
   el('ktBody').style.display='block';
   el('ktWallet').innerHTML='<b>サーバー所持状況</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+esc(JSON.stringify(profile.inventory||{}))+'</div><div class="kt-muted">衣装・携帯品: '+esc(JSON.stringify(profile.cosmetics||{}))+'</div>';
