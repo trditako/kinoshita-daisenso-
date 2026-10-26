@@ -133,8 +133,8 @@ function gameCatalog(){
 function assetLabel(kind,id){return gameCatalog().all.find(x=>x.kind===kind&&x.id===id)?.name||String(id)}
 function assetMeta(kind,id){const x=gameCatalog().all.find(v=>v.kind===kind&&v.id===String(id));return {rarity:x?.rarity||String(x?.name||'').match(/(ノーマル|レア|激レア|超激レア|伝説レア)/)?.[1]||'未設定',source:x?.source||'ゲーム内'}}
 function rarityBadge(kind,id){const m=assetMeta(kind,id);return '<span class="kt-muted">［'+esc(m.rarity)+'・'+esc(m.source)+'］</span>'}
-function rarityLine(a){const out=[];for(const id of Object.keys(a?.items||{}))out.push(rarityBadge('item',id));for(const id of Object.keys(a?.cosmetics||{}))out.push(rarityBadge('cosmetic',id));return out.join(' ')}
-function renderCollectionInfo(){const box=el('ktCollectionInfo');if(!box)return;const c=gameCatalog(),items=c.all.filter(x=>x.kind==='cosmetic'),owned=items.filter(x=>x.qty>0),counts={},got={};for(const x of items){const r=x.rarity||assetMeta(x.kind,x.id).rarity;counts[r]=(counts[r]||0)+1;}for(const x of owned){const r=x.rarity||assetMeta(x.kind,x.id).rarity;got[r]=(got[r]||0)+1;}box.innerHTML='<b>🗂️ コレクション・レアリティ情報</b><p>衣装・携帯品：'+owned.length+' / '+items.length+' 種類</p><div class="kt-muted">'+Object.keys(counts).map(r=>esc(r)+' '+(got[r]||0)+'/'+counts[r]).join(' · ')+'</div><p class="kt-muted">未登録のレアリティは「未設定」と表示します。</p>';}
+function rarityLine(a){const out=[];for(const id of Object.keys(a?.items||{}))out.push(rarityBadge('item',id));for(const [id,qty] of Object.entries(a?.cosmetics||{}))out.push(rarityBadge('cosmetic',id)+' × '+Number(qty||0));return out.join(' ')}
+function renderCollectionInfo(){const box=el('ktCollectionInfo');if(!box)return;const c=gameCatalog(),items=c.all.filter(x=>x.kind==='cosmetic'),owned=items.filter(x=>x.qty>0),counts={},got={};for(const x of items){const r=x.rarity||assetMeta(x.kind,x.id).rarity;counts[r]=(counts[r]||0)+1;}for(const x of owned){const r=x.rarity||assetMeta(x.kind,x.id).rarity;got[r]=(got[r]||0)+x.qty;}box.innerHTML='<b>🗂️ コレクション・レアリティ情報</b><p>衣装・携帯品：'+owned.reduce((n,x)=>n+x.qty,0)+' 個（'+owned.length+' 種類） / '+items.length+' 種類登録</p><div class="kt-muted">'+Object.keys(got).map(r=>esc(r)+' '+got[r]+'個所持').join(' · ')+'</div><p class="kt-muted">未登録のレアリティは「未設定」と表示します。</p>';}
 function fillAssetSelect(side){
  const select=el(side==='give'?'ktGiveAsset':'ktWantAsset');if(!select)return;
  const c=gameCatalog(),rows=side==='give'?c.owned:c.all;
@@ -152,8 +152,8 @@ function addSelectedAsset(side){
  const qty=Number(el(side==='give'?'ktGiveQty':'ktWantQty').value);
  if(!Number.isSafeInteger(qty)||qty<1||qty>100000)throw new Error('個数は1以上100,000以下の整数にしてください。');
  const target=chosen[side][kind==='item'?'items':'cosmetics'];
- if(kind==='cosmetic'&&qty!==1)throw new Error('衣装・携帯品は重複できないため個数は1にしてください。');
- if(kind==='cosmetic'&&target[id])throw new Error('同じ衣装・携帯品は複数回追加できません。');
+ 
+ 
  const next=(target[id]||0)+qty;
  if(side==='give'){const owned=gameCatalog().owned.find(x=>x.kind===kind&&x.id===id);if(!owned||next>owned.qty)throw new Error('現在の所持数を超えて指定できません。');}
  target[id]=next;renderChosen(side);
@@ -163,7 +163,7 @@ function selectedAssets(side){return {coins:integerInput(side==='give'?'ktGiveCo
 function formatAssets(a){
  const out=[];if(Number(a?.coins||0))out.push('🪙 '+Number(a.coins).toLocaleString());if(Number(a?.xp||0))out.push('⭐ XP '+Number(a.xp).toLocaleString());
  for(const [id,n] of Object.entries(a?.items||{}))out.push(assetLabel('item',id)+' × '+n);
- for(const id of Object.keys(a?.cosmetics||{}))out.push(assetLabel('cosmetic',id));
+ for(const [id,qty] of Object.entries(a?.cosmetics||{}))out.push(assetLabel('cosmetic',id)+' × '+qty);
  return out.length?out.map(esc).join('、'):'なし';
 }
 
@@ -183,7 +183,7 @@ function estimateAssets(assets){
  const a=assets&&typeof assets==='object'?assets:{};
  let total=Math.max(0,Number(a.coins)||0)+Math.max(0,Number(a.xp)||0)/20;
  for(const [id,qty] of Object.entries(a.items||{}))total+=marketValue(id)*Math.max(0,Number(qty)||0);
- for(const [id,owned] of Object.entries(a.cosmetics||{}))if(owned===true||Number(owned)>0)total+=cosmeticValue(id);
+ for(const [id,owned] of Object.entries(a.cosmetics||{}))if(owned===true||Number(owned)>0)total+=cosmeticValue(id)*(owned===true?1:Number(owned));
  return Math.round(total);
 }
 function renderHistory(){
