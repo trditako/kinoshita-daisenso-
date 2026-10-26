@@ -342,6 +342,15 @@ Deno.serve(async (req: Request) => {
       for(const id of Object.keys(availableAssets(row)))ownedItemIds.add(id)
       for(const id of availableCosmetics(row))ownedCosmeticIds.add(id)
     }
+    // Cosmetics can be player-owned before any AI has collected them. Include
+    // actual player inventory IDs in the wish-list catalog so they can be sold.
+    const {data: playerCosmeticRows,error: playerCosmeticError}=await admin.from('trade_profiles').select('cosmetics').limit(1000)
+    if(playerCosmeticError)throw playerCosmeticError
+    for(const profile of (playerCosmeticRows||[])) {
+      for(const [id,qty] of Object.entries(object(profile.cosmetics))) {
+        if(id.length<=120&&!/[\\x00-\\x1f]/.test(id)&&(qty===true||int(qty)>0))ownedCosmeticIds.add(id)
+      }
+    }
     let aiBuyOrdersCreated=0
     for(const row of shuffle((freshRows||[]) as AI[])) {
       if(aiBuyOrdersCreated>=Math.min(20,batchSize)||activeBuyers.has(row.account_id))continue
