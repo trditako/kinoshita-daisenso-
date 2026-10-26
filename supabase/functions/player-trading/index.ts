@@ -81,6 +81,14 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, offers: data || [] })
     }
+    if (action === 'history') {
+      const { data, error } = await admin.from('trade_history')
+        .select('id,offer_id,seller_id,buyer_id,offered_assets,requested_assets,completed_at')
+        .or(`seller_id.eq.${userId},buyer_id.eq.${userId}`)
+        .order('completed_at', { ascending: false }).limit(50)
+      if (error) throw error
+      return response({ ok: true, history: data || [] })
+    }
     if (action === 'create_offer') {
       const offered = cleanAssets(body.offered_assets)
       const requested = cleanAssets(body.requested_assets)
