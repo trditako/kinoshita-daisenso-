@@ -124,6 +124,12 @@ begin
   for k,n in select key, value::text::bigint from jsonb_each_text(coalesce(o.requested_assets->'cosmetics','{}'::jsonb)) loop
     if n <> 1 or coalesce((b.cosmetics->>k)::bigint,0) < 1 then raise exception 'INSUFFICIENT_COSMETIC:%', k; end if;
   end loop;
+  for k in select key from jsonb_each(coalesce(o.offered_assets->'cosmetics','{}'::jsonb)) loop
+    if coalesce((b.cosmetics->>k)::bigint,0) > 0 then raise exception 'COSMETIC_ALREADY_OWNED:%', k; end if;
+  end loop;
+  for k in select key from jsonb_each(coalesce(o.requested_assets->'cosmetics','{}'::jsonb)) loop
+    if coalesce((s.cosmetics->>k)::bigint,0) > 0 then raise exception 'COSMETIC_ALREADY_OWNED:%', k; end if;
+  end loop;
 
   -- Apply currency movements.
   update public.trade_profiles set
