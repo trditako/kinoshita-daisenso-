@@ -112,6 +112,25 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, entries: data || [] })
     }
+    if (action === 'reconcile_cosmetics') {
+      const snapshot = object(body.snapshot)
+      const incoming = object(snapshot.cosmetics)
+      const cosmetics: Record<string, number> = {}
+      for (const [id, qty] of Object.entries(incoming)) {
+        if (!id || id.length > 120 || /[\\x00-\\x1f]/.test(id)) throw new Error('INVALID_COSMETIC_ID')
+        const n = int(qty, 100_000)
+        if (n > 0) cosmetics[id] = n
+      }
+      const { data, error } = await admin.rpc('reconcile_trade_cosmetic_counts', { p_user_id: userId, p_cosmetics: cosmetics })
+      if (error) {
+        const message = String(error.message || '')
+        if (message.includes('COSMETIC_RECONCILIATION_ALREADY_USED')) return response({ ok: false, error: 'COSMETIC_RECONCILIATION_ALREADY_USED' }, 409)
+        throw error
+      }
+      const { data: latest, error: latestError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).single()
+      if (latestError) throw latestError
+      return response({ ok: true, profile: latest, reconciliation: data })
+    }
     if (action === 'market_history') {
       const assetType = String(body.asset_type || '')
       const assetId = String(body.asset_id || '')
@@ -156,6 +175,24 @@ Deno.serve(async (req) => {
         }
       }
       const catalog = Array.isArray(body.catalog) ? body.catalog.slice(0, 2500) : []
+      // Limited cosmetics appreciate as supply becomes scarce: older Shinju seasons
+      // receive a stronger scarcity premium, and the estimate rises gradually over time.
+      const valuationEpoch = Date.parse('2026-10-27T00:00:00Z')
+      const daysSinceValuationStart = Math.max(0, Math.floor((Date.now() - valuationEpoch) / 86400000))
+      const limitedMultipliers: Record<string, number> = {}
+      for (const entry of catalog) {
+        const row = object(entry), kind = String(row.kind || ''), id = String(row.id || '')
+        if (kind !== 'cosmetic' || !id) continue
+        const seasonMatch = id.match(/^shinju_s(\\d+)_/i)
+        const isLimited = !!seasonMatch || /^halloween_/i.test(id) || String(row.source || '').includes('限定')
+        if (!isLimited) continue
+        const season = seasonMatch ? Number(seasonMatch[1]) : 0
+        const scarcity = season ? 1 + Math.min(2, Math.max(0, 18 - season) * 0.07) : 1.5
+        const appreciation = Math.min(3, 1 + daysSinceValuationStart * 0.005)
+        const multiplier = (normalized.cosmetics[id] ?? 1) * scarcity * appreciation
+        normalized.cosmetics[id] = multiplier
+        limitedMultipliers[id] = multiplier
+      }
       const fixed: Record<string, number> = {
         normal_gold: 250, power_chest: 1200, golden_chest: 2400, ability_core: 1800,
         ancient_power: 900, latest_character_exchange_chest: 30000,
