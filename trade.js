@@ -45,11 +45,11 @@ function panel(){
  .kt-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.kt-filters select{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff}.kt-value-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:8px;border-bottom:1px solid #475569}.kt-help ol{padding-left:22px}.kt-help li{margin:7px 0}@media(max-width:480px){.kt-grid,.kt-filters{grid-template-columns:1fr}}
  `;
  document.head.appendChild(style);
- const b=document.createElement('button');b.id='kinoshitaTradeHomeButton';b.type='button';b.textContent='🏪 バザー';b.onclick=()=>{el('kinoshitaTradeRoot').style.display='flex';refresh().catch(showError)};b.style.display='none';
+ const b=document.createElement('button');b.id='kinoshitaTradeHomeButton';b.type='button';b.textContent='🏪 バザー';b.onclick=()=>{el('kinoshitaTradeRoot').style.display='flex';refresh().catch(showError)};b.style.display='none';document.body.appendChild(b);
  function attachHomeButton(){
   if(!b.isConnected)return;
   const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');
-  const isHomeLabel=(t)=>/(編成|図鑑|ガチャ|交換所|ステージ|ランク戦|対戦|ホーム|キャラ|イベント)/.test(t||'');
+  const isHomeLabel=(t)=>/(編成|図鑑|ガチャ|交換所|ランク戦|イベント)/.test(t||'');
   const candidates=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&isHomeLabel((n.innerText||n.textContent||'').trim()));
   let best=null,bestScore=0;
   for(const n of candidates){let p=n.parentElement;for(let depth=0;p&&depth<5;depth++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const labels=bs.filter(x=>isHomeLabel((x.innerText||x.textContent||'').trim()));const score=labels.length*10-depth;if(labels.length>=3&&score>bestScore){best=p;bestScore=score}}}
@@ -276,6 +276,6 @@ async function linkAccount(){
  el('ktStatus').innerHTML='<span class="kt-good">確認メールを送信しました。メール内のリンクで確認を完了し、このゲームに戻ってから、もう一度このボタンを押してパスワードを設定してください。</span>';
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
- const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ステージ|ランク戦|対戦|ホーム|キャラ|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
+ const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ランク戦|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
  const observer=new MutationObserver(watchHome);observer.observe(document.documentElement,{childList:true,subtree:true});watchHome();
 })();
