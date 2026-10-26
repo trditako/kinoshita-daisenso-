@@ -113,13 +113,13 @@ async function createOffer(){
 }
 async function linkAccount(){
  const email=el('ktEmail').value.trim(),password=el('ktPassword').value;
- if(password.length<8)throw new Error('パスワードは8文字以上で入力してください');
  await ensureSession();
  const headers={apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'};
  const ur=await fetch(BASE+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}});
  const user=await ur.json().catch(()=>({}));
  if(!ur.ok)throw new Error(user.msg||user.message||user.error_description||'アカウント状態を確認できませんでした');
  if(user.email_confirmed_at){
+  if(password.length<8)throw new Error('パスワードは8文字以上で入力してください');
   const r=await fetch(BASE+'/auth/v1/user',{method:'PUT',headers,body:JSON.stringify({password})});
   const d=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(d.msg||d.message||d.error_description||'パスワード設定に失敗しました');
