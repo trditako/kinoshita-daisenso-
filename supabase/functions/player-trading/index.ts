@@ -228,6 +228,17 @@ Deno.serve(async (req) => {
       if(error){const msg=String(error.message||'');const known=['BAZAAR_LISTING_NOT_OPEN','BAZAAR_LISTING_EXPIRED','BAZAAR_LISTING_NOT_PUBLIC','BAZAAR_AI_SELLER_MISSING','TRADE_PROFILE_MISSING','BAZAAR_UNSUPPORTED_ASSETS','INSUFFICIENT_CURRENCY','BAZAAR_AI_ITEM_UNAVAILABLE','BAZAAR_COSMETIC_UNAVAILABLE'];return response({ok:false,error:known.find(k=>msg.includes(k))||'BAZAAR_PURCHASE_FAILED'},400)}
       return response({ok:true,result:data})
     }
+    if (action === 'sell_to_ai_buy_order') {
+      const offerId = String(body.offer_id || '')
+      if (!/^[0-9a-f-]{36}$/i.test(offerId)) return response({ ok: false, error: 'INVALID_OFFER_ID' }, 400)
+      const { data, error } = await admin.rpc('settle_ai_buy_order_player', { p_offer_id: offerId, p_seller_id: userId })
+      if (error) {
+        const message = String(error.message || '')
+        const known = ['BAZAAR_LISTING_NOT_OPEN','BAZAAR_LISTING_EXPIRED','BAZAAR_LISTING_NOT_PUBLIC','BAZAAR_AI_SELLER_MISSING','TRADE_PROFILE_MISSING','BAZAAR_UNSUPPORTED_ASSETS','BAZAAR_AI_FUNDS_CHANGED','BAZAAR_PLAYER_ITEM_UNAVAILABLE','BAZAAR_PLAYER_ITEM_RESERVED','BAZAAR_INVALID_ITEM','BAZAAR_INVALID_COSMETIC','BAZAAR_AI_ALREADY_OWNS_COSMETIC','BAZAAR_PLAYER_COSMETIC_UNAVAILABLE','BAZAAR_PLAYER_COSMETIC_RESERVED']
+        return response({ ok: false, error: known.find(k => message.includes(k)) || 'BAZAAR_AI_BUY_ORDER_FAILED' }, 400)
+      }
+      return response({ ok: true, result: data })
+    }
     if (action === 'history') {
       const { data, error } = await admin.from('trade_history')
         .select('id,offer_id,seller_id,buyer_id,offered_assets,requested_assets,completed_at')
