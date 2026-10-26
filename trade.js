@@ -179,7 +179,7 @@ function estimateAssets(assets){
  const a=assets&&typeof assets==='object'?assets:{};
  let total=Math.max(0,Number(a.coins)||0)+Math.max(0,Number(a.xp)||0)/20;
  for(const [id,qty] of Object.entries(a.items||{}))total+=marketValue(id)*Math.max(0,Number(qty)||0);
- for(const [id,owned] of Object.entries(a.cosmetics||{}))if(owned===true||Number(owned)>0)total+=5000;
+ for(const [id,owned] of Object.entries(a.cosmetics||{}))if(owned===true||Number(owned)>0)total+=cosmeticValue(id);
  return Math.round(total);
 }
 function renderHistory(){
