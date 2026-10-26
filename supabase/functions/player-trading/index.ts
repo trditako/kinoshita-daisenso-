@@ -32,12 +32,12 @@ function cleanAssets(input: unknown) {
   const items: Record<string, number> = {}
   const cosmetics: Record<string, number> = {}
   for (const [id, qty] of Object.entries(itemsIn)) {
-    if (id.length < 1 || id.length > 100 || /[\\u0000-\\u001f]/.test(id)) throw new Error('INVALID_ITEM_ID')
+    if (id.length < 1 || id.length > 100 || /[\x00-\x1f]/.test(id)) throw new Error('INVALID_ITEM_ID')
     const n = int(qty, 100_000)
     if (n > 0) items[id] = n
   }
   for (const [id, qty] of Object.entries(cosmeticsIn)) {
-    if (id.length < 1 || id.length > 120 || /[\\u0000-\\u001f]/.test(id)) throw new Error('INVALID_COSMETIC_ID')
+    if (id.length < 1 || id.length > 120 || /[\x00-\x1f]/.test(id)) throw new Error('INVALID_COSMETIC_ID')
     if (int(qty, 1) !== 1) throw new Error('COSMETICS_MUST_BE_UNIQUE')
     cosmetics[id] = 1
   }
