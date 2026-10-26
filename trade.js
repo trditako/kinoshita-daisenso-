@@ -103,6 +103,7 @@ function applyProfileToGame(p){
  localStorage.setItem('kinoshitaPlayerXP',String(Math.max(0,Number(p.xp)||0)));
  localStorage.setItem('kinoshitaInventoryItems',JSON.stringify(p.inventory&&typeof p.inventory==='object'?p.inventory:{}));
  localStorage.setItem('kinoshitaShinjuInventory',JSON.stringify(p.cosmetics&&typeof p.cosmetics==='object'?p.cosmetics:{}));
+ if(p.updated_at)localStorage.setItem('kinoshitaTradeWalletVersion',String(p.updated_at));
 }
 function gameCatalog(){
  const items=profile?.inventory||{}, cosmetics=profile?.cosmetics||{};
@@ -192,7 +193,8 @@ async function refresh(){
   profile=d.profile;
   const synced=await api('sync_wallet',{snapshot:localGameSnapshot()});
   profile=synced.profile||profile;
-  if(synced.imported) applyProfileToGame(profile);
+  const appliedVersion=localStorage.getItem('kinoshitaTradeWalletVersion');
+  if(synced.imported||!appliedVersion||(profile?.updated_at&&String(profile.updated_at)!==appliedVersion)) applyProfileToGame(profile);
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
   const list=await api('list');offers=list.offers||[];
   const completed=await api('history');history=completed.history||[];
