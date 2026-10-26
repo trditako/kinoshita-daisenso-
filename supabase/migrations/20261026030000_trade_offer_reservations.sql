@@ -17,6 +17,7 @@ declare
   reserved bigint;
   reserved_coins bigint;
   reserved_xp bigint;
+  active_count integer;
   items jsonb;
   cosmetics jsonb;
 begin
@@ -36,6 +37,10 @@ begin
   perform 1 from public.trade_profiles where user_id = p_seller_id for update;
   select * into seller from public.trade_profiles where user_id = p_seller_id;
   if not found then raise exception 'TRADE_PROFILE_MISSING'; end if;
+
+  select count(*) into active_count from public.trade_offers
+   where seller_id=p_seller_id and status='open' and expires_at>now();
+  if active_count >= 10 then raise exception 'ACTIVE_OFFER_LIMIT'; end if;
 
   select coalesce(sum((offered_assets->>'coins')::bigint),0),
          coalesce(sum((offered_assets->>'xp')::bigint),0)
