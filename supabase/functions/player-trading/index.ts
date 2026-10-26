@@ -119,7 +119,22 @@ Deno.serve(async (req) => {
         .or(`seller_id.eq.${userId},buyer_id.eq.${userId},buyer_id.is.null`)
         .order('created_at', { ascending: false }).limit(100)
       if (error) throw error
-      return response({ ok: true, offers: data || [] })
+      const { data: aiData, error: aiError } = await admin.from('ai_trade_offers')
+        .select('id,seller_ai_id,buyer_ai_id,offered_assets,requested_assets,status,created_at,expires_at')
+        .eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
+        .order('created_at',{ascending:false}).limit(100)
+      if (aiError) throw aiError
+      const ids=[...new Set((aiData||[]).map(x=>x.seller_ai_id))]
+      let names: Record<number,string>={}
+      if(ids.length){const {data: aiNames,error:nameError}=await admin.from('ai_accounts').select('account_id,name').in('account_id',ids);if(nameError)throw nameError;names=Object.fromEntries((aiNames||[]).map(x=>[x.account_id,x.name]))}
+      return response({ ok: true, offers: data || [], ai_offers: (aiData||[]).map(x=>({...x,seller_type:'ai',seller_name:names[x.seller_ai_id]||('AI '+x.seller_ai_id)})) })
+    }
+    if (action === 'buy_ai_offer') {
+      const offerId=String(body.offer_id||'')
+      if(!/^[0-9a-f-]{36}$/i.test(offerId))return response({ok:false,error:'INVALID_OFFER_ID'},400)
+      const {data,error}=await admin.rpc('settle_ai_trade_player',{p_offer_id:offerId,p_buyer_id:userId})
+      if(error){const msg=String(error.message||'');const known=['BAZAAR_LISTING_NOT_OPEN','BAZAAR_LISTING_EXPIRED','BAZAAR_LISTING_NOT_PUBLIC','BAZAAR_AI_SELLER_MISSING','TRADE_PROFILE_MISSING','BAZAAR_UNSUPPORTED_ASSETS','INSUFFICIENT_CURRENCY','BAZAAR_AI_ITEM_UNAVAILABLE','BAZAAR_COSMETIC_UNAVAILABLE'];return response({ok:false,error:known.find(k=>msg.includes(k))||'BAZAAR_PURCHASE_FAILED'},400)}
+      return response({ok:true,result:data})
     }
     if (action === 'history') {
       const { data, error } = await admin.from('trade_history')
