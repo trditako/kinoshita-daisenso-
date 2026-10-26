@@ -10,8 +10,8 @@ const cors = {
   'Content-Type': 'application/json',
 }
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors })
-type Assets = { coins: number; xp: number; items: Record<string, number> }
-type AI = { account_id: number; coins: number; player_xp: number; inventory_items: Record<string, unknown>; strategy?: string; skill?: number; activity?: Record<string, unknown> }
+type Assets = { coins: number; xp: number; items: Record<string, number>; cosmetics: Record<string, boolean> }
+type AI = { account_id: number; coins: number; player_xp: number; inventory_items: Record<string, unknown>; trade_cosmetics: Record<string, boolean>; strategy?: string; skill?: number; activity?: Record<string, unknown> }
 
 function serviceKey() {
   let key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -69,14 +69,25 @@ function shuffle<T>(values: T[]): T[] {
 function availableAssets(ai: AI) {
   return flatten(ai.inventory_items)
 }
-function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; value: number; currency: 'coins' | 'xp' } | null {
+function availableCosmetics(ai: AI) {
+  return Object.entries(object(ai.trade_cosmetics)).filter(([, owned]) => owned === true).map(([id]) => id)
+}
+function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; value: number; currency: 'coins' | 'xp'; cosmetic: boolean } | null {
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
-  const candidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) =>
-    qty >= 2 && /^[\\p{L}\\p{N}_:-]{1,120}$/u.test(id) && !buyerItems[id]
-  ))
-  for (const [itemId] of candidates) {
-    const base = marketValue(itemId)
+  const buyerCosmetics = new Set(availableCosmetics(buyer))
+  const cosmeticCandidates = shuffle(availableCosmetics(seller).filter(id => !buyerCosmetics.has(id)))
+  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && /^[\\p{L}\\p{N}_:-]{1,120}$/u.test(id) && !buyerItems[id]))
+  const candidates = [
+    ...cosmeticCandidates.map(id => ({ id, cosmetic: true })),
+    ...itemCandidates.map(([id]) => ({ id, cosmetic: false })),
+  ]
+  for (const candidate of candidates) {
+    const itemId = candidate.id
+    const base = candidate.cosmetic ? 5000 : marketValue(itemId)
+    const offeredAssets: Assets = candidate.cosmetic
+      ? { coins: 0, xp: 0, items: {}, cosmetics: { [itemId]: true } }
+      : { coins: 0, xp: 0, items: { [itemId]: 1 }, cosmetics: {} }
     // Sellers trade duplicates at a discount; buyers pay a premium for an item they do not own.
     const sellerFloor = Math.max(1, Math.round(base * 0.65))
     const buyerCeiling = Math.max(sellerFloor, Math.round(base * 1.2))
@@ -84,12 +95,13 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
     if (coinBalance >= sellerFloor) {
       const price = Math.min(buyerCeiling, coinBalance)
       return {
-        offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
-        requested: { coins: price, xp: 0, items: {} },
+        offered: offeredAssets,
+        requested: { coins: price, xp: 0, items: {}, cosmetics: {} },
         itemId,
         price,
         value: price,
         currency: 'coins',
+        cosmetic: candidate.cosmetic,
       }
     }
     // If coins are scarce, XP can be exchanged at a transparent internal reference rate.
@@ -100,12 +112,13 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
     if (xpBalance >= xpFloor) {
       const xpPrice = Math.min(xpCeiling, xpBalance)
       return {
-        offered: { coins: 0, xp: 0, items: { [itemId]: 1 } },
-        requested: { coins: 0, xp: xpPrice, items: {} },
+        offered: offeredAssets,
+        requested: { coins: 0, xp: xpPrice, items: {}, cosmetics: {} },
         itemId,
         price: xpPrice,
         value: Math.round(xpPrice / xpPerCoin),
         currency: 'xp',
+        cosmetic: candidate.cosmetic,
       }
     }
   }
@@ -121,13 +134,13 @@ Deno.serve(async (req: Request) => {
     const batchSize = Number.isInteger(requestedBatch) ? Math.max(1, Math.min(100, requestedBatch)) : 40
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
     const { data, error } = await admin.from('ai_accounts')
-      .select('account_id,coins,player_xp,inventory_items,strategy,skill,activity')
+      .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,strategy,skill,activity')
       .order('account_id', { ascending: true })
     if (error) throw error
     const accounts = (data || []) as AI[]
-    const sellers = shuffle(accounts.filter(ai => Object.keys(availableAssets(ai)).length > 0))
+    const sellers = shuffle(accounts.filter(ai => Object.keys(availableAssets(ai)).length > 0 || availableCosmetics(ai).length > 0))
     let attempted = 0, completed = 0, noMatch = 0, failures = 0
-    const trades: Array<{ seller: number; buyer: number; item: string; currency: 'coins' | 'xp'; amount: number }> = []
+    const trades: Array<{ seller: number; buyer: number; item: string; cosmetic: boolean; currency: 'coins' | 'xp'; amount: number }> = []
     const used = new Set<number>()
     for (const seller of sellers) {
       if (completed >= batchSize) break
@@ -173,7 +186,7 @@ Deno.serve(async (req: Request) => {
           buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price)
         }
         completed++
-        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, currency: offer.currency, amount: offer.price })
+        trades.push({ seller: seller.account_id, buyer: buyer.account_id, item: offer.itemId, cosmetic: offer.cosmetic, currency: offer.currency, amount: offer.price })
         didTrade = true
         break
       }
