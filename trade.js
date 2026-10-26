@@ -107,26 +107,26 @@ function renderLedger(entries){
  }).join('');
 }
 function showError(e){const s=el('ktStatus');if(s)s.innerHTML='<span class="kt-error">'+esc(e?.message||e)+'</span>'}
+function flattenInventory(value,prefix='',out={}){
+ if(!value||typeof value!=='object'||Array.isArray(value))return out;
+ for(const [key,raw] of Object.entries(value)){
+  const id=prefix?prefix+':'+key:key;
+  if(raw&&typeof raw==='object'&&!Array.isArray(raw))flattenInventory(raw,id,out);
+  else {const qty=Math.floor(Number(raw)||0);if(qty>0)out[id]=qty;}
+ }
+ return out;
+}
+function expandInventory(value){
+ const out={};
+ for(const [path,qty] of Object.entries(value||{})){
+  const keys=String(path).split(':');let node=out;
+  for(let i=0;i<keys.length-1;i++){if(!node[keys[i]]||typeof node[keys[i]]!=='object'||Array.isArray(node[keys[i]]))node[keys[i]]={};node=node[keys[i]];}
+  node[keys[keys.length-1]]=Math.max(0,Math.floor(Number(qty)||0));
+ }
+ return out;
+}
 function localGameSnapshot(){
  const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||fallback);return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch{return {}}};
- function flattenInventory(value,prefix='',out={}){
-  if(!value||typeof value!=='object'||Array.isArray(value))return out;
-  for(const [key,raw] of Object.entries(value)){
-   const id=prefix?prefix+':'+key:key;
-   if(raw&&typeof raw==='object'&&!Array.isArray(raw))flattenInventory(raw,id,out);
-   else {const qty=Math.floor(Number(raw)||0);if(qty>0)out[id]=qty;}
-  }
-  return out;
- }
- function expandInventory(value){
-  const out={};
-  for(const [path,qty] of Object.entries(value||{})){
-   const keys=String(path).split(':');let node=out;
-   for(let i=0;i<keys.length-1;i++){if(!node[keys[i]]||typeof node[keys[i]]!=='object'||Array.isArray(node[keys[i]]))node[keys[i]]={};node=node[keys[i]];}
-   node[keys[keys.length-1]]=Math.max(0,Math.floor(Number(qty)||0));
-  }
-  return out;
- }
  const cosmeticsRaw=read('kinoshitaShinjuInventory','{}'), cosmetics={};
  for(const [id,n] of Object.entries(cosmeticsRaw))if(Number(n)>0)cosmetics[id]=Math.floor(Number(n));
  return {coins:Math.max(0,Math.floor(Number(localStorage.getItem('kinoshitaGachaCoins')||0))),xp:Math.max(0,Math.floor(Number(localStorage.getItem('kinoshitaPlayerXP')||0))),items:flattenInventory(read('kinoshitaInventoryItems','{}')),cosmetics};
@@ -148,7 +148,7 @@ function gameCatalog(){
  for(const [id,qty] of Object.entries(items))if(!allItems.some(x=>x.id===id)) {
   const rarity=id.startsWith('rarity_gold:')?id.slice('rarity_gold:'.length):'';
   const known=itemLabels[id];
-  allItems.push({kind:'item',id,name:rarity?'🪙 '+(rarityLabels[rarity]||rarity+'金'):(known?'🎁 '+known:'🎁 アイテム（'+id+'）'),rarity:rarity||'未設定',source:rarity?'ガチャ・ゲーム内':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0)});
+  allItems.push({kind:'item',id,name:rarity?'🪙 '+(rarityLabels[rarity]||rarity+'金'):(known?'🎁 '+known:'🎁 アイテム（'+id+'）'),rarity:rarity||'未設定',source:rarity?'ガチャ・ゲーム内':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0))});
  }
  let allCosmetics=[];
  try{if(typeof SHINJU_ITEMS!=='undefined')allCosmetics=SHINJU_ITEMS.map(x=>({kind:'cosmetic',id:String(x.id),name:(x.emoji||'✨')+' '+x.name+'（'+(x.rarity||'未設定')+' '+(x.type==='costume'?'衣装':'携帯品')+'）',rarity:String(x.rarity||'未設定'),source:String(x.source||x.origin||'真髄'),type:String(x.type||'accessory'),qty:Math.max(0,Math.floor(Number(cosmetics[x.id])||0))}))}catch{}
