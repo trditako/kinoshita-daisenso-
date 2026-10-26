@@ -14,9 +14,12 @@ on:
     branches: [main]
     paths:
       - "supabase/functions/player-trading/**"
+      - "supabase/functions/game-wallet/**"
       - "supabase/functions/ai-trading/**"
       - "supabase/functions/ai-cron/**"
       - "supabase/migrations/*trade*.sql"
+      - "supabase/migrations/*game_wallet*.sql"
+      - "trade.js"
 
 permissions:
   contents: read
