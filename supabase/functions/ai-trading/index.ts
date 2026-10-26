@@ -318,7 +318,48 @@ Deno.serve(async (req: Request) => {
         if(settleError&&!String(settleError.message||'').includes('BAZAAR_LISTING_NOT_OPEN'))failures++
       }
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought })
+    // Publish AI buy orders for items/cosmetics the account does not own.
+    // Each AI has at most one active buy order; settlement revalidates funds and
+    // the player's unreserved inventory atomically in the database.
+    const { data: openPublicOffers, error: openPublicError } = await admin.from('ai_trade_offers')
+      .select('seller_ai_id,offered_assets,requested_assets')
+      .eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
+    if(openPublicError)throw openPublicError
+    const activeBuyers = new Set((openPublicOffers||[]).filter(o => {
+      const off=object(o.offered_assets), req=object(o.requested_assets)
+      return (int(off.coins)>0||int(off.xp)>0) && Object.keys(object(req.items)).length+Object.keys(object(req.cosmetics)).length>0
+    }).map(o=>o.seller_ai_id))
+    const ownedItemIds = new Set<string>(), ownedCosmeticIds = new Set<string>()
+    for(const row of (freshRows||[]) as AI[]) {
+      for(const id of Object.keys(availableAssets(row)))ownedItemIds.add(id)
+      for(const id of availableCosmetics(row))ownedCosmeticIds.add(id)
+    }
+    let aiBuyOrdersCreated=0
+    for(const row of shuffle((freshRows||[]) as AI[])) {
+      if(aiBuyOrdersCreated>=Math.min(20,batchSize)||activeBuyers.has(row.account_id))continue
+      const ownItems=availableAssets(row), ownCosmetics=new Set(availableCosmetics(row))
+      const itemWishes=shuffle([...ownedItemIds].filter(id=>!ownItems[id]&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const cosmeticWishes=shuffle([...ownedCosmeticIds].filter(id=>!ownCosmetics.has(id)&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      if(!itemWishes.length&&!cosmeticWishes.length)continue
+      const useCosmetic=cosmeticWishes.length>0&&(itemWishes.length===0||Math.random()<0.35)
+      const wishId=useCosmetic?cosmeticWishes[0]:itemWishes[0]
+      const reference=useCosmetic?5000:marketValue(wishId)
+      const price=Math.max(1,Math.round(reference*(0.8+Math.random()*0.2)))
+      const useXp=int(row.coins)<price&&int(row.player_xp)>=price*20
+      if(int(row.coins)<price&&!useXp)continue
+      const offered:Assets=useXp
+        ? {coins:0,xp:price*20,items:{},cosmetics:{}}
+        : {coins:price,xp:0,items:{},cosmetics:{}}
+      const requested:Assets=useCosmetic
+        ? {coins:0,xp:0,items:{},cosmetics:{[wishId]:true}}
+        : {coins:0,xp:0,items:{[wishId]:1},cosmetics:{}}
+      const {error:buyOrderError}=await admin.from('ai_trade_offers').insert({
+        seller_ai_id:row.account_id,buyer_ai_id:null,offered_assets:offered,requested_assets:requested,
+        estimated_offered_value:price,estimated_requested_value:reference,status:'open'
+      })
+      if(!buyOrderError){activeBuyers.add(row.account_id);aiBuyOrdersCreated++}else{failures++}
+    }
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
