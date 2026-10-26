@@ -44,3 +44,9 @@ This list is intentionally not exhaustive for every item/currency. The source al
 - The in-game economy has **not** been switched to that wallet.
 - No localStorage inventory import is trusted.
 - Do not merge/deploy the feature as a complete game-wallet integration until the migration and end-to-end tests above are done.
+
+## Follow-up guardrail (2026-10-26)
+
+The current production schema had a legacy `trade_profiles.player_id` association, but that value originated from a client-side ranking ID and is not proof of ownership. Migration `20261026070000_verified_game_account_link_guard.sql` clears such legacy associations, adds `player_link_verified_at`, and enforces uniqueness for non-null player IDs. Future code must set the ID and verification timestamp only after a server-verifiable ownership challenge; a client-provided ID, display name, or email verification for the trade account is insufficient.
+
+This migration is not yet applied to production. The daily-login claim remains intentionally disabled, and game-local balances are not imported. A complete link flow still requires a canonical game-side proof that cannot be minted merely by choosing a localStorage value.
