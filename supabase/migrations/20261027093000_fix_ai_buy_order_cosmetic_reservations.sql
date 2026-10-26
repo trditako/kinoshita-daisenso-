@@ -63,9 +63,24 @@ begin
       when coalesce(t.offered_assets->'cosmetics'->>k,'0')='true' then 1
       else coalesce(nullif(t.offered_assets->'cosmetics'->>k,''),'0')::bigint
     end),0) into v_reserved
-      from public.trade_offers t where t.seller_id=p_seller_id and t.status='open' and t.expires_at>now()
-      and coalesce(t.offered_assets->'cosmetics'->>k,'0') in ('true','1') or
-      (t.seller_id=p_seller_id and t.status='open' and t.expires_at>now() and coalesce(t.offered_assets->'cosmetics'->>k,'0') ~ '^[0-9]+$');
+      from public.trade_offers t
+      where t.seller_id=p_seller_id and t.status='open' and t.expires_at>now()
+        and (coalesce(t.offered_assets->'cosmetics'->>k,'0')='true'
+          or coalesce(t.offered_assets->'cosmetics'->>k,'0') ~ '^[0-9]+    if v_qty-v_reserved < 1 then raise exception 'BAZAAR_PLAYER_COSMETIC_RESERVED'; end if;
+    if v_qty=1 then p_cosmetics:=p_cosmetics-k; else p_cosmetics:=jsonb_set(p_cosmetics,array[k],to_jsonb(v_qty-1),true); end if;
+    ai_cosmetics:=jsonb_set(ai_cosmetics,array[k],'true'::jsonb,true);
+  end loop;
+
+  update public.ai_accounts set coins=coins-pay_coins,player_xp=player_xp-pay_xp,inventory_items=ai_inventory,trade_cosmetics=ai_cosmetics,updated_at=now() where account_id=ai.account_id;
+  update public.trade_profiles set coins=coins+pay_coins,xp=xp+pay_xp,inventory=p_inventory,cosmetics=p_cosmetics,updated_at=now() where user_id=p_seller_id;
+  update public.ai_trade_offers set status='completed',completed_at=now() where id=o.id;
+  insert into public.bazaar_history(listing_type,listing_id,buyer_player_id,seller_ai_id,offered_assets,requested_assets)
+    values('ai',o.id,p_seller_id,o.seller_ai_id,o.requested_assets,o.offered_assets);
+  return jsonb_build_object('ok',true,'listing_id',o.id,'seller_type','player','buyer_type','ai');
+end
+$function$;
+revoke all on function public.settle_ai_buy_order_player(uuid,uuid) from public, anon;
+grant execute on function public.settle_ai_buy_order_player(uuid,uuid) to service_role;);
     if v_qty-v_reserved < 1 then raise exception 'BAZAAR_PLAYER_COSMETIC_RESERVED'; end if;
     if v_qty=1 then p_cosmetics:=p_cosmetics-k; else p_cosmetics:=jsonb_set(p_cosmetics,array[k],to_jsonb(v_qty-1),true); end if;
     ai_cosmetics:=jsonb_set(ai_cosmetics,array[k],'true'::jsonb,true);
