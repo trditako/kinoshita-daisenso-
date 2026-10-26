@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
         if (error) throw error
         return response({ ok: true, profile: data })
       }
-      const { data, error } = await admin.from('trade_profiles').update({ display_name: displayName, updated_at: new Date().toISOString() }).eq('user_id', userId).select('*').single()
+      const { data, error } = await admin.from('trade_profiles').update({ display_name: displayName }).eq('user_id', userId).select('*').single()
       if (error) throw error
       return response({ ok: true, profile: data })
     }
