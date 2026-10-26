@@ -51,7 +51,7 @@ function panel(){
  <div id="ktBody" style="display:none">
   <div id="ktWallet" class="kt-offer"></div>
   <details class="kt-offer"><summary style="cursor:pointer;font-weight:700">アカウント引き継ぎ設定</summary>
-   <p class="kt-muted">メールアドレスとパスワードを登録すると、この匿名アカウントにログイン手段を追加できます。認証サービスの確認メールが必要な場合があります。</p>
+   <p class="kt-muted">まずメールアドレスを登録して確認メールのリンクを開き、その後ゲームに戻ってもう一度ボタンを押すとパスワードを設定できます。</p>
    <label>メールアドレス<input id="ktEmail" type="email" autocomplete="email" placeholder="example@example.com"></label>
    <label>パスワード（8文字以上）<input id="ktPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8文字以上"></label>
    <button id="ktLink" class="kt-primary">引き継ぎ用ログインを追加</button>
