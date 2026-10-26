@@ -113,13 +113,25 @@ async function createOffer(){
 }
 async function linkAccount(){
  const email=el('ktEmail').value.trim(),password=el('ktPassword').value;
- if(!email||password.length<8)throw new Error('メールアドレスと8文字以上のパスワードを入力してください');
+ if(password.length<8)throw new Error('パスワードは8文字以上で入力してください');
  await ensureSession();
- const r=await fetch(BASE+'/auth/v1/user',{method:'PUT',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+ const headers={apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'};
+ const ur=await fetch(BASE+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}});
+ const user=await ur.json().catch(()=>({}));
+ if(!ur.ok)throw new Error(user.msg||user.message||user.error_description||'アカウント状態を確認できませんでした');
+ if(user.email_confirmed_at){
+  const r=await fetch(BASE+'/auth/v1/user',{method:'PUT',headers,body:JSON.stringify({password})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.msg||d.message||d.error_description||'パスワード設定に失敗しました');
+  el('ktStatus').innerHTML='<span class="kt-good">パスワードを設定しました。メールアドレスとこのパスワードで引き継ぎできます。</span>';
+  el('ktPassword').value='';
+  return;
+ }
+ if(!email)throw new Error('先にメールアドレスを入力してください');
+ const r=await fetch(BASE+'/auth/v1/user',{method:'PUT',headers,body:JSON.stringify({email})});
  const d=await r.json().catch(()=>({}));
- if(!r.ok)throw new Error(d.msg||d.message||d.error_description||'引き継ぎ設定に失敗しました');
- el('ktStatus').innerHTML='<span class="kt-good">引き継ぎ用ログインを追加するリクエストを送信しました。</span>';
- el('ktPassword').value='';
+ if(!r.ok)throw new Error(d.msg||d.message||d.error_description||'確認メールの送信に失敗しました');
+ el('ktStatus').innerHTML='<span class="kt-good">確認メールを送信しました。メール内のリンクで確認を完了し、このゲームに戻ってから、もう一度このボタンを押してパスワードを設定してください。</span>';
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
 })();
