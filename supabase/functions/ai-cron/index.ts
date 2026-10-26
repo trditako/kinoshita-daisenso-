@@ -36,7 +36,24 @@ Deno.serve(async (req) => {
       return json({ ok: false, batchStart, batchEnd, status: response.status, text: body }, 502)
     }
 
-    return json({ ok: true, batchStart, batchEnd, worker: body })
+    // Run a bounded AI-to-AI trade batch after the player-simulation batch.
+    // Trading failures are reported separately and do not invalidate the completed worker batch.
+    const tradeResponse = await fetch(`${SUPABASE_URL}/functions/v1/ai-trading`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-ai-worker-token': WORKER_TOKEN
+      },
+      body: JSON.stringify({ batch_size: 20 })
+    })
+    const tradingBody = await tradeResponse.text()
+    return json({
+      ok: true,
+      batchStart,
+      batchEnd,
+      worker: body,
+      trading: { ok: tradeResponse.status >= 200 && tradeResponse.status < 300, status: tradeResponse.status, body: tradingBody }
+    })
   } catch (e) {
     console.error('ai-cron worker fetch failed:', e)
     return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502)
