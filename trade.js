@@ -55,7 +55,6 @@ function panel(){
   for(const n of candidates){let p=n.parentElement;for(let depth=0;p&&depth<5;depth++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const labels=bs.filter(x=>isHomeLabel((x.innerText||x.textContent||'').trim()));const score=labels.length*10-depth;if(labels.length>=3&&score>bestScore){best=p;bestScore=score}}}
   if(best){if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else{b.style.display='none'}
  }
- const root=document.createElement('div');
  const root=document.createElement('div');root.id='kinoshitaTradeRoot';root.innerHTML=`<section id="kinoshitaTradeCard" role="dialog" aria-modal="true" aria-label="プレイヤー取引">
  <header style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><h2 style="margin:0;font-size:22px">🏪 みんなのバザー</h2><div class="kt-muted">プレイヤーとAIが出品・購入する共通市場</div></div><button id="ktClose" class="kt-secondary">閉じる</button></header>
  <div id="ktStatus" style="margin:12px 0">認証状態を確認しています…</div>
