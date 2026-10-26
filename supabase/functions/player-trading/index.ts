@@ -73,6 +73,38 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, profile: data })
     }
+    if (action === 'sync_wallet') {
+      const snapshot = object(body.snapshot)
+      const coins = int(snapshot.coins ?? 0)
+      const xp = int(snapshot.xp ?? 0)
+      const itemsIn = object(snapshot.items)
+      const cosmeticsIn = object(snapshot.cosmetics)
+      const items: Record<string, number> = {}
+      const cosmetics: Record<string, number> = {}
+      for (const [id, qty] of Object.entries(itemsIn)) {
+        if (!id || id.length > 100) throw new Error('INVALID_ITEM_ID')
+        const n = int(qty, 100_000)
+        if (n > 0) items[id] = n
+      }
+      for (const [id, qty] of Object.entries(cosmeticsIn)) {
+        if (!id || id.length > 120) throw new Error('INVALID_COSMETIC_ID')
+        if (int(qty, 1) !== 1) throw new Error('COSMETICS_MUST_BE_UNIQUE')
+        cosmetics[id] = 1
+      }
+      const { data: current, error: currentError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).maybeSingle()
+      if (currentError) throw currentError
+      if (!current) return response({ ok: false, error: 'TRADE_PROFILE_MISSING' }, 404)
+      if (!current.game_assets_synced_at) {
+        const { data: synced, error: syncError } = await admin.from('trade_profiles')
+          .update({ coins, xp, inventory: items, cosmetics, game_assets_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq('user_id', userId).is('game_assets_synced_at', null).select('*').maybeSingle()
+        if (syncError) throw syncError
+        if (synced) return response({ ok: true, imported: true, profile: synced })
+      }
+      const { data: latest, error: latestError } = await admin.from('trade_profiles').select('*').eq('user_id', userId).single()
+      if (latestError) throw latestError
+      return response({ ok: true, imported: false, profile: latest })
+    }
     if (action === 'ledger') {
       const { data, error } = await admin.from('trade_asset_ledger')
         .select('id,asset_type,asset_id,delta,balance_after,source,created_at')
