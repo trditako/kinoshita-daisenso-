@@ -142,10 +142,26 @@ function formatAssets(a){
 }
 async function syncGameFromProfile(p){
  if(!p)return;
- localStorage.setItem('kinoshitaGachaCoins',String(Number(p.coins||0)));
- localStorage.setItem('kinoshitaPlayerXP',String(Number(p.xp||0)));
- localStorage.setItem('kinoshitaInventoryItems',JSON.stringify(p.inventory||{}));
- localStorage.setItem('kinoshitaShinjuInventory',JSON.stringify(p.cosmetics||{}));
+ if(typeof gachaCoins==='number')gachaCoins=Number(p.coins||0);
+ if(typeof playerXP==='number')playerXP=Number(p.xp||0);
+ if(typeof saveInventoryItems==='function')saveInventoryItems(p.inventory||{});
+ if(typeof shinjuInventory!=='undefined'){
+  for(const key of Object.keys(shinjuInventory))delete shinjuInventory[key];
+  Object.assign(shinjuInventory,p.cosmetics||{});
+  if(typeof saveShinjuState==='function')saveShinjuState();
+ }
+ if(typeof characterCosmeticState!=='undefined'&&typeof saveCharacterCosmetics==='function'){
+  for(const key of Object.keys(characterCosmeticState)){
+   const i=Number(key);
+   if(typeof getCharacterCosmeticState==='function')getCharacterCosmeticState(i);
+  }
+  saveCharacterCosmetics();
+ }
+ if(typeof save==='function')save();
+ if(typeof renderOwnedStart==='function')renderOwnedStart();
+ if(typeof renderInventory==='function')renderInventory();
+ if(typeof renderCards==='function')renderCards();
+ if(typeof renderStageSelect==='function')renderStageSelect();
 }
 function marketValue(id){
  const key=String(id).toLowerCase();
@@ -181,7 +197,7 @@ function renderOffers(){
   const canAccept=!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
   return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
  }).join('');
- box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh();await syncGameFromProfile(profile);if(confirm('取引を反映しました。ゲームの所持数を更新するため、ページを再読み込みしますか？'))location.reload()}catch(e){showError(e)}});
+ box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});await refresh();await syncGameFromProfile(profile);el('ktStatus').innerHTML='<span class="kt-good">取引が成立し、ゲーム内の所持数にも反映しました。</span>'}catch(e){showError(e)}});
  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{try{await api('cancel',{offer_id:b.dataset.cancel});await refresh()}catch(e){showError(e)}});
 }
 async function refresh(){
