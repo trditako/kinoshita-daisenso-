@@ -145,6 +145,65 @@ Deno.serve(async (req) => {
       }
       return response({ ok: true, stats: normalized, sample_size: (playerTrades || []).length + (aiTrades || []).length })
     }
+    if (action === 'market_stats') {
+      // Aggregate completed trades into a bounded demand/supply index.
+      const [{ data: playerTrades, error: playerTradeError }, { data: aiTrades, error: aiTradeError }] = await Promise.all([
+        admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
+        admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+      ])
+      if (playerTradeError) throw playerTradeError
+      if (aiTradeError) throw aiTradeError
+      const stats: Record<string, Record<string, { demand: number; supply: number }>> = { items: {}, cosmetics: {} }
+      const add = (kind: 'items' | 'cosmetics', id: string, side: 'demand' | 'supply') => {
+        if (!id || id.length > 120) return
+        const row = (stats[kind] as any)[id] || { demand: 0, supply: 0 }
+        row[side]++
+        ;(stats[kind] as any)[id] = row
+      }
+      const scan = (trade: any) => {
+        const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
+        for (const [id, qty] of Object.entries(object(offered.items))) if (int(qty) > 0) add('items', id, 'supply')
+        for (const [id, qty] of Object.entries(object(requested.items))) if (int(qty) > 0) add('items', id, 'demand')
+        for (const [id, qty] of Object.entries(object(offered.cosmetics))) if (qty === true || int(qty) > 0) add('cosmetics', id, 'supply')
+        for (const [id, qty] of Object.entries(object(requested.cosmetics))) if (qty === true || int(qty) > 0) add('cosmetics', id, 'demand')
+      }
+      for (const trade of [...(playerTrades || []), ...(aiTrades || [])]) scan(trade)
+      const normalized: Record<string, Record<string, number>> = { items: {}, cosmetics: {} }
+      for (const kind of ['items', 'cosmetics'] as const) {
+        for (const [id, row] of Object.entries(stats[kind]) as [string, { demand: number; supply: number }][]) {
+          normalized[kind][id] = Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.demand) * 0.35 - Math.log1p(row.supply) * 0.12))
+        }
+      }
+      const catalog = Array.isArray(body.catalog) ? body.catalog.slice(0, 2500) : []
+      const fixed: Record<string, number> = {
+        normal_gold: 250, power_chest: 1200, golden_chest: 2400, ability_core: 1800,
+        ancient_power: 900, latest_character_exchange_chest: 30000,
+        'rarity_gold:ノーマル': 300, 'rarity_gold:レア': 600, 'rarity_gold:激レア': 1200,
+        'rarity_gold:超激レア': 6000, 'rarity_gold:伝説レア': 18000,
+      }
+      const rarityBase: Record<string, number> = { 'ノーマル': 500, 'レア': 1500, '激レア': 4000, '超激レア': 12000, '伝説レア': 30000 }
+      const snapshotDate = new Date().toISOString().slice(0, 10)
+      const snapshots = []
+      for (const entry of catalog) {
+        const row = object(entry), kind = String(row.kind || ''), id = String(row.id || '')
+        if (!['item', 'cosmetic'].includes(kind) || !id || id.length > 120 || /[\\x00-\\x1f]/.test(id)) continue
+        const bucket = kind === 'item' ? 'items' : 'cosmetics'
+        const multiplier = normalized[bucket][id] ?? 1
+        const rarity = String(row.rarity || '')
+        const base = kind === 'item' ? (fixed[id] ?? fixed[id.toLowerCase()] ?? 150) : (rarityBase[rarity] ?? 5000)
+        snapshots.push({ asset_type: kind, asset_id: id, snapshot_date: snapshotDate, estimated_value: Math.max(1, Math.round(base * multiplier)), demand_multiplier: multiplier })
+      }
+      if (snapshots.length) {
+        const { error: snapshotError } = await admin.from('bazaar_price_history').upsert(snapshots, { onConflict: 'asset_type,asset_id,snapshot_date' })
+        if (snapshotError) throw snapshotError
+      }
+      const since = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10)
+      const { data: priceHistory, error: historyError } = await admin.from('bazaar_price_history')
+        .select('asset_type,asset_id,snapshot_date,estimated_value,demand_multiplier')
+        .gte('snapshot_date', since).order('snapshot_date', { ascending: true }).limit(5000)
+      if (historyError) throw historyError
+      return response({ ok: true, stats: normalized, price_history: priceHistory || [], sample_size: (playerTrades || []).length + (aiTrades || []).length })
+    }
     if (action === 'list') {
       const { data, error } = await admin.from('trade_offers')
         .select('id,seller_id,buyer_id,offered_assets,requested_assets,status,created_at,expires_at')
