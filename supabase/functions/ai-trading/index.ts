@@ -12,6 +12,8 @@ const cors = {
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors })
 type Assets = { coins: number; xp: number; items: Record<string, number>; cosmetics: Record<string, boolean> }
 type AI = { account_id: number; coins: number; player_xp: number; inventory_items: Record<string, unknown>; trade_cosmetics: Record<string, boolean>; strategy?: string; skill?: number; activity?: Record<string, unknown> }
+let marketMultipliers: Record<string, number> = {}
+function demandMultiplier(kind: 'item' | 'cosmetic', id: string) { return Math.max(0.65, Math.min(2.5, marketMultipliers[kind + ':' + id] || 1)) }
 
 function serviceKey() {
   let key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -56,7 +58,7 @@ function marketValue(id: string): number {
     'rarity_gold:超激レア': 6000,
     'rarity_gold:伝説レア': 18000,
   }
-  return fixed[id] ?? fixed[key] ?? 150
+  return Math.round((fixed[id] ?? fixed[key] ?? 150) * demandMultiplier('item', id))
 }
 function shuffle<T>(values: T[]): T[] {
   const a = values.slice()
@@ -84,7 +86,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   ]
   for (const candidate of candidates) {
     const itemId = candidate.id
-    const base = candidate.cosmetic ? 5000 : marketValue(itemId)
+    const base = candidate.cosmetic ? Math.round(5000 * demandMultiplier('cosmetic', itemId)) : marketValue(itemId)
     const offeredAssets: Assets = candidate.cosmetic
       ? { coins: 0, xp: 0, items: {}, cosmetics: { [itemId]: true } }
       : { coins: 0, xp: 0, items: { [itemId]: 1 }, cosmetics: {} }
@@ -133,6 +135,22 @@ Deno.serve(async (req: Request) => {
     const requestedBatch = Number(body.batch_size ?? 40)
     const batchSize = Number.isInteger(requestedBatch) ? Math.max(1, Math.min(100, requestedBatch)) : 40
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+    const [{ data: playerTrades, error: playerTradeError }, { data: aiHistory, error: aiHistoryError }] = await Promise.all([
+      admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
+      admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+    ])
+    if (playerTradeError) throw playerTradeError
+    if (aiHistoryError) throw aiHistoryError
+    const demand: Record<string, { requested: number; offered: number }> = {}
+    const countAssets = (trade: any) => {
+      const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
+      for (const [kind, key] of [['item', 'items'], ['cosmetic', 'cosmetics']] as const) {
+        for (const [id, qty] of Object.entries(object(requested[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.requested++; demand[kind + ':' + id] = row }
+        for (const [id, qty] of Object.entries(object(offered[key]))) if (int(qty) > 0 || qty === true) { const row = demand[kind + ':' + id] || { requested: 0, offered: 0 }; row.offered++; demand[kind + ':' + id] = row }
+      }
+    }
+    for (const trade of [...(playerTrades || []), ...(aiHistory || [])]) countAssets(trade)
+    marketMultipliers = Object.fromEntries(Object.entries(demand).map(([id, row]) => [id, Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.requested) * 0.35 - Math.log1p(row.offered) * 0.12))]))
     const { data, error } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,strategy,skill,activity')
       .order('account_id', { ascending: true })
@@ -225,6 +243,46 @@ Deno.serve(async (req: Request) => {
       if(!insertError){listedAiIds.add(row.account_id);aiListingsCreated++}else{failures++}
     }
 
+    // AI buyers also shop public AI listings. Claim each listing conditionally before
+    // settlement so two workers cannot purchase the same offer at once.
+    const { data: publicAiListings, error: publicAiListingsError } = await admin.from('ai_trade_offers')
+      .select('id,seller_ai_id,offered_assets,requested_assets')
+      .eq('status', 'open').is('buyer_ai_id', null).gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: true }).limit(Math.min(100, batchSize * 5))
+    if (publicAiListingsError) throw publicAiListingsError
+    let aiPublicListingsBought = 0
+    for (const listing of (publicAiListings || [])) {
+      if (aiPublicListingsBought >= Math.min(10, batchSize)) break
+      const req = object(listing.requested_assets), off = object(listing.offered_assets)
+      const reqItems = object(req.items), reqCosmetics = object(req.cosmetics)
+      const offItems = object(off.items), offCosmetics = object(off.cosmetics)
+      const priceCoins = int(req.coins), priceXp = int(req.xp)
+      if ((priceCoins === 0 && priceXp === 0) || Object.keys(reqItems).length || Object.keys(reqCosmetics).length
+        || int(off.coins) > 0 || int(off.xp) > 0
+        || (!Object.keys(offItems).length && !Object.keys(offCosmetics).length)) continue
+      for (const buyer of shuffle((freshRows || []) as AI[])) {
+        if (buyer.account_id === listing.seller_ai_id || int(buyer.coins) < priceCoins || int(buyer.player_xp) < priceXp) continue
+        const { data: claimed, error: claimError } = await admin.from('ai_trade_offers')
+          .update({ buyer_ai_id: buyer.account_id })
+          .eq('id', listing.id).eq('status', 'open').is('buyer_ai_id', null)
+          .select('id').maybeSingle()
+        if (claimError || !claimed) continue
+        const { data: settled, error: settleError } = await admin.rpc('settle_ai_trade', {
+          p_offer_id: listing.id, p_buyer_ai_id: buyer.account_id,
+        })
+        if (!settleError && object(settled).ok) {
+          aiPublicListingsBought++
+          if (priceCoins > 0) buyer.coins = Math.max(0, int(buyer.coins) - priceCoins)
+          if (priceXp > 0) buyer.player_xp = Math.max(0, int(buyer.player_xp) - priceXp)
+          break
+        }
+        // Reopen only if settlement left the listing open; never overwrite a completed trade.
+        await admin.from('ai_trade_offers').update({ buyer_ai_id: null })
+          .eq('id', listing.id).eq('status', 'open').eq('buyer_ai_id', buyer.account_id)
+        if (settleError && !String(settleError.message || '').includes('BAZAAR_LISTING_NOT_OPEN')) failures++
+      }
+    }
+
     // AI buyers also shop public player listings. Only listings priced in coins/XP
     // and offering items/cosmetics are eligible for automated purchase.
     const {data: playerListings,error: playerListingsError}=await admin.from('trade_offers')
@@ -248,7 +306,7 @@ Deno.serve(async (req: Request) => {
         if(settleError&&!String(settleError.message||'').includes('BAZAAR_LISTING_NOT_OPEN'))failures++
       }
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, player_listings_bought:playerListingsBought })
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }

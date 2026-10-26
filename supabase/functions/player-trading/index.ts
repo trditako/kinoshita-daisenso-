@@ -112,6 +112,39 @@ Deno.serve(async (req) => {
       if (error) throw error
       return response({ ok: true, entries: data || [] })
     }
+    if (action === 'market_stats') {
+      // Demand index from recent completed player and AI trades. Requested assets
+      // count as demand; offered assets count as supply. Only aggregate counts leave the server.
+      const [{ data: playerTrades, error: playerTradeError }, { data: aiTrades, error: aiTradeError }] = await Promise.all([
+        admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
+        admin.from('ai_trade_offers').select('offered_assets,requested_assets,created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(500),
+      ])
+      if (playerTradeError) throw playerTradeError
+      if (aiTradeError) throw aiTradeError
+      const stats: Record<string, Record<string, { demand: number; supply: number }>> = { items: {}, cosmetics: {} }
+      const add = (kind: 'items' | 'cosmetics', id: string, side: 'demand' | 'supply') => {
+        if (!id || id.length > 120) return
+        const row = (stats[kind] as any)[id] || { demand: 0, supply: 0 }
+        row[side]++
+        ;(stats[kind] as any)[id] = row
+      }
+      const scan = (trade: any) => {
+        const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
+        for (const [id, qty] of Object.entries(object(offered.items))) if (int(qty) > 0) add('items', id, 'supply')
+        for (const [id, qty] of Object.entries(object(requested.items))) if (int(qty) > 0) add('items', id, 'demand')
+        for (const [id, owned] of Object.entries(object(offered.cosmetics))) if (owned === true || int(owned) > 0) add('cosmetics', id, 'supply')
+        for (const [id, owned] of Object.entries(object(requested.cosmetics))) if (owned === true || int(owned) > 0) add('cosmetics', id, 'demand')
+      }
+      for (const trade of [...(playerTrades || []), ...(aiTrades || [])]) scan(trade)
+      const normalized: Record<string, Record<string, number>> = { items: {}, cosmetics: {} }
+      for (const kind of ['items', 'cosmetics'] as const) {
+        for (const [id, row] of Object.entries(stats[kind]) as [string, { demand: number; supply: number }][]) {
+          // Demand-to-supply ratio adjusts the base estimate; cap the multiplier to avoid extreme swings.
+          normalized[kind][id] = Math.max(0.65, Math.min(2.5, 0.8 + Math.log1p(row.demand) * 0.35 - Math.log1p(row.supply) * 0.12))
+        }
+      }
+      return response({ ok: true, stats: normalized, sample_size: (playerTrades || []).length + (aiTrades || []).length })
+    }
     if (action === 'list') {
       const { data, error } = await admin.from('trade_offers')
         .select('id,seller_id,buyer_id,offered_assets,requested_assets,status,created_at,expires_at')
