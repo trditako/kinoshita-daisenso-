@@ -74,7 +74,7 @@ function availableAssets(ai: AI) {
 function availableCosmetics(ai: AI) {
   return Object.entries(object(ai.trade_cosmetics)).filter(([, owned]) => owned === true).map(([id]) => id)
 }
-function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; value: number; currency: 'coins' | 'xp'; cosmetic: boolean } | null {
+function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets; itemId: string; price: number; value: number; currency: 'coins' | 'xp' | 'barter'; cosmetic: boolean } | null {
   const sellerItems = availableAssets(seller)
   const buyerItems = availableAssets(buyer)
   const buyerCosmetics = new Set(availableCosmetics(buyer))
@@ -103,7 +103,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
       const requested: Assets = useCosmetic
         ? { coins: 0, xp: 0, items: {}, cosmetics: { [buyerBarterCosmetics[0]]: true } }
         : { coins: 0, xp: 0, items: { [buyerBarterItems[0][0]]: 1 }, cosmetics: {} }
-      return { offered: offeredAssets, requested, itemId, price: base, value: base, currency: 'coins', cosmetic: candidate.cosmetic }
+      return { offered: offeredAssets, requested, itemId, price: 0, value: base, currency: 'barter', cosmetic: candidate.cosmetic }
     }
     const coinBalance = int(buyer.coins)
     if (coinBalance >= sellerFloor) {
@@ -170,7 +170,7 @@ Deno.serve(async (req: Request) => {
     const accounts = (data || []) as AI[]
     const sellers = shuffle(accounts.filter(ai => Object.keys(availableAssets(ai)).length > 0 || availableCosmetics(ai).length > 0))
     let attempted = 0, completed = 0, noMatch = 0, failures = 0
-    const trades: Array<{ seller: number; buyer: number; item: string; cosmetic: boolean; currency: 'coins' | 'xp'; amount: number }> = []
+    const trades: Array<{ seller: number; buyer: number; item: string; cosmetic: boolean; currency: 'coins' | 'xp' | 'barter'; amount: number }> = []
     const used = new Set<number>()
     for (const seller of sellers) {
       if (completed >= batchSize) break
@@ -211,7 +211,7 @@ Deno.serve(async (req: Request) => {
         if (offer.currency === 'coins') {
           seller.coins = int(seller.coins) + offer.price
           buyer.coins = Math.max(0, int(buyer.coins) - offer.price)
-        } else {
+        } else if (offer.currency === 'xp') {
           seller.player_xp = int(seller.player_xp) + offer.price
           buyer.player_xp = Math.max(0, int(buyer.player_xp) - offer.price)
         }
