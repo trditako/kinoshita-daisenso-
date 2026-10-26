@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       ])
       if (playerTradeError) throw playerTradeError
       if (aiTradeError) throw aiTradeError
-      const stats: Record<string, { demand: number; supply: number }> = { items: {}, cosmetics: {} } as any
+      const stats: Record<string, Record<string, { demand: number; supply: number }>> = { items: {}, cosmetics: {} }
       const add = (kind: 'items' | 'cosmetics', id: string, side: 'demand' | 'supply') => {
         if (!id || id.length > 120) return
         const row = (stats[kind] as any)[id] || { demand: 0, supply: 0 }
