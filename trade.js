@@ -47,7 +47,7 @@ function panel(){
  document.head.appendChild(style);
  const b=document.createElement('button');b.id='kinoshitaTradeLaunch';b.textContent='🔁 取引';b.onclick=()=>{el('kinoshitaTradeRoot').style.display='flex';refresh().catch(showError)};document.body.appendChild(b);
  const root=document.createElement('div');root.id='kinoshitaTradeRoot';root.innerHTML=`<section id="kinoshitaTradeCard" role="dialog" aria-modal="true" aria-label="プレイヤー取引">
- <header style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><h2 style="margin:0;font-size:22px">🔁 プレイヤー取引</h2><div class="kt-muted">認証済みの取引・サーバー側所持確認</div></div><button id="ktClose" class="kt-secondary">閉じる</button></header>
+ <header style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><h2 style="margin:0;font-size:22px">🏪 みんなのバザー</h2><div class="kt-muted">プレイヤーとAIが出品・購入する共通市場</div></div><button id="ktClose" class="kt-secondary">閉じる</button></header>
  <div id="ktStatus" style="margin:12px 0">認証状態を確認しています…</div>
  <div id="ktBody" style="display:none">
   <div id="ktWallet" class="kt-offer"></div>
@@ -58,7 +58,7 @@ function panel(){
    <label>パスワード（8文字以上）<input id="ktPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8文字以上"></label>
    <button id="ktLink" class="kt-primary">引き継ぎ用ログインを追加</button>
   </details>
-  <h3>取引を募集する</h3>
+  <h3>バザーに出品する</h3>
   <p class="kt-muted">IDやJSONの入力は不要です。サーバーで確認できる所持品から選び、渡す個数を指定してください。衣装・携帯品は重複不可のため1点単位です。ブラウザ保存データの自動取り込みは安全性のため行いません。</p>
   <p class="kt-muted">初回に現在のコイン・XP・アイテム・衣装を取引残高へ取り込みます。取引成立後は交換結果をゲーム内保存データへ反映します。ゲーム側がブラウザ保存方式のため、初回取り込みは端末データを信頼する方式であり、不正改変を完全には防げません。</p>
   <div class="kt-grid">
@@ -70,8 +70,8 @@ function panel(){
    <section class="kt-offer"><h4>求めるアイテム・衣装</h4><label>品目<select id="ktWantAsset"></select></label><label>個数<input id="ktWantQty" type="number" min="1" step="1" value="1"></label><button id="ktAddWant" class="kt-secondary" type="button">求めるものに追加</button><div id="ktWantSelected"></div></section>
   </div>
   <label>相手のユーザーID（空欄なら公開募集）<input id="ktBuyer" placeholder="特定の相手に限定する場合のみ"></label>
-  <button id="ktCreate" class="kt-primary">取引募集を作成</button>
-  <h3 style="margin-top:18px">募集中の取引</h3><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div>
+  <button id="ktCreate" class="kt-primary">出品する</button>
+  <h3 style="margin-top:18px">バザー出品一覧</h3><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div>
   <h3 style="margin-top:18px">取引履歴</h3><div id="ktHistory"></div>
  </div>
  </section>`;
@@ -175,13 +175,19 @@ function renderHistory(){
 }
 function renderOffers(){
  const box=el('ktOffers');if(!box)return;
- if(!offers.length){box.innerHTML='<p class="kt-muted">現在、募集中の取引はありません。</p>';return}
+ if(!offers.length){box.innerHTML='<p class="kt-muted">現在、募集中の出品はありません。</p>';return}
  box.innerHTML=offers.map(o=>{
-  const mine=o.seller_id===session?.user?.id;
-  const canAccept=!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
-  return '<article class="kt-offer"><div><b>募集 '+esc(o.id.slice(0,8))+'</b> · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">渡す: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">求める: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div class="kt-muted">募集者ID: '+esc(o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開募集')+'</div><div style="display:flex;gap:8px;margin-top:8px">'+(canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件を承諾</button>':'')+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">募集取消</button>':'')+'</div></article>'
+  const isAI=o.seller_type==='ai';
+  const mine=!isAI&&o.seller_id===session?.user?.id;
+  const canAccept=!isAI&&!mine&&(!o.buyer_id||o.buyer_id===session?.user?.id);
+  const priceOnly=Number(o.requested_assets?.coins||0)>0||Number(o.requested_assets?.xp||0)>0;
+  const button=isAI
+   ? (priceOnly?'<button class="kt-primary" data-buy-ai="'+esc(o.id)+'">購入する</button>':'<span class="kt-muted">交換不可</span>')
+   : (canAccept?'<button class="kt-primary" data-accept="'+esc(o.id)+'">条件で交換</button>':'');
+  return '<article class="kt-offer"><div><b>'+(isAI?'🤖 AIバザー':'📦 プレイヤー出品')+'</b> · '+esc(o.id.slice(0,8))+' · '+esc(new Date(o.created_at).toLocaleString('ja-JP'))+'</div><div class="kt-muted">出品者: '+esc(isAI?(o.seller_name||('AI '+o.seller_ai_id)):o.seller_id)+(o.buyer_id?' · 指定相手あり':' · 公開出品')+'</div><div class="kt-muted">出品: '+formatAssets(o.offered_assets)+' · 参考評価 '+estimateAssets(o.offered_assets).toLocaleString()+'</div><div class="kt-muted">希望: '+formatAssets(o.requested_assets)+' · 参考評価 '+estimateAssets(o.requested_assets).toLocaleString()+'</div><div style="display:flex;gap:8px;margin-top:8px">'+button+(mine?'<button class="kt-secondary" data-cancel="'+esc(o.id)+'">出品取消</button>':'')+'</div></article>'
  }).join('');
  box.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{try{if(!confirm('この条件で取引を確定しますか？確定後は取り消せません。'))return;await api('accept',{offer_id:b.dataset.accept});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});applyProfileToGame(wallet.profile);el('ktStatus').innerHTML='<span class="kt-good">取引成立。ゲーム内の所持数を更新しています…</span>';setTimeout(()=>location.reload(),250)}catch(e){showError(e)}});
+ box.querySelectorAll('[data-buy-ai]').forEach(b=>b.onclick=async()=>{try{if(!confirm('AIの出品を購入しますか？コイン・XPを消費します。'))return;await api('buy_ai_offer',{offer_id:b.dataset.buyAi});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});applyProfileToGame(wallet.profile);el('ktStatus').innerHTML='<span class="kt-good">購入成立。ゲーム内所持品を更新しています…</span>';setTimeout(()=>location.reload(),250)}catch(e){showError(e)}});
  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{try{await api('cancel',{offer_id:b.dataset.cancel});await refresh()}catch(e){showError(e)}});
 }
 async function refresh(){
@@ -196,7 +202,7 @@ async function refresh(){
   const appliedVersion=localStorage.getItem('kinoshitaTradeWalletVersion');
   if(synced.imported||!appliedVersion||(profile?.updated_at&&String(profile.updated_at)!==appliedVersion)) applyProfileToGame(profile);
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
-  const list=await api('list');offers=list.offers||[];
+  const list=await api('list');offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   const completed=await api('history');history=completed.history||[];
   el('ktStatus').innerHTML='<span class="kt-good">匿名ログイン済み</span> · ユーザーID: <code>'+esc(session.user?.id||'')+'</code>';
   el('ktBody').style.display='block';

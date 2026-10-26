@@ -192,7 +192,63 @@ Deno.serve(async (req: Request) => {
       }
       if (!didTrade) noMatch++
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades })
+
+    // Publish a small, bounded set of AI-owned items into the same public bazaar.
+    const { data: activeAiListings, error: activeListingError } = await admin.from('ai_trade_offers')
+      .select('seller_ai_id').eq('status','open').is('buyer_ai_id',null).gt('expires_at',new Date().toISOString())
+    if(activeListingError) throw activeListingError
+    const listedAiIds = new Set((activeAiListings||[]).map(x=>x.seller_ai_id))
+    const { data: freshRows, error: freshError } = await admin.from('ai_accounts')
+      .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,name')
+      .order('account_id',{ascending:true})
+    if(freshError) throw freshError
+    let aiListingsCreated=0
+    for(const row of (freshRows||[]) as AI[]){
+      if(aiListingsCreated>=Math.min(20,batchSize)||listedAiIds.has(row.account_id))continue
+      const itemMap=availableAssets(row)
+      const cosmeticIds=availableCosmetics(row)
+      const itemCandidates=shuffle(Object.entries(itemMap).filter(([id,qty])=>qty>=2&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const cosmeticCandidates=shuffle(cosmeticIds)
+      const useCosmetic=cosmeticCandidates.length>0&&(itemCandidates.length===0||Math.random()<0.25)
+      const itemId=useCosmetic?cosmeticCandidates[0]:itemCandidates[0]?.[0]
+      if(!itemId)continue
+      const cosmetic=useCosmetic
+      const price=Math.max(1,Math.round(marketValue(itemId)*(0.9+Math.random()*0.35)))
+      const offered:Assets=cosmetic
+        ? {coins:0,xp:0,items:{},cosmetics:{[itemId]:true}}
+        : {coins:0,xp:0,items:{[itemId]:1},cosmetics:{}}
+      const {error:insertError}=await admin.from('ai_trade_offers').insert({
+        seller_ai_id:row.account_id,buyer_ai_id:null,offered_assets:offered,
+        requested_assets:{coins:price,xp:0,items:{},cosmetics:{}},
+        estimated_offered_value:marketValue(itemId),estimated_requested_value:price,status:'open'
+      })
+      if(!insertError){listedAiIds.add(row.account_id);aiListingsCreated++}else{failures++}
+    }
+
+    // AI buyers also shop public player listings. Only listings priced in coins/XP
+    // and offering items/cosmetics are eligible for automated purchase.
+    const {data: playerListings,error: playerListingsError}=await admin.from('trade_offers')
+      .select('id,offered_assets,requested_assets,seller_id')
+      .eq('status','open').is('buyer_id',null).gt('expires_at',new Date().toISOString())
+      .order('created_at',{ascending:true}).limit(Math.min(100,batchSize*5))
+    if(playerListingsError)throw playerListingsError
+    let playerListingsBought=0
+    const aiBuyers=shuffle((freshRows||[]) as AI[])
+    for(const listing of (playerListings||[])){
+      if(playerListingsBought>=Math.min(10,batchSize))break
+      const req=object(listing.requested_assets), off=object(listing.offered_assets)
+      const reqItems=object(req.items),reqCosmetics=object(req.cosmetics),offItems=object(off.items),offCosmetics=object(off.cosmetics)
+      const priceCoins=int(req.coins),priceXp=int(req.xp)
+      if((priceCoins===0&&priceXp===0)||Object.keys(reqItems).length||Object.keys(reqCosmetics).length
+        ||(int(off.coins)>0||int(off.xp)>0)||(!Object.keys(offItems).length&&!Object.keys(offCosmetics).length))continue
+      for(const buyer of aiBuyers){
+        if(int(buyer.coins)<priceCoins||int(buyer.player_xp)<priceXp)continue
+        const {data:settled,error:settleError}=await admin.rpc('settle_player_trade_ai',{p_offer_id:listing.id,p_buyer_ai_id:buyer.account_id})
+        if(!settleError&&object(settled).ok){playerListingsBought++;break}
+        if(settleError&&!String(settleError.message||'').includes('BAZAAR_LISTING_NOT_OPEN'))failures++
+      }
+    }
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, player_listings_bought:playerListingsBought })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
