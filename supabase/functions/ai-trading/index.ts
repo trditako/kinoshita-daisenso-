@@ -80,7 +80,7 @@ function makeOffer(seller: AI, buyer: AI): { offered: Assets; requested: Assets;
   const buyerCosmetics = new Set(availableCosmetics(buyer))
   const sellerCosmetics = new Set(availableCosmetics(seller))
   const cosmeticCandidates = shuffle(availableCosmetics(seller).filter(id => !buyerCosmetics.has(id)))
-  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !buyerItems[id]))
+  const itemCandidates = shuffle(Object.entries(sellerItems).filter(([id, qty]) => qty >= 1 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !buyerItems[id]))
   // AI wish lists may request surplus items and cosmetics, not only currency.
   const buyerBarterItems = shuffle(Object.entries(buyerItems).filter(([id, qty]) => qty >= 2 && id.length <= 120 && !/[\\x00-\\x1f]/.test(id) && !sellerItems[id]))
   const buyerBarterCosmetics = shuffle(availableCosmetics(buyer).filter(id => !sellerCosmetics.has(id)))
