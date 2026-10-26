@@ -243,6 +243,46 @@ Deno.serve(async (req: Request) => {
       if(!insertError){listedAiIds.add(row.account_id);aiListingsCreated++}else{failures++}
     }
 
+    // AI buyers also shop public AI listings. Claim each listing conditionally before
+    // settlement so two workers cannot purchase the same offer at once.
+    const { data: publicAiListings, error: publicAiListingsError } = await admin.from('ai_trade_offers')
+      .select('id,seller_ai_id,offered_assets,requested_assets')
+      .eq('status', 'open').is('buyer_ai_id', null).gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: true }).limit(Math.min(100, batchSize * 5))
+    if (publicAiListingsError) throw publicAiListingsError
+    let aiPublicListingsBought = 0
+    for (const listing of (publicAiListings || [])) {
+      if (aiPublicListingsBought >= Math.min(10, batchSize)) break
+      const req = object(listing.requested_assets), off = object(listing.offered_assets)
+      const reqItems = object(req.items), reqCosmetics = object(req.cosmetics)
+      const offItems = object(off.items), offCosmetics = object(off.cosmetics)
+      const priceCoins = int(req.coins), priceXp = int(req.xp)
+      if ((priceCoins === 0 && priceXp === 0) || Object.keys(reqItems).length || Object.keys(reqCosmetics).length
+        || int(off.coins) > 0 || int(off.xp) > 0
+        || (!Object.keys(offItems).length && !Object.keys(offCosmetics).length)) continue
+      for (const buyer of shuffle((freshRows || []) as AI[])) {
+        if (buyer.account_id === listing.seller_ai_id || int(buyer.coins) < priceCoins || int(buyer.player_xp) < priceXp) continue
+        const { data: claimed, error: claimError } = await admin.from('ai_trade_offers')
+          .update({ buyer_ai_id: buyer.account_id })
+          .eq('id', listing.id).eq('status', 'open').is('buyer_ai_id', null)
+          .select('id').maybeSingle()
+        if (claimError || !claimed) continue
+        const { data: settled, error: settleError } = await admin.rpc('settle_ai_trade', {
+          p_offer_id: listing.id, p_buyer_ai_id: buyer.account_id,
+        })
+        if (!settleError && object(settled).ok) {
+          aiPublicListingsBought++
+          if (priceCoins > 0) buyer.coins = Math.max(0, int(buyer.coins) - priceCoins)
+          if (priceXp > 0) buyer.player_xp = Math.max(0, int(buyer.player_xp) - priceXp)
+          break
+        }
+        // Reopen only if settlement left the listing open; never overwrite a completed trade.
+        await admin.from('ai_trade_offers').update({ buyer_ai_id: null })
+          .eq('id', listing.id).eq('status', 'open').eq('buyer_ai_id', buyer.account_id)
+        if (settleError && !String(settleError.message || '').includes('BAZAAR_LISTING_NOT_OPEN')) failures++
+      }
+    }
+
     // AI buyers also shop public player listings. Only listings priced in coins/XP
     // and offering items/cosmetics are eligible for automated purchase.
     const {data: playerListings,error: playerListingsError}=await admin.from('trade_offers')
@@ -266,7 +306,7 @@ Deno.serve(async (req: Request) => {
         if(settleError&&!String(settleError.message||'').includes('BAZAAR_LISTING_NOT_OPEN'))failures++
       }
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, player_listings_bought:playerListingsBought })
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
