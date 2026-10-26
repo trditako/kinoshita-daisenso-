@@ -128,6 +128,82 @@ begin
 
   s_inventory := coalesce(s.inventory_items, '{}'::jsonb);
   b_inventory := coalesce(b.inventory_items, '{}'::jsonb);
+  -- Validate both inventories before moving anything, so an incoming item cannot be used
+  -- to satisfy the buyer's requested side of the same trade.
+  for k,n in select key, value::text::bigint from jsonb_each_text(offered_items) loop
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}$' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((s_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+    s_inventory := public.trade_jsonb_adjust(s_inventory, string_to_array(k, ':'), -n);
+    b_inventory := public.trade_jsonb_adjust(b_inventory, string_to_array(k, ':'), n);
+  end loop;
+  for k,n in select key, value::text::bigint from jsonb_each_text(requested_items) loop
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}$' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((b_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+    b_inventory := public.trade_jsonb_adjust(b_inventory, string_to_array(k, ':'), -n);
+    s_inventory := public.trade_jsonb_adjust(s_inventory, string_to_array(k, ':'), n);
+  end loop;
+
+  update public.ai_accounts set
+    coins = coins - offered_coins + requested_coins,
+    player_xp = player_xp - offered_xp + requested_xp,
+    inventory_items = s_inventory,
+    updated_at = now()
+  where account_id = o.seller_ai_id;
+  update public.ai_accounts set
+    coins = coins + offered_coins - requested_coins,
+    player_xp = player_xp + offered_xp - requested_xp,
+    inventory_items = b_inventory,
+    updated_at = now()
+  where account_id = p_buyer_ai_id;
+  update public.ai_trade_offers set status = 'completed', completed_at = now() where id = o.id;
+  insert into public.ai_trade_history(offer_id,seller_ai_id,buyer_ai_id,offered_assets,requested_assets,offered_value,requested_value)
+  values(o.id,o.seller_ai_id,p_buyer_ai_id,o.offered_assets,o.requested_assets,o.estimated_offered_value,o.estimated_requested_value);
+  return jsonb_build_object('ok',true,'offer_id',o.id,'seller_ai_id',o.seller_ai_id,'buyer_ai_id',p_buyer_ai_id);
+end;
+$$;
+revoke all on function public.settle_ai_trade(uuid, integer) from public, anon, authenticated;
+grant execute on function public.settle_ai_trade(uuid, integer) to service_role;
+ or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((s_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+  end loop;
+  for k,n in select key, value::text::bigint from jsonb_each_text(requested_items) loop
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}$' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((s_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+    s_inventory := public.trade_jsonb_adjust(s_inventory, string_to_array(k, ':'), -n);
+    b_inventory := public.trade_jsonb_adjust(b_inventory, string_to_array(k, ':'), n);
+  end loop;
+  for k,n in select key, value::text::bigint from jsonb_each_text(requested_items) loop
+    if k !~ '^[a-zA-Z0-9_:-]{1,120}$' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((b_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+    b_inventory := public.trade_jsonb_adjust(b_inventory, string_to_array(k, ':'), -n);
+    s_inventory := public.trade_jsonb_adjust(s_inventory, string_to_array(k, ':'), n);
+  end loop;
+
+  update public.ai_accounts set
+    coins = coins - offered_coins + requested_coins,
+    player_xp = player_xp - offered_xp + requested_xp,
+    inventory_items = s_inventory,
+    updated_at = now()
+  where account_id = o.seller_ai_id;
+  update public.ai_accounts set
+    coins = coins + offered_coins - requested_coins,
+    player_xp = player_xp + offered_xp - requested_xp,
+    inventory_items = b_inventory,
+    updated_at = now()
+  where account_id = p_buyer_ai_id;
+  update public.ai_trade_offers set status = 'completed', completed_at = now() where id = o.id;
+  insert into public.ai_trade_history(offer_id,seller_ai_id,buyer_ai_id,offered_assets,requested_assets,offered_value,requested_value)
+  values(o.id,o.seller_ai_id,p_buyer_ai_id,o.offered_assets,o.requested_assets,o.estimated_offered_value,o.estimated_requested_value);
+  return jsonb_build_object('ok',true,'offer_id',o.id,'seller_ai_id',o.seller_ai_id,'buyer_ai_id',p_buyer_ai_id);
+end;
+$$;
+revoke all on function public.settle_ai_trade(uuid, integer) from public, anon, authenticated;
+grant execute on function public.settle_ai_trade(uuid, integer) to service_role;
+ or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
+    if coalesce((b_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
+  end loop;
   for k,n in select key, value::text::bigint from jsonb_each_text(offered_items) loop
     if k !~ '^[a-zA-Z0-9_:-]{1,120}$' or n < 1 then raise exception 'AI_TRADE_INVALID_ITEM'; end if;
     if coalesce((s_inventory #>> string_to_array(k, ':'))::bigint,0) < n then raise exception 'AI_TRADE_INSUFFICIENT_ITEM:%', k; end if;
