@@ -200,7 +200,7 @@ function fillFilterAssetSelect(){const select=el('ktFilterAsset');if(!select)ret
 function renderValueTable(){
  const box=el('ktValueTable');if(!box)return;const c=gameCatalog();
  const rows=c.all.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).map(x=>({name:x.name,kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity,source:x.source||assetMeta(x.kind,x.id).source,value:x.kind==='item'?marketValue(x.id):cosmeticValue(x.id),multiplier:Number((x.kind==='item'?marketStats.items:marketStats.cosmetics)?.[x.id]||1)}));
- box.innerHTML=rows.length?rows.map(x=>'<div class="kt-value-row"><span>'+esc(x.name)+'<span class="kt-muted"> · '+(x.kind==='item'?'アイテム':'衣装・携帯品')+'</span></span><b>'+Number(x.value).toLocaleString()+' コイン相当</b></div>').join(''):'<p class="kt-muted">現在のカタログを読み込めませんでした。</p>';
+ box.innerHTML=rows.length?rows.map(x=>'<div class="kt-value-row"><span>'+esc(x.name)+'<span class="kt-muted"> · '+esc(x.rarity)+' · '+esc(x.source)+' · '+(x.multiplier>=1.25?'需要高め':x.multiplier<=0.85?'供給多め':'標準')+'</span></span><b>'+Number(x.value).toLocaleString()+' コイン相当</b></div>').join(''):'<p class="kt-muted">現在のカタログを読み込めませんでした。</p>';
 }
 function offerMatches(o){
  const seller=el('ktFilterSeller')?.value||'all',type=el('ktFilterType')?.value||'all',specific=el('ktFilterAsset')?.value||'all',mode=el('ktFilterMode')?.value||'all';
@@ -257,7 +257,7 @@ async function refresh(){
 async function createOffer(){
  const offered=selectedAssets('give');
   const requested=selectedAssets('want');
-  if(el('ktOfferMode').value==='buy'){if(Object.keys(offered.items||{}).length||Object.keys(offered.cosmetics||{}).length)throw new Error('買い注文ではコイン・XPだけを提示してください。');if(!offered.coins&&!offered.xp)throw new Error('買い注文には提示するコインまたはXPが必要です。');if(!Object.keys(requested.items||{}).length&&!Object.keys(requested.cosmetics||{}).length)throw new Error('買い注文では希望するアイテム・衣装・携帯品を指定してください。');}
+  if(el('ktOfferMode').value==='buy'){if(Object.keys(offered.items||{}).length||Object.keys(offered.cosmetics||{}).length)throw new Error('買い注文ではコイン・XPだけを提示してください。');if(!offered.coins&&!offered.xp)throw new Error('買い注文には提示するコインまたはXPが必要です。');if(requested.coins||requested.xp)throw new Error('買い注文の希望側にはコイン・XPではなく品目を指定してください。');if(!Object.keys(requested.items||{}).length&&!Object.keys(requested.cosmetics||{}).length)throw new Error('買い注文では希望するアイテム・衣装・携帯品を指定してください。')}
   if(!offered.coins&&!offered.xp&&!Object.keys(offered.items).length&&!Object.keys(offered.cosmetics).length)throw new Error('渡すものを1つ以上選んでください。');
   if(el('ktWantNoItems').checked){requested.items={};requested.cosmetics={};}
   if(!requested.coins&&!requested.xp&&!Object.keys(requested.items).length&&!Object.keys(requested.cosmetics).length)throw new Error('求めるものが空です。コイン・XPを指定するか、求める品目を追加してください。');
