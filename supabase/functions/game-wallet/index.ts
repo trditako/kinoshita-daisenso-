@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return response({ ok: false, error: 'POST_ONLY' }, 405)
   try {
-    const token = (req.headers.get('authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1]
+    const token = (req.headers.get('authorization') || '').match(/^Bearer\\s+(.+)$/i)?.[1]
     if (!token) return response({ ok: false, error: 'AUTH_REQUIRED' }, 401)
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
     const { data: authData, error: authError } = await admin.auth.getUser(token)
@@ -59,13 +59,11 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'claim_daily_login') {
-      const { data, error } = await admin.rpc('claim_game_daily_login', { p_user_id: userId })
-      if (error) {
-        const message = String(error.message || '')
-        if (message.includes('INVALID_USER')) return response({ ok: false, error: 'INVALID_USER' }, 400)
-        throw error
-      }
-      return response({ ok: true, result: data })
+      // The trade profile is not yet bound to a verified game account. Awarding
+      // rewards here would mint transferable trade balances for an unrelated
+      // anonymous account. Keep the RPC unreachable until account linking and
+      // the canonical game wallet are implemented end-to-end.
+      return response({ ok: false, error: 'GAME_ACCOUNT_LINK_REQUIRED' }, 409)
     }
 
     return response({ ok: false, error: 'UNKNOWN_ACTION' }, 400)
