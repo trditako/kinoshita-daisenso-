@@ -308,6 +308,17 @@ Deno.serve(async (req: Request) => {
       activeByAi.set(listing.seller_ai_id, ids)
     }
 
+    const { data: publicInventoryRows, error: publicInventoryError } = await admin.from('trade_profiles').select('inventory,cosmetics').limit(1000)
+    if(publicInventoryError) throw publicInventoryError
+    const marketItemIds = new Set<string>(), marketCosmeticIds = new Set<string>()
+    for(const profile of (publicInventoryRows||[])) {
+      for(const [id, qty] of Object.entries(flatten(profile.inventory))) if(qty>0&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)) marketItemIds.add(id)
+      for(const [id, qty] of Object.entries(object(profile.cosmetics))) if((qty===true||int(qty)>0)&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)) marketCosmeticIds.add(id)
+    }
+    for(const ai of (freshRows||[]) as AI[]) {
+      for(const [id, qty] of Object.entries(availableAssets(ai))) if(qty>0) marketItemIds.add(id)
+      for(const id of availableCosmetics(ai)) marketCosmeticIds.add(id)
+    }
     let aiListingsCreated=0
     for(const row of shuffle((freshRows||[]) as AI[])){
       if(aiListingsCreated>=Math.min(20,batchSize))break
@@ -326,10 +337,23 @@ Deno.serve(async (req: Request) => {
       const offered:Assets=cosmetic
         ? {coins:0,xp:0,items:{},cosmetics:{[itemId]:true}}
         : {coins:0,xp:0,items:{[itemId]:1},cosmetics:{}}
+      const ownItems = availableAssets(row), ownCosmetics = new Set(availableCosmetics(row))
+      const wantedItems = shuffle([...marketItemIds].filter(id=>id!==itemId&&!ownItems[id]&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const wantedCosmetics = shuffle([...marketCosmeticIds].filter(id=>!ownCosmetics.has(id)&&id!==itemId&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      let requested:Assets = {coins:price,xp:0,items:{},cosmetics:{}}
+      let requestedValue = price
+      if((wantedItems.length||wantedCosmetics.length)&&Math.random()<0.35) {
+        const wantCosmetic = wantedCosmetics.length>0&&(wantedItems.length===0||Math.random()<0.35)
+        const wantId = wantCosmetic?wantedCosmetics[0]:wantedItems[0]
+        requested = wantCosmetic
+          ? {coins:0,xp:0,items:{},cosmetics:{[wantId]:true}}
+          : {coins:0,xp:0,items:{[wantId]:1},cosmetics:{}}
+        requestedValue = wantCosmetic?Math.round(5000*demandMultiplier('cosmetic',wantId)):marketValue(wantId)
+      }
       const {error:insertError}=await admin.from('ai_trade_offers').insert({
         seller_ai_id:row.account_id,buyer_ai_id:null,offered_assets:offered,
-        requested_assets:{coins:price,xp:0,items:{},cosmetics:{}},
-        estimated_offered_value:referenceValue,estimated_requested_value:price,status:'open'
+        requested_assets:requested,
+        estimated_offered_value:referenceValue,estimated_requested_value:requestedValue,status:'open'
       })
       if(!insertError){activeIds.add((cosmetic?'cosmetic:':'item:')+itemId);activeByAi.set(row.account_id,activeIds);aiListingsCreated++}else{failures++}
     }
@@ -348,11 +372,14 @@ Deno.serve(async (req: Request) => {
       const reqItems = object(req.items), reqCosmetics = object(req.cosmetics)
       const offItems = object(off.items), offCosmetics = object(off.cosmetics)
       const priceCoins = int(req.coins), priceXp = int(req.xp)
-      if ((priceCoins === 0 && priceXp === 0) || Object.keys(reqItems).length || Object.keys(reqCosmetics).length
-        || int(off.coins) > 0 || int(off.xp) > 0
-        || (!Object.keys(offItems).length && !Object.keys(offCosmetics).length)) continue
+      if (int(off.coins) > 0 || int(off.xp) > 0
+        || (!Object.keys(offItems).length && !Object.keys(offCosmetics).length)
+        || (!priceCoins && !priceXp && !Object.keys(reqItems).length && !Object.keys(reqCosmetics).length)) continue
       for (const buyer of shuffle((freshRows || []) as AI[])) {
         if (buyer.account_id === listing.seller_ai_id || int(buyer.coins) < priceCoins || int(buyer.player_xp) < priceXp) continue
+        const buyerItems = availableAssets(buyer), buyerCosmetics = new Set(availableCosmetics(buyer))
+        if (Object.entries(reqItems).some(([id, qty]) => (buyerItems[id] || 0) < Math.max(1, int(qty)))) continue
+        if (Object.keys(reqCosmetics).some(id => !buyerCosmetics.has(id))) continue
         const { data: claimed, error: claimError } = await admin.from('ai_trade_offers')
           .update({ buyer_ai_id: buyer.account_id })
           .eq('id', listing.id).eq('status', 'open').is('buyer_ai_id', null)
