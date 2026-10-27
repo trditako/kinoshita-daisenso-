@@ -270,9 +270,8 @@ Deno.serve(async (req: Request) => {
     // Reconcile every existing public AI listing against current server-side holdings.
     // A listing is cancelled if the AI no longer owns the offered assets, or if
     // earlier open listings already reserve those quantities/balances.
-    const aiById = new Map<number, AI>((freshRows || []).map(row => [row.account_id, row as AI]))
+    const aiById = new Map<number, AI>((freshRows || []).map(row => [row.account_id, row as AI] as [number, AI]))
     const reservedByAi = new Map<number, { items: Record<string, number>; cosmetics: Set<string>; coins: number; xp: number }>()
-    const invalidListingIds = new Set<string>()
     let aiListingsCancelledForMissingAssets = 0
     const currentListings = [...(activeAiListings || [])].sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
     for (const listing of currentListings) {
@@ -295,7 +294,7 @@ Deno.serve(async (req: Request) => {
       if (!valid) {
         const { error: cancelError } = await admin.from('ai_trade_offers').update({ status: 'cancelled' }).eq('id', listing.id).eq('status', 'open')
         if (cancelError) failures++
-        else { invalidListingIds.add(listing.id); aiListingsCancelledForMissingAssets++ }
+        else { aiListingsCancelledForMissingAssets++ }
         continue
       }
       for (const [id, qty] of itemEntries) reserved.items[id] = (reserved.items[id] || 0) + int(qty)
@@ -448,7 +447,7 @@ Deno.serve(async (req: Request) => {
       })
       if(!buyOrderError){activeBuyers.add(row.account_id);aiBuyOrdersCreated++}else{failures++}
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated })
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated, ai_listings_cancelled_missing_assets:aiListingsCancelledForMissingAssets })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
