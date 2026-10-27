@@ -352,6 +352,17 @@ async function linkAccount(){
  el('ktStatus').innerHTML='<span class="kt-good">確認メールを送信しました。メール内のリンクで確認を完了し、このゲームに戻ってから、もう一度このボタンを押してパスワードを設定してください。</span>';
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
- const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ランク戦|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){const first=best.querySelector('button,[role="button"]');if(first&&first!==b)best.insertBefore(b,first);else if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
+ // Refresh only the public listing feed every 15 seconds while the bazaar is open.
+  // This avoids repeating wallet sync, market stats, history, and ledger queries.
+  setInterval(async()=>{
+    const root=el('kinoshitaTradeRoot');
+    if(!root||root.style.display==='none'||root.style.display===''||busy||document.hidden)return;
+    try{
+      const list=await api('list');
+      offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+      fillFilterAssetSelect();renderOffers();
+    }catch(e){/* retain current feed; manual refresh still reports errors */}
+  },15000);
+  const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ランク戦|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){const first=best.querySelector('button,[role="button"]');if(first&&first!==b)best.insertBefore(b,first);else if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
  const observer=new MutationObserver(watchHome);observer.observe(document.documentElement,{childList:true,subtree:true});watchHome();
 })();
