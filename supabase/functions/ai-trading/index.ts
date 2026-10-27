@@ -247,7 +247,6 @@ Deno.serve(async (req: Request) => {
     const activeByAi = new Map<number, Set<string>>()
     let aiListingsRepriced=0
     for(const listing of (activeAiListings||[])){
-      const ids=activeByAi.get(listing.seller_ai_id)||new Set<string>()
       const offered=object(listing.offered_assets), requested=object(listing.requested_assets)
       const ageHours=Math.max(0,(Date.now()-Date.parse(String(listing.created_at||new Date().toISOString())))/3600000)
       const targetFactor=ageHours<1?null:ageHours<3?1.08:ageHours<6?1.00:ageHours<12?0.93:ageHours<18?0.87:ageHours<24?0.82:0.75
@@ -262,14 +261,54 @@ Deno.serve(async (req: Request) => {
           if(!priceError)aiListingsRepriced++
         }
       }
-      for(const id of Object.keys(object(offered.items)))ids.add('item:'+id)
-      for(const id of Object.keys(object(offered.cosmetics)))ids.add('cosmetic:'+id)
-      activeByAi.set(listing.seller_ai_id,ids)
     }
     const { data: freshRows, error: freshError } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,name')
       .order('account_id',{ascending:true})
     if(freshError) throw freshError
+
+    // Reconcile every existing public AI listing against current server-side holdings.
+    // A listing is cancelled if the AI no longer owns the offered assets, or if
+    // earlier open listings already reserve those quantities/balances.
+    const aiById = new Map<number, AI>((freshRows || []).map(row => [row.account_id, row as AI]))
+    const reservedByAi = new Map<number, { items: Record<string, number>; cosmetics: Set<string>; coins: number; xp: number }>()
+    const invalidListingIds = new Set<string>()
+    let aiListingsCancelledForMissingAssets = 0
+    const currentListings = [...(activeAiListings || [])].sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+    for (const listing of currentListings) {
+      const ai = aiById.get(listing.seller_ai_id)
+      const offered = object(listing.offered_assets)
+      const itemEntries = Object.entries(object(offered.items)).filter(([, qty]) => int(qty) > 0)
+      const cosmeticEntries = Object.entries(object(offered.cosmetics)).filter(([, qty]) => qty === true || int(qty) > 0)
+      const coins = int(offered.coins), xp = int(offered.xp)
+      const reserved = reservedByAi.get(listing.seller_ai_id) || { items: {}, cosmetics: new Set<string>(), coins: 0, xp: 0 }
+      let valid = !!ai && (itemEntries.length + cosmeticEntries.length + (coins > 0 ? 1 : 0) + (xp > 0 ? 1 : 0) > 0)
+      const ownedItems = ai ? availableAssets(ai) : {}
+      const ownedCosmetics = new Set(ai ? availableCosmetics(ai) : [])
+      for (const [id, qty] of itemEntries) {
+        if (!ownedItems[id] || (reserved.items[id] || 0) + int(qty) > ownedItems[id]) valid = false
+      }
+      for (const [id] of cosmeticEntries) {
+        if (!ownedCosmetics.has(id) || reserved.cosmetics.has(id)) valid = false
+      }
+      if (!ai || reserved.coins + coins > int(ai.coins) || reserved.xp + xp > int(ai.player_xp)) valid = false
+      if (!valid) {
+        const { error: cancelError } = await admin.from('ai_trade_offers').update({ status: 'cancelled' }).eq('id', listing.id).eq('status', 'open')
+        if (cancelError) failures++
+        else { invalidListingIds.add(listing.id); aiListingsCancelledForMissingAssets++ }
+        continue
+      }
+      for (const [id, qty] of itemEntries) reserved.items[id] = (reserved.items[id] || 0) + int(qty)
+      for (const [id] of cosmeticEntries) reserved.cosmetics.add(id)
+      reserved.coins += coins
+      reserved.xp += xp
+      reservedByAi.set(listing.seller_ai_id, reserved)
+      const ids = activeByAi.get(listing.seller_ai_id) || new Set<string>()
+      for (const [id] of itemEntries) ids.add('item:' + id)
+      for (const [id] of cosmeticEntries) ids.add('cosmetic:' + id)
+      activeByAi.set(listing.seller_ai_id, ids)
+    }
+
     let aiListingsCreated=0
     for(const row of shuffle((freshRows||[]) as AI[])){
       if(aiListingsCreated>=Math.min(20,batchSize))break
