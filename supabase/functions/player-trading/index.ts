@@ -241,9 +241,21 @@ Deno.serve(async (req) => {
         .eq('status','open').gt('ends_at',new Date().toISOString())
         .order('ends_at',{ascending:true}).limit(100)
       if (error) throw error
+      const auctions = data || []
+      const playerBidderIds = [...new Set(auctions.map(a=>a.highest_bidder_id).filter((id): id is string=>!!id))]
+      const aiBidderIds = [...new Set(auctions.map(a=>a.highest_bidder_ai_id).filter((id): id is number=>id!==null&&id!==undefined))]
+      const [playerNamesResult, aiNamesResult] = await Promise.all([
+        playerBidderIds.length ? admin.from('trade_profiles').select('user_id,display_name').in('user_id',playerBidderIds) : Promise.resolve({data:[],error:null} as any),
+        aiBidderIds.length ? admin.from('ai_accounts').select('account_id,name').in('account_id',aiBidderIds) : Promise.resolve({data:[],error:null} as any)
+      ])
+      if(playerNamesResult.error)throw playerNamesResult.error
+      if(aiNamesResult.error)throw aiNamesResult.error
+      const playerNames = Object.fromEntries((playerNamesResult.data||[]).map((p:any)=>[p.user_id,p.display_name]))
+      const aiNames = Object.fromEntries((aiNamesResult.data||[]).map((a:any)=>[a.account_id,a.name]))
+      const namedAuctions = auctions.map(a=>({...a,highest_bidder_name:a.highest_bidder_ai_id!=null?(aiNames[a.highest_bidder_ai_id]||('AI '+a.highest_bidder_ai_id)):(a.highest_bidder_id?(playerNames[a.highest_bidder_id]||'プレイヤー'):null)}))
       const { data: profile, error: profileError } = await admin.from('trade_profiles').select('*').eq('user_id',userId).maybeSingle()
       if (profileError) throw profileError
-      return response({ok:true,auctions:data||[],profile})
+      return response({ok:true,auctions:namedAuctions,profile})
     }
     if (action === 'create_auction') {
       const offered = cleanAssets(body.offered_assets)

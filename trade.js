@@ -82,7 +82,7 @@ function panel(){
   <button id="ktCreate" class="kt-primary">出品する</button>
   <section class="kt-offer" style="margin-top:12px"><h4>🔨 オークションに出品</h4><p class="kt-muted">「渡すアイテム・衣装」で選択した品目1種類を出品します。出品時に所持数から預け入れ、終了時に最高入札者へ渡します。入札コインは入札時に一時預かりし、上回られた場合は返金します。</p><div class="kt-grid"><label>開始価格（木下コイン）<input id="ktAuctionStartPrice" type="number" min="1" step="1" value="100"></label><label>開催期間<select id="ktAuctionDuration"><option value="1">1時間</option><option value="6">6時間</option><option value="12">12時間</option><option value="24" selected>24時間</option><option value="48">48時間</option><option value="72">72時間</option></select></label></div><button id="ktCreateAuction" class="kt-primary" type="button">選択した品目をオークションに出す</button></section>
   <h3 style="margin-top:18px">出品の絞り込み</h3><div class="kt-filters"><label>出品者<select id="ktFilterSeller"><option value="all">すべて</option><option value="player">プレイヤー</option><option value="ai">AI</option></select></label><label>品目<select id="ktFilterType"><option value="all">すべての品目</option><option value="item">アイテム</option><option value="cosmetic">衣装・携帯品</option><option value="currency">コイン・XP</option></select></label></div>
-  <label>個別の品目<select id="ktFilterAsset"><option value="all">すべてのアイテム</option></select></label><label>募集タイプ<select id="ktFilterMode"><option value="all">すべて</option><option value="sell">売り出し・交換募集</option><option value="buy">買い注文</option></select></label><h3 style="margin-top:18px">バザー出品一覧</h3><label>並び順<select id="ktSortOffers"><option value="newest">新着順</option><option value="value_desc">参考価値が高い順</option><option value="value_asc">参考価値が安い順</option><option value="requested_desc">希望価値が高い順</option><option value="requested_asc">希望価値が安い順</option></select></label><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div><h3 style="margin-top:18px">🔨 オークション一覧</h3><p class="kt-muted">終了時刻まで入札できます。最高入札額が更新されると、前の最高入札者のコインは自動返金されます。</p><div id="ktAuctions"></div>
+  <label>個別の品目<select id="ktFilterAsset"><option value="all">すべてのアイテム</option></select></label><label>募集タイプ<select id="ktFilterMode"><option value="all">すべて</option><option value="sell">売り出し・交換募集</option><option value="buy">買い注文</option></select></label><h3 style="margin-top:18px">バザー出品一覧</h3><label>並び順<select id="ktSortOffers"><option value="newest">新着順</option><option value="value_desc">参考価値が高い順</option><option value="value_asc">参考価値が安い順</option><option value="requested_desc">希望価値が高い順</option><option value="requested_asc">希望価値が安い順</option></select></label><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div><h3 style="margin-top:18px">🔨 オークション一覧</h3><p class="kt-muted">終了時刻まで入札できます。最高入札額が更新されると、前の最高入札者のコインは自動返金されます。</p><div class="kt-filters"><label>出品者<select id="ktAuctionSeller"><option value="all">すべて</option><option value="player">プレイヤー</option><option value="ai">AI</option></select></label><label>品目の種類<select id="ktAuctionType"><option value="all">すべて</option><option value="item">アイテム</option><option value="cosmetic">衣装・携帯品</option><option value="currency">コイン・XP</option></select></label><label>入札状況<select id="ktAuctionBidState"><option value="all">すべて</option><option value="bid">入札あり</option><option value="none">入札なし</option></select></label><label>表示順<select id="ktAuctionSort"><option value="ending">終了が近い順</option><option value="newest">新着順</option><option value="price_asc">現在価格が安い順</option><option value="price_desc">現在価格が高い順</option></select></label></div><label>品目名で検索<input id="ktAuctionSearch" type="search" placeholder="アイテム名・衣装名・IDの一部"></label><div id="ktAuctions"></div>
   <div id="ktCollectionInfo" class="kt-offer"></div><details class="kt-offer"><summary style="cursor:pointer;font-weight:700">📊 アイテム・衣装・携帯品の参考価値表</summary><p class="kt-muted">表示価格はゲーム内で比較するための参考評価（木下コイン換算）です。公式固定価格や売却保証ではなく、出品者の希望価格・実際の成立価格とは異なります。相場は取引データが増えたら見直してください。</p><div id="ktValueTable"></div><hr style="border-color:#475569;margin:12px 0"><h4>品目ごとの価値推移</h4><p class="kt-muted">品目を選ぶと、バザーを開いた際に記録された日別の参考評価を表示します。記録開始前の価格は復元できません。実際の取引価格ではなく、需要・供給から算出した参考評価です。</p><label>グラフ対象<select id="ktChartAsset"><option value="">品目を選択</option></select></label><div id="ktPriceChart"></div></details>
   <details class="kt-offer kt-help"><summary style="cursor:pointer;font-weight:700">📖 出品方法・取引の手順</summary><ol><li>「バザーに出品する」で、渡す側の所持品一覧から出品するアイテム・衣装・携帯品を選びます。IDを手入力する必要はありません。</li><li>アイテムは渡したい個数を入力して「渡すものに追加」を押します。衣装・携帯品は重複できないため1点ずつ指定します。コイン・XPも必要な分だけ入力します。</li><li>「求めるもの」側で、交換相手に希望するコイン・XP・アイテム・衣装・携帯品を選びます。何も指定しない募集は作成できません。</li><li>誰でも応募できる場合は相手のユーザーIDを空欄にします。特定の相手だけに出したい場合は、その相手のユーザーIDを入力します。</li><li>内容と参考価値を確認して「出品する」を押します。出品後は一覧に表示され、成立前なら自分の出品の「出品取消」から取り下げられます。</li><li>他のプレイヤーの出品は「条件で交換」、AIのコイン・XP販売は「購入する」から進めます。確定前に内容を確認してください。成立した取引は原則として取り消せません。</li></ol><p class="kt-muted">注意：サーバーで確認できる所持品だけが出品対象です。初回同期の端末データは完全な不正防止を保証しません。相手のユーザーIDや提示条件をよく確認してください。</p></details>
   <h3 style="margin-top:18px">取引履歴</h3><div id="ktHistory"></div>
@@ -94,7 +94,7 @@ function panel(){
  el('ktReconcileCosmetics').onclick=async()=>{try{if(!confirm('現在のゲーム内データにある衣装・携帯品の個数を、バザーの所持数に一度だけ反映します。ゲームを更新した後の最新データであることを確認してください。続けますか？'))return;const result=await api('reconcile_cosmetics',{snapshot:localGameSnapshot()});profile=result.profile;applyProfileToGame(profile);el('ktStatus').innerHTML='<span class="kt-good">衣装・携帯品の重複所持数を再同期しました。</span>';await refresh()}catch(e){showError(e)}};
  el('ktAddGive').addEventListener('click',()=>{try{addSelectedAsset('give');el('ktStatus').textContent='渡すものに追加しました。';}catch(e){showError(e)}});
  el('ktAddWant').addEventListener('click',()=>{try{addSelectedAsset('want');el('ktStatus').textContent='求めるものに追加しました。';}catch(e){showError(e)}});
- el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=()=>loadPriceHistory().catch(showError);
+ el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=()=>loadPriceHistory().catch(showError);['ktAuctionSeller','ktAuctionType','ktAuctionBidState','ktAuctionSort','ktAuctionSearch'].forEach(id=>{const node=el(id);if(node)node.addEventListener(id==='ktAuctionSearch'?'input':'change',renderAuctions)});
  el('ktWantNoItems').onchange=()=>{const off=el('ktWantNoItems').checked;el('ktWantAsset').disabled=off;el('ktWantQty').disabled=off;if(off){chosen.want.items={};chosen.want.cosmetics={};renderChosen('want');}else fillAssetSelect('want');};
  el('ktCreate').onclick=()=>createOffer().catch(showError);
  el('ktCreateAuction').onclick=()=>createAuction().catch(showError);
@@ -342,19 +342,44 @@ async function createAuction(){
 function renderAuctions(){
  const box=el('ktAuctions');if(!box)return;
  const now=Date.now();
- const visible=auctions.filter(a=>a.status==='open'&&new Date(a.ends_at).getTime()>now);
- if(!visible.length){box.innerHTML='<p class="kt-muted">開催中のオークションはありません。</p>';return;}
+ const sellerFilter=el('ktAuctionSeller')?.value||'all';
+ const typeFilter=el('ktAuctionType')?.value||'all';
+ const bidFilter=el('ktAuctionBidState')?.value||'all';
+ const sort=el('ktAuctionSort')?.value||'ending';
+ const query=(el('ktAuctionSearch')?.value||'').trim().toLocaleLowerCase();
+ const visible=auctions.filter(a=>{
+  if(a.status!=='open'||new Date(a.ends_at).getTime()<=now)return false;
+  const isAI=a.seller_ai_id!==null&&a.seller_ai_id!==undefined;
+  if(sellerFilter==='ai'&&!isAI||sellerFilter==='player'&&isAI)return false;
+  const assets=a.offered_assets||{};
+  const items=assets.items&&Object.values(assets.items).some(v=>Number(v)>0);
+  const cosmetics=assets.cosmetics&&Object.values(assets.cosmetics).some(v=>Number(v)>0);
+  const currency=Number(assets.coins||0)>0||Number(assets.xp||0)>0;
+  if(typeFilter==='item'&&!items||typeFilter==='cosmetic'&&!cosmetics||typeFilter==='currency'&&!currency)return false;
+  const hasBid=Number(a.highest_bid||0)>0||!!a.highest_bidder_id||a.highest_bidder_ai_id!==null&&a.highest_bidder_ai_id!==undefined;
+  if(bidFilter==='bid'&&!hasBid||bidFilter==='none'&&hasBid)return false;
+  if(query&&!((JSON.stringify(assets)+' '+formatAssets(assets)+' '+a.id).toLocaleLowerCase().includes(query)))return false;
+  return true;
+ }).sort((a,b)=>{
+  if(sort==='newest')return new Date(b.created_at)-new Date(a.created_at);
+  if(sort==='price_asc')return Number(a.highest_bid||a.starting_price||0)-Number(b.highest_bid||b.starting_price||0);
+  if(sort==='price_desc')return Number(b.highest_bid||b.starting_price||0)-Number(a.highest_bid||a.starting_price||0);
+  return new Date(a.ends_at)-new Date(b.ends_at);
+ });
+ if(!visible.length){box.innerHTML='<p class="kt-muted">条件に一致するオークションはありません。</p>';return;}
  box.innerHTML=visible.map(a=>{
-  const mine=a.seller_id===session?.user?.id;const sellerLabel=a.seller_ai_id!=null?'AI '+a.seller_ai_id:'プレイヤー';const isMineAI=a.seller_ai_id!=null;
+  const mine=a.seller_id===session?.user?.id;
+  const sellerLabel=a.seller_ai_id!=null?'AI '+a.seller_ai_id:(a.seller_name||'プレイヤー');
   const bid=Number(a.highest_bid||0),minimum=Math.max(Number(a.starting_price||1),bid+1);
   const remaining=Math.max(0,new Date(a.ends_at).getTime()-now);
   const time=remaining<3600000?Math.ceil(remaining/60000)+'分':Math.ceil(remaining/3600000)+'時間';
-  return '<article class="kt-offer"><div><b>🔨 オークション</b> · '+esc(a.id.slice(0,8))+'</div><div class="kt-muted">出品者: '+esc(sellerLabel)+'</div><div>出品: '+formatAssets(a.offered_assets)+'</div><div>開始価格: '+Number(a.starting_price).toLocaleString()+' コイン</div><div><b>現在価格: '+(bid?bid.toLocaleString()+' コイン':'入札なし')+'</b></div><div class="kt-muted">終了まで約 '+time+((a.highest_bidder_id||a.highest_bidder_ai_id!=null)?' · 入札あり':' · 入札なし')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+(!mine?'<button class="kt-primary" data-auction-bid="'+esc(a.id)+'" data-minimum="'+minimum+'">入札する（最低 '+minimum.toLocaleString()+'）</button>':'<span class="kt-muted">自分の出品</span>')+(mine&&bid===0?'<button class="kt-secondary" data-auction-cancel="'+esc(a.id)+'">出品取消</button>':'')+'</div></article>';
+  const hasBid=!!(a.highest_bidder_id||a.highest_bidder_ai_id!=null||bid>0);
+  const bidderLabel=a.highest_bidder_ai_id!=null?(a.highest_bidder_name||('AI '+a.highest_bidder_ai_id)):(a.highest_bidder_id?(a.highest_bidder_name||'プレイヤー'):'入札者なし');
+  return '<article class="kt-offer"><div><b>🔨 オークション</b> · '+esc(a.id.slice(0,8))+'</div><div class="kt-muted">出品者: '+esc(sellerLabel)+'</div><div>出品: '+formatAssets(a.offered_assets)+'</div><div>開始価格: '+Number(a.starting_price).toLocaleString()+' コイン</div><div><b>現在価格: '+(bid?bid.toLocaleString()+' コイン':'入札なし')+'</b></div><div class="kt-muted">最後の入札者: <b>'+esc(bidderLabel)+'</b></div><div class="kt-muted">終了まで約 '+time+' · '+(hasBid?'入札あり':'入札なし')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+(!mine?'<button class="kt-primary" data-auction-bid="'+esc(a.id)+'" data-minimum="'+minimum+'">入札する（最低 '+minimum.toLocaleString()+'）</button>':'<span class="kt-muted">自分の出品</span>')+(mine&&bid===0?'<button class="kt-secondary" data-auction-cancel="'+esc(a.id)+'">出品取消</button>':'')+'</div></article>';
  }).join('');
  box.querySelectorAll('[data-auction-bid]').forEach(b=>b.onclick=async()=>{try{const amount=prompt('入札額（木下コイン）を入力してください。最低入札額: '+Number(b.dataset.minimum).toLocaleString(),b.dataset.minimum);if(amount===null)return;const n=Number(amount);if(!Number.isSafeInteger(n)||n<Number(b.dataset.minimum))throw new Error('最低入札額以上の整数を入力してください。');if(!confirm(n.toLocaleString()+'コインで入札します。入札中のコインは一時的に預けられます。'))return;await api('bid_auction',{auction_id:b.dataset.auctionBid,bid:n});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});profile=wallet.profile;applyProfileToGame(profile);await refresh();}catch(e){showError(e)}});
  box.querySelectorAll('[data-auction-cancel]').forEach(b=>b.onclick=async()=>{try{if(!confirm('入札がないオークションを取り消して、預けた品目を返却しますか？'))return;await api('cancel_auction',{auction_id:b.dataset.auctionCancel});await refresh();}catch(e){showError(e)}});
 }
-
 async function createOffer(){
  const offered=selectedAssets('give');
   const requested=selectedAssets('want');
