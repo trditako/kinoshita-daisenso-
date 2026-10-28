@@ -156,6 +156,7 @@ Deno.serve(async (req) => {
       const stats: Record<string, Record<string, { demand: number; supply: number }>> = { items: {}, cosmetics: {} }
       const realized: Record<string, { sum: number; count: number }> = {}
       const realizedFixed: Record<string, number> = {normal_gold:250,power_chest:1200,golden_chest:2400,ability_core:1800,ancient_power:900,latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000}
+      const inferredItemBase = (id: string) => { if(realizedFixed[id]!==undefined)return realizedFixed[id]; const rarity=id.match(/(伝説レア|超激レア|激レア|レア|ノーマル|legendary|uber|super|rare|normal)/i)?.[1]||''; const values:Record<string,number>={'伝説レア':18000,'legendary':18000,'超激レア':6000,'uber':6000,'激レア':1200,'super':1200,'レア':600,'rare':600,'ノーマル':300,'normal':300}; if(/gold/i.test(id))return values[rarity]??300; if(/(?:^|[_:-])power(?:$|[_:-])/i.test(id)||/パワー/.test(id))return values[rarity]??900; return 150 }
       const add = (kind: 'items' | 'cosmetics', id: string, side: 'demand' | 'supply') => {
         if (!id || id.length > 120) return
         const row = (stats[kind] as any)[id] || { demand: 0, supply: 0 }
@@ -171,7 +172,7 @@ Deno.serve(async (req) => {
         const price=int(requested.coins)+Math.round(int(requested.xp)/20)
         if(price<=0)return
         const assets:Array<{kind:'items'|'cosmetics';id:string;base:number;qty:number}>=[]
-        for(const [id,qty] of Object.entries(object(offered.items)))if(int(qty)>0)assets.push({kind:'items',id,base:realizedFixed[id]??realizedFixed[id.toLowerCase()]??150,qty:int(qty)})
+        for(const [id,qty] of Object.entries(object(offered.items)))if(int(qty)>0)assets.push({kind:'items',id,base:inferredItemBase(id),qty:int(qty)})
         for(const [id,qty] of Object.entries(object(offered.cosmetics)))if(qty===true||int(qty)>0)assets.push({kind:'cosmetics',id,base:5000,qty:qty===true?1:int(qty)})
         const total=assets.reduce((sum,a)=>sum+a.base*a.qty,0)
         if(total<=0)return
@@ -222,7 +223,7 @@ Deno.serve(async (req) => {
         const bucket = kind === 'item' ? 'items' : 'cosmetics'
         const multiplier = normalized[bucket][id] ?? 1
         const rarity = String(row.rarity || '')
-        const base = kind === 'item' ? (fixed[id] ?? fixed[id.toLowerCase()] ?? 150) : (rarityBase[rarity] ?? 5000)
+        const base = kind === 'item' ? (fixed[id] ?? fixed[id.toLowerCase()] ?? inferredItemBase(id)) : (rarityBase[rarity] ?? 5000)
         snapshots.push({ asset_type: kind, asset_id: id, snapshot_date: snapshotDate, estimated_value: Math.max(1, Math.round(base * multiplier)), demand_multiplier: multiplier })
       }
       if (snapshots.length) {

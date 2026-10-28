@@ -147,9 +147,14 @@ function gameCatalog(){
  const itemLabels={normal_gold:'ノーマル金塊',power_chest:'パワー宝箱',golden_chest:'黄金宝箱',ability_core:'能力コア',ancient_power:'古代のパワー',latest_character_exchange_chest:'最新キャラ交換宝箱',skill_crystal:'スキル結晶'};
  const allItems=Object.entries(defs).map(([id,d])=>({kind:'item',id,name:(d.emoji||'🎁')+' '+d.name,rarity:String(d.rarity||d.rarityName||d.tier||'未設定'),source:String(d.source||d.origin||'ゲーム内'),qty:Math.max(0,Math.floor(Number(items[id])||0))}));
  for(const [id,qty] of Object.entries(items))if(!allItems.some(x=>x.id===id)) {
-  const rarity=id.startsWith('rarity_gold:')?id.slice('rarity_gold:'.length):'';
+  const goldRarity=id.match(/(?:rarity_gold:|(?:gold|golden)[_:-]?)(ノーマル|レア|激レア|超激レア|伝説レア|normal|rare|super_rare|uber_rare|legendary)/i)?.[1]||'';
+  const rarityAliases={'normal':'ノーマル','rare':'レア','super_rare':'激レア','uber_rare':'超激レア','legendary':'伝説レア'};
+  const rarity=rarityAliases[goldRarity.toLowerCase()]||goldRarity;
   const known=itemLabels[id];
-  allItems.push({kind:'item',id,name:rarity?'🪙 '+(rarityLabels[rarity]||rarity+'金'):(known?'🎁 '+known:'🎁 アイテム（'+id+'）'),rarity:rarity||'未設定',source:rarity?'ガチャ・ゲーム内':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0))});
+  const powerLabel=/(?:^|[_:-])power(?:$|[_:-])/i.test(id)||/パワー/.test(id);
+  const goldLabel=/gold/i.test(id)||!!rarity;
+  const inferredName=goldLabel?'🪙 '+(rarityLabels[rarity]||((rarity||'各種')+'金')):powerLabel?'⚡ '+(known||('パワー素材（'+id+'）')):null;
+  allItems.push({kind:'item',id,name:inferredName||(known?'🎁 '+known:'🎁 アイテム（'+id+'）'),rarity:rarity||'未設定',source:goldLabel?'ガチャ・ゲーム内':powerLabel?'強化素材':'ゲーム内',qty:Math.max(0,Math.floor(Number(qty)||0))});
  }
  let allCosmetics=[];
  try{if(typeof SHINJU_ITEMS!=='undefined')allCosmetics=SHINJU_ITEMS.map(x=>({kind:'cosmetic',id:String(x.id),name:(x.emoji||'✨')+' '+x.name+'（'+(x.rarity||'未設定')+' '+(x.type==='costume'?'衣装':'携帯品')+'）',rarity:String(x.rarity||'未設定'),source:String(x.source||x.origin||'真髄'),type:String(x.type||'accessory'),qty:Math.max(0,Math.floor(Number(cosmetics[x.id])||0))}))}catch{}
