@@ -9,7 +9,7 @@ begin
       $cmd$select net.http_post(
         url := 'https://jhohdvuoyvbzwjumnibc.supabase.co/functions/v1/ai-cron',
         body := '{"mode":"trading"}'::jsonb,
-        headers := '{"Content-Type":"application/json","x-ai-cron-token":"11231123Aa"}'::jsonb,
+        headers := '{"Content-Type":"application/json"}'::jsonb,
         timeout_milliseconds := 10000
       );$cmd$
     );
