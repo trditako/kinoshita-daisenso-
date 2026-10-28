@@ -52,7 +52,7 @@ begin
  if not found then raise exception 'AI_ACCOUNT_MISSING'; end if;
  if a.highest_bidder_id is not null then
    update public.trade_profiles set coins=coins+a.highest_bid,updated_at=now() where user_id=a.highest_bidder_id;
- elsif a.highest_bidder_ai_id is not null then
+ elsif a.highest_bidder_ai_id is not null and a.highest_bidder_ai_id<>p_bidder_ai_id then
    update public.ai_accounts set coins=coins+a.highest_bid,updated_at=now() where account_id=a.highest_bidder_ai_id;
  end if;
  if a.highest_bidder_ai_id=p_bidder_ai_id then
@@ -87,7 +87,7 @@ begin
      update public.trade_profiles set inventory=seller.inventory,cosmetics=seller.cosmetics,updated_at=now() where user_id=seller.user_id;
    else
      for k,n in select key,value::text::bigint from jsonb_each_text(items) loop seller_ai.inventory_items:=public.trade_jsonb_adjust(coalesce(seller_ai.inventory_items,'{}'::jsonb),string_to_array(k,':'),n); end loop;
-     update public.ai_accounts set inventory_items=seller_ai.inventory_items,trade_cosmetics=coalesce(seller_ai.trade_cosmetics,'{}'::jsonb)||cosmetics,updated_at=now() where account_id=seller_ai.account_id;
+     update public.ai_accounts set inventory_items=seller_ai.inventory_items,trade_cosmetics=coalesce(seller_ai.trade_cosmetics,'{}'::jsonb)|| (select coalesce(jsonb_object_agg(key,true),'{}'::jsonb) from jsonb_each(cosmetics)),updated_at=now() where account_id=seller_ai.account_id;
    end if;
    update public.bazaar_auctions set status='expired',completed_at=now() where id=a.id;
    return jsonb_build_object('ok',true,'status','expired','no_bids',true);
@@ -111,7 +111,7 @@ begin
    update public.trade_profiles set inventory=buyer.inventory,cosmetics=buyer.cosmetics,updated_at=now() where user_id=buyer.user_id;
  else
    for k,n in select key,value::text::bigint from jsonb_each_text(items) loop buyer_ai.inventory_items:=public.trade_jsonb_adjust(coalesce(buyer_ai.inventory_items,'{}'::jsonb),string_to_array(k,':'),n); end loop;
-   update public.ai_accounts set inventory_items=buyer_ai.inventory_items,trade_cosmetics=coalesce(trade_cosmetics,'{}'::jsonb)||cosmetics,updated_at=now() where account_id=buyer_ai.account_id;
+   update public.ai_accounts set inventory_items=buyer_ai.inventory_items,trade_cosmetics=coalesce(trade_cosmetics,'{}'::jsonb)|| (select coalesce(jsonb_object_agg(key,true),'{}'::jsonb) from jsonb_each(cosmetics)),updated_at=now() where account_id=buyer_ai.account_id;
  end if;
  if a.seller_id is not null then update public.trade_profiles set coins=coins+a.highest_bid,updated_at=now() where user_id=a.seller_id;
  else update public.ai_accounts set coins=coins+a.highest_bid,updated_at=now() where account_id=a.seller_ai_id; end if;
