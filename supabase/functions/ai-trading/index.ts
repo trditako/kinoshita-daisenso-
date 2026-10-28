@@ -532,11 +532,10 @@ Deno.serve(async (req: Request) => {
       if(aiAuctionBids>=5)break
       if(!auction.seller_ai_id&&auction.seller_id===null)continue
       if(auction.seller_ai_id!==null&&auction.seller_ai_id!==undefined&&auction.highest_bidder_ai_id===auction.seller_ai_id)continue
-      if(auction.highest_bidder_ai_id!==null&&auction.highest_bidder_ai_id!==undefined)continue
       const minimum=Math.max(Number(auction.starting_price)||1,(Number(auction.highest_bid)||0)+1)
       const bidderCandidates=shuffle((freshRows||[]) as AI[])
       for(const bidder of bidderCandidates){
-        if(bidder.account_id===auction.seller_ai_id||int(bidder.coins)<minimum)continue
+        if(bidder.account_id===auction.seller_ai_id||bidder.account_id===auction.highest_bidder_ai_id||int(bidder.coins)<minimum)continue
         // Keep AI bids conservative; they should not spend more than 8% of current coins per bid.
         if(minimum>Math.max(100,Math.floor(int(bidder.coins)*0.08)))continue
         const {error:bidError}=await admin.rpc('bid_ai_bazaar_auction',{p_auction_id:auction.id,p_bidder_ai_id:bidder.account_id,p_bid:minimum})
