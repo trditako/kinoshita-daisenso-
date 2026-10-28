@@ -74,7 +74,16 @@ function marketValue(id: string): number {
     'rarity_gold:超激レア': 6000,
     'rarity_gold:伝説レア': 18000,
   }
-  return Math.round((fixed[id] ?? fixed[key] ?? 150) * demandMultiplier('item', id))
+  const rarityMatch = id.match(/(?:rarity_gold:|(?:gold|golden)[_:-]?)(ノーマル|レア|激レア|超激レア|伝説レア|normal|rare|super_rare|uber_rare|legendary)/i)
+  const rarityName = rarityMatch?.[1] || ''
+  const rarityAlias: Record<string, string> = { normal: 'ノーマル', rare: 'レア', super_rare: '激レア', uber_rare: '超激レア', legendary: '伝説レア' }
+  const rarity = rarityAlias[rarityName.toLowerCase()] || rarityName
+  const rarityGoldValues: Record<string, number> = { 'ノーマル': 300, 'レア': 600, '激レア': 1200, '超激レア': 6000, '伝説レア': 18000 }
+  const powerMatch = /(?:^|[_:-])power(?:$|[_:-])/i.test(id) || /パワー/.test(id)
+  const powerRarity = id.match(/(伝説レア|超激レア|激レア|レア|ノーマル|legendary|uber|super|rare|normal)/i)?.[1] || ''
+  const powerAlias: Record<string, number> = { 'ノーマル': 300, 'normal': 300, 'レア': 900, 'rare': 900, '激レア': 1800, 'super': 1800, '超激レア': 6000, 'uber': 6000, '伝説レア': 18000, 'legendary': 18000 }
+  const inferred = rarityGoldValues[rarity] ?? (powerMatch ? (powerAlias[powerRarity] ?? 900) : 150)
+  return Math.round((fixed[id] ?? fixed[key] ?? inferred) * demandMultiplier('item', id))
 }
 function shuffle<T>(values: T[]): T[] {
   const a = values.slice()
@@ -171,7 +180,7 @@ Deno.serve(async (req: Request) => {
     if (aiHistoryError) throw aiHistoryError
     const demand: Record<string, { requested: number; offered: number }> = {}
     const realized: Record<string, { sum: number; count: number }> = {}
-    const baseItemValue = (id: string) => ({normal_gold:250,power_chest:1200,golden_chest:2400,ability_core:1800,ancient_power:900,latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000}[id] ?? 150)
+    const baseItemValue = (id: string) => { const fixed: Record<string,number> = {normal_gold:250,power_chest:1200,golden_chest:2400,ability_core:1800,ancient_power:900,latest_character_exchange_chest:30000,'rarity_gold:ノーマル':300,'rarity_gold:レア':600,'rarity_gold:激レア':1200,'rarity_gold:超激レア':6000,'rarity_gold:伝説レア':18000}; if(fixed[id]!==undefined)return fixed[id]; const rarity=id.match(/(伝説レア|超激レア|激レア|レア|ノーマル|legendary|uber|super|rare|normal)/i)?.[1]||''; const isPower=/(?:^|[_:-])power(?:$|[_:-])/i.test(id)||/パワー/.test(id); const values:Record<string,number>={'伝説レア':18000,'legendary':18000,'超激レア':6000,'uber':6000,'激レア':1800,'super':1800,'レア':900,'rare':900,'ノーマル':300,'normal':300}; return /gold/i.test(id)?(values[rarity]??300):(isPower?(values[rarity]??900):150) }
     const countAssets = (trade: any) => {
       const offered = object(trade.offered_assets), requested = object(trade.requested_assets)
       for (const [kind, key] of [['item', 'items'], ['cosmetic', 'cosmetics']] as const) {
