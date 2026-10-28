@@ -529,17 +529,30 @@ Deno.serve(async (req: Request) => {
       if(!createError&&created){aiAuctionsCreated++;auctionRows.push({id:created,seller_ai_id:row.account_id,seller_id:null,starting_price:starting,highest_bid:0,highest_bidder_id:null,highest_bidder_ai_id:null,ends_at:new Date(Date.now()+21600000).toISOString(),offered_assets:{}} as any)}
     }
     for(const auction of shuffle(auctionRows)){
-      if(aiAuctionBids>=5)break
+      if(aiAuctionBids>=12)break
       if(!auction.seller_ai_id&&auction.seller_id===null)continue
       if(auction.seller_ai_id!==null&&auction.seller_ai_id!==undefined&&auction.highest_bidder_ai_id===auction.seller_ai_id)continue
       const minimum=Math.max(Number(auction.starting_price)||1,(Number(auction.highest_bid)||0)+1)
+      const offered=object(auction.offered_assets)
+      const itemEntries=Object.entries(object(offered.items))
+      const cosmeticEntries=Object.entries(object(offered.cosmetics))
+      const itemValue=itemEntries.reduce((sum,[id,qty])=>sum+(int(qty)>0?marketValue(id)*int(qty):0),0)
+      const cosmeticValue=cosmeticEntries.reduce((sum,[id,qty])=>sum+(int(qty)>0?Math.round(5000*demandMultiplier('cosmetic',id))*int(qty):0),0)
+      const listedValue=Math.max(100, itemValue+cosmeticValue+int(offered.coins)+Math.round(int(offered.xp)*0.5))
       const bidderCandidates=shuffle((freshRows||[]) as AI[])
       for(const bidder of bidderCandidates){
-        if(bidder.account_id===auction.seller_ai_id||bidder.account_id===auction.highest_bidder_ai_id||int(bidder.coins)<minimum)continue
-        // Keep AI bids conservative; they should not spend more than 8% of current coins per bid.
-        if(minimum>Math.max(100,Math.floor(int(bidder.coins)*0.08)))continue
-        const {error:bidError}=await admin.rpc('bid_ai_bazaar_auction',{p_auction_id:auction.id,p_bidder_ai_id:bidder.account_id,p_bid:minimum})
-        if(!bidError){aiAuctionBids++;bidder.coins=Math.max(0,int(bidder.coins)-minimum);break}
+        const balance=int(bidder.coins)
+        if(bidder.account_id===auction.seller_ai_id||bidder.account_id===auction.highest_bidder_ai_id||balance<minimum)continue
+        // Distinct AI personalities bid more assertively, but keep a hard budget and value ceiling.
+        const aggression=Math.max(0.75,Math.min(1.8,Number((bidder as any).aggression??1)))
+        const spendLimit=Math.min(balance,Math.max(250,Math.floor(balance*(0.18+Math.random()*0.22)*aggression)))
+        const valueLimit=Math.max(minimum,Math.floor(listedValue*(1.7+Math.random()*1.4)*aggression))
+        const ceiling=Math.min(spendLimit,valueLimit)
+        if(minimum>ceiling)continue
+        const increment=Math.max(1,Math.ceil(minimum*(0.06+Math.random()*0.24)*aggression))
+        const proposed=Math.min(ceiling,minimum+increment)
+        const {error:bidError}=await admin.rpc('bid_ai_bazaar_auction',{p_auction_id:auction.id,p_bidder_ai_id:bidder.account_id,p_bid:proposed})
+        if(!bidError){aiAuctionBids++;bidder.coins=Math.max(0,balance-proposed);break}
       }
     }
     return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated, ai_listings_cancelled_missing_assets:aiListingsCancelledForMissingAssets, ai_auctions_created:aiAuctionsCreated, ai_auction_bids:aiAuctionBids })
