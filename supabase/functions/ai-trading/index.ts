@@ -169,8 +169,8 @@ Deno.serve(async (req: Request) => {
   if (!TOKEN || req.headers.get('x-ai-worker-token') !== TOKEN) return response({ ok: false, error: 'UNAUTHORIZED' }, 401)
   try {
     const body = object(await req.json().catch(() => ({})))
-    const requestedBatch = Number(body.batch_size ?? 40)
-    const batchSize = Number.isInteger(requestedBatch) ? Math.max(1, Math.min(100, requestedBatch)) : 40
+    const requestedBatch = Number(body.batch_size ?? 3)
+    const batchSize = Number.isInteger(requestedBatch) ? Math.max(1, Math.min(100, requestedBatch)) : 3
     const admin = createClient(URL, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
     const [{ data: playerTrades, error: playerTradeError }, { data: aiHistory, error: aiHistoryError }] = await Promise.all([
       admin.from('trade_history').select('offered_assets,requested_assets,completed_at').order('completed_at', { ascending: false }).limit(500),
@@ -503,7 +503,47 @@ Deno.serve(async (req: Request) => {
       })
       if(!buyOrderError){activeBuyers.add(row.account_id);aiBuyOrdersCreated++}else{failures++}
     }
-    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, trades, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated, ai_listings_cancelled_missing_assets:aiListingsCancelledForMissingAssets })
+    // Participate in the shared player/AI auction book. Bound work per run so the
+    // short market cadence does not create an unbounded burst of database writes.
+    const { data: auctions, error: auctionReadError } = await admin.from('bazaar_auctions')
+      .select('id,seller_id,seller_ai_id,offered_assets,starting_price,highest_bid,highest_bidder_id,highest_bidder_ai_id,ends_at')
+      .eq('status','open').gt('ends_at',new Date().toISOString()).order('ends_at',{ascending:true}).limit(30)
+    if (auctionReadError) throw auctionReadError
+    let aiAuctionsCreated=0, aiAuctionBids=0
+    const auctionRows = auctions || []
+    for (const row of shuffle((freshRows || []) as AI[])) {
+      if (aiAuctionsCreated >= 3) break
+      const activeOwn = auctionRows.filter(a=>a.seller_ai_id===row.account_id).length
+      if(activeOwn>=3) continue
+      const ownItems=availableAssets(row), ownCosmetics=availableCosmetics(row)
+      const itemCandidates=shuffle(Object.entries(ownItems).filter(([id,qty])=>qty>=1&&id.length<=120&&!/[\\x00-\\x1f]/.test(id)))
+      const cosmeticCandidates=shuffle(ownCosmetics)
+      const useCosmetic=cosmeticCandidates.length>0&&(itemCandidates.length===0||Math.random()<0.3)
+      const itemId=useCosmetic?cosmeticCandidates[0]:itemCandidates[0]?.[0]
+      if(!itemId) continue
+      const reference=useCosmetic?Math.round(5000*demandMultiplier('cosmetic',itemId)):marketValue(itemId)
+      const starting=Math.max(1,Math.round(reference*(0.65+Math.random()*0.15)))
+      const {data:created,error:createError}=await admin.rpc('create_ai_bazaar_auction',{
+        p_ai_id:row.account_id,p_item_id:itemId,p_is_cosmetic:useCosmetic,p_starting_price:starting,p_duration_hours:6
+      })
+      if(!createError&&created){aiAuctionsCreated++;auctionRows.push({id:created,seller_ai_id:row.account_id,seller_id:null,starting_price:starting,highest_bid:0,highest_bidder_id:null,highest_bidder_ai_id:null,ends_at:new Date(Date.now()+21600000).toISOString(),offered_assets:{}} as any)}
+    }
+    for(const auction of shuffle(auctionRows)){
+      if(aiAuctionBids>=5)break
+      if(!auction.seller_ai_id&&auction.seller_id===null)continue
+      if(auction.seller_ai_id!==null&&auction.seller_ai_id!==undefined&&auction.highest_bidder_ai_id===auction.seller_ai_id)continue
+      if(auction.highest_bidder_ai_id!==null&&auction.highest_bidder_ai_id!==undefined)continue
+      const minimum=Math.max(Number(auction.starting_price)||1,(Number(auction.highest_bid)||0)+1)
+      const bidderCandidates=shuffle((freshRows||[]) as AI[])
+      for(const bidder of bidderCandidates){
+        if(bidder.account_id===auction.seller_ai_id||int(bidder.coins)<minimum)continue
+        // Keep AI bids conservative; they should not spend more than 8% of current coins per bid.
+        if(minimum>Math.max(100,Math.floor(int(bidder.coins)*0.08)))continue
+        const {error:bidError}=await admin.rpc('bid_ai_bazaar_auction',{p_auction_id:auction.id,p_bidder_ai_id:bidder.account_id,p_bid:minimum})
+        if(!bidError){aiAuctionBids++;bidder.coins=Math.max(0,int(bidder.coins)-minimum);break}
+      }
+    }
+    return response({ ok: true, accounts: accounts.length, attempted, completed, no_match: noMatch, failures, ai_listings_created:aiListingsCreated, ai_listings_repriced:aiListingsRepriced, ai_public_listings_bought:aiPublicListingsBought, player_listings_bought:playerListingsBought, ai_buy_orders_created:aiBuyOrdersCreated, ai_listings_cancelled_missing_assets:aiListingsCancelledForMissingAssets, ai_auctions_created:aiAuctionsCreated, ai_auction_bids:aiAuctionBids })
   } catch (error) {
     return response({ ok: false, error: error instanceof Error ? error.message : 'AI_TRADE_FAILED' }, 500)
   }
