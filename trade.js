@@ -5,7 +5,7 @@ const KEY='sb_publishable_bofrXTgGnFd-s52JoE2OnQ_75sLT_Jg';
 const SESSION_KEY='kinoshitaTradeAuthSession';
 const el=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let session=null, profile=null, offers=[], history=[], marketStats={items:{},cosmetics:{}}, priceHistory=[], busy=false;
+let session=null, profile=null, offers=[], auctions=[], history=[], marketStats={items:{},cosmetics:{}}, priceHistory=[], busy=false;
 const chosen={give:{items:{},cosmetics:{}},want:{items:{},cosmetics:{}}};
 try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}
 function saveSession(){try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY)}catch{}}
@@ -80,8 +80,9 @@ function panel(){
   </div>
   <label>相手のユーザーID（空欄なら公開募集）<input id="ktBuyer" placeholder="特定の相手に限定する場合のみ"></label>
   <button id="ktCreate" class="kt-primary">出品する</button>
+  <section class="kt-offer" style="margin-top:12px"><h4>🔨 オークションに出品</h4><p class="kt-muted">「渡すアイテム・衣装」で選択した品目1種類を出品します。出品時に所持数から預け入れ、終了時に最高入札者へ渡します。入札コインは入札時に一時預かりし、上回られた場合は返金します。</p><div class="kt-grid"><label>開始価格（木下コイン）<input id="ktAuctionStartPrice" type="number" min="1" step="1" value="100"></label><label>開催期間<select id="ktAuctionDuration"><option value="1">1時間</option><option value="6">6時間</option><option value="12">12時間</option><option value="24" selected>24時間</option><option value="48">48時間</option><option value="72">72時間</option></select></label></div><button id="ktCreateAuction" class="kt-primary" type="button">選択した品目をオークションに出す</button></section>
   <h3 style="margin-top:18px">出品の絞り込み</h3><div class="kt-filters"><label>出品者<select id="ktFilterSeller"><option value="all">すべて</option><option value="player">プレイヤー</option><option value="ai">AI</option></select></label><label>品目<select id="ktFilterType"><option value="all">すべての品目</option><option value="item">アイテム</option><option value="cosmetic">衣装・携帯品</option><option value="currency">コイン・XP</option></select></label></div>
-  <label>個別の品目<select id="ktFilterAsset"><option value="all">すべてのアイテム</option></select></label><label>募集タイプ<select id="ktFilterMode"><option value="all">すべて</option><option value="sell">売り出し・交換募集</option><option value="buy">買い注文</option></select></label><h3 style="margin-top:18px">バザー出品一覧</h3><label>並び順<select id="ktSortOffers"><option value="newest">新着順</option><option value="value_desc">参考価値が高い順</option><option value="value_asc">参考価値が安い順</option><option value="requested_desc">希望価値が高い順</option><option value="requested_asc">希望価値が安い順</option></select></label><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div>
+  <label>個別の品目<select id="ktFilterAsset"><option value="all">すべてのアイテム</option></select></label><label>募集タイプ<select id="ktFilterMode"><option value="all">すべて</option><option value="sell">売り出し・交換募集</option><option value="buy">買い注文</option></select></label><h3 style="margin-top:18px">バザー出品一覧</h3><label>並び順<select id="ktSortOffers"><option value="newest">新着順</option><option value="value_desc">参考価値が高い順</option><option value="value_asc">参考価値が安い順</option><option value="requested_desc">希望価値が高い順</option><option value="requested_asc">希望価値が安い順</option></select></label><button id="ktRefresh" class="kt-secondary">更新</button><div id="ktOffers"></div><h3 style="margin-top:18px">🔨 オークション一覧</h3><p class="kt-muted">終了時刻まで入札できます。最高入札額が更新されると、前の最高入札者のコインは自動返金されます。</p><div id="ktAuctions"></div>
   <div id="ktCollectionInfo" class="kt-offer"></div><details class="kt-offer"><summary style="cursor:pointer;font-weight:700">📊 アイテム・衣装・携帯品の参考価値表</summary><p class="kt-muted">表示価格はゲーム内で比較するための参考評価（木下コイン換算）です。公式固定価格や売却保証ではなく、出品者の希望価格・実際の成立価格とは異なります。相場は取引データが増えたら見直してください。</p><div id="ktValueTable"></div><hr style="border-color:#475569;margin:12px 0"><h4>品目ごとの価値推移</h4><p class="kt-muted">品目を選ぶと、バザーを開いた際に記録された日別の参考評価を表示します。記録開始前の価格は復元できません。実際の取引価格ではなく、需要・供給から算出した参考評価です。</p><label>グラフ対象<select id="ktChartAsset"><option value="">品目を選択</option></select></label><div id="ktPriceChart"></div></details>
   <details class="kt-offer kt-help"><summary style="cursor:pointer;font-weight:700">📖 出品方法・取引の手順</summary><ol><li>「バザーに出品する」で、渡す側の所持品一覧から出品するアイテム・衣装・携帯品を選びます。IDを手入力する必要はありません。</li><li>アイテムは渡したい個数を入力して「渡すものに追加」を押します。衣装・携帯品は重複できないため1点ずつ指定します。コイン・XPも必要な分だけ入力します。</li><li>「求めるもの」側で、交換相手に希望するコイン・XP・アイテム・衣装・携帯品を選びます。何も指定しない募集は作成できません。</li><li>誰でも応募できる場合は相手のユーザーIDを空欄にします。特定の相手だけに出したい場合は、その相手のユーザーIDを入力します。</li><li>内容と参考価値を確認して「出品する」を押します。出品後は一覧に表示され、成立前なら自分の出品の「出品取消」から取り下げられます。</li><li>他のプレイヤーの出品は「条件で交換」、AIのコイン・XP販売は「購入する」から進めます。確定前に内容を確認してください。成立した取引は原則として取り消せません。</li></ol><p class="kt-muted">注意：サーバーで確認できる所持品だけが出品対象です。初回同期の端末データは完全な不正防止を保証しません。相手のユーザーIDや提示条件をよく確認してください。</p></details>
   <h3 style="margin-top:18px">取引履歴</h3><div id="ktHistory"></div>
@@ -96,6 +97,7 @@ function panel(){
  el('ktFilterSeller').onchange=renderOffers;el('ktFilterType').onchange=renderOffers;el('ktFilterAsset').onchange=renderOffers;el('ktFilterMode').onchange=renderOffers;el('ktSortOffers').onchange=renderOffers;el('ktChartAsset').onchange=()=>loadPriceHistory().catch(showError);
  el('ktWantNoItems').onchange=()=>{const off=el('ktWantNoItems').checked;el('ktWantAsset').disabled=off;el('ktWantQty').disabled=off;if(off){chosen.want.items={};chosen.want.cosmetics={};renderChosen('want');}else fillAssetSelect('want');};
  el('ktCreate').onclick=()=>createOffer().catch(showError);
+ el('ktCreateAuction').onclick=()=>createAuction().catch(showError);
  el('ktLink').onclick=()=>linkAccount().catch(showError);
 }
 function renderLedger(entries){
@@ -312,16 +314,47 @@ async function refresh(){
   fillAssetSelect('give');fillAssetSelect('want');renderChosen('give');renderChosen('want');
   const catalog=gameCatalog().all.map(x=>({kind:x.kind,id:x.id,rarity:x.rarity||assetMeta(x.kind,x.id).rarity,source:x.source||assetMeta(x.kind,x.id).source,type:x.type||''}));const stats=await api('market_stats',{catalog});marketStats=stats.stats||{items:{},cosmetics:{}};priceHistory=[];
   const list=await api('list');offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const auctionList=await api('list_auctions');auctions=auctionList.auctions||[];if(auctionList.profile){profile=auctionList.profile;applyProfileToGame(profile);}
   fillFilterAssetSelect();
   const completed=await api('history');history=completed.history||[];
   el('ktStatus').innerHTML='<span class="kt-good">匿名ログイン済み</span> · ユーザーID: <code>'+esc(session.user?.id||'')+'</code>';
   el('ktBody').style.display='block';
   el('ktWallet').innerHTML='<b>サーバー所持状況（取引の正本）</b><div>コイン: '+Number(profile.coins||0).toLocaleString()+' · XP: '+Number(profile.xp||0).toLocaleString()+'</div><div class="kt-muted">アイテム: '+formatAssets({items:profile.inventory||{}})+'</div><div class="kt-muted">衣装・携帯品: '+formatAssets({cosmetics:profile.cosmetics||{}})+'</div><p class="kt-error">初回同期でゲーム内所持品を取り込み、取引後はサーバーの所持数をゲーム内保存データへ反映します。</p>';
-  renderOffers();renderValueTable();fillChartAssetSelect();renderCollectionInfo();
+  renderOffers();renderAuctions();renderValueTable();fillChartAssetSelect();renderCollectionInfo();
   const ledger=await api('ledger');renderLedger(ledger.entries||[]);
    renderHistory();
  }finally{busy=false}
 }
+
+async function createAuction(){
+ const selected={coins:0,xp:0,items:{...chosen.give.items},cosmetics:{...chosen.give.cosmetics}};
+ const count=Object.keys(selected.items).length+Object.keys(selected.cosmetics).length;
+ if(count!==1)throw new Error('オークションでは「渡すアイテム・衣装」に品目を1種類だけ追加してください。');
+ const price=integerInput('ktAuctionStartPrice'),duration=integerInput('ktAuctionDuration');
+ if(price<1)throw new Error('開始価格は1コイン以上にしてください。');
+ if(!confirm('選択した品目をオークションに預けます。終了まで出品を取り消せるのは入札がない場合のみです。続けますか？'))return;
+ await api('create_auction',{offered_assets:selected,starting_price:price,duration_hours:duration});
+ chosen.give.items={};chosen.give.cosmetics={};renderChosen('give');
+ const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});profile=wallet.profile;applyProfileToGame(profile);
+ el('ktStatus').innerHTML='<span class="kt-good">オークションを開始しました。</span>';
+ await refresh();
+}
+function renderAuctions(){
+ const box=el('ktAuctions');if(!box)return;
+ const now=Date.now();
+ const visible=auctions.filter(a=>a.status==='open'&&new Date(a.ends_at).getTime()>now);
+ if(!visible.length){box.innerHTML='<p class="kt-muted">開催中のオークションはありません。</p>';return;}
+ box.innerHTML=visible.map(a=>{
+  const mine=a.seller_id===session?.user?.id;
+  const bid=Number(a.highest_bid||0),minimum=Math.max(Number(a.starting_price||1),bid+1);
+  const remaining=Math.max(0,new Date(a.ends_at).getTime()-now);
+  const time=remaining<3600000?Math.ceil(remaining/60000)+'分':Math.ceil(remaining/3600000)+'時間';
+  return '<article class="kt-offer"><div><b>🔨 オークション</b> · '+esc(a.id.slice(0,8))+'</div><div>出品: '+formatAssets(a.offered_assets)+'</div><div>開始価格: '+Number(a.starting_price).toLocaleString()+' コイン</div><div><b>現在価格: '+(bid?bid.toLocaleString()+' コイン':'入札なし')+'</b></div><div class="kt-muted">終了まで約 '+time+(a.highest_bidder_id?' · 入札あり':' · 入札なし')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+(!mine?'<button class="kt-primary" data-auction-bid="'+esc(a.id)+'" data-minimum="'+minimum+'">入札する（最低 '+minimum.toLocaleString()+'）</button>':'<span class="kt-muted">自分の出品</span>')+(mine&&bid===0?'<button class="kt-secondary" data-auction-cancel="'+esc(a.id)+'">出品取消</button>':'')+'</div></article>';
+ }).join('');
+ box.querySelectorAll('[data-auction-bid]').forEach(b=>b.onclick=async()=>{try{const amount=prompt('入札額（木下コイン）を入力してください。最低入札額: '+Number(b.dataset.minimum).toLocaleString(),b.dataset.minimum);if(amount===null)return;const n=Number(amount);if(!Number.isSafeInteger(n)||n<Number(b.dataset.minimum))throw new Error('最低入札額以上の整数を入力してください。');if(!confirm(n.toLocaleString()+'コインで入札します。入札中のコインは一時的に預けられます。'))return;await api('bid_auction',{auction_id:b.dataset.auctionBid,bid:n});const wallet=await api('profile',{display_name:localStorage.getItem('kinoshitaPlayerName')||'プレイヤー'});profile=wallet.profile;applyProfileToGame(profile);await refresh();}catch(e){showError(e)}});
+ box.querySelectorAll('[data-auction-cancel]').forEach(b=>b.onclick=async()=>{try{if(!confirm('入札がないオークションを取り消して、預けた品目を返却しますか？'))return;await api('cancel_auction',{auction_id:b.dataset.auctionCancel});await refresh();}catch(e){showError(e)}});
+}
+
 async function createOffer(){
  const offered=selectedAssets('give');
   const requested=selectedAssets('want');
@@ -365,7 +398,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     try{
       const list=await api('list');
       offers=[...(list.offers||[]),...(list.ai_offers||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-      fillFilterAssetSelect();renderOffers();
+      const auctionList=await api('list_auctions');auctions=auctionList.auctions||[];if(auctionList.profile){profile=auctionList.profile;applyProfileToGame(profile);}
+      fillFilterAssetSelect();renderOffers();renderAuctions();
     }catch(e){/* retain current feed; manual refresh still reports errors */}
   },15000);
   const watchHome=()=>{const b=el('kinoshitaTradeHomeButton');if(b&&b.isConnected){const visible=(n)=>!!(n&&n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden'&&getComputedStyle(n).display!=='none');const match=t=>/(編成|図鑑|ガチャ|交換所|ランク戦|イベント)/.test(t||'');const nodes=[...document.querySelectorAll('button,[role="button"]')].filter(n=>n!==b&&visible(n)&&match((n.innerText||n.textContent||'').trim()));let best=null,score=0;for(const n of nodes){let p=n.parentElement;for(let d=0;p&&d<5;d++,p=p.parentElement){const bs=[...p.querySelectorAll('button,[role="button"]')].filter(x=>x!==b&&visible(x));const count=bs.filter(x=>match((x.innerText||x.textContent||'').trim())).length;const s=count*10-d;if(count>=3&&s>score){best=p;score=s}}}if(best){const first=best.querySelector('button,[role="button"]');if(first&&first!==b)best.insertBefore(b,first);else if(b.parentElement!==best)best.appendChild(b);b.style.display='inline-block'}else b.style.display='none'}};
