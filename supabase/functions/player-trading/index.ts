@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
       const { error: finalizeError } = await admin.rpc('finalize_expired_bazaar_auctions')
       if (finalizeError) throw finalizeError
       const { data, error } = await admin.from('bazaar_auctions')
-        .select('id,seller_id,offered_assets,starting_price,highest_bid,highest_bidder_id,ends_at,status,created_at,completed_at')
+        .select('id,seller_id,seller_ai_id,offered_assets,starting_price,highest_bid,highest_bidder_id,highest_bidder_ai_id,ends_at,status,created_at,completed_at')
         .eq('status','open').gt('ends_at',new Date().toISOString())
         .order('ends_at',{ascending:true}).limit(100)
       if (error) throw error
