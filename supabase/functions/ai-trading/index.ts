@@ -13,7 +13,23 @@ const response = (body: unknown, status = 200) => new Response(JSON.stringify(bo
 type Assets = { coins: number; xp: number; items: Record<string, number>; cosmetics: Record<string, boolean> }
 type AI = { account_id: number; coins: number; player_xp: number; inventory_items: Record<string, unknown>; trade_cosmetics: Record<string, boolean>; strategy?: string; skill?: number; activity?: Record<string, unknown> }
 let marketMultipliers: Record<string, number> = {}
-function demandMultiplier(kind: 'item' | 'cosmetic', id: string) { return Math.max(0.65, Math.min(2.5, marketMultipliers[kind + ':' + id] || 1)) }
+// Prices move in six-hour market cycles. The deterministic per-asset shock keeps
+// prices stable during a cycle while allowing noticeable, reproducible changes.
+function marketCycleMultiplier(kind: 'item' | 'cosmetic', id: string) {
+  const cycle = Math.floor(Date.now() / (6 * 60 * 60 * 1000))
+  const input = kind + ':' + id + ':' + cycle
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  const unit = (hash >>> 0) / 4294967295
+  return 0.72 + unit * 0.60
+}
+function demandMultiplier(kind: 'item' | 'cosmetic', id: string) {
+  const observed = marketMultipliers[kind + ':' + id] || 1
+  return Math.max(0.4, Math.min(3.5, observed * marketCycleMultiplier(kind, id)))
+}
 
 function serviceKey() {
   let key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -174,11 +190,15 @@ Deno.serve(async (req: Request) => {
     }
     for (const trade of [...(playerTrades || []), ...(aiHistory || [])]) countAssets(trade)
     marketMultipliers = Object.fromEntries([...new Set([...Object.keys(demand),...Object.keys(realized)])].map(id => {
-      const row=demand[id]||{requested:0,offered:0}
-      const demandFactor=Math.max(0.65,Math.min(2.5,0.8+Math.log1p(row.requested)*0.35-Math.log1p(row.offered)*0.12))
-      const sale=realized[id]
-      const realizedFactor=sale&&sale.count?Math.max(0.75,Math.min(1.35,Math.pow(sale.sum/sale.count,0.35))):1
-      return [id,Math.max(0.65,Math.min(2.5,demandFactor*realizedFactor))]
+      const row = demand[id] || { requested: 0, offered: 0 }
+      // Stronger elasticity: requested-vs-offered scarcity now has a meaningful effect.
+      const balance = (row.requested + 1) / (row.offered + 1)
+      const demandFactor = Math.max(0.45, Math.min(3.0, Math.pow(balance, 0.55)))
+      const sale = realized[id]
+      const realizedFactor = sale && sale.count
+        ? Math.max(0.55, Math.min(1.8, Math.pow(sale.sum / sale.count, 0.55)))
+        : 1
+      return [id, Math.max(0.4, Math.min(3.5, demandFactor * realizedFactor))]
     }))
     const { data, error } = await admin.from('ai_accounts')
       .select('account_id,coins,player_xp,inventory_items,trade_cosmetics,strategy,skill,activity')
