@@ -232,6 +232,41 @@ Deno.serve(async (req) => {
       }
       return response({ ok: true, stats: normalized, sample_size: (playerTrades || []).length + (aiTrades || []).length })
     }
+
+    if (action === 'list_auctions') {
+      const { error: finalizeError } = await admin.rpc('finalize_expired_bazaar_auctions')
+      if (finalizeError) throw finalizeError
+      const { data, error } = await admin.from('bazaar_auctions')
+        .select('id,seller_id,offered_assets,starting_price,highest_bid,highest_bidder_id,ends_at,status,created_at,completed_at')
+        .eq('status','open').gt('ends_at',new Date().toISOString())
+        .order('ends_at',{ascending:true}).limit(100)
+      if (error) throw error
+      const { data: profile, error: profileError } = await admin.from('trade_profiles').select('*').eq('user_id',userId).maybeSingle()
+      if (profileError) throw profileError
+      return response({ok:true,auctions:data||[],profile})
+    }
+    if (action === 'create_auction') {
+      const offered = cleanAssets(body.offered_assets)
+      const startingPrice = int(body.starting_price, 1000000000)
+      const duration = int(body.duration_hours,72)
+      const {data,error}=await admin.rpc('create_bazaar_auction',{p_seller_id:userId,p_offered_assets:offered,p_starting_price:startingPrice,p_duration_hours:duration})
+      if(error){const msg=String(error.message||'');const known=['BAZAAR_AUCTION_INVALID_SETTINGS','BAZAAR_AUCTION_UNSUPPORTED_ASSET','BAZAAR_AUCTION_ONE_ASSET_ONLY','BAZAAR_AUCTION_LIMIT','BAZAAR_AUCTION_INVALID_ITEM','BAZAAR_AUCTION_ITEM_UNAVAILABLE','BAZAAR_AUCTION_INVALID_COSMETIC','BAZAAR_AUCTION_COSMETIC_UNAVAILABLE','TRADE_PROFILE_MISSING'];return response({ok:false,error:known.find(k=>msg.includes(k))||'BAZAAR_AUCTION_CREATE_FAILED'},400)}
+      return response({ok:true,auction:data})
+    }
+    if (action === 'bid_auction') {
+      const auctionId=String(body.auction_id||'');const bid=int(body.bid,1000000000)
+      if(!/^[0-9a-f-]{36}$/i.test(auctionId)||bid<1)return response({ok:false,error:'INVALID_AUCTION_BID'},400)
+      const {data,error}=await admin.rpc('bid_bazaar_auction',{p_auction_id:auctionId,p_bidder_id:userId,p_bid:bid})
+      if(error){const msg=String(error.message||'');const known=['BAZAAR_AUCTION_NOT_OPEN','BAZAAR_AUCTION_ENDED','BAZAAR_AUCTION_SELF_BID','BAZAAR_AUCTION_BID_TOO_LOW','BAZAAR_AUCTION_INSUFFICIENT_COINS','TRADE_PROFILE_MISSING'];return response({ok:false,error:known.find(k=>msg.includes(k))||'BAZAAR_AUCTION_BID_FAILED'},400)}
+      return response({ok:true,auction:data})
+    }
+    if (action === 'cancel_auction') {
+      const auctionId=String(body.auction_id||'')
+      if(!/^[0-9a-f-]{36}$/i.test(auctionId))return response({ok:false,error:'INVALID_AUCTION_ID'},400)
+      const {data,error}=await admin.rpc('cancel_bazaar_auction',{p_auction_id:auctionId,p_seller_id:userId})
+      if(error){const msg=String(error.message||'');const known=['BAZAAR_AUCTION_NOT_OPEN','BAZAAR_AUCTION_NOT_OWNER','BAZAAR_AUCTION_HAS_BIDS'];return response({ok:false,error:known.find(k=>msg.includes(k))||'BAZAAR_AUCTION_CANCEL_FAILED'},400)}
+      return response({ok:true,result:data})
+    }
     if (action === 'list') {
       const { data, error } = await admin.from('trade_offers')
         .select('id,seller_id,buyer_id,offered_assets,requested_assets,status,created_at,expires_at')
