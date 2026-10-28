@@ -165,7 +165,7 @@ begin
   update public.trade_profiles set coins=coins+a.highest_bid,updated_at=now() where user_id=seller.user_id;
   update public.bazaar_auctions set status='completed',completed_at=now() where id=a.id;
   insert into public.bazaar_history(listing_type,listing_id,buyer_player_id,seller_ai_id,offered_assets,requested_assets)
-    values('player_auction',a.id,a.highest_bidder_id,null,a.offered_assets,jsonb_build_object('coins',a.highest_bid));
+    values('player',a.id,a.highest_bidder_id,null,a.offered_assets,jsonb_build_object('coins',a.highest_bid));
   return jsonb_build_object('ok',true,'status','completed','winner_id',a.highest_bidder_id,'price',a.highest_bid);
 end;
 $function$
