@@ -15,7 +15,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Run one 250-account batch every 30 minutes to preserve log quota until reset.
+    const requestBody = await req.json().catch(() => ({})) as Record<string, unknown>
+    if (requestBody.mode === 'trading') {
+      const tradeResponse = await fetch(`${SUPABASE_URL}/functions/v1/ai-trading`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ai-worker-token': WORKER_TOKEN },
+        body: JSON.stringify({ batch_size: 20 })
+      })
+      const tradingBody = await tradeResponse.text()
+      if (tradeResponse.status < 200 || tradeResponse.status >= 300) return json({ ok: false, mode: 'trading', status: tradeResponse.status, body: tradingBody }, 502)
+      return json({ ok: true, mode: 'trading', trading: tradingBody })
+    }
+    // Player simulation and progression remain on the existing 30-minute schedule.
     // Rotate by the same 30-minute interval as pg_cron so all four batches are covered.
     const batchIndex = Math.floor(Date.now() / 1800000) % 4
     const batchStart = batchIndex * 250 + 1
@@ -36,24 +47,8 @@ Deno.serve(async (req) => {
       return json({ ok: false, batchStart, batchEnd, status: response.status, text: body }, 502)
     }
 
-    // Run a bounded AI-to-AI trade batch after the player-simulation batch.
-    // Trading failures are reported separately and do not invalidate the completed worker batch.
-    const tradeResponse = await fetch(`${SUPABASE_URL}/functions/v1/ai-trading`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-ai-worker-token': WORKER_TOKEN
-      },
-      body: JSON.stringify({ batch_size: 20 })
-    })
-    const tradingBody = await tradeResponse.text()
-    return json({
-      ok: true,
-      batchStart,
-      batchEnd,
-      worker: body,
-      trading: { ok: tradeResponse.status >= 200 && tradeResponse.status < 300, status: tradeResponse.status, body: tradingBody }
-    })
+    // AI market activity is handled by a separate five-minute cron job.
+    return json({ ok: true, batchStart, batchEnd, worker: body })
   } catch (e) {
     console.error('ai-cron worker fetch failed:', e)
     return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502)

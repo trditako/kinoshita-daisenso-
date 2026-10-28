@@ -8,8 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.17';
+const GAME_VERSION='v1.9.18';
 const UPDATE_LOG=[
+ {date:'2026-10-28',version:'v1.9.18',title:'🔨 バザーのオークションとAI市場の更新周期を分離',items:['所持品を預けて開始価格・開催時間を指定するオークションを追加','入札時にコインを一時預かりし、最高額が更新された場合は前の入札者へ自動返金','終了時は最高入札者へ品物を渡し、出品者へ落札コインを付与。入札がない場合は品物を返却','AIのバザー出品・買い注文・市場取引を5分ごとに更新し、通常のAI行動は30分ごとの周期を維持']},
+
  {date:'2026-10-28',version:'v1.9.17',title:'🏪 バザーを拡張・市場価格と所持数の管理を改善',items:['プレイヤーとAIが衣装・携帯品・アイテム・木下コインなどを出品・購入できるバザーを拡張し、AI同士の取引にも対応','衣装・携帯品の重複所持数を保持し、所持数を反映した出品数量と交換処理に対応。重複所持数の再同期機能も追加','AIの出品・買い注文を多様化し、コイン以外のアイテムを希望する取引や、所持状況に応じた出品整理に対応','取引履歴を市場価格へ反映し、資産ごとの価格推移を確認できる履歴データを追加','需要・供給・取引量・経過時間に応じて価格が変動する仕組みを強化し、一定周期の価格変動も追加','ノーマル以外のレアリティの金や古代以外のパワー素材も、所持品の識別と基準価値の推定に対応','バザーの一覧を開いている間の更新を改善し、出品の古さや所持状況に合わないAI出品を整理']},
 
  {date:'2026-10-26',version:'v1.9.16',title:'🛠️ 初期シリーズ6体の第二形態ボタン表示を修正',items:['キャラクター詳細の最後に専用の第二形態欄を確実に表示','既存キャラクターと同じ進化・形態切替方式に統一']},
@@ -6280,5 +6282,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<script src="./trade.js?v=20261028-gold-power-items"></script>
+<script src="./trade.js?v=20261028-auctions"></script>
 </body></html>
