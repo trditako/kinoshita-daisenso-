@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.22';
+const GAME_VERSION='v1.9.23';
 const UPDATE_LOG=[
+ {date:'2026-10-29',version:'v1.9.23',title:'🌌 狂乱の強化木下降臨と狂乱の強化木下を追加',items:['複数の狂乱の強化木下が出現する高難易度イベントステージを追加','クリア報酬として狂乱の強化木下を獲得可能に','宇宙属性編成ボーナス、属性特効・耐性、ダメージ反射、撃破時強化・回復、烈波を追加']}, 
  {date:'2026-10-29',version:'v1.9.22',title:'👼 天使神:木下の復活後にHP0で正常に退場するよう修正',items:['復活後にHPが0以下になった際、撃破回復が発動して倒されない不具合を修正','復活前の撃破時は従来どおり復活し、復活済みの2回目の撃破では回復しないよう調整']},
  {date:'2026-10-28',version:'v1.9.21',title:'👼 天使神:木下の基礎性能・成長段階を強化',items:['基礎HPを+125%、基礎攻撃力を+85%に調整','成長1/2/3段階の各ステータス上昇率を+20%/+45%/+85%に変更','攻撃命中後、累積上昇率と現在攻撃力をユニット表示で確認可能に改善']},
  {date:'2026-10-28',version:'v1.9.20',title:'👼 ウルトラレア「天使神:木下」を追加',items:['超木下祭で1,000,000木下コインで交換できる新レアリティ「ウルトラレア」を追加','成長・天使属性強化・復活・ダメージ上限/反射/吸収・特効を戦闘処理へ実装','レアリティ表示、図鑑、交換価格を新レアリティに対応']},
@@ -858,7 +859,9 @@ const LATEST_RANK_BONUS_PER_CHARACTER=15;
 function latestRankBonusCharacters(list){const seen=new Set();for(const i of (list||[])){const n=Number(i);if(LATEST_RANK_BONUS_IDS.includes(n))seen.add(n);}return [...seen];}
 function latestRankBonusRP(list){return latestRankBonusCharacters(list).length*LATEST_RANK_BONUS_PER_CHARACTER;}
 function latestRankBonusText(list){const ids=latestRankBonusCharacters(list);return ids.length?ids.map(i=>cards[i]?.icon+' '+cards[i]?.name).join('、'):'なし';}
+cards.push({name:"狂乱の強化木下",cost:3900,hp:29500,atk:19600,range:55,spd:.8,interval:4,recharge:16,icon:"🌌",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"SSR",series:"狂乱シリーズ",specialReward:true,eventReward:"狂乱の強化木下降臨",ability:{name:"狂乱強化・宇宙共鳴",desc:"編成中の宇宙属性1体につき攻撃力+15%（最大+100%）。天使・赤・浮いてる敵・黒に3倍ダメージ、同属性からの被ダメージ25%軽減。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv2。敵撃破ごとに攻撃力+5%（最大+50%）、最大HPの1%回復。HP50%以上で攻撃力+15%。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.75,赤:.75,浮:.75,黒:.75},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,phoenixSurgeLevel:2,phoenixSurgeChance:.25,cosmicFormationBonus:{perUnit:.15,maxBonus:1},killAttackStack:{perKill:.05,maxBonus:.5},healOnKill:.01,hpThresholdAttackBonus:{threshold:.5,multiplier:1.15}}});
 const allyTraits={
+  '狂乱の強化木下':'宇宙',
   '木下':'無','強化木下':'赤','マッチョ木下':'青','木下（野球）':'赤','木下（覚醒）':'浮',
   '木下（忍者）':'黒','木下（博士）':'青','木下（ロボ）':'鋼','木下（王）':'光','木下（超覚醒）':'赤',
   '森の守護木下':'無','森の杖木下':'浮','森王木下':'無','木下（電脳）':'青','木下（ドローン）':'浮',
@@ -898,6 +901,7 @@ const enemyTypes={
 超巨大木下:{name:"超巨大木下",icon:"🗻",trait:"無",hp:18000,atk:820,range:125,spd:.2,interval:2.0,attackType:"area",kb:5,boss:true,money:1500},
 波動木下:{name:"波動木下",icon:"〰️",trait:"宇宙",hp:250000,atk:1000,range:80,spd:.7,interval:.6,attackType:"single",kb:20,money:3000,waveLevel:10}
 };
+enemyTypes["狂乱の強化木下"]={name:"狂乱の強化木下",icon:"🌌",trait:"宇宙",hp:5980000,atk:21800,range:55,spd:.8,interval:4.3,attackType:"single",kb:2,boss:true,money:5000,ability:{name:"狂乱強化・宇宙反撃",desc:"天使・赤・浮いてる敵・黒からの被ダメージ45%軽減、同属性に3倍ダメージ、受けたダメージの45%反射。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv10、75%で後方ワープ。撃破ごとに攻撃力+5%（最大+150%）と最大HPの3%回復。HP50%以上で攻撃力+35%。撃破時100%でヤバヤバLv5。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.45,赤:.45,浮:.45,黒:.45},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,warpChance:.75,warpDistance:260,phoenixSurgeLevel:10,phoenixSurgeChance:.25,yabayaba:5,yabayabaChance:1,killAttackStack:{perKill:.05,maxBonus:1.5},healOnKill:.03,hpThresholdAttackBonus:{threshold:.5,multiplier:1.35},reflectDamage:.45}};
 enemyTypes["ジャック・オー・木下"]={name:"ジャック・オー・木下",icon:"🎃",trait:"黒・浮",hp:92000,atk:4200,range:165,spd:.42,interval:1.7,attackType:"area",kb:3,money:650,ability:{slow:{trait:"*",chance:.35,factor:.5,duration:2}}};
 
 enemyTypes['ワイバーン']={name:'ワイバーン',icon:'🐉',trait:'浮',hp:2500000,atk:3700,range:175,spd:1.7,interval:2,attackType:'area',kb:10,money:16000,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,ability:{name:'天空の捕食者',desc:'距離150以上から受けるダメージ80%軽減。結界30,000を20秒ごとに再生。味方撃破ごとに攻撃力+10%。攻撃時100%で烈波Lv5、3秒呪い・停止・鈍足。停止・鈍足・波動・烈波・呪い無効。17秒ごとに3秒間飛行し、速度1.3で攻撃せず敵をすり抜ける。',mythologyV2:['barrier','distanceArmor','soulFeast'],barrier:30000,barrierCooldown:20,distanceArmor:.2,distanceThreshold:150,soulAtk:.10,soulHeal:0,phoenixSurgeLevel:5,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:1,curseDuration:3,stopChance:1,stopDuration:3,slowChance:1,slowFactor:.5,slowDuration:3,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,wyvernFlight:true,flightInterval:17,flightDuration:3,flightSpeed:1.3}};
@@ -1310,6 +1314,7 @@ eventStages.push(
  {name:"👑 ジャック・オー・木下降臨",width:1900,baseHp:180000,xp:5000,halloweenEvent:true,eventReward:"パンプキン木下",rewardCharacter:"パンプキン木下",enemies:["赤鬼木下","呪王木下","ジャック・オー・木下"],schedule:[{t:2,enemy:"赤鬼木下",mult:12,fixedMultiplier:true},{t:8,enemy:"呪王木下",mult:5,fixedMultiplier:true},{t:15,enemy:"ジャック・オー・木下",mult:1,fixedMultiplier:true,role:"boss"},{t:28,enemy:"ジャック・オー・木下",mult:1.35,fixedMultiplier:true,role:"boss"}]}
 );
 
+eventStages.push({name:'狂乱の強化木下降臨',width:2350,baseHp:600000,xp:50000,eventReward:'狂乱の強化木下降臨',rewardCharacter:'狂乱の強化木下',enemies:['狂乱の強化木下','めっちゃ木下','阿修羅王','月読命','酒呑童子'],schedule:[{t:0,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:2,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:3,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:4,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:5,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:6,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:7,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:7,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:8,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:8,enemy:'阿修羅王',mult:4,fixedMultiplier:true},{t:15,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:22,enemy:'月読命',mult:3.5,fixedMultiplier:true},{t:29,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:360,enemy:'酒呑童子',mult:58,fixedMultiplier:true}],repeatSpawns:[{start:39,interval:17,enemy:'月読命',mult:3.5,fixedMultiplier:true}]});
 eventStages.push({name:'アイヴィ降臨',width:2350,baseHp:350000,xp:12000,eventReward:'アイヴィ降臨',rewardCharacter:'アイヴィ',enemies:['酒呑童子','アイヴィ','古代神木下','風神獣','終末ヤバヤバ木下'],schedule:[{t:0,enemy:'酒呑童子',mult:5,fixedMultiplier:true},{t:10,enemy:'アイヴィ',mult:1,fixedMultiplier:true,role:'boss'},{t:13,enemy:'古代神木下',mult:1.5,fixedMultiplier:true},{t:15,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:16,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:17,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:18,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:19,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:20,enemy:'風神獣',mult:3.33,fixedMultiplier:true}],repeatSpawns:[{start:29,interval:40,enemy:'酒呑童子',mult:2,fixedMultiplier:true},{start:33,interval:32,enemy:'終末ヤバヤバ木下',mult:15,fixedMultiplier:true}]});
 // ===== 日本編 第2章・第3章 =====
 function cloneChapterStage(base, stageNo, chapter){
@@ -2210,6 +2215,10 @@ function damageAgainst(u,target,baseAtk){
  }
  let mult=1;
  if(u?.mythDomainUntil&&now<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);
+ const customAbility=a0;
+ if(customAbility.cosmicFormationBonus&&units.includes(u)){const cosmicCount=units.filter(v=>v&&v.hp>0&&v.trait==='宇宙').length;mult*=1+Math.min(Number(customAbility.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(customAbility.cosmicFormationBonus.perUnit||.15));}
+ if(customAbility.killAttackStack)mult*=1+Math.min(Number(customAbility.killAttackStack.maxBonus||0),Number(u.killAttackStacks||0)*Number(customAbility.killAttackStack.perKill||.05));
+ if(customAbility.hpThresholdAttackBonus&&u?.hp>=u?.maxhp*Number(customAbility.hpThresholdAttackBonus.threshold||.5))mult*=Number(customAbility.hpThresholdAttackBonus.multiplier||1);
  if(!isAbilitySealed(u)&&u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;
  if(u?.name==='天使神:木下'&&entityTraitMatch(target,['古代','赤','黒','浮','神話']))mult*=8;
  const tr=target.trait||"無";
@@ -2231,7 +2240,7 @@ function damageTakenBy(u,attacker){
  if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;
  if(!isAbilitySealed(attacker)&&attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;
  const now=performance.now()/1000;
- let effectiveAtk=Number(attacker.atk||1);if(attacker.attackDownUntil&&now<attacker.attackDownUntil)effectiveAtk*=Number(attacker.attackDownFactor||.01);if(attacker.festivalVoidUntil&&now<attacker.festivalVoidUntil)effectiveAtk*=Number(attacker.festivalVoidAttackFactor||.55);
+ let effectiveAtk=Number(attacker.atk||1);const attackerAbility=attacker.ability||{};if(attackerAbility.killAttackStack)effectiveAtk*=1+Math.min(Number(attackerAbility.killAttackStack.maxBonus||0),Number(attacker.killAttackStacks||0)*Number(attackerAbility.killAttackStack.perKill||.05));if(attackerAbility.hpThresholdAttackBonus&&attacker.hp>=attacker.maxhp*Number(attackerAbility.hpThresholdAttackBonus.threshold||.5))effectiveAtk*=Number(attackerAbility.hpThresholdAttackBonus.multiplier||1);if(attacker.attackDownUntil&&now<attacker.attackDownUntil)effectiveAtk*=Number(attacker.attackDownFactor||.01);if(attacker.festivalVoidUntil&&now<attacker.festivalVoidUntil)effectiveAtk*=Number(attacker.festivalVoidAttackFactor||.55);
  const ua={...(u||{}),...(u.ability||{})};
  const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
  if(ivyIsEntity(u)){
@@ -2409,6 +2418,7 @@ function hit(target,damage,source,abilitySource){
  if(angelGodTarget&&source?.isEnemy){if(target.hp>=target.maxhp*.4)dealt*=.65;if(entityTraitMatch(source,['古代','赤','黒','浮','神話']))dealt*=.8;dealt=Math.min(dealt,Math.max(1,target.maxhp*.15));}
  if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}
  const actualHealthDamage=Math.min(before,Math.max(0,dealt));target.hp=Math.max(0,target.hp-dealt);
+ if(target.isEnemy&&target.ability?.reflectDamage&&source&&!source.isEnemy&&!abilitySource?.reflectBounce&&actualHealthDamage>0){const reflected=Math.max(1,Math.round(actualHealthDamage*Number(target.ability.reflectDamage||0)));if(reflected>0)hit(source,reflected,target,{reflectBounce:true});}
  if(angelGodTarget&&target.hp<=0&&!target.angelGodRevived){target.angelGodRevived=true;const previousMaxHp=Math.max(1,Number(target.maxhp||1)),previousAtk=Math.max(1,Number(target.atk||1));target.maxhp=previousAtk;target.hp=target.maxhp;target.atk=previousMaxHp;target.angelGodBaseAtk=target.atk;target.angelGodAttackStacks=0;target.angelGodReviveStatSwap={previousMaxHp,previousAtk,newMaxHp:target.maxhp,newAtk:target.atk};if(target.el){const hpBar=target.el.querySelector('.hp i');if(hpBar)hpBar.style.width='100%';const hpText=target.el.querySelector('.hpLabel');if(hpText)hpText.textContent=Math.ceil(target.hp).toLocaleString()+' / '+Math.ceil(target.maxhp).toLocaleString();}setStatusMark(target,'👼','復活済み：HP '+Number(target.hp).toLocaleString()+' / '+Number(target.maxhp).toLocaleString('ja-JP')+'・攻撃力 '+Number(target.atk).toLocaleString(),999999,'angelGodRevive');popup('👼 天使神の復活！ HP・攻撃力を入れ替え、HP100%で復活',target.x,90,'criticalPop');}
  if(angelGodTarget&&actualHealthDamage>0&&target.hp>0){target.hp=Math.min(target.maxhp,target.hp+Math.round(actualHealthDamage*.15));if(source?.isEnemy&&before>=targetMaxHpBefore*.4){const reflected=Math.max(1,Math.round(actualHealthDamage*.15));hit(source,reflected,target,{angelGodReflection:true});}}
  if(!target.isEnemy&&target.hp<=0&&target.ability?.causalityReversal&&!target.causalityReversed){target.causalityReversed=true;target.hp=Math.max(1,Math.min(target.maxhp,Math.round(target.maxhp*Number(target.ability.causalityReversal.heal??target.ability.causalityReversal.revivePercent??.4))));target.causalityInvulnUntil=performance.now()/1000+Number(target.ability.causalityReversal.invulnerable||3);popup('⏳ 因果反転！',target.x,90,'criticalPop');}
@@ -4061,13 +4071,14 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
      for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0||(e.isFlying&&!u.airAttack))continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);const inRange=u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e):d<detectionRange;if(inRange&&d<bestDist){target=e;bestDist=d;}}
      u.target=target;
    }
-   if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);removeEnemy(t)}}applyGlobalSlow(u);applyAreaAttackDown(u);u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
+   if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(u.ability?.killAttackStack&&!isAbilitySealed(u)){u.killAttackStacks=Math.min(Math.ceil(Number(u.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(u.ability.killAttackStack.perKill||.05))),Number(u.killAttackStacks||0)+1);if(u.ability.healOnKill)u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*Number(u.ability.healOnKill)));}removeEnemy(t)}}applyGlobalSlow(u);applyAreaAttackDown(u);u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
    else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){
  attackEffect(u,t);
  const sequence=getAttackSequence(u,t);
  const baseAttack=sequence[0]?.damage??u.atk;
  const dealt=damageAgainst(u,t,baseAttack);
  hit(t,dealt,u);
+ 
  const firstStopChance=Number(u.firstStopChance??u.ability?.firstStopChance??0);
  if(!isAbilitySealed(u)&&firstStopChance)applyDirectStop(t,firstStopChance,u.firstStopDuration??u.ability?.firstStopDuration);
  const waveStopChance=Number(u.waveStopChance??u.ability?.waveStopChance??0);
@@ -4083,6 +4094,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});
  if(t.hp<=0){
   if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);
+  if(!isAbilitySealed(u)&&u.ability?.killAttackStack){u.killAttackStacks=Math.min(Math.ceil(Number(u.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(u.ability.killAttackStack.perKill||.05))),Number(u.killAttackStacks||0)+1);if(u.ability.healOnKill)u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*Number(u.ability.healOnKill)));}
   if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true);}
   else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}
   else removeEnemy(t);
@@ -4166,6 +4178,7 @@ function applyPhoenixAttackAbility(source,target){const a=source?.ability||{};if
 function triggerPhoenixSurge(source,center,hitTargets=[]){
  if(!source||isAbilitySealed(source))return;
  const a=source.ability||{},level=Number(source.phoenixSurgeLevel??a.phoenixSurgeLevel??0);if(!level)return;
+ if(a.phoenixSurgeChance&&Math.random()>=Number(a.phoenixSurgeChance))return;
  const isAlly=units.includes(source);
  const min=Number(a.phoenixSurgeMin??source.phoenixSurgeMin??1),max=Number(a.phoenixSurgeMax??source.phoenixSurgeMax??200);
  // 通常攻撃が命中した位置ごとに烈波を生成し、烈波の持続時間中は0.2秒ごとに範囲内の敵を再判定する。
@@ -4243,6 +4256,7 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
    if(!hasAbilityFlag(t,'yabayabaImmune')&&!sourceSealed&&Number(e.yabayaba||ea.yabayaba||0)>0&&Math.random()<Number(e.yabayabaChance??ea.yabayabaChance??1)){
      try{spawnYabayabaClone(t,ea.yabayaba);}catch(err){console.warn('enemy Yabayaba clone skipped',err);}
    }
+   if(e.ability?.killAttackStack&&!sourceSealed){e.killAttackStacks=Math.min(Math.ceil(Number(e.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(e.ability.killAttackStack.perKill||.05))),Number(e.killAttackStacks||0)+1);if(e.ability.healOnKill)e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(e.ability.healOnKill)));}
    removeUnit(t);
  }
  mythologyV2OnEnemyAttack(e,t);
