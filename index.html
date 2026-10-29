@@ -8,8 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.23';
+const GAME_VERSION='v1.9.24';
 const UPDATE_LOG=[
+ {date:'2026-10-29',version:'v1.9.24',title:'🛠️ 狂乱の強化木下の攻撃負荷を軽減',items:['Lv10烈波の継続処理を専用で短縮し、攻撃時に戦闘全体が停止する問題の原因候補を抑制']},
+
  {date:'2026-10-29',version:'v1.9.23',title:'🌌 狂乱の強化木下降臨と狂乱の強化木下を追加',items:['複数の狂乱の強化木下が出現する高難易度イベントステージを追加','クリア報酬として狂乱の強化木下を獲得可能に','宇宙属性編成ボーナス、属性特効・耐性、ダメージ反射、撃破時強化・回復、烈波を追加']}, 
  {date:'2026-10-29',version:'v1.9.22',title:'👼 天使神:木下の復活後にHP0で正常に退場するよう修正',items:['復活後にHPが0以下になった際、撃破回復が発動して倒されない不具合を修正','復活前の撃破時は従来どおり復活し、復活済みの2回目の撃破では回復しないよう調整']},
  {date:'2026-10-28',version:'v1.9.21',title:'👼 天使神:木下の基礎性能・成長段階を強化',items:['基礎HPを+125%、基礎攻撃力を+85%に調整','成長1/2/3段階の各ステータス上昇率を+20%/+45%/+85%に変更','攻撃命中後、累積上昇率と現在攻撃力をユニット表示で確認可能に改善']},
@@ -4208,7 +4210,8 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   };
   // 生成直後にも判定し、継続中は定期的にダメージを与える。
   applySurgeHit();
-  const endAt=performance.now()+level*1000;
+  const surgeDurationMs=source.name==='狂乱の強化木下'?1000:level*1000;
+  const endAt=performance.now()+surgeDurationMs;
   const timer=setInterval(()=>{
    if(performance.now()>=endAt||source.hp<=0||isAbilitySealed(source)){
     clearInterval(timer);
@@ -4222,9 +4225,9 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   fx.style.left=origin+'px';
   fx.style.bottom='105px';
   fx.style.setProperty('--surge-height',Math.min(230,145+level*30)+'px');
-  fx.style.setProperty('--surge-duration',level+'s');
+  fx.style.setProperty('--surge-duration',(surgeDurationMs/1000)+'s');
   effects.appendChild(fx);
-  setTimeout(()=>fx.remove(),level*1000+50);
+  setTimeout(()=>fx.remove(),surgeDurationMs+50);
 }
 }function enemyAttackTarget(e,t,ea,now2,sourceSealed){
  if(!e||!t||t.hp<=0)return;
