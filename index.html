@@ -2240,7 +2240,7 @@ function damageTakenBy(u,attacker){
  if(!isAbilitySealed(attacker)&&attacker?.ability?.mythic==='apocalypse'&&attacker.hp<attacker.maxhp*.35)mult*=1.8;
  if(!isAbilitySealed(attacker)&&attacker?.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;
  const now=performance.now()/1000;
- let effectiveAtk=Number(attacker.atk||1);if(attacker.attackDownUntil&&now<attacker.attackDownUntil)effectiveAtk*=Number(attacker.attackDownFactor||.01);if(attacker.festivalVoidUntil&&now<attacker.festivalVoidUntil)effectiveAtk*=Number(attacker.festivalVoidAttackFactor||.55);
+ let effectiveAtk=Number(attacker.atk||1);const attackerAbility=attacker.ability||{};if(attackerAbility.killAttackStack)effectiveAtk*=1+Math.min(Number(attackerAbility.killAttackStack.maxBonus||0),Number(attacker.killAttackStacks||0)*Number(attackerAbility.killAttackStack.perKill||.05));if(attackerAbility.hpThresholdAttackBonus&&attacker.hp>=attacker.maxhp*Number(attackerAbility.hpThresholdAttackBonus.threshold||.5))effectiveAtk*=Number(attackerAbility.hpThresholdAttackBonus.multiplier||1);if(attacker.attackDownUntil&&now<attacker.attackDownUntil)effectiveAtk*=Number(attacker.attackDownFactor||.01);if(attacker.festivalVoidUntil&&now<attacker.festivalVoidUntil)effectiveAtk*=Number(attacker.festivalVoidAttackFactor||.55);
  const ua={...(u||{}),...(u.ability||{})};
  const aa=isAbilitySealed(attacker)?{}:{...(attacker||{}),...(attacker.ability||{})};
  if(ivyIsEntity(u)){
