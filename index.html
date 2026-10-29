@@ -2216,7 +2216,7 @@ function damageAgainst(u,target,baseAtk){
  let mult=1;
  if(u?.mythDomainUntil&&now<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);
  const customAbility=a0;
- if(customAbility.cosmicFormationBonus&&units.includes(u)){const cosmicCount=units.filter(v=>v&&v.hp>0&&v.trait==='宇宙').length;mult*=1+Math.min(Number(customAbility.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(customAbility.cosmicFormationBonus.perUnit||.15));}
+ if(customAbility.cosmicFormationBonus&&units.includes(u)){const cosmicCount=formation.filter(i=>{const c=activeCard(i)||cards[i];return !!c&&(c.trait==='宇宙'||allyTraits[c.name]==='宇宙');}).length;mult*=1+Math.min(Number(customAbility.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(customAbility.cosmicFormationBonus.perUnit||.15));}
  if(customAbility.killAttackStack)mult*=1+Math.min(Number(customAbility.killAttackStack.maxBonus||0),Number(u.killAttackStacks||0)*Number(customAbility.killAttackStack.perKill||.05));
  if(customAbility.hpThresholdAttackBonus&&u?.hp>=u?.maxhp*Number(customAbility.hpThresholdAttackBonus.threshold||.5))mult*=Number(customAbility.hpThresholdAttackBonus.multiplier||1);
  if(!isAbilitySealed(u)&&u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;
