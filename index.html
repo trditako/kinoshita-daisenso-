@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.22';
+const GAME_VERSION='v1.9.23';
 const UPDATE_LOG=[
+ {date:'2026-10-29',version:'v1.9.23',title:'🌌 狂乱の強化木下降臨と狂乱の強化木下を追加',items:['複数の狂乱の強化木下が出現する高難易度イベントステージを追加','クリア報酬として狂乱の強化木下を獲得可能に','宇宙属性編成ボーナス、属性特効・耐性、ダメージ反射、撃破時強化・回復、烈波を追加']}, 
  {date:'2026-10-29',version:'v1.9.22',title:'👼 天使神:木下の復活後にHP0で正常に退場するよう修正',items:['復活後にHPが0以下になった際、撃破回復が発動して倒されない不具合を修正','復活前の撃破時は従来どおり復活し、復活済みの2回目の撃破では回復しないよう調整']},
  {date:'2026-10-28',version:'v1.9.21',title:'👼 天使神:木下の基礎性能・成長段階を強化',items:['基礎HPを+125%、基礎攻撃力を+85%に調整','成長1/2/3段階の各ステータス上昇率を+20%/+45%/+85%に変更','攻撃命中後、累積上昇率と現在攻撃力をユニット表示で確認可能に改善']},
  {date:'2026-10-28',version:'v1.9.20',title:'👼 ウルトラレア「天使神:木下」を追加',items:['超木下祭で1,000,000木下コインで交換できる新レアリティ「ウルトラレア」を追加','成長・天使属性強化・復活・ダメージ上限/反射/吸収・特効を戦闘処理へ実装','レアリティ表示、図鑑、交換価格を新レアリティに対応']},
@@ -900,7 +901,7 @@ const enemyTypes={
 超巨大木下:{name:"超巨大木下",icon:"🗻",trait:"無",hp:18000,atk:820,range:125,spd:.2,interval:2.0,attackType:"area",kb:5,boss:true,money:1500},
 波動木下:{name:"波動木下",icon:"〰️",trait:"宇宙",hp:250000,atk:1000,range:80,spd:.7,interval:.6,attackType:"single",kb:20,money:3000,waveLevel:10}
 };
-enemyTypes["狂乱の強化木下"]={name:"狂乱の強化木下",icon:"🌌",trait:"宇宙",hp:5980000,atk:21800,range:55,spd:.8,interval:4.3,attackType:"single",kb:2,boss:true,money:5000,ability:{name:"狂乱強化・宇宙反撃",desc:"天使・赤・浮いてる敵・黒からの被ダメージ45%軽減、同属性に3倍ダメージ、受けたダメージの45%反射。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv10、75%で後方ワープ。撃破ごとに攻撃力+5%（最大+150%）と最大HPの3%回復。HP50%以上で攻撃力+35%。撃破時100%でヤバヤバLv5。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.55,赤:.55,浮:.55,黒:.55},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,warpChance:.75,warpDistance:260,phoenixSurgeLevel:10,phoenixSurgeChance:.25,yabayaba:5,yabayabaChance:1,killAttackStack:{perKill:.05,maxBonus:1.5},healOnKill:.03,hpThresholdAttackBonus:{threshold:.5,multiplier:1.35},reflectDamage:.45}};
+enemyTypes["狂乱の強化木下"]={name:"狂乱の強化木下",icon:"🌌",trait:"宇宙",hp:5980000,atk:21800,range:55,spd:.8,interval:4.3,attackType:"single",kb:2,boss:true,money:5000,ability:{name:"狂乱強化・宇宙反撃",desc:"天使・赤・浮いてる敵・黒からの被ダメージ45%軽減、同属性に3倍ダメージ、受けたダメージの45%反射。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv10、75%で後方ワープ。撃破ごとに攻撃力+5%（最大+150%）と最大HPの3%回復。HP50%以上で攻撃力+35%。撃破時100%でヤバヤバLv5。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.45,赤:.45,浮:.45,黒:.45},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,warpChance:.75,warpDistance:260,phoenixSurgeLevel:10,phoenixSurgeChance:.25,yabayaba:5,yabayabaChance:1,killAttackStack:{perKill:.05,maxBonus:1.5},healOnKill:.03,hpThresholdAttackBonus:{threshold:.5,multiplier:1.35},reflectDamage:.45}};
 enemyTypes["ジャック・オー・木下"]={name:"ジャック・オー・木下",icon:"🎃",trait:"黒・浮",hp:92000,atk:4200,range:165,spd:.42,interval:1.7,attackType:"area",kb:3,money:650,ability:{slow:{trait:"*",chance:.35,factor:.5,duration:2}}};
 
 enemyTypes['ワイバーン']={name:'ワイバーン',icon:'🐉',trait:'浮',hp:2500000,atk:3700,range:175,spd:1.7,interval:2,attackType:'area',kb:10,money:16000,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,ability:{name:'天空の捕食者',desc:'距離150以上から受けるダメージ80%軽減。結界30,000を20秒ごとに再生。味方撃破ごとに攻撃力+10%。攻撃時100%で烈波Lv5、3秒呪い・停止・鈍足。停止・鈍足・波動・烈波・呪い無効。17秒ごとに3秒間飛行し、速度1.3で攻撃せず敵をすり抜ける。',mythologyV2:['barrier','distanceArmor','soulFeast'],barrier:30000,barrierCooldown:20,distanceArmor:.2,distanceThreshold:150,soulAtk:.10,soulHeal:0,phoenixSurgeLevel:5,phoenixSurgeMin:1,phoenixSurgeMax:200,curseChance:1,curseDuration:3,stopChance:1,stopDuration:3,slowChance:1,slowFactor:.5,slowDuration:3,curseImmune:true,stopImmune:true,slowImmune:true,waveImmune:true,surgeImmune:true,wyvernFlight:true,flightInterval:17,flightDuration:3,flightSpeed:1.3}};
@@ -4077,7 +4078,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  const baseAttack=sequence[0]?.damage??u.atk;
  const dealt=damageAgainst(u,t,baseAttack);
  hit(t,dealt,u);
- if(u.ability?.phoenixSurgeLevel&&u.ability?.phoenixSurgeChance&&Math.random()<Number(u.ability.phoenixSurgeChance))triggerPhoenixSurge(u,t.x,[t]);
+ 
  const firstStopChance=Number(u.firstStopChance??u.ability?.firstStopChance??0);
  if(!isAbilitySealed(u)&&firstStopChance)applyDirectStop(t,firstStopChance,u.firstStopDuration??u.ability?.firstStopDuration);
  const waveStopChance=Number(u.waveStopChance??u.ability?.waveStopChance??0);
@@ -4093,6 +4094,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  if(pvpMode&&t.isRemote)pvpSend({type:'hit',targetId:t.id,damage:dealt,attackerIndex:u.cardIndex});
  if(t.hp<=0){
   if(!isAbilitySealed(u)&&u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);
+  if(!isAbilitySealed(u)&&u.ability?.killAttackStack){u.killAttackStacks=Math.min(Math.ceil(Number(u.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(u.ability.killAttackStack.perKill||.05))),Number(u.killAttackStacks||0)+1);if(u.ability.healOnKill)u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*Number(u.ability.healOnKill)));}
   if(t.key==='フェニックス'&&!t.phoenixRevived){revivePhoenix(t);removeEnemy(t,true);}
   else if(t.ability?.mythic==='resurrection'&&!t.mythicRevived){t.mythicRevived=true;t.hp=Math.max(1,Math.round(t.maxhp*Number(t.ability.revive||.5)));t.x=Math.max(120,t.x-90);t.cd=1.5;mythicPopup('☠️ 再臨',t);if(t.el){const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}}
   else removeEnemy(t);
@@ -4257,7 +4259,6 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
    if(e.ability?.killAttackStack&&!sourceSealed){e.killAttackStacks=Math.min(Math.ceil(Number(e.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(e.ability.killAttackStack.perKill||.05))),Number(e.killAttackStacks||0)+1);if(e.ability.healOnKill)e.hp=Math.min(e.maxhp,e.hp+Math.round(e.maxhp*Number(e.ability.healOnKill)));}
    removeUnit(t);
  }
- if(e.ability?.phoenixSurgeLevel)triggerPhoenixSurge(e,t.x,[t]);
  mythologyV2OnEnemyAttack(e,t);
 
 }
