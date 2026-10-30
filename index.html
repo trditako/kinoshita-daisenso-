@@ -4808,26 +4808,35 @@ try{
   const swapIndices=i=>i===richIndex?miraiIndex:i===miraiIndex?richIndex:i;
   const remapList=(list,from,to)=>Array.isArray(list)?list.map(i=>i===from?to:i):list;
   if(richIndex>=0&&miraiIndex>=0&&richIndex!==miraiIndex){
+   const hasSavedFormationNames=(Array.isArray(formationStableNamesAtBoot)&&formationStableNamesAtBoot.length>0)||(Array.isArray(formationCharacterNamesAtBoot)&&formationCharacterNamesAtBoot.length>0);
+   const remapActiveFormation=!v7Done||!hasSavedFormationNames;
    if(hasRich&&hasMirai){
-    if(!v7Done){
+    if(!v7Done||!savedNames){
      swapValues(charLevel);swapValues(charMaxLevel);swapValues(charForm);swapValues(normalEvolved);
-     formationPresets=formationPresets.map(p=>remapList(p,richIndex,miraiIndex).map(i=>i===richIndex?miraiIndex:i));
+     formationPresets=formationPresets.map(p=>Array.isArray(p)?p.map(swapIndices):p);
+     if(!savedNames&&Array.isArray(ownedFlags)){swapValues(ownedFlags);owned=ownedFlags.filter(Boolean).length;}
     }
-    formation=remapList(formation,richIndex,miraiIndex).map(swapIndices);
-    for(let i=0;i<formationBeforeLateCards.length;i++)formationBeforeLateCards[i]=swapIndices(formationBeforeLateCards[i]);
+    if(remapActiveFormation){
+     formation=Array.isArray(formation)?formation.map(swapIndices):[];
+     for(let i=0;i<formationBeforeLateCards.length;i++)formationBeforeLateCards[i]=swapIndices(formationBeforeLateCards[i]);
+    }
    }else if(hasMirai){
     moveValue(charLevel,richIndex,miraiIndex,1);moveValue(charMaxLevel,richIndex,miraiIndex,20);
     moveValue(charForm,richIndex,miraiIndex,1);moveValue(normalEvolved,richIndex,miraiIndex,false);
     formationPresets=formationPresets.map(p=>remapList(p,richIndex,miraiIndex));
-    formation=remapList(formation,richIndex,miraiIndex);
-    for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===richIndex)formationBeforeLateCards[i]=miraiIndex;
+    if(remapActiveFormation){
+     formation=remapList(formation,richIndex,miraiIndex);
+     for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===richIndex)formationBeforeLateCards[i]=miraiIndex;
+    }
     if(!savedNames&&Array.isArray(ownedFlags)){moveValue(ownedFlags,richIndex,miraiIndex,false);owned=ownedFlags.filter(Boolean).length;}
    }else if(hasRich){
     moveValue(charLevel,miraiIndex,richIndex,1);moveValue(charMaxLevel,miraiIndex,richIndex,20);
     moveValue(charForm,miraiIndex,richIndex,1);moveValue(normalEvolved,miraiIndex,richIndex,false);
     formationPresets=formationPresets.map(p=>remapList(p,miraiIndex,richIndex));
-    formation=remapList(formation,miraiIndex,richIndex);
-    for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===miraiIndex)formationBeforeLateCards[i]=richIndex;
+    if(remapActiveFormation){
+     formation=remapList(formation,miraiIndex,richIndex);
+     for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===miraiIndex)formationBeforeLateCards[i]=richIndex;
+    }
     if(!savedNames&&Array.isArray(ownedFlags)){moveValue(ownedFlags,miraiIndex,richIndex,false);owned=ownedFlags.filter(Boolean).length;}
    }
   }
