@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.37';
+const GAME_VERSION='v1.9.38';
 const UPDATE_LOG=[
+  {date:'2026-10-31',version:'v1.9.38',title:'🛠️ キャラクターID引き継ぎ・AIデータ取得を修正',items:['富豪木下またはMiraiKの片方だけを所持していた場合も、レベル・形態・進化・編成プリセットを正しいIDへ移行','現在の編成と旧形式の編成データもID変更に追従','AIアカウント1,000体の読み込みを100体ずつに分割し、データ取得タイムアウトを回避']},
   {date:'2026-10-31',version:'v1.9.37',title:'🆔 富豪木下とMiraiKのキャラクターIDを修正',items:['富豪木下を元のカードIDへ戻し、MiraiKを新規の末尾IDへ移動','所持名・抽選設定・2体の性能と能力は維持','v1.9.36から更新したセーブデータはレベル・形態・編成プリセットのID参照を一度だけ入れ替えて引き継ぐ']},
   {date:'2026-10-30',version:'v1.9.34',title:'🌪️ 覇風を弱体化',items:['攻撃力を16,500から12,500へ、再生産時間を5.2秒から20秒へ調整','非UR編成数による覇風自身の強化対象から射程・移動速度を除外','編成画面の強化倍率表示を実際の能力適用内容に合わせて修正']},
   {date:'2026-10-30',version:'v1.9.33',title:'🌪️ 覇風の編成バフ表示を追加',items:['編成画面に覇風の全味方ステータス強化・覇風自身の強化倍率・パワーシールド耐久値を表示','UR・非URの編成数に応じた実際の強化率を各キャラクターのステータス欄へ反映','覇風が戦場にいる間の敵攻撃力低下効果を編成効果と区別して明記']},
@@ -1544,9 +1545,17 @@ async function loadAIServerProfiles(force=false){
  if(aiServerProfilesLoadBusy)return false;
  aiServerProfilesLoadBusy=true;
  try{
-  const res=await fetch(SUPABASE_REST_URL+'/ai_accounts?select=account_id,name,rp,skill,wins,losses,generation,strategy,aggression,save_rate,coins,player_xp,worker_level,stage_clears,chapter_clears,owned_characters,formation,char_levels,event_clears,training_xp,matches,last_result,activity,activity_history,match_history,reward_rank,reward_cycle,rank_badge,limited_character_owned,inventory_items,best_rp,best_rank,rank_matches,current_rank_matches,rank_streak,formation_presets&order=account_id.asc',{headers:supabaseHeaders(),cache:'no-store'});
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  const rows=await res.json();
+  // 1,000体分の大きなJSONを一括取得するとPostgRESTがstatement timeoutになるため、100体ずつ取得する。
+  const endpoint=SUPABASE_REST_URL+'/ai_accounts?select=account_id,name,rp,skill,wins,losses,generation,strategy,aggression,save_rate,coins,player_xp,worker_level,stage_clears,chapter_clears,owned_characters,formation,char_levels,event_clears,training_xp,matches,last_result,activity,activity_history,match_history,reward_rank,reward_cycle,rank_badge,limited_character_owned,inventory_items,best_rp,best_rank,rank_matches,current_rank_matches,rank_streak,formation_presets&order=account_id.asc';
+  const rows=[],pageSize=100;
+  for(let offset=0;offset<1000;offset+=pageSize){
+   const pageRes=await fetch(endpoint,{headers:supabaseHeaders({'Range-Unit':'items','Range':offset+'-'+(offset+pageSize-1)}),cache:'no-store'});
+   if(!pageRes.ok)throw new Error('AIデータ取得失敗（'+(offset+1)+'〜'+(offset+pageSize)+'件目 / HTTP '+pageRes.status+'）');
+   const page=await pageRes.json();
+   if(!Array.isArray(page))throw new Error('AIデータの形式が不正です');
+   rows.push(...page);
+   if(page.length<pageSize)break;
+  }
   if(!Array.isArray(rows)||rows.length===0)throw new Error('AIデータが空です');
   const serverProfiles=rows.map((row,i)=>{
    const a={
@@ -4777,6 +4786,63 @@ try{
   storage.setItem('kinoshitaCharacterIdSwapV7','done');
  }
 }catch(e){console.warn('Rich Kinoshita/MiraiK ID migration V7 failed',e);}
+
+/* v1.9.38: 片方だけを所持していたセーブも含め、旧IDから正しいIDへ移行する。
+   V7済みで両方所持している場合は配列を再交換しない（V7で既に交換済み）。 */
+try{
+ if(storage.getItem('kinoshitaCharacterIdSwapV8')!=='done'){
+  const savedNames=Array.isArray(ownedCharacterNamesAtBoot)?ownedCharacterNamesAtBoot:null;
+  const v7Done=storage.getItem('kinoshitaCharacterIdSwapV7')==='done';
+  const hasRich=savedNames?savedNames.includes('富豪木下'):!!(Array.isArray(ownedFlags)&&ownedFlags[miraiIndex]);
+  const hasMirai=savedNames?savedNames.includes('MiraiK'):!!(Array.isArray(ownedFlags)&&ownedFlags[richIndex]);
+  const swapValues=(arr)=>{
+   if(!Array.isArray(arr))return;
+   while(arr.length<=Math.max(richIndex,miraiIndex))arr.push(undefined);
+   const value=arr[richIndex];arr[richIndex]=arr[miraiIndex];arr[miraiIndex]=value;
+  };
+  const moveValue=(arr,from,to,fallback)=>{
+   if(!Array.isArray(arr))return;
+   while(arr.length<=Math.max(from,to))arr.push(fallback);
+   arr[to]=arr[from]===undefined?fallback:arr[from];arr[from]=fallback;
+  };
+  const swapIndices=i=>i===richIndex?miraiIndex:i===miraiIndex?richIndex:i;
+  const remapList=(list,from,to)=>Array.isArray(list)?list.map(i=>i===from?to:i):list;
+  if(richIndex>=0&&miraiIndex>=0&&richIndex!==miraiIndex){
+   const hasSavedFormationNames=(Array.isArray(formationStableNamesAtBoot)&&formationStableNamesAtBoot.length>0)||(Array.isArray(formationCharacterNamesAtBoot)&&formationCharacterNamesAtBoot.length>0);
+   const remapActiveFormation=!v7Done||!hasSavedFormationNames;
+   if(hasRich&&hasMirai){
+    if(!v7Done||!savedNames){
+     swapValues(charLevel);swapValues(charMaxLevel);swapValues(charForm);swapValues(normalEvolved);
+     formationPresets=formationPresets.map(p=>Array.isArray(p)?p.map(swapIndices):p);
+     if(!savedNames&&Array.isArray(ownedFlags)){swapValues(ownedFlags);owned=ownedFlags.filter(Boolean).length;}
+    }
+    if(remapActiveFormation){
+     formation=Array.isArray(formation)?formation.map(swapIndices):[];
+     for(let i=0;i<formationBeforeLateCards.length;i++)formationBeforeLateCards[i]=swapIndices(formationBeforeLateCards[i]);
+    }
+   }else if(hasMirai){
+    moveValue(charLevel,richIndex,miraiIndex,1);moveValue(charMaxLevel,richIndex,miraiIndex,20);
+    moveValue(charForm,richIndex,miraiIndex,1);moveValue(normalEvolved,richIndex,miraiIndex,false);
+    formationPresets=formationPresets.map(p=>remapList(p,richIndex,miraiIndex));
+    if(remapActiveFormation){
+     formation=remapList(formation,richIndex,miraiIndex);
+     for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===richIndex)formationBeforeLateCards[i]=miraiIndex;
+    }
+    if(!savedNames&&Array.isArray(ownedFlags)){moveValue(ownedFlags,richIndex,miraiIndex,false);owned=ownedFlags.filter(Boolean).length;}
+   }else if(hasRich){
+    moveValue(charLevel,miraiIndex,richIndex,1);moveValue(charMaxLevel,miraiIndex,richIndex,20);
+    moveValue(charForm,miraiIndex,richIndex,1);moveValue(normalEvolved,miraiIndex,richIndex,false);
+    formationPresets=formationPresets.map(p=>remapList(p,miraiIndex,richIndex));
+    if(remapActiveFormation){
+     formation=remapList(formation,miraiIndex,richIndex);
+     for(let i=0;i<formationBeforeLateCards.length;i++)if(formationBeforeLateCards[i]===miraiIndex)formationBeforeLateCards[i]=richIndex;
+    }
+    if(!savedNames&&Array.isArray(ownedFlags)){moveValue(ownedFlags,miraiIndex,richIndex,false);owned=ownedFlags.filter(Boolean).length;}
+   }
+  }
+  storage.setItem('kinoshitaCharacterIdSwapV8','done');
+ }
+}catch(e){console.warn('Rich Kinoshita/MiraiK ID migration V8 failed',e);}
 
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
