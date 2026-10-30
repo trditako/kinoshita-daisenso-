@@ -2277,7 +2277,7 @@ function damageAgainst(u,target,baseAtk){
  if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;
  if(target?.cursedUntil&&now<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;
  if(u?.name==='MiraiK'){
-  const angelCount=formation.filter(i=>Number.isInteger(i)&&i!==u.cardIndex&&hasCharacter(i)&&entityHasTrait(activeCard(i)||cards[i],'天使')).length;
+  const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return Number.isInteger(i)&&hasCharacter(i)&&card&&card.name!=='MiraiK'&&entityHasTrait(card,'天使');}).length;
   mult*=1+Math.min(.55,angelCount*.10);
   if(target?.attackType==='single')mult*=3;
  }
