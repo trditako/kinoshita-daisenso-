@@ -3060,7 +3060,7 @@ function applyHaifuFormationEffects(unit){
 function haifuPrepareDamage(target,attacker,damage){
  let dealt=Math.max(0,Number(damage)||0);
  if(target?.name!=='覇風')return dealt;
- if(attacker?.isEnemy&&dealt>0){
+ if(dealt>0){
   const stacks=Math.min(8,Math.max(0,Number(target.haifuDefenseStacks||0)));
   dealt*=1-stacks*.025;
   if(stacks<8){target.haifuDefenseStacks=stacks+1;setStatusMark(target,'🛡️','防御力上昇 +'+(target.haifuDefenseStacks*2.5)+'%',999999,'haifuDefense');}
@@ -4241,7 +4241,7 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  const sequence=getAttackSequence(u,t);
  const baseAttack=sequence[0]?.damage??u.atk;
  const dealt=damageAgainst(u,t,baseAttack);
- hit(t,dealt,u);haifuOnAttack(u,t);kbrOnAttack(u,t,dealt);
+ haifuOnAttack(u,t);hit(t,dealt,u);kbrOnAttack(u,t,dealt);
  
  const firstStopChance=Number(u.firstStopChance??u.ability?.firstStopChance??0);
  if(!isAbilitySealed(u)&&firstStopChance)applyDirectStop(t,firstStopChance,u.firstStopDuration??u.ability?.firstStopDuration);
