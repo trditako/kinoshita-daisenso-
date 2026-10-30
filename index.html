@@ -8,8 +8,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.31';
+const GAME_VERSION='v1.9.33';
 const UPDATE_LOG=[
+  {date:'2026-10-30',version:'v1.9.33',title:'🌪️ 覇風の編成バフ表示を追加',items:['編成画面に覇風の全味方ステータス強化・覇風自身の強化倍率・パワーシールド耐久値を表示','UR・非URの編成数に応じた実際の強化率を各キャラクターのステータス欄へ反映','覇風が戦場にいる間の敵攻撃力低下効果を編成効果と区別して明記']},
+  {date:'2026-10-30',version:'v1.9.32',title:'🌪️ 覇風のレベルアップ・編成能力を修正',items:['後から追加されたキャラクターにもレベル・最大レベル配列を初期化し、覇風のレベルアップでXPだけが消費される問題を修正','レベルアップ処理を安全化し、正常なレベル更新を保存してからXPを消費','覇風出撃前に登場していた味方にも編成バフとパワーシールドを適用']},
   {date:'2026-10-30',version:'v1.9.31',title:'🌪️ エレメンタル木下s・ウルトラレア覇風を追加',items:['期間限定交換所を「エレメンタル木下s」に変更し、既存の元素シリーズ6体を交換対象に設定','ウルトラレア「覇風」を500,000木下コインで追加','編成バフ・敵攻撃力低下・パワーシールド・召喚回数攻撃・時間成長・被ダメージ上限・防御成長・波動Lv5・反射無効を実装']},
   {date:'2026-10-30',version:'v1.9.30',title:'🆔 キャラクターIDの並び順を修正',items:['KBRキャラクター10体の登録を全ての既存キャラクター登録後へ移動','KBR追加位置より後に登録されていたキャラクターのIDがずれる問題を修正','所持状態・編成の名前ベース復元前に全キャラクターを登録']},
   {date:'2026-10-30',version:'v1.9.29',title:'🏇 KBR報酬データの欠落時もキャラクターを付与',items:['KBRステージ報酬を騎乗キャラクター一覧から補完し、報酬データ未設定で受け取れない問題を修正','ステージ一覧・クリア処理の両方で報酬キャラクター名を補完','サービスワーカーのキャッシュを更新']},
@@ -2627,7 +2629,7 @@ function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=
  document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name+((isNormal||isHarland||isAnomalous||!!EARLY_SECOND_FORM_CONFIG[base.name]||isRich||isYoshida)&&charForm[i]===2?'【第二形態】':'');
  document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b><div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+c.recharge.toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
  document.getElementById('detail').style.display='flex';
-}function levelUpCharacter(i){if(running||!hasCharacter(i)||charLevel[i]>=charMaxLevel[i])return;const need=xpNeed(i);if(playerXP<need)return;playerXP-=need;charLevel[i]++;save();showCharacterDetail(i);renderCards();renderStageSelect()}
+}function levelUpCharacter(i){if(running||!Number.isInteger(i)||!cards[i]||!hasCharacter(i))return;const max=Math.max(20,Math.min(30,Number(charMaxLevel[i])||20));const raw=Number(charLevel[i]);const current=Number.isFinite(raw)&&raw>=1?Math.min(max,Math.floor(raw)):1;charMaxLevel[i]=max;charLevel[i]=current;if(current>=max)return;const need=xpNeed(i);if(!Number.isFinite(need)||need<=0||playerXP<need)return;charLevel[i]=current+1;playerXP=Math.max(0,playerXP-need);save();showCharacterDetail(i);renderCards();renderStageSelect()}
 function openKinoshitaBook(){
  const el=document.getElementById('kinoshitaBook');
  if(!el)return;
@@ -2709,13 +2711,17 @@ function formationBuffSummaryHTML(i){
  let aura=1,auraLabel='';
  if(c.name==='天使神:木下'){aura=1+Math.min(.30,angelCount*.07);auraLabel='天使神自身 '+Math.round((aura-1)*100)+'%';}
  else if(angelGodInFormation&&entityHasTrait(c,'天使')){aura=1.55;auraLabel='天使神の編成バフ +55%';}
+ const haifuCtx=haifuFormationContext();
+ const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
+ const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
+ const totalFactor=aura*haifuAllyFactor*haifuSelfFactor;
  const values={
-  hp:Math.round(Number(statAt(i,'hp')||0)*aura),
-  atk:Math.round(Number(statAt(i,'atk')||0)*aura),
-  range:Math.round(Number(statAt(i,'range')||0)*aura),
-  spd:Math.round(Number(statAt(i,'spd')||0)*aura*100)/100,
-  interval:Math.round((Number(statAt(i,'interval')||0)/aura)*100)/100,
-  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/aura)*100)/100
+  hp:Math.round(Number(statAt(i,'hp')||0)*totalFactor),
+  atk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
+  range:Math.round(Number(statAt(i,'range')||0)*totalFactor),
+  spd:Math.round(Number(statAt(i,'spd')||0)*totalFactor*100)/100,
+  interval:Math.round((Number(statAt(i,'interval')||0)/totalFactor)*100)/100,
+  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/totalFactor)*100)/100
  };
  const base={hp:Number(c.hp||0)*Math.pow(1.04,lv-1),atk:Number(c.atk||0)*Math.pow(1.04,lv-1),range:Number(c.range||0),spd:Number(c.spd||0),interval:Number(c.interval||0),recharge:Number(c.recharge||0)};
  const pct=(value,original,inverse=false)=>{if(!(original>0))return '';const n=(value/original-1)*100;return (n>=0?'+':'')+Math.round(n)+'%';};
@@ -2729,12 +2735,19 @@ function formationBuffSummaryHTML(i){
  if(tree.recharge)tags.push('再生産 −'+(tree.recharge*5)+'%');
  if(rankMode&&Math.abs(rankFactor-1)>.0001)tags.push('ランク補正 '+(rankFactor>=1?'+':'')+Math.round((rankFactor-1)*100)+'%');
  if(auraLabel)tags.push(auraLabel);
+ if(haifuCtx){
+  tags.push('覇風：全味方ステータス +'+Math.round((haifuAllyFactor-1)*100)+'%');
+  tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
+  if(c.name==='覇風')tags.push('覇風自身：非UR '+haifuCtx.nonUrCount+'体で +'+Math.round((haifuSelfFactor-1)*100)+'%');
+ }
  const statLine=(label,key)=>'<span>'+label+' <b>'+Number(values[key]).toLocaleString()+'</b> <small style="color:'+(Number(pct(values[key],base[key]).replace('%',''))<0?'#b91c1c':'#64748b')+'">'+pct(values[key],base[key])+'</small></span>';
- return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
+ return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
 }
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
- el.innerHTML=formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>';
+ const haifuCtx=haifuFormationContext();
+ const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・射程・移動速度 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（攻撃間隔・再生産時間は倍率に応じて短縮）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → さらに全ステータス +'+Math.round((haifuCtx.selfFactor-1)*100)+'%</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
+ el.innerHTML=haifuSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
 }
 function renderFormation(){
  normalizeFormation();
@@ -3042,7 +3055,7 @@ function haifuEffectiveAttack(ctx){
  return Math.round(base*ctx.allyFactor*ctx.selfFactor);
 }
 function applyHaifuFormationEffects(unit){
- if(!unit||unit.isEnemy)return;
+ if(!unit||unit.isEnemy||unit.haifuFormationBuffApplied)return;
  const ctx=haifuFormationContext();if(!ctx)return;
  const factor=ctx.allyFactor*(unit.name==='覇風'?ctx.selfFactor:1);
  unit.maxhp=Math.max(1,Math.round(Number(unit.maxhp||1)*factor));
@@ -3056,6 +3069,8 @@ function applyHaifuFormationEffects(unit){
  const shield=Math.max(0,Math.round(haifuEffectiveAttack(ctx)*.8));
  unit.powerShieldMax=shield;unit.powerShield=shield;
  unit.haifuFormationBuffApplied=true;
+ if(unit.el){const hpFill=unit.el.querySelector('.hp i');if(hpFill)hpFill.style.width=Math.max(0,unit.hp/Math.max(1,unit.maxhp)*100)+'%';}
+ updatePowerShieldDisplay(unit);
 }
 function haifuPrepareDamage(target,attacker,damage){
  let dealt=Math.max(0,Number(damage)||0);
@@ -3078,7 +3093,10 @@ function absorbPowerShield(target,damage){
 function updatePowerShieldDisplay(target){
  if(!target?.el)return;
  const max=Math.max(0,Number(target.powerShieldMax||0)),current=Math.max(0,Number(target.powerShield||0));
- const bar=target.el.querySelector('.powerShieldBar'),fill=target.el.querySelector('.powerShieldBar i'),label=target.el.querySelector('.powerShieldLabel');
+ let bar=target.el.querySelector('.powerShieldBar'),label=target.el.querySelector('.powerShieldLabel');
+ if(max>0&&!bar){bar=document.createElement('div');bar.className='powerShieldBar';bar.title='パワーシールド';bar.innerHTML='<i></i>';target.el.appendChild(bar);}
+ if(max>0&&!label){label=document.createElement('div');label.className='powerShieldLabel';target.el.appendChild(label);}
+ const fill=bar?.querySelector('i');
  if(bar&&fill)fill.style.width=(max>0?Math.max(0,Math.min(100,current/max*100)):0)+'%';
  if(label)label.textContent='⚡ パワーシールド '+Math.ceil(current).toLocaleString()+' / '+Math.ceil(max).toLocaleString();
  if(bar)bar.style.opacity=current>0?'1':'.35';
@@ -3108,6 +3126,7 @@ function haifuOnAttack(unit,target){
  popup('🔥 根性だけで勝ちます！ -'+Math.max(0,Math.min(before,damage)).toLocaleString(),target.x,90,'criticalPop');
 }
 function tickHaifuUnits(now){
+ const formationContext=haifuFormationContext();if(formationContext)for(const ally of units)applyHaifuFormationEffects(ally);
  for(const unit of units){
   if(!unit||unit.isEnemy||unit.name!=='覇風'||unit.hp<=0)continue;
   if(unit.haifuBaseMaxHp==null){unit.haifuBaseMaxHp=unit.maxhp;unit.haifuBaseAtk=unit.atk;unit.haifuNextGrowthAt=now+2;}
@@ -3126,7 +3145,7 @@ function tickHaifuUnits(now){
  }
 }
 
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;const deployCard=activeCard(i)||cards[i];if(deployCard.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,growthStage:0,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a=JSON.parse(JSON.stringify(c.ability||{})),tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot]===1)applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};applyAngelGodFormationEffects(u,i);applyHaifuFormationEffects(u);if(u.name==='天使神:木下')u.angelGodBaseAtk=u.atk;if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}rechargeLeft[i]=Math.max(1,Number(u.recharge||c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);haifuOnSummoned(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;const deployCard=activeCard(i)||cards[i];if(deployCard.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,growthStage:0,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a=JSON.parse(JSON.stringify(c.ability||{})),tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot]===1)applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};applyAngelGodFormationEffects(u,i);applyHaifuFormationEffects(u);if(u.name==='天使神:木下')u.angelGodBaseAtk=u.atk;if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}rechargeLeft[i]=Math.max(1,Number(u.recharge||c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);if(u.name==='覇風')for(const ally of units)applyHaifuFormationEffects(ally);haifuOnSummoned(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
 function isGrowthInUpperFormationRow(cardIndex){const slot=formation.indexOf(cardIndex);return slot>=0&&slot<5;} function growUnit(cardIndex){const unit=units.find(u=>!u.isEnemy&&u.cardIndex===cardIndex&&u.hp>0);if(!running||!unit||!unit.growth)return;if(!isGrowthInUpperFormationRow(cardIndex)){popup('成長は編成上段（1〜5番）のキャラのみ可能です',unit.x,95);return;}const stage=Number(unit.growthStage||0);if(stage>=3)return;const cost=[2500,5000,8500][stage];if(money<cost){popup('木下マネー不足',unit.x,95);return;}money-=cost;unit.growthStage=stage+1;if(unit.name==='天使神:木下'){const factor=[1.2,1.45,1.85][stage];unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*factor));unit.angelGodBaseAtk=Math.round(Number(unit.angelGodBaseAtk||unit.atk)*factor);unit.atk=Math.round(unit.angelGodBaseAtk*(1+Math.min(35,Number(unit.angelGodAttackStacks||0))*.02));unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.cardSpeed=unit.spd;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.kb=Math.max(1,Math.round(Number(unit.kb||1)*factor));if(rechargeLeft[cardIndex]>0)rechargeLeft[cardIndex]/=factor;}else{const factor=[1.8,2.2,2.8][stage];unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*factor));unit.atk=Math.round(unit.atk*factor);unit.range+=([35,50,75][stage]);unit.spd*=1.12;unit.interval=Math.max(.35,unit.interval*.86);unit.kbRemaining=Math.max(0,Number(unit.kbRemaining??unit.kb??1))+1;unit.kb=Math.max(1,Number(unit.kb||1)+1);}if(unit.ability?.dimensionalRend)unit.ability.dimensionalRend.factor=Math.min(.12,Number(unit.ability.dimensionalRend.factor||.02)+.01);if(unit.ability?.voidField)unit.ability.voidField.radius=Number(unit.ability.voidField.radius||180)+60;/* 因果反転は全成長段階で最大HP40%回復・3秒無敵を維持する。 */if(unit.ability?.genesisPulse){unit.ability.genesisPulse.allyHeal=Math.min(.15,Number(unit.ability.genesisPulse.allyHeal||.03)+.02);unit.ability.genesisPulse.enemyDamage=Math.min(.6,Number(unit.ability.genesisPulse.enemyDamage||.2)+.1);}if(unit.el){unit.el.classList.add('growthAwakened');const label=unit.el.querySelector('.unitNameLabel');if(label)label.textContent=unit.name+' 成長'+unit.growthStage;}popup('✨ 成長 '+unit.growthStage+'！',unit.x,90,'critical');renderCards();update(true);}
 function updateBarrierDisplay(target){if(!target?.el)return;const isMythBarrier=!!(target.isEnemy&&Array.isArray(target.ability?.mythologyV2)&&target.ability.mythologyV2.includes('barrier'));if(isMythBarrier){if(!target.mythBarrierMax)target.mythBarrierMax=Number(target.ability?.barrier||10000);if(target.mythBarrier==null)target.mythBarrier=target.mythBarrierMax;}const max=Number(isMythBarrier?(target.mythBarrierMax||target.ability?.barrier||0):(target.barrierMax??target.barrier??0));if(max<=0)return;const current=Math.max(0,Number(isMythBarrier?target.mythBarrier:(target.barrier??max)));const bar=target.el.querySelector('.barrierBar'),fill=target.el.querySelector('.barrierBar i'),label=target.el.querySelector('.barrierLabel');if(bar&&fill)fill.style.width=Math.max(0,Math.min(100,current/max*100))+'%';if(label&&current>0)label.textContent='🛡 '+(isMythBarrier?'結界':'バリア')+' '+Math.ceil(current).toLocaleString()+' / '+Math.ceil(max).toLocaleString();else if(label&&current<=0)label.textContent='🛡 '+(isMythBarrier?'結界破壊！':'バリア破壊！');}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion+(Number(u.chargeTime||0)>0?' thousandStepUnit':'');const isMythBarrier=!!(u.isEnemy&&Array.isArray(u.ability?.mythologyV2)&&u.ability.mythologyV2.includes('barrier'));const bm=Number(isMythBarrier?(u.mythBarrierMax??u.ability?.barrier??10000):(u.barrierMax??u.barrier??0));const bc=Number(isMythBarrier?(u.mythBarrier??bm):(u.barrier??bm));d.innerHTML=`${bm>0?`<div class="barrierBar" title="バリア"><i style="width:${Math.max(0,Math.min(100,bc/bm*100))}%"></i></div><div class="barrierLabel">🛡 ${isMythBarrier?'結界':'バリア'} ${Math.ceil(bc).toLocaleString()} / ${bm.toLocaleString()}</div>`:''}${Number(u.powerShieldMax||0)>0?`<div class="powerShieldBar" title="パワーシールド"><i style="width:${Math.max(0,Math.min(100,Number(u.powerShield||0)/Math.max(1,Number(u.powerShieldMax||1))*100))}%"></i></div><div class="powerShieldLabel">⚡ パワーシールド ${Math.ceil(Number(u.powerShield||0)).toLocaleString()} / ${Math.ceil(Number(u.powerShieldMax||0)).toLocaleString()}</div>`:''}<div class="unitNameLabel">${u.name||u.key||"味方"}</div><div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>${Number(u.chargeTime||0)>0?'<div class="chargeRange"></div><div class="chargeLabel">⚡ チャージ完了後にこの範囲を攻撃</div>':''}`;unitsEl.appendChild(d);u.el=d;d.__unit=u;applyCosmeticToElement(u);updateStatusMark(u);updateBarrierDisplay(u);return d}
@@ -4653,8 +4672,16 @@ cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:
  for(const [name,cost,hp,atk,range,spd,interval,recharge,icon,rarity,skill,desc,ability] of KBR_CARDS){if(!cards.some(c=>c.name===name)){const card={name,cost,hp,atk,range,spd,interval,recharge,icon,motion:'super',attackType:'area',kb:4,rarity,series:'Kinoshita Ball Run',trait:'宇宙',kbrMounted:true,ability:{name:skill,desc,...ability}};cards.push(card);card.id=cards.length-1;}}
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
-if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:16500,range:225,spd:1.9,interval:.6,recharge:5.2,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身の全ステータス+35%（最大+200%）。編成中のウルトラレア1体につき全味方の全ステータス+75%（最大+450%）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
+if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:16500,range:225,spd:1.9,interval:.6,recharge:5.2,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身の全ステータス+35%（最大+200%）。編成中のウルトラレア1体につき全味方の全ステータス+75%（最大+450%）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
  CURRENT_CHARACTER_COUNT=cards.length;
+// 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
+for(let i=0;i<cards.length;i++){
+ const savedLevel=Number(charLevel[i]);
+ charMaxLevel[i]=Math.max(20,Math.min(30,Number(charMaxLevel[i])||20));
+ charLevel[i]=Number.isFinite(savedLevel)&&savedLevel>=1?Math.min(charMaxLevel[i],Math.floor(savedLevel)):1;
+ charForm[i]=Number(charForm[i])===2?2:1;
+ normalEvolved[i]=!!normalEvolved[i];
+}
 /* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=ownedCharacterNamesAtBoot;if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames);ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=Array.isArray(formationStableNamesAtBoot)?formationStableNamesAtBoot:formationCharacterNamesAtBoot;const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===name)).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 保存済み名前キーは起動直後に退避済み。初期化途中のsave()で空にされても、退避した編成を優先して復元する。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を通常キーと保護キーの両方へ保存する。 */save();saveFormationStableNames();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='エレメンタル木下s')return c.rarity==='UR'?500000:c.rarity==='LR'?50000:10000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
