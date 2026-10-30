@@ -3090,7 +3090,7 @@ function haifuOnSummoned(unit){
  let totalDamage=0;
  for(const enemy of [...enemies]){
   if(!enemy||enemy.hp<=0)continue;
-  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(unit.atk*2.5)),unit);
+  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*2.5))),unit);
   totalDamage+=Math.max(0,before-enemy.hp);
   if(enemy.hp<=0)removeEnemy(enemy);
  }
@@ -3978,11 +3978,11 @@ function pvpReceive(msg){if(!msg||typeof msg!=='object')return;if(msg.type==='he
 function pvpReady(){if(!pvpAuthenticated){pvpSetStatus('先に相手と接続してください。');return;}pvpReadyLocal=true;pvpSend({type:'ready'});pvpSetStatus(pvpReadyRemote?'対戦開始準備中…':'準備完了。相手を待っています…');if(pvpRole==='host'&&pvpReadyRemote)pvpBeginMatch();}
 function pvpBeginMatch(){if(pvpStarted)return;pvpStarted=true;const at=Date.now()+2500;pvpSend({type:'start',at});pvpStartAt(at);}
 function pvpStartAt(at){if(pvpStarted&&running)return;pvpStarted=true;const wait=Math.max(0,at-Date.now());setTimeout(()=>startPvpBattle(),wait);}
-function startPvpBattle(){document.getElementById('pvpLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';pvpMode=true;selectedMode='pvp';gameSpeed=1;updateGameSpeedButton();paused=false;units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;money=1500;setupWorld();level=1;workerMax=6000;workerIncome=120;running=true;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];update();playSE('boss');requestAnimationFrame(loop);}
+function startPvpBattle(){document.getElementById('pvpLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';pvpMode=true;haifuSummonCount=0;selectedMode='pvp';gameSpeed=1;updateGameSpeedButton();paused=false;units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;money=1500;setupWorld();level=1;workerMax=6000;workerIncome=120;running=true;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];update();playSE('boss');requestAnimationFrame(loop);}
 function pvpApplyRemoteHit(msg){const target=units.find(u=>u.id===msg.targetId);if(!target||target.hp<=0)return;const attacker=cards[msg.attackerIndex]?{...cards[msg.attackerIndex],ability:cards[msg.attackerIndex].ability,trait:cards[msg.attackerIndex].trait,isEnemy:true}:null;hit(target,Math.max(1,Math.round(msg.damage)),attacker,true);if(target.hp<=0)removeUnit(target);}
 function pvpQuit(){pvpSend({type:'result',win:false});pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';closePvpConnection();document.getElementById('pvpLobby').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards();}
 function pvpFinish(opponentWon){pvpMode=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();running=false;document.getElementById('battlePauseBtn').style.display='';showResult(!opponentWon);}
-function startStage(n){selectedStage=n;if(selectedMode==='bossrush'){bossRushIndex=0;bossRushKills=0;bossRushBossSpawned=false;}gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=playerCastleMaxHp();money=1500;setupWorld();if(audioEnabled){if(audioStarted)startBGM(stageBgmKey());else initAudio();}level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);eventTriggerTime=-1;eventTriggerSpawnIndex=0;eventTriggerRepeatNextTimes=[];update();requestAnimationFrame(loop)}
+function startStage(n){haifuSummonCount=0;selectedStage=n;if(selectedMode==='bossrush'){bossRushIndex=0;bossRushKills=0;bossRushBossSpawned=false;}gameSpeed=normalGameSpeed;paused=false;document.getElementById('pause').style.display='none';document.getElementById('start').style.display='none';document.getElementById('result').style.display='none';document.getElementById('detail').style.display='none';units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=currentStage().baseHp;enemyHp=enemyMaxHp;baseHp=playerCastleMaxHp();money=1500;setupWorld();if(audioEnabled){if(audioStarted)startBGM(stageBgmKey());else initAudio();}level=1;workerMax=6000;workerIncome=120;running=true;last=0;spawn=0;income=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=(currentStage().repeatSpawns||[]).map(r=>r.start);eventTriggerTime=-1;eventTriggerSpawnIndex=0;eventTriggerRepeatNextTimes=[];update();requestAnimationFrame(loop)}
 function attackAnim(el){if(!el)return;spawnCosmeticEffect(el.__unit,'attack');el.classList.remove('attacking');void el.offsetWidth;el.classList.add('attacking');setTimeout(()=>el?.classList.remove('attacking'),240)}
 function rankAIThink(dt){
  if(!rankMode||!running||!rankAI)return;
@@ -4011,7 +4011,7 @@ function startRankBattle(){
   // 画面状態やAI選択の失敗を開始前に検出し、無反応にならないようにする。
   if(!lobby||!document.getElementById('field')||!unitsEl)throw new Error('戦闘画面の初期化に必要な要素が見つかりません。');
   savePlayerName();
-  rankAI=chooseRankAI();
+  rankAI=chooseRankAI();haifuSummonCount=0;
   if(!rankAI)throw new Error('対戦AIを選択できませんでした。ランク戦画面を開き直してください。');
   gameSpeed=1;updateGameSpeedButton();
   rankAI._battleFormationCache=null;rankPlayerUsed=[];rankAIUsed=[];rankMode=true;pvpMode=false;
@@ -5892,7 +5892,7 @@ document.getElementById('shinjuClose')?.addEventListener('click',()=>{document.g
    if(oldShop&&oldShop!==shopSig){
     let detail={items:[]};try{detail=JSON.parse(shopSig)}catch(e){}
     const names=(detail.items||[]).map(x=>x.name+'（'+x.rarity+'・'+(Number(x.cost)||0).toLocaleString()+'コイン）');
-    addDynamicNews({id:'limited-shop-update-'+Date.now(),date:dateToday(),title:'🤖 期間限定交換所が更新されました',summary:'歴代シリーズのラインナップ・交換価格が変更',body:['期間限定交換所の内容が更新されました。',...(names.length?['現在の交換対象：'+names.join('、')]:['現在の交換対象や価格は期間限定交換所で確認してください。']),'ホーム画面の「木下交換」→「期間限定交換所（エレメンタル木下s）」から内容を確認してください。']});
+    addDynamicNews({id:'limited-shop-update-'+Date.now(),date:dateToday(),title:'🤖 期間限定交換所が更新されました',summary:'エレメンタル木下sのラインナップ・交換価格が変更',body:['期間限定交換所の内容が更新されました。',...(names.length?['現在の交換対象：'+names.join('、')]:['現在の交換対象や価格は期間限定交換所で確認してください。']),'ホーム画面の「木下交換」→「期間限定交換所（エレメンタル木下s）」から内容を確認してください。']});
    }
    localStorage.setItem(SHOP_STATE_KEY,shopSig);
   }
