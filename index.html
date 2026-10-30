@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.34';
+const GAME_VERSION='v1.9.35';
 const UPDATE_LOG=[
+  {date:'2026-10-31',version:'v1.9.35',title:'💎 特別真髄の限定キャラをMiraiKへ変更',items:['特別真髄の2%限定キャラクターを富豪木下からウルトラレア「MiraiK」へ変更','距離装甲・天使編成バフ・属性特効/耐性・被ダメージ上限・反転/再反転スキルを実装','既存の富豪木下所持・編成データをMiraiKへ引き継ぎ']},
   {date:'2026-10-30',version:'v1.9.34',title:'🌪️ 覇風を弱体化',items:['攻撃力を16,500から12,500へ、再生産時間を5.2秒から20秒へ調整','非UR編成数による覇風自身の強化対象から射程・移動速度を除外','編成画面の強化倍率表示を実際の能力適用内容に合わせて修正']},
   {date:'2026-10-30',version:'v1.9.33',title:'🌪️ 覇風の編成バフ表示を追加',items:['編成画面に覇風の全味方ステータス強化・覇風自身の強化倍率・パワーシールド耐久値を表示','UR・非URの編成数に応じた実際の強化率を各キャラクターのステータス欄へ反映','覇風が戦場にいる間の敵攻撃力低下効果を編成効果と区別して明記']},
   {date:'2026-10-30',version:'v1.9.32',title:'🌪️ 覇風のレベルアップ・編成能力を修正',items:['後から追加されたキャラクターにもレベル・最大レベル配列を初期化し、覇風のレベルアップでXPだけが消費される問題を修正','レベルアップ処理を安全化し、正常なレベル更新を保存してからXPを消費','覇風出撃前に登場していた味方にも編成バフとパワーシールドを適用']},
@@ -831,9 +832,9 @@ function processIvyTransfer(ivy,now){
  if(typeof setStatusMark==='function')setStatusMark(target,'🌿','ヤバヤバ化',3,'ivyYabayaba');
  if(typeof popup==='function')popup('🌿 感情転移！',Number(target.x||0),Math.max(25,field.clientHeight-165));
 }
-const RICH_KINOSHITA_CARD={name:'富豪木下',cost:1500,hp:30000,atk:1500,range:70,spd:.2,interval:1.5,recharge:150,icon:'💰',motion:'super',attackType:'single',kb:2,trait:'浮・赤',rarity:'LR',series:'特別真髄',specialGachaOnly:true,curseImmune:true,ability:{name:'富豪の資産運用',desc:'場にいる間、敵撃破時のお金2倍・2秒ごとに150円獲得（各効果最大2体分まで重複）。呪い無効。',curseImmune:true}};
-RICH_KINOSHITA_CARD.secondForm={name:'大富豪木下',icon:'💎',cost:4500,hp:85000,atk:300000,range:140,spd:1.3,interval:20,recharge:150,kb:2,attackType:'single',trait:'赤',ability:{name:'大富豪の超臨界',desc:'50%でクリティカル（ダメージ2倍、メタルにも通常ダメージを通す）。浮・天使・神話に5倍ダメージ。呪い・波動・烈波・停止・攻撃力低下無効。HP50%未満で攻撃力300%増加。',criticalChance:.5,criticalMultiplier:2,wyvernStrongTraits:['浮','天使','神話'],wyvernStrongMultiplier:5,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true,hpBelowThreshold:.5,hpBelowThresholdMultiplier:4},curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true};
-cards.push(RICH_KINOSHITA_CARD);RICH_KINOSHITA_CARD.id=cards.length-1;
+// 特別真髄の限定キャラクター。旧「富豪木下」と同じ配列位置を維持し、既存所持・編成IDを引き継ぐ。
+const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
+cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
 
 
 // ===== ノーマルキャラ育成・第二形態 =====
@@ -2275,7 +2276,24 @@ function damageAgainst(u,target,baseAtk){
  if(a.attributeOverload&&!entityHasTrait(target,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;
  if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;
  if(target?.cursedUntil&&now<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;
+ if(u?.name==='MiraiK'){
+  const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return Number.isInteger(i)&&hasCharacter(i)&&card&&card.name!=='MiraiK'&&entityHasTrait(card,'天使');}).length;
+  mult*=1+Math.min(.55,angelCount*.10);
+  if(target?.attackType==='single')mult*=3;
+ }
  return Math.max(1,Math.round(effectiveAttack*mult));
+}
+function miraiKLimitDamage(target,attacker,damage){
+ const dealt=Math.max(0,Number(damage)||0);
+ if(target?.name!=='MiraiK'||!attacker||dealt<=0)return dealt;
+ const cap=Math.max(1,Math.round(Number(target.maxhp||1)*.25));
+ if(dealt<=cap)return dealt;
+ const now=performance.now()/1000;
+ attacker.attackDownUntil=Math.max(Number(attacker.attackDownUntil||0),now+7);
+ attacker.attackDownFactor=Math.min(Number(attacker.attackDownFactor??1),.1);
+ setStatusMark(attacker,'⚔️','攻撃力90%低下',7,'miraiKAttackDown');
+ applyCurseStatus({ability:{curseChance:1,curseDuration:2}},attacker);
+ return cap;
 }
 function damageTakenBy(u,attacker){
  if(!u||!attacker)return 1;
@@ -2320,7 +2338,11 @@ function damageTakenBy(u,attacker){
  if(attacker.isEnemy&&!u.isEnemy){const haifuCount=units.filter(x=>x&&!x.isEnemy&&x.hp>0&&x.name==='覇風').length;if(haifuCount)mult*=Math.max(.3,1-Math.min(.7,haifuCount*.35));}
  if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)mult*=Number(attacker.cursedAttackFactor)||1;
  if(u.cursedUntil&&now<u.cursedUntil&&aa.cursedAttackMultiplier)mult*=Number(aa.cursedAttackMultiplier)||1;
- return Math.max(1,Math.round(effectiveAtk*mult));
+ if(u.name==='MiraiK'){
+  if(Math.abs(Number(u.x||0)-Number(attacker.x||0))>=150)mult*=.15;
+  if(attacker.attackType==='single')mult*=.75;
+ }
+ return miraiKLimitDamage(u,attacker,Math.max(1,Math.round(effectiveAtk*mult)));
 }
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;try{const d=Number.isFinite(Number(duration))?Math.max(0,Number(duration)):0;if(!target.statuses||typeof target.statuses!=='object')target.statuses={};target.statuses[type]={icon:String(icon||''),text:String(text||''),until:performance.now()/1000+d};updateStatusMark(target);}catch(err){console.warn('status mark skipped',err);}}
 function updateStatusMark(target){if(!target?.el)return;try{const now=performance.now()/1000;const statuses=target.statuses&&typeof target.statuses==='object'?target.statuses:{};for(const k of Object.keys(statuses)){const until=Number(statuses[k]?.until);if(!Number.isFinite(until)||until<=now)delete statuses[k];}let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}if(target.cursedUntil&&target.cursedUntil<=now){target.cursedUntil=0;target.cursedBy=null;target.cursedSpeedFactor=1;target.cursedAttackFactor=1;if(target.curseSealUntil&&Number(target.abilitySealedUntil||0)<=Number(target.curseSealUntil)+.001)target.abilitySealedUntil=0;target.curseSealUntil=0;}if(target.rangeDownUntil&&target.rangeDownUntil<=now){target.rangeDownUntil=0;if(target.rangeOriginal!=null){target.range=target.rangeOriginal;delete target.rangeOriginal;}}const active=Object.values(statuses);if(active.length){const s=statuses.attackBoost||active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove();}catch(err){console.warn('status update skipped',err)}}
@@ -2361,6 +2383,42 @@ function applyAbility(u,target,damage){const now=performance.now()/1000;if(!targ
  if(a.attackDownChance&&!hasAbilityFlag(target,'attackDownImmune')&&Math.random()<Number(a.attackDownChance)){target.attackDownUntil=now+Number(a.attackDownDuration||4);target.attackDownFactor=Number(a.attackDownFactor||.5);setStatusMark(target,'⚔️','攻撃力低下',Number(a.attackDownDuration||4),'attackDown');}
  if(a.sealChance&&!hasAbilityFlag(target,'curseImmune')&&Math.random()<Number(a.sealChance)){const duration=Number(a.sealDuration||3);target.cursedUntil=Math.max(Number(target.cursedUntil||0),now+duration);target.cursedBy=u;setStatusMark(target,'🪬','呪い',duration,'curse');}
  if(a.slow&&!a.slow.all&&Math.random()<Number(a.slow.chance||0))applySlow(target,a.slow);
+ if(u.name==='MiraiK'&&target.isEnemy){
+  if(entityTraitMatch(target,['黒','浮','神話'])){
+   target.rangeOriginal=target.rangeOriginal??target.range;
+   target.rangeDownUntil=Math.max(Number(target.rangeDownUntil||0),now+3);
+   target.range=target.rangeOriginal*.2;
+   setStatusMark(target,'🎯','射程80%低下',3,'miraiKRangeDown');
+  }
+  const stackFrame=Math.floor(now*10);
+  if(u.miraiKLastStackFrame!==stackFrame){
+   u.miraiKLastStackFrame=stackFrame;
+   u.interval=Math.max(.3,Number(u.interval||2.5)-.1);
+   setStatusMark(u,'⚡','攻撃間隔 '+Number(u.interval).toFixed(1)+'秒',999999,'miraiKInterval');
+  }
+  if(u.trait==='天使'&&now>=Number(u.miraiKSkill1ReadyAt||0)&&Math.random()<.75){
+   u.miraiKSkill1ReadyAt=now+15;
+   u.trait='黒';
+   u.miraiKBaseAtk=Number(u.miraiKBaseAtk||u.atk||1);
+   u.miraiKAttackBonus=Math.min(.15,Number(u.miraiKAttackBonus||0)+.07);
+   u.atk=Math.round(u.miraiKBaseAtk*(1+u.miraiKAttackBonus));
+   applyMiraiKFormationEffects(u);
+   const skillDamage=Math.max(1,Math.round(Number(u.hp||0)*1.5));
+   hit(target,skillDamage,null,null);
+   setStatusMark(u,'🌑','黒属性・反転 '+Math.round(u.miraiKAttackBonus*100)+'%攻撃力上昇',999999,'miraiKTrait');
+   popup('🌑 反転！',u.x,90,'criticalPop');
+  }else if(u.trait==='黒'&&now>=Number(u.miraiKSkill2ReadyAt||0)&&Math.random()<.75){
+   u.miraiKSkill2ReadyAt=now+15;
+   u.trait='天使';
+   applyMiraiKFormationEffects(u);
+   const skillDamage=Math.max(1,Math.round(Number(target.atk||0)+Number(u.atk||0)));
+   const healed=hit(target,skillDamage,null,null);
+   const heal=Math.max(0,Math.round(healed*.05));
+   if(heal>0){u.hp=Math.min(u.maxhp,u.hp+heal);const hpBar=u.el?.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}
+   setStatusMark(u,'👼','天使属性・再反転',999999,'miraiKTrait');
+   popup('👼 再反転！ 回復 '+heal,u.x,90,'criticalPop');
+  }
+ }
 }
 function applyGlobalSlow(source){
  if(!source||isAbilitySealed(source))return false;
@@ -2460,6 +2518,7 @@ function hit(target,damage,source,abilitySource){
  if(barrierBreakSource?.ability?.barrierBreak&&!isAbilitySealed(source)&&!isAbilitySealed(barrierBreakSource)){if(Number(target.barrier||0)>0)target.barrier=0;if(Number(target.mythBarrier||0)>0)target.mythBarrier=0;updateBarrierDisplay(target);}
  if(target.isEnemy&&target.ability?.mythologyV2){const pre=mythologyV2PreHit(target,dealt,source);if(pre?.handled)return 0;dealt=Number(pre?.damage??dealt);}
  const angelGodTarget=!target.isEnemy&&target.name==='天使神:木下';
+ if(target.name==='MiraiK'&&source?.isEnemy)dealt=miraiKLimitDamage(target,source,dealt);
  dealt=haifuPrepareDamage(target,source,dealt);if(absorbPowerShield(target,dealt))dealt=0;
  if(angelGodTarget&&source?.isEnemy){if(target.hp>=target.maxhp*.4)dealt*=.65;if(entityTraitMatch(source,['古代','赤','黒','浮','神話']))dealt*=.8;dealt=Math.min(dealt,Math.max(1,target.maxhp*.15));}
  if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}
@@ -3038,6 +3097,27 @@ function allyWaveAttack(u,hitTargets=[],baseAttack=null){
  }
  setTimeout(()=>wave.remove(),520);
 }
+function applyMiraiKFormationEffects(unit){
+ if(!unit||unit.isEnemy)return;
+ const miraiKIndex=cards.findIndex(card=>card?.name==='MiraiK');
+ const inFormation=miraiKIndex>=0&&formation.includes(miraiKIndex)&&hasCharacter(miraiKIndex);
+ const nextFactor=inFormation&&entityHasTrait(unit,'天使')?1.1:1;
+ const oldFactor=Math.max(.01,Number(unit.miraiKFormationFactor||1));
+ if(Math.abs(nextFactor-oldFactor)<.0001)return;
+ const ratio=nextFactor/oldFactor;
+ unit.maxhp=Math.max(1,Math.round(Number(unit.maxhp||1)*ratio));
+ unit.hp=Math.max(0,Math.min(unit.maxhp,Math.round(Number(unit.hp||unit.maxhp)*ratio)));
+ unit.atk=Math.max(1,Math.round(Number(unit.atk||1)*ratio));
+ unit.range=Math.max(1,Number(unit.range||1)*ratio);
+ unit.spd=Math.max(.01,Number(unit.spd||1)*ratio);
+ unit.cardSpeed=unit.spd;
+ unit.interval=Math.max(.05,Number(unit.interval||1)/ratio);
+ unit.recharge=Math.max(1,Number(unit.recharge||1)/ratio);
+ if(Number.isFinite(Number(unit.miraiKBaseAtk)))unit.miraiKBaseAtk=Number(unit.miraiKBaseAtk)*ratio;
+ if(Number.isInteger(unit.cardIndex)&&Array.isArray(rechargeLeft)&&Number(rechargeLeft[unit.cardIndex]||0)>0)rechargeLeft[unit.cardIndex]=Math.max(1,Number(rechargeLeft[unit.cardIndex])*oldFactor/nextFactor);
+ unit.miraiKFormationFactor=nextFactor;
+ if(unit.el){const hp=unit.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,unit.hp/unit.maxhp*100)+'%';}
+}
 function applyAngelGodFormationEffects(unit,cardIndex){if(!unit||unit.isEnemy)return;const angelGodIndex=cards.findIndex(card=>card?.name==='天使神:木下');const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);if(unit.name==='天使神:木下'){const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;const factor=1+Math.min(.30,angelCount*.07);unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=unit.maxhp;unit.atk=Math.round(unit.atk*factor);unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.angelGodBaseAtk=unit.atk;unit.angelGodAttackStacks=0;unit.cardSpeed=Number(unit.spd||1.2);}else if(angelGodInFormation&&entityHasTrait(unit,'天使')){unit.maxhp=Math.round(unit.maxhp*1.55);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*1.55));unit.atk=Math.round(unit.atk*1.55);unit.range=Math.round(unit.range*1.55);unit.spd*=1.55;unit.interval=Math.max(.1,unit.interval/1.55);unit.recharge=Math.max(1,Number(unit.recharge||1)/1.55);unit.angelGodAuraApplied=true;unit.curseImmune=true;unit.waveImmune=true;unit.surgeImmune=true;unit.ability={...(unit.ability||{}),curseImmune:true,waveImmune:true,surgeImmune:true};}}
 
 let haifuSummonCount=0;
@@ -3148,7 +3228,7 @@ function tickHaifuUnits(now){
  }
 }
 
-function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;const deployCard=activeCard(i)||cards[i];if(deployCard.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,growthStage:0,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a=JSON.parse(JSON.stringify(c.ability||{})),tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot]===1)applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};applyAngelGodFormationEffects(u,i);applyHaifuFormationEffects(u);if(u.name==='天使神:木下')u.angelGodBaseAtk=u.atk;if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}rechargeLeft[i]=Math.max(1,Number(u.recharge||c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);if(u.name==='覇風')for(const ally of units)applyHaifuFormationEffects(ally);haifuOnSummoned(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
+function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;const deployCard=activeCard(i)||cards[i];if(deployCard.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,growthStage:0,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a=JSON.parse(JSON.stringify(c.ability||{})),tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot]===1)applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i};applyAngelGodFormationEffects(u,i);applyHaifuFormationEffects(u);applyMiraiKFormationEffects(u);if(u.name==='天使神:木下')u.angelGodBaseAtk=u.atk;if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}rechargeLeft[i]=Math.max(1,Number(u.recharge||c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);for(const ally of units)applyMiraiKFormationEffects(ally);if(u.name==='覇風')for(const ally of units)applyHaifuFormationEffects(ally);haifuOnSummoned(u);renderUnitElement(u);if(pvpMode)pvpSend({type:'deploy',index:i,id:u.id});update(true)}
 function isGrowthInUpperFormationRow(cardIndex){const slot=formation.indexOf(cardIndex);return slot>=0&&slot<5;} function growUnit(cardIndex){const unit=units.find(u=>!u.isEnemy&&u.cardIndex===cardIndex&&u.hp>0);if(!running||!unit||!unit.growth)return;if(!isGrowthInUpperFormationRow(cardIndex)){popup('成長は編成上段（1〜5番）のキャラのみ可能です',unit.x,95);return;}const stage=Number(unit.growthStage||0);if(stage>=3)return;const cost=[2500,5000,8500][stage];if(money<cost){popup('木下マネー不足',unit.x,95);return;}money-=cost;unit.growthStage=stage+1;if(unit.name==='天使神:木下'){const factor=[1.2,1.45,1.85][stage];unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*factor));unit.angelGodBaseAtk=Math.round(Number(unit.angelGodBaseAtk||unit.atk)*factor);unit.atk=Math.round(unit.angelGodBaseAtk*(1+Math.min(35,Number(unit.angelGodAttackStacks||0))*.02));unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.cardSpeed=unit.spd;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.kb=Math.max(1,Math.round(Number(unit.kb||1)*factor));if(rechargeLeft[cardIndex]>0)rechargeLeft[cardIndex]/=factor;}else{const factor=[1.8,2.2,2.8][stage];unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*factor));unit.atk=Math.round(unit.atk*factor);unit.range+=([35,50,75][stage]);unit.spd*=1.12;unit.interval=Math.max(.35,unit.interval*.86);unit.kbRemaining=Math.max(0,Number(unit.kbRemaining??unit.kb??1))+1;unit.kb=Math.max(1,Number(unit.kb||1)+1);}if(unit.ability?.dimensionalRend)unit.ability.dimensionalRend.factor=Math.min(.12,Number(unit.ability.dimensionalRend.factor||.02)+.01);if(unit.ability?.voidField)unit.ability.voidField.radius=Number(unit.ability.voidField.radius||180)+60;/* 因果反転は全成長段階で最大HP40%回復・3秒無敵を維持する。 */if(unit.ability?.genesisPulse){unit.ability.genesisPulse.allyHeal=Math.min(.15,Number(unit.ability.genesisPulse.allyHeal||.03)+.02);unit.ability.genesisPulse.enemyDamage=Math.min(.6,Number(unit.ability.genesisPulse.enemyDamage||.2)+.1);}if(unit.el){unit.el.classList.add('growthAwakened');const label=unit.el.querySelector('.unitNameLabel');if(label)label.textContent=unit.name+' 成長'+unit.growthStage;}popup('✨ 成長 '+unit.growthStage+'！',unit.x,90,'critical');renderCards();update(true);}
 function updateBarrierDisplay(target){if(!target?.el)return;const isMythBarrier=!!(target.isEnemy&&Array.isArray(target.ability?.mythologyV2)&&target.ability.mythologyV2.includes('barrier'));if(isMythBarrier){if(!target.mythBarrierMax)target.mythBarrierMax=Number(target.ability?.barrier||10000);if(target.mythBarrier==null)target.mythBarrier=target.mythBarrierMax;}const max=Number(isMythBarrier?(target.mythBarrierMax||target.ability?.barrier||0):(target.barrierMax??target.barrier??0));if(max<=0)return;const current=Math.max(0,Number(isMythBarrier?target.mythBarrier:(target.barrier??max)));const bar=target.el.querySelector('.barrierBar'),fill=target.el.querySelector('.barrierBar i'),label=target.el.querySelector('.barrierLabel');if(bar&&fill)fill.style.width=Math.max(0,Math.min(100,current/max*100))+'%';if(label&&current>0)label.textContent='🛡 '+(isMythBarrier?'結界':'バリア')+' '+Math.ceil(current).toLocaleString()+' / '+Math.ceil(max).toLocaleString();else if(label&&current<=0)label.textContent='🛡 '+(isMythBarrier?'結界破壊！':'バリア破壊！');}
 function renderUnitElement(u){const d=document.createElement('div');d.className='unit '+(u.isEnemy?'enemy ':'')+'motion-'+u.motion+(Number(u.chargeTime||0)>0?' thousandStepUnit':'');const isMythBarrier=!!(u.isEnemy&&Array.isArray(u.ability?.mythologyV2)&&u.ability.mythologyV2.includes('barrier'));const bm=Number(isMythBarrier?(u.mythBarrierMax??u.ability?.barrier??10000):(u.barrierMax??u.barrier??0));const bc=Number(isMythBarrier?(u.mythBarrier??bm):(u.barrier??bm));d.innerHTML=`${bm>0?`<div class="barrierBar" title="バリア"><i style="width:${Math.max(0,Math.min(100,bc/bm*100))}%"></i></div><div class="barrierLabel">🛡 ${isMythBarrier?'結界':'バリア'} ${Math.ceil(bc).toLocaleString()} / ${bm.toLocaleString()}</div>`:''}${Number(u.powerShieldMax||0)>0?`<div class="powerShieldBar" title="パワーシールド"><i style="width:${Math.max(0,Math.min(100,Number(u.powerShield||0)/Math.max(1,Number(u.powerShieldMax||1))*100))}%"></i></div><div class="powerShieldLabel">⚡ パワーシールド ${Math.ceil(Number(u.powerShield||0)).toLocaleString()} / ${Math.ceil(Number(u.powerShieldMax||0)).toLocaleString()}</div>`:''}<div class="unitNameLabel">${u.name||u.key||"味方"}</div><div class="hp"><i></i></div><div>${u.icon}</div><div class="typeTag">${u.attackType==='area'?'範囲':'単体'}</div>${Number(u.chargeTime||0)>0?'<div class="chargeRange"></div><div class="chargeLabel">⚡ チャージ完了後にこの範囲を攻撃</div>':''}`;unitsEl.appendChild(d);u.el=d;d.__unit=u;applyCosmeticToElement(u);updateStatusMark(u);updateBarrierDisplay(u);return d}
@@ -4621,7 +4701,7 @@ function renderGacha(){
 }
 function renderSpecialShinju(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- if(banner)banner.innerHTML='<div class="specialShinjuBanner"><div class="specialShinjuSigil">✦ 💎 ✦</div><div class="specialShinjuKicker">SPECIAL RELIC • LIMITED DRAW</div><h2>特別真髄</h2><p class="specialShinjuLead">特別な力を秘めた報酬を解放せよ。</p><div class="specialShinjuRates"><span>💰 富豪木下 <b>2%</b></span><span>👑 伝説レアの金 <b>1%</b></span><span>🌟 超激レアの金 <b>25%</b></span><span>🌈 パワー宝箱 <b>72%</b></span></div><div class="specialShinjuPrice">1連 <b>12,000</b> コイン　／　11連 <b>120,000</b> コイン</div></div>';
+ if(banner)banner.innerHTML='<div class="specialShinjuBanner"><div class="specialShinjuSigil">✦ 💎 ✦</div><div class="specialShinjuKicker">SPECIAL RELIC • LIMITED DRAW</div><h2>特別真髄</h2><p class="specialShinjuLead">特別な力を秘めた報酬を解放せよ。</p><div class="specialShinjuRates"><span>🌗 MiraiK <b>2%</b></span><span>👑 伝説レアの金 <b>1%</b></span><span>🌟 超激レアの金 <b>25%</b></span><span>🌈 パワー宝箱 <b>72%</b></span></div><div class="specialShinjuPrice">1連 <b>12,000</b> コイン　／　11連 <b>120,000</b> コイン</div></div>';
  if(!result)return;
  result.innerHTML='<div class="gachaResult" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="gachaGetBtn" id="specialShinjuOne" '+(gachaCoins>=12000?'':'disabled')+'>💎 1連（12,000）</button><button class="gachaGetBtn" id="specialShinjuEleven" '+(gachaCoins>=120000?'':'disabled')+'>💎 11連（120,000）</button></div><div id="specialShinjuResults" style="margin-top:10px"></div>';
  document.getElementById('specialShinjuOne')?.addEventListener('click',()=>drawSpecialShinju(1));
@@ -4633,9 +4713,9 @@ function drawSpecialShinju(count){
  for(let n=0;n<count;n++){
   const roll=Math.random();
   if(roll<.02){
-   const i=cards.findIndex(c=>c.name==='富豪木下');
-   if(i>=0&&!ownedFlags[i]){ownedFlags[i]=true;results.push({label:'💰 富豪木下（伝説レア）',tier:'rich'});}
-   else{addRarityGold('伝説レア',1);results.push({label:'💰 富豪木下（所持済み）→ 伝説レアの金×1',tier:'legendary'});}
+   const i=cards.findIndex(c=>c.name==='MiraiK');
+   if(i>=0&&!ownedFlags[i]){ownedFlags[i]=true;results.push({label:'🌗 MiraiK（ウルトラレア）',tier:'miraiK'});}
+   else{addRarityGold('ウルトラレア',1);results.push({label:'🌗 MiraiK（所持済み）→ ウルトラレアの金×1',tier:'ultra'});}
   }else if(roll<.03){addRarityGold('伝説レア',1);results.push({label:'👑 伝説レアの金×1',tier:'legendary'});}
   else if(roll<.28){addRarityGold('超激レア',1);results.push({label:'🌟 超激レアの金×1',tier:'super'});}
   else{inventoryAddItem('power_chest',1);results.push({label:'🌈 パワー宝箱×1',tier:'power'});}
@@ -4647,18 +4727,18 @@ function drawSpecialShinju(count){
 }
 function showSpecialShinjuReveal(rewards){
  const old=document.getElementById('specialShinjuRevealOverlay');if(old)old.remove();
- const tier=rewards.some(x=>x.tier==='rich')?'rich':rewards.some(x=>x.tier==='legendary')?'legendary':rewards.some(x=>x.tier==='super')?'super':'normal';
- const colors={rich:['#facc15','#c084fc'],legendary:['#fbbf24','#f97316'],super:['#c4b5fd','#7c3aed'],power:['#67e8f9','#2563eb'],normal:['#60a5fa','#1e3a8a']};
+ const tier=rewards.some(x=>x.tier==='miraiK')?'miraiK':rewards.some(x=>x.tier==='ultra')?'ultra':rewards.some(x=>x.tier==='legendary')?'legendary':rewards.some(x=>x.tier==='super')?'super':'normal';
+ const colors={miraiK:['#67e8f9','#7c3aed'],ultra:['#67e8f9','#2563eb'],legendary:['#fbbf24','#f97316'],super:['#c4b5fd','#7c3aed'],power:['#67e8f9','#2563eb'],normal:['#60a5fa','#1e3a8a']};
  const palette=colors[tier]||colors.normal;
  const ov=document.createElement('div');ov.id='specialShinjuRevealOverlay';
  Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'10000',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',background:'radial-gradient(circle at center,'+palette[0]+'55,rgba(76,29,149,.35) 35%,rgba(2,6,23,.97) 75%)',backdropFilter:'blur(5px)'});
- ov.innerHTML='<div style="width:min(92vw,560px);max-height:88vh;overflow:auto;text-align:center;color:#fff;background:linear-gradient(160deg,#1e1b4b,#111827 60%,#312e81);border:3px solid '+palette[0]+';border-radius:22px;padding:20px;box-shadow:0 0 45px '+palette[0]+',0 0 100px '+palette[1]+'88"><div style="font-size:12px;letter-spacing:4px;color:'+palette[0]+'">SPECIAL RELIC REVEAL</div><div class="specialRevealRays" style="font-size:25px;letter-spacing:7px;color:#fef3c7;text-shadow:0 0 18px '+palette[0]+';animation:shinjuRays .7s ease-in-out infinite alternate">✦ ✧ ✦ ✧ ✦</div><div class="specialRevealOrb" style="font-size:82px;margin:10px;filter:drop-shadow(0 0 22px '+palette[0]+');animation:shinjuRarePulse .5s ease-in-out infinite alternate">'+(tier==='rich'?'💰':tier==='legendary'?'👑':tier==='super'?'🌟':'🌈')+'</div><h2 style="margin:8px 0;color:'+palette[0]+';text-shadow:0 0 15px '+palette[1]+'">'+(tier==='rich'?'💎 富豪木下 降臨！':tier==='legendary'?'👑 伝説レア報酬！':tier==='super'?'🌟 超激レア報酬！':'🌈 パワー解放！')+'</h2><p id="specialShinjuRevealText">特別真髄を開封中…</p><div id="specialShinjuRevealList"></div><button type="button" id="specialShinjuRevealClose" style="display:none;margin-top:12px;padding:11px 24px;border:2px solid '+palette[0]+';border-radius:12px;background:#312e81;color:#fff;font-weight:900">結果を見る</button></div>';
+ ov.innerHTML='<div style="width:min(92vw,560px);max-height:88vh;overflow:auto;text-align:center;color:#fff;background:linear-gradient(160deg,#1e1b4b,#111827 60%,#312e81);border:3px solid '+palette[0]+';border-radius:22px;padding:20px;box-shadow:0 0 45px '+palette[0]+',0 0 100px '+palette[1]+'88"><div style="font-size:12px;letter-spacing:4px;color:'+palette[0]+'">SPECIAL RELIC REVEAL</div><div class="specialRevealRays" style="font-size:25px;letter-spacing:7px;color:#fef3c7;text-shadow:0 0 18px '+palette[0]+';animation:shinjuRays .7s ease-in-out infinite alternate">✦ ✧ ✦ ✧ ✦</div><div class="specialRevealOrb" style="font-size:82px;margin:10px;filter:drop-shadow(0 0 22px '+palette[0]+');animation:shinjuRarePulse .5s ease-in-out infinite alternate">'+(tier==='miraiK'||tier==='ultra'?'🌗':tier==='legendary'?'👑':tier==='super'?'🌟':'🌈')+'</div><h2 style="margin:8px 0;color:'+palette[0]+';text-shadow:0 0 15px '+palette[1]+'">'+(tier==='miraiK'?'🌗 MiraiK 降臨！':tier==='ultra'?'💠 ウルトラレアの金！':tier==='legendary'?'👑 伝説レア報酬！':tier==='super'?'🌟 超激レア報酬！':'🌈 パワー解放！')+'</h2><p id="specialShinjuRevealText">特別真髄を開封中…</p><div id="specialShinjuRevealList"></div><button type="button" id="specialShinjuRevealClose" style="display:none;margin-top:12px;padding:11px 24px;border:2px solid '+palette[0]+';border-radius:12px;background:#312e81;color:#fff;font-weight:900">結果を見る</button></div>';
  document.body.appendChild(ov);
  const list=ov.querySelector('#specialShinjuRevealList'),txt=ov.querySelector('#specialShinjuRevealText');
  rewards.forEach((reward,i)=>setTimeout(()=>{
   const d=document.createElement('div');d.textContent=(i+1)+'. '+reward.label;
-  const c=reward.tier==='rich'?['#fef08a','#c084fc']:reward.tier==='legendary'?['#fde68a','#f97316']:reward.tier==='super'?['#ede9fe','#a78bfa']:['#cffafe','#67e8f9'];
-  Object.assign(d.style,{padding:reward.tier==='rich'?'15px':'11px',margin:'8px 0',borderRadius:'12px',background:'linear-gradient(100deg,'+c[0]+','+c[1]+')',color:'#111827',fontWeight:'900',border:reward.tier==='rich'?'3px solid #fff7ad':'1px solid #e2e8f0',boxShadow:'0 0 18px '+c[1]+'99',animation:'shinjuRarePop .45s ease-out'});
+  const c=reward.tier==='miraiK'?['#cffafe','#7c3aed']:reward.tier==='ultra'?['#cffafe','#2563eb']:reward.tier==='legendary'?['#fde68a','#f97316']:reward.tier==='super'?['#ede9fe','#a78bfa']:['#cffafe','#67e8f9'];
+  Object.assign(d.style,{padding:reward.tier==='miraiK'||reward.tier==='ultra'?'15px':'11px',margin:'8px 0',borderRadius:'12px',background:'linear-gradient(100deg,'+c[0]+','+c[1]+')',color:'#111827',fontWeight:'900',border:reward.tier==='miraiK'||reward.tier==='ultra'?'3px solid #fff7ad':'1px solid #e2e8f0',boxShadow:'0 0 18px '+c[1]+'99',animation:'shinjuRarePop .45s ease-out'});
   list.appendChild(d);txt.textContent=i===rewards.length-1?'✨ 全ての特別真髄報酬を獲得しました！':'次の報酬を開封中…';
  },500+i*260));
  const close=ov.querySelector('#specialShinjuRevealClose');setTimeout(()=>close.style.display='inline-block',500+rewards.length*260+300);close.onclick=()=>ov.remove();
@@ -4685,7 +4765,7 @@ for(let i=0;i<cards.length;i++){
  charForm[i]=Number(charForm[i])===2?2:1;
  normalEvolved[i]=!!normalEvolved[i];
 }
-/* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=ownedCharacterNamesAtBoot;if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames);ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=Array.isArray(formationStableNamesAtBoot)?formationStableNamesAtBoot:formationCharacterNamesAtBoot;const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===name)).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 保存済み名前キーは起動直後に退避済み。初期化途中のsave()で空にされても、退避した編成を優先して復元する。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を通常キーと保護キーの両方へ保存する。 */save();saveFormationStableNames();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='エレメンタル木下s')return c.rarity==='UR'?500000:c.rarity==='LR'?50000:10000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
+/* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=ownedCharacterNamesAtBoot;if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames);if(savedOwnedNameSet.has('富豪木下'))savedOwnedNameSet.add('MiraiK');ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=Array.isArray(formationStableNamesAtBoot)?formationStableNamesAtBoot:formationCharacterNamesAtBoot;const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===(name==='富豪木下'?'MiraiK':name))).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 保存済み名前キーは起動直後に退避済み。初期化途中のsave()で空にされても、退避した編成を優先して復元する。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を通常キーと保護キーの両方へ保存する。 */save();saveFormationStableNames();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c&&c.limitedExchangeSeries==='エレメンタル木下s')return c.rarity==='UR'?500000:c.rarity==='LR'?50000:10000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
  const seriesOrder=['エレメンタル木下s'];
