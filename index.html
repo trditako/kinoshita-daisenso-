@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.32';
+const GAME_VERSION='v1.9.33';
 const UPDATE_LOG=[
+  {date:'2026-10-30',version:'v1.9.33',title:'🌪️ 覇風の編成バフ表示を追加',items:['編成画面に覇風の全味方ステータス強化・覇風自身の強化倍率・パワーシールド耐久値を表示','UR・非URの編成数に応じた実際の強化率を各キャラクターのステータス欄へ反映','覇風が戦場にいる間の敵攻撃力低下効果を編成効果と区別して明記']},
   {date:'2026-10-30',version:'v1.9.32',title:'🌪️ 覇風のレベルアップ・編成能力を修正',items:['後から追加されたキャラクターにもレベル・最大レベル配列を初期化し、覇風のレベルアップでXPだけが消費される問題を修正','レベルアップ処理を安全化し、正常なレベル更新を保存してからXPを消費','覇風出撃前に登場していた味方にも編成バフとパワーシールドを適用']},
   {date:'2026-10-30',version:'v1.9.31',title:'🌪️ エレメンタル木下s・ウルトラレア覇風を追加',items:['期間限定交換所を「エレメンタル木下s」に変更し、既存の元素シリーズ6体を交換対象に設定','ウルトラレア「覇風」を500,000木下コインで追加','編成バフ・敵攻撃力低下・パワーシールド・召喚回数攻撃・時間成長・被ダメージ上限・防御成長・波動Lv5・反射無効を実装']},
   {date:'2026-10-30',version:'v1.9.30',title:'🆔 キャラクターIDの並び順を修正',items:['KBRキャラクター10体の登録を全ての既存キャラクター登録後へ移動','KBR追加位置より後に登録されていたキャラクターのIDがずれる問題を修正','所持状態・編成の名前ベース復元前に全キャラクターを登録']},
@@ -2710,13 +2711,17 @@ function formationBuffSummaryHTML(i){
  let aura=1,auraLabel='';
  if(c.name==='天使神:木下'){aura=1+Math.min(.30,angelCount*.07);auraLabel='天使神自身 '+Math.round((aura-1)*100)+'%';}
  else if(angelGodInFormation&&entityHasTrait(c,'天使')){aura=1.55;auraLabel='天使神の編成バフ +55%';}
+ const haifuCtx=haifuFormationContext();
+ const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
+ const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
+ const totalFactor=aura*haifuAllyFactor*haifuSelfFactor;
  const values={
-  hp:Math.round(Number(statAt(i,'hp')||0)*aura),
-  atk:Math.round(Number(statAt(i,'atk')||0)*aura),
-  range:Math.round(Number(statAt(i,'range')||0)*aura),
-  spd:Math.round(Number(statAt(i,'spd')||0)*aura*100)/100,
-  interval:Math.round((Number(statAt(i,'interval')||0)/aura)*100)/100,
-  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/aura)*100)/100
+  hp:Math.round(Number(statAt(i,'hp')||0)*totalFactor),
+  atk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
+  range:Math.round(Number(statAt(i,'range')||0)*totalFactor),
+  spd:Math.round(Number(statAt(i,'spd')||0)*totalFactor*100)/100,
+  interval:Math.round((Number(statAt(i,'interval')||0)/totalFactor)*100)/100,
+  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/totalFactor)*100)/100
  };
  const base={hp:Number(c.hp||0)*Math.pow(1.04,lv-1),atk:Number(c.atk||0)*Math.pow(1.04,lv-1),range:Number(c.range||0),spd:Number(c.spd||0),interval:Number(c.interval||0),recharge:Number(c.recharge||0)};
  const pct=(value,original,inverse=false)=>{if(!(original>0))return '';const n=(value/original-1)*100;return (n>=0?'+':'')+Math.round(n)+'%';};
@@ -2730,12 +2735,19 @@ function formationBuffSummaryHTML(i){
  if(tree.recharge)tags.push('再生産 −'+(tree.recharge*5)+'%');
  if(rankMode&&Math.abs(rankFactor-1)>.0001)tags.push('ランク補正 '+(rankFactor>=1?'+':'')+Math.round((rankFactor-1)*100)+'%');
  if(auraLabel)tags.push(auraLabel);
+ if(haifuCtx){
+  tags.push('覇風：全味方ステータス +'+Math.round((haifuAllyFactor-1)*100)+'%');
+  tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
+  if(c.name==='覇風')tags.push('覇風自身：非UR '+haifuCtx.nonUrCount+'体で +'+Math.round((haifuSelfFactor-1)*100)+'%');
+ }
  const statLine=(label,key)=>'<span>'+label+' <b>'+Number(values[key]).toLocaleString()+'</b> <small style="color:'+(Number(pct(values[key],base[key]).replace('%',''))<0?'#b91c1c':'#64748b')+'">'+pct(values[key],base[key])+'</small></span>';
- return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
+ return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
 }
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
- el.innerHTML=formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>';
+ const haifuCtx=haifuFormationContext();
+ const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・射程・移動速度 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（攻撃間隔・再生産時間は倍率に応じて短縮）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → さらに全ステータス +'+Math.round((haifuCtx.selfFactor-1)*100)+'%</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
+ el.innerHTML=haifuSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
 }
 function renderFormation(){
  normalizeFormation();
