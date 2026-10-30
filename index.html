@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.36';
+const GAME_VERSION='v1.9.37';
 const UPDATE_LOG=[
-  {date:'2026-10-31',version:'v1.9.36',title:'💎 富豪木下を維持してMiraiKを特別真髄に追加',items:['既存キャラクター「富豪木下」と第二形態「大富豪木下」を復元し、既存所持・進化・能力を維持','新しい限定キャラクター「MiraiK」を別キャラクターとして特別真髄の2%枠に追加','旧アップデートでMiraiKへ移行した所持データは富豪木下も復元し、MiraiKの所持状態も維持']},
+  {date:'2026-10-31',version:'v1.9.37',title:'🆔 富豪木下とMiraiKのキャラクターIDを修正',items:['富豪木下を元のカードIDへ戻し、MiraiKを新規の末尾IDへ移動','所持名・抽選設定・2体の性能と能力は維持','v1.9.36から更新したセーブデータはレベル・形態・編成プリセットのID参照を一度だけ入れ替えて引き継ぐ']},
   {date:'2026-10-30',version:'v1.9.34',title:'🌪️ 覇風を弱体化',items:['攻撃力を16,500から12,500へ、再生産時間を5.2秒から20秒へ調整','非UR編成数による覇風自身の強化対象から射程・移動速度を除外','編成画面の強化倍率表示を実際の能力適用内容に合わせて修正']},
   {date:'2026-10-30',version:'v1.9.33',title:'🌪️ 覇風の編成バフ表示を追加',items:['編成画面に覇風の全味方ステータス強化・覇風自身の強化倍率・パワーシールド耐久値を表示','UR・非URの編成数に応じた実際の強化率を各キャラクターのステータス欄へ反映','覇風が戦場にいる間の敵攻撃力低下効果を編成効果と区別して明記']},
   {date:'2026-10-30',version:'v1.9.32',title:'🌪️ 覇風のレベルアップ・編成能力を修正',items:['後から追加されたキャラクターにもレベル・最大レベル配列を初期化し、覇風のレベルアップでXPだけが消費される問題を修正','レベルアップ処理を安全化し、正常なレベル更新を保存してからXPを消費','覇風出撃前に登場していた味方にも編成バフとパワーシールドを適用']},
@@ -832,9 +832,12 @@ function processIvyTransfer(ivy,now){
  if(typeof setStatusMark==='function')setStatusMark(target,'🌿','ヤバヤバ化',3,'ivyYabayaba');
  if(typeof popup==='function')popup('🌿 感情転移！',Number(target.x||0),Math.max(25,field.clientHeight-165));
 }
-// 特別真髄の次回限定キャラクター。既存の富豪木下とは別カードとして追加。
-const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
-cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
+// 既存の富豪木下は維持し、MiraiKとは別キャラクターとして登録する。元のカードIDを維持するため従来位置に登録。
+if(!cards.some(c=>c?.name==='富豪木下')){
+ const RICH_KINOSHITA_CARD={name:'富豪木下',cost:1500,hp:30000,atk:1500,range:70,spd:.2,interval:1.5,recharge:150,icon:'💰',motion:'super',attackType:'single',kb:2,trait:'浮・赤',rarity:'LR',series:'特別真髄',specialGachaOnly:true,curseImmune:true,ability:{name:'富豪の資産運用',desc:'場にいる間、敵撃破時のお金2倍・2秒ごとに150円獲得（各効果最大2体分まで重複）。呪い無効。',curseImmune:true}};
+ RICH_KINOSHITA_CARD.secondForm={name:'大富豪木下',icon:'💎',cost:4500,hp:85000,atk:300000,range:140,spd:1.3,interval:20,recharge:150,kb:2,attackType:'single',trait:'赤',ability:{name:'大富豪の超臨界',desc:'50%でクリティカル（ダメージ2倍、メタルにも通常ダメージを通す）。浮・天使・神話に5倍ダメージ。呪い・波動・烈波・停止・攻撃力低下無効。HP50%未満で攻撃力300%増加。',criticalChance:.5,criticalMultiplier:2,wyvernStrongTraits:['浮','天使','神話'],wyvernStrongMultiplier:5,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true,hpBelowThreshold:.5,hpBelowThresholdMultiplier:4},curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true};
+ cards.push(RICH_KINOSHITA_CARD);RICH_KINOSHITA_CARD.id=cards.length-1;
+}
 
 
 // ===== ノーマルキャラ育成・第二形態 =====
@@ -4756,12 +4759,25 @@ cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
 if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:20,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方の全ステータス+75%（最大+450%）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
- // 既存の富豪木下は維持し、MiraiKとは別キャラクターとして登録する。旧カードIDをずらさないため末尾に追加。
-if(!cards.some(c=>c?.name==='富豪木下')){
- const RICH_KINOSHITA_CARD={name:'富豪木下',cost:1500,hp:30000,atk:1500,range:70,spd:.2,interval:1.5,recharge:150,icon:'💰',motion:'super',attackType:'single',kb:2,trait:'浮・赤',rarity:'LR',series:'特別真髄',specialGachaOnly:true,curseImmune:true,ability:{name:'富豪の資産運用',desc:'場にいる間、敵撃破時のお金2倍・2秒ごとに150円獲得（各効果最大2体分まで重複）。呪い無効。',curseImmune:true}};
- RICH_KINOSHITA_CARD.secondForm={name:'大富豪木下',icon:'💎',cost:4500,hp:85000,atk:300000,range:140,spd:1.3,interval:20,recharge:150,kb:2,attackType:'single',trait:'赤',ability:{name:'大富豪の超臨界',desc:'50%でクリティカル（ダメージ2倍、メタルにも通常ダメージを通す）。浮・天使・神話に5倍ダメージ。呪い・波動・烈波・停止・攻撃力低下無効。HP50%未満で攻撃力300%増加。',criticalChance:.5,criticalMultiplier:2,wyvernStrongTraits:['浮','天使','神話'],wyvernStrongMultiplier:5,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true,hpBelowThreshold:.5,hpBelowThresholdMultiplier:4},curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,attackDownImmune:true};
- cards.push(RICH_KINOSHITA_CARD);RICH_KINOSHITA_CARD.id=cards.length-1;
-}
+ // 新しい特別真髄限定キャラクター。富豪木下の旧IDとは別の末尾IDを割り当てる。
+const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
+cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
+// v1.9.36で一時的に逆転していた富豪木下/MiraiKのID参照を復元する。
+try{
+ const richIndex=cards.findIndex(c=>c?.name==='富豪木下');
+ const miraiIndex=cards.findIndex(c=>c?.name==='MiraiK');
+ if(storage.getItem('kinoshitaCharacterIdSwapV7')!=='done'){
+  const savedNames=Array.isArray(ownedCharacterNamesAtBoot)?ownedCharacterNamesAtBoot:[];
+  const wasV1936=savedNames.includes('富豪木下')&&savedNames.includes('MiraiK');
+  if(wasV1936&&richIndex>=0&&miraiIndex>=0&&richIndex!==miraiIndex){
+   const swapArray=(arr)=>{if(Array.isArray(arr)&&arr.length>Math.max(richIndex,miraiIndex)){const v=arr[richIndex];arr[richIndex]=arr[miraiIndex];arr[miraiIndex]=v;}};
+   swapArray(charLevel);swapArray(charMaxLevel);swapArray(charForm);swapArray(normalEvolved);
+   if(Array.isArray(formationPresets))formationPresets=formationPresets.map(p=>Array.isArray(p)?p.map(i=>i===richIndex?miraiIndex:i===miraiIndex?richIndex:i):p);
+  }
+  storage.setItem('kinoshitaCharacterIdSwapV7','done');
+ }
+}catch(e){console.warn('Rich Kinoshita/MiraiK ID migration V7 failed',e);}
+
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
 for(let i=0;i<cards.length;i++){
