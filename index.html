@@ -2907,7 +2907,8 @@ function applyStageVisual(){
 }
 function stageBgmKey(){return stageVisualInfo().bgm||'menu';}
 
-const PVP_SHARED_WORLD_WIDTH=3200;\nfunction setupWorld(){const s=currentStage();worldWidth=pvpMode?PVP_SHARED_WORLD_WIDTH:Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
+const PVP_SHARED_WORLD_WIDTH=3200;
+function setupWorld(){const s=currentStage();worldWidth=pvpMode?PVP_SHARED_WORLD_WIDTH:Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
 field.addEventListener('pointerdown',e=>{if(!running)return;if(e.target?.closest?.('button,[role="button"],input,select,textarea,a,[data-game-speed]'))return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
