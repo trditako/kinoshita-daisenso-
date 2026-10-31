@@ -1560,16 +1560,26 @@ async function loadAIServerProfiles(force=false){
   }
   if(!Array.isArray(rows)||rows.length===0)throw new Error('AIデータが空です');
   const serverProfiles=rows.map((row,i)=>{
+   const activityState=row.activity&&typeof row.activity==='object'&&!Array.isArray(row.activity)?{...row.activity}:{};
+   const orderMigrated=activityState.aiCharacterIdOrderV1===1;
+   const remapId=raw=>{const id=Number(raw);if(!Number.isInteger(id))return raw;if(id===90)return 101;if(id===91)return 90;if(id>=92&&id<=101)return id-1;return id;};
+   const remapArray=raw=>{if(!Array.isArray(raw))return raw;const old=raw.slice(),next=old.slice();next[90]=old[91];for(let id=92;id<=101;id++)next[id-1]=old[id];next[101]=old[90];return next;};
+   const ownedCharacters=Array.isArray(row.owned_characters)?(orderMigrated?row.owned_characters:row.owned_characters.map(remapId)):[0];
+   const formation=Array.isArray(row.formation)?(orderMigrated?row.formation:row.formation.map(remapId)):[0];
+   const formationPresets=Array.isArray(row.formation_presets)?row.formation_presets.map(p=>Array.isArray(p)?(orderMigrated?p:p.map(remapId)):p):[];
+   const rawLevels=Array.isArray(row.char_levels)?row.char_levels:(row.char_levels&&typeof row.char_levels==='object'?Array.from({length:Math.max(cards.length,104)},(_,ci)=>Math.max(1,Number(row.char_levels[String(ci)]||1))):Array(Math.max(cards.length,104)).fill(1));
+   const charLevels=orderMigrated?rawLevels:remapArray(rawLevels);
+   if(!orderMigrated)for(const key of ['aiCharMaxLevel','aiCharForm','aiNormalEvolved'])if(Array.isArray(activityState[key]))activityState[key]=remapArray(activityState[key]);
    const a={
     accountId:'AI-'+String(Number(row.account_id)||i+1).padStart(3,'0'),name:row.name||('AI-'+String(i+1).padStart(3,'0')),
     rp:Number(row.rp||0),skill:Number(row.skill??.25),wins:Number(row.wins||0),losses:Number(row.losses||0),
     generation:Number(row.generation||1),strategy:row.strategy||'balanced',aggression:Number(row.aggression??.55),save:Number(row.save_rate??row.save??.35),
     coins:Number(row.coins??900),playerXP:Number(row.player_xp||0),workerLevel:Number(row.worker_level||1),stageClears:Number(row.stage_clears||0),
-    chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters:Array.isArray(row.owned_characters)?row.owned_characters:[0],
-    formation:Array.isArray(row.formation)?row.formation:[0],charLevels:Array.isArray(row.char_levels)?row.char_levels:(row.char_levels&&typeof row.char_levels==="object"?Array.from({length:cards.length},(_,ci)=>Math.max(1,Number(row.char_levels[String(ci)]||1))):Array.isArray(row.charLevels)?row.charLevels:Array(Math.max(cards.length,104)).fill(1)),
+    chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters,
+    formation,charLevels:Array.isArray(row.charLevels)?row.charLevels:charLevels,
     eventClears:row.event_clears&&typeof row.event_clears==='object'?row.event_clears:{},trainingXP:Number(row.training_xp||0),matches:Number(row.matches||0),
-    lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activityState:row.activity&&typeof row.activity==='object'?row.activity:{},activity:typeof row.activity==='string'?row.activity:(row.activity&&typeof row.activity==='object'?(row.activity.currentActivity||row.activity.status||'活動状態を記録中'):'待機中'),
-    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],inventoryItems:row.inventory_items&&typeof row.inventory_items==='object'&&!Array.isArray(row.inventory_items)?row.inventory_items:{},population:Number(row.population||1),bestRP:Number(row.best_rp||0),bestRankTitle:String(row.best_rank||''),rankMatches:Number(row.rank_matches||0),currentRankMatches:Number(row.current_rank_matches||0),rankStreak:Number(row.rank_streak||0),formationPresets:Array.isArray(row.formation_presets)?row.formation_presets:[],
+    lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activityState,activity:typeof row.activity==='string'?row.activity:(row.activity&&typeof row.activity==='object'?(row.activity.currentActivity||row.activity.status||'活動状態を記録中'):'待機中'),
+    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],inventoryItems:row.inventory_items&&typeof row.inventory_items==='object'&&!Array.isArray(row.inventory_items)?row.inventory_items:{},population:Number(row.population||1),bestRP:Number(row.best_rp||0),bestRankTitle:String(row.best_rank||''),rankMatches:Number(row.rank_matches||0),currentRankMatches:Number(row.current_rank_matches||0),rankStreak:Number(row.rank_streak||0),formationPresets,
     rewardRank:Number(row.reward_rank||0),rewardCycle:Number(row.reward_cycle??-1),rankBadge:String(row.rank_badge||''),limitedCharacterOwned:!!row.limited_character_owned,bestRankTitle:String(row.best_rank||'')
    };
    return normalizeAIAccount(a,i,Number(row.population||1));
