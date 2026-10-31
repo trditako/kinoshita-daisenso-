@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.38';
+const GAME_VERSION='v1.9.39';
 const UPDATE_LOG=[
+  {date:'2026-11-01',version:'v1.9.39',title:'🌗 MiraiKの編成バフ表示を追加',items:['編成画面にMiraiKの天使属性全ステータス+10%バフを表示','天使属性の各キャラクターのステータス表示へMiraiKの補正を反映','MiraiK自身の天使属性人数に応じた与ダメージ上昇（最大+55%）を表示']},
   {date:'2026-10-31',version:'v1.9.38',title:'🛠️ キャラクターID引き継ぎ・AIデータ取得を修正',items:['富豪木下またはMiraiKの片方だけを所持していた場合も、レベル・形態・進化・編成プリセットを正しいIDへ移行','現在の編成と旧形式の編成データもID変更に追従','AIアカウント1,000体の読み込みを100体ずつに分割し、データ取得タイムアウトを回避']},
   {date:'2026-10-31',version:'v1.9.37',title:'🆔 富豪木下とMiraiKのキャラクターIDを修正',items:['富豪木下を元のカードIDへ戻し、MiraiKを新規の末尾IDへ移動','所持名・抽選設定・2体の性能と能力は維持','v1.9.36から更新したセーブデータはレベル・形態・編成プリセットのID参照を一度だけ入れ替えて引き継ぐ']},
   {date:'2026-10-30',version:'v1.9.34',title:'🌪️ 覇風を弱体化',items:['攻撃力を16,500から12,500へ、再生産時間を5.2秒から20秒へ調整','非UR編成数による覇風自身の強化対象から射程・移動速度を除外','編成画面の強化倍率表示を実際の能力適用内容に合わせて修正']},
@@ -2774,6 +2775,13 @@ function renderKinoshitaBook(){
  }).join('');
  grid.querySelectorAll('[data-book-char]').forEach(b=>b.onclick=()=>showCharacterDetail(Number(b.dataset.bookChar)));
 }
+function miraiKFormationContext(){
+ const ids=formation.filter(i=>Number.isInteger(i)&&hasCharacter(i));
+ const miraiKIndex=ids.find(i=>(activeCard(i)||cards[i])?.name==='MiraiK');
+ if(miraiKIndex==null)return null;
+ const angelCount=ids.filter(i=>i!==miraiKIndex).filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;
+ return {miraiKIndex,angelCount,damageFactor:1+Math.min(.55,angelCount*.10)};
+}
 function formationBuffSummaryHTML(i){
  const c=activeCard(i)||cards[i],lv=Math.max(1,Number(charLevel[i]||1)),tree=skillTreeFor(i);
  if(!c)return '';
@@ -2784,10 +2792,12 @@ function formationBuffSummaryHTML(i){
  if(c.name==='天使神:木下'){aura=1+Math.min(.30,angelCount*.07);auraLabel='天使神自身 '+Math.round((aura-1)*100)+'%';}
  else if(angelGodInFormation&&entityHasTrait(c,'天使')){aura=1.55;auraLabel='天使神の編成バフ +55%';}
  const haifuCtx=haifuFormationContext();
+ const miraiKCtx=miraiKFormationContext();
  const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
  const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
- const totalFactor=aura*haifuAllyFactor*haifuSelfFactor;
- const mobilityFactor=aura*haifuAllyFactor;
+ const miraiKAllyFactor=miraiKCtx&&entityHasTrait(c,'天使')?1.1:1;
+ const totalFactor=aura*haifuAllyFactor*haifuSelfFactor*miraiKAllyFactor;
+ const mobilityFactor=aura*haifuAllyFactor*miraiKAllyFactor;
  const values={
   hp:Math.round(Number(statAt(i,'hp')||0)*totalFactor),
   atk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
@@ -2808,19 +2818,23 @@ function formationBuffSummaryHTML(i){
  if(tree.recharge)tags.push('再生産 −'+(tree.recharge*5)+'%');
  if(rankMode&&Math.abs(rankFactor-1)>.0001)tags.push('ランク補正 '+(rankFactor>=1?'+':'')+Math.round((rankFactor-1)*100)+'%');
  if(auraLabel)tags.push(auraLabel);
+ if(miraiKCtx&&entityHasTrait(c,'天使'))tags.push('MiraiK：天使属性の全ステータス +10%');
+ if(miraiKCtx&&c.name==='MiraiK')tags.push('自身以外の天使属性 '+miraiKCtx.angelCount+'体：与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）');
  if(haifuCtx){
   tags.push('覇風：全味方ステータス +'+Math.round((haifuAllyFactor-1)*100)+'%');
   tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
   if(c.name==='覇風')tags.push('覇風自身：非UR '+haifuCtx.nonUrCount+'体でHP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuSelfFactor-1)*100)+'%（射程・移動速度は対象外）');
  }
  const statLine=(label,key)=>'<span>'+label+' <b>'+Number(values[key]).toLocaleString()+'</b> <small style="color:'+(Number(pct(values[key],base[key]).replace('%',''))<0?'#b91c1c':'#64748b')+'">'+pct(values[key],base[key])+'</small></span>';
- return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
+ return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')||t.includes('MiraiK')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
 }
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
  const haifuCtx=haifuFormationContext();
  const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・射程・移動速度 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（攻撃間隔・再生産時間は倍率に応じて短縮）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → HP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuCtx.selfFactor-1)*100)+'%（射程・移動速度は対象外）</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
- el.innerHTML=haifuSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
+ const miraiKCtx=miraiKFormationContext();
+ const miraiKSummary=miraiKCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #a78bfa;background:#f5f3ff"><h3>🌗 MiraiKの編成バフ</h3><div><b>天使属性の味方：</b>HP・攻撃力・射程・移動速度など全ステータス +10%（攻撃間隔・再生産時間も1.1倍速で短縮）</div><div><b>MiraiK自身：</b>自身以外の天使属性 '+miraiKCtx.angelCount+'体 → 与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）</div></article>':'';
+ el.innerHTML=haifuSummary+miraiKSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
 }
 function renderFormation(){
  normalizeFormation();
