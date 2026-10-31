@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.39';
+const GAME_VERSION='v1.9.40';
 const UPDATE_LOG=[
+  {date:'2026-11-01',version:'v1.9.40',title:'🌌 狂乱の強化木下の編成バフ・戦闘効果表示とID順を修正',items:['狂乱の強化木下をKBRキャラクターの後、覇風の直前へ移動し、旧IDから新IDへのセーブ移行を追加','宇宙属性編成数による攻撃力上昇、撃破強化、HP条件バフを編成画面・戦闘中に表示','状態異常・バフ・デバフを複数同時に表示し、パワーシールドとバリアの残量も識別しやすく改善']},
   {date:'2026-11-01',version:'v1.9.39',title:'🌗 MiraiKの編成バフ表示を追加',items:['編成画面にMiraiKの天使属性全ステータス+10%バフを表示','天使属性の各キャラクターのステータス表示へMiraiKの補正を反映','MiraiK自身の天使属性人数に応じた与ダメージ上昇（最大+55%）を表示']},
   {date:'2026-10-31',version:'v1.9.38',title:'🛠️ キャラクターID引き継ぎ・AIデータ取得を修正',items:['富豪木下またはMiraiKの片方だけを所持していた場合も、レベル・形態・進化・編成プリセットを正しいIDへ移行','現在の編成と旧形式の編成データもID変更に追従','AIアカウント1,000体の読み込みを100体ずつに分割し、データ取得タイムアウトを回避']},
   {date:'2026-10-31',version:'v1.9.37',title:'🆔 富豪木下とMiraiKのキャラクターIDを修正',items:['富豪木下を元のカードIDへ戻し、MiraiKを新規の末尾IDへ移動','所持名・抽選設定・2体の性能と能力は維持','v1.9.36から更新したセーブデータはレベル・形態・編成プリセットのID参照を一度だけ入れ替えて引き継ぐ']},
@@ -316,7 +317,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-f
 @keyframes superAttack{0%{transform:scale(1)}30%{transform:scale(1.20)}60%{transform:scale(.94)}100%{transform:scale(1)}}
 .card .reload{position:absolute;inset:0;background:#0f172aee;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:18px;font-weight:1000;text-shadow:2px 2px #000;z-index:3}.card .reload small{font-size:10px;color:#ffd21f;margin-top:2px}
 .abilityTag{display:inline-block;background:#eef6ff;color:#135a9e;border:1px solid #8ab7e8;border-radius:7px;padding:2px 5px;margin-top:2px;font-size:9px;font-weight:1000;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bookNo{display:block;background:#1e293b;color:#fff;border-radius:6px;padding:2px 6px;margin-bottom:4px;font-size:11px;font-weight:1000;letter-spacing:.3px;text-align:center}.kinoshitaBookCard .bookNo{grid-column:1/-1}
-.statusTag{position:absolute;top:-44px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:1000;text-shadow:2px 2px #000;white-space:nowrap}
+.unitEffects{position:absolute;top:-58px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;width:max-content;max-width:190px;z-index:7;pointer-events:none}.unit .powerShieldLabel,.unit .barrierLabel,.unit .mythAttackBoostLabel{display:none}.unitEffectTag{display:inline-block;padding:2px 4px;border:1px solid #64748b;border-radius:5px;background:#0f172aee;color:#f8fafc;font-size:9px;line-height:1.2;font-weight:900;white-space:nowrap;text-shadow:none;box-shadow:0 1px 3px #0008}.unitEffectTag.buff{background:#064e3bee;border-color:#34d399;color:#d1fae5}.unitEffectTag.debuff{background:#7f1d1dee;border-color:#f87171;color:#fee2e2}.unitEffectTag.status{background:#334155ee;border-color:#94a3b8;color:#f1f5f9}
 
 .unit.motion-thousandStep{animation:thousandIdle 1.2s ease-in-out infinite alternate}.unit.thousandStepUnit .chargeRange{position:absolute;left:150px;bottom:27px;width:450px;height:34px;border:4px solid #f0abfc;background:linear-gradient(90deg,rgba(168,85,247,.18),rgba(216,180,254,.48),rgba(168,85,247,.18));border-radius:8px;display:none;pointer-events:none;z-index:1;box-shadow:0 0 0 2px #581c87,0 0 18px rgba(216,180,254,.95)}.unit.thousandStepUnit .chargeRange:before{content:"";position:absolute;left:-4px;top:-12px;height:52px;border-left:5px solid #fde68a;box-shadow:450px 0 0 #fde68a}.unit.thousandStepUnit .chargeRange:after{content:"攻撃範囲 150〜600";position:absolute;left:0;top:-25px;width:100%;text-align:center;color:#fff;font-size:14px;font-weight:1000;text-shadow:2px 2px #000,0 0 6px #7e22ce}.unit.thousandStepUnit.charging .chargeRange{display:block;animation:thousandRangePulse .55s ease-in-out infinite alternate}.unit.thousandStepUnit.charging>div:nth-child(2){animation:thousandChargeMotion .7s ease-in-out infinite}.unit.thousandStepUnit.charging .chargeLabel{display:block}.chargeLabel{display:none;position:absolute;left:150px;bottom:68px;width:450px;text-align:center;color:#fef3c7;background:#581c87e8;border:3px solid #f0abfc;border-radius:10px;padding:4px 8px;font-weight:1000;font-size:13px;text-shadow:2px 2px #111;pointer-events:none;z-index:2}.unit.thousandStepUnit.charging:before{content:"⚡ 3秒チャージ中";position:absolute;left:-25px;bottom:92px;color:#fef3c7;background:#581c87e8;border:3px solid #f0abfc;border-radius:10px;padding:4px 7px;font-size:12px;font-weight:1000;white-space:nowrap;text-shadow:2px 2px #111;z-index:3;animation:thousandChargeBadge .5s ease-in-out infinite alternate}.unit.thousandStepUnit.charging:after{content:"";position:absolute;left:50%;top:50%;width:78px;height:78px;border:5px solid #f0abfc;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 18px #e879f9,0 0 35px rgba(216,180,254,.9);animation:thousandCorePulse .55s ease-in-out infinite alternate;pointer-events:none;z-index:0}@keyframes thousandIdle{from{transform:translateY(0) scale(1)}to{transform:translateY(-2px) scale(1.02)}}@keyframes thousandChargeMotion{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.14) rotate(-5deg)}60%{transform:scale(.94) rotate(4deg)}100%{transform:scale(1.18) rotate(0)}}@keyframes thousandChargeBadge{from{transform:scale(1)}to{transform:scale(1.06)}}@keyframes thousandCorePulse{from{opacity:.45;transform:translate(-50%,-50%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}}@keyframes thousandRangePulse{from{opacity:.55}to{opacity:1}}.unit .barrierBar{position:absolute;top:-10px;left:3px;width:58px;height:7px;background:#1e293b;border:1px solid #111;border-radius:8px;overflow:hidden}.unit .barrierBar i{display:block;height:100%;background:#38bdf8;width:100%}.unit .barrierLabel{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:9px;line-height:12px;font-weight:1000;color:#e0f2fe;background:#075985e8;border:1px solid #38bdf8;border-radius:5px;padding:0 4px;white-space:nowrap;text-shadow:1px 1px #000;z-index:6}.unit .hp{position:absolute;top:0;left:3px;width:58px;height:7px;background:#333;border:1px solid #111;border-radius:8px;overflow:hidden}.unit .hp i{display:block;height:100%;background:#49d05b;width:100%}
 .unit.hitback{animation:kbBack .22s ease-out!important}.enemy.hitback{animation:kbBackEnemy .22s ease-out!important}@keyframes kbBack{0%{transform:translateX(0) scale(1)}35%{transform:translateX(10px) scale(.94)}100%{transform:translateX(0) scale(1)}}@keyframes kbBackEnemy{0%{transform:scaleX(-1) translateX(0) scale(1)}35%{transform:scaleX(-1) translateX(10px) scale(.94)}100%{transform:scaleX(-1) translateX(0) scale(1)}}
@@ -879,7 +880,7 @@ const LATEST_RANK_BONUS_PER_CHARACTER=15;
 function latestRankBonusCharacters(list){const seen=new Set();for(const i of (list||[])){const n=Number(i);if(LATEST_RANK_BONUS_IDS.includes(n))seen.add(n);}return [...seen];}
 function latestRankBonusRP(list){return latestRankBonusCharacters(list).length*LATEST_RANK_BONUS_PER_CHARACTER;}
 function latestRankBonusText(list){const ids=latestRankBonusCharacters(list);return ids.length?ids.map(i=>cards[i]?.icon+' '+cards[i]?.name).join('、'):'なし';}
-cards.push({name:"狂乱の強化木下",cost:3900,hp:29500,atk:19600,range:55,spd:.8,interval:4,recharge:16,icon:"🌌",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"SSR",series:"狂乱シリーズ",specialReward:true,eventReward:"狂乱の強化木下降臨",ability:{name:"狂乱強化・宇宙共鳴",desc:"編成中の宇宙属性1体につき攻撃力+15%（最大+100%）。天使・赤・浮いてる敵・黒に3倍ダメージ、同属性からの被ダメージ25%軽減。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv2。敵撃破ごとに攻撃力+5%（最大+50%）、最大HPの1%回復。HP50%以上で攻撃力+15%。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.75,赤:.75,浮:.75,黒:.75},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,phoenixSurgeLevel:2,phoenixSurgeChance:.25,cosmicFormationBonus:{perUnit:.15,maxBonus:1},killAttackStack:{perKill:.05,maxBonus:.5},healOnKill:.01,hpThresholdAttackBonus:{threshold:.5,multiplier:1.15}}});
+const RAGE_KINOSHITA_CARD={name:"狂乱の強化木下",cost:3900,hp:29500,atk:19600,range:55,spd:.8,interval:4,recharge:16,icon:"🌌",motion:"super",attackType:"single",kb:2,trait:"宇宙",rarity:"SSR",series:"狂乱シリーズ",specialReward:true,eventReward:"狂乱の強化木下降臨",ability:{name:"狂乱強化・宇宙共鳴",desc:"編成中の宇宙属性1体につき攻撃力+15%（最大+100%）。天使・赤・浮いてる敵・黒に3倍ダメージ、同属性からの被ダメージ25%軽減。呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv2。敵撃破ごとに攻撃力+5%（最大+50%）、最大HPの1%回復。HP50%以上で攻撃力+15%。",strong:{天使:3,赤:3,浮:3,黒:3},resist:{天使:.75,赤:.75,浮:.75,黒:.75},curseImmune:true,stopImmune:true,surgeImmune:true,knockbackImmune:true,phoenixSurgeLevel:2,phoenixSurgeChance:.25,cosmicFormationBonus:{perUnit:.15,maxBonus:1},killAttackStack:{perKill:.05,maxBonus:.5},healOnKill:.01,hpThresholdAttackBonus:{threshold:.5,multiplier:1.15}}};
 
  // KBR限定騎乗キャラクター10体。既存IDを変えないよう末尾に追加。
  const KBR_CARDS=[
@@ -1559,16 +1560,26 @@ async function loadAIServerProfiles(force=false){
   }
   if(!Array.isArray(rows)||rows.length===0)throw new Error('AIデータが空です');
   const serverProfiles=rows.map((row,i)=>{
+   const activityState=row.activity&&typeof row.activity==='object'&&!Array.isArray(row.activity)?{...row.activity}:{};
+   const orderMigrated=activityState.aiCharacterIdOrderV1===1;
+   const remapId=raw=>{const id=Number(raw);if(!Number.isInteger(id))return raw;if(id===90)return 101;if(id===91)return 90;if(id>=92&&id<=101)return id-1;return id;};
+   const remapArray=raw=>{if(!Array.isArray(raw))return raw;const old=raw.slice(),next=old.slice();next[90]=old[91];for(let id=92;id<=101;id++)next[id-1]=old[id];next[101]=old[90];return next;};
+   const ownedCharacters=Array.isArray(row.owned_characters)?(orderMigrated?row.owned_characters:row.owned_characters.map(remapId)):[0];
+   const formation=Array.isArray(row.formation)?(orderMigrated?row.formation:row.formation.map(remapId)):[0];
+   const formationPresets=Array.isArray(row.formation_presets)?row.formation_presets.map(p=>Array.isArray(p)?(orderMigrated?p:p.map(remapId)):p):[];
+   const rawLevels=Array.isArray(row.char_levels)?row.char_levels:(row.char_levels&&typeof row.char_levels==='object'?Array.from({length:Math.max(cards.length,104)},(_,ci)=>Math.max(1,Number(row.char_levels[String(ci)]||1))):Array(Math.max(cards.length,104)).fill(1));
+   const charLevels=orderMigrated?rawLevels:remapArray(rawLevels);
+   if(!orderMigrated)for(const key of ['aiCharMaxLevel','aiCharForm','aiNormalEvolved'])if(Array.isArray(activityState[key]))activityState[key]=remapArray(activityState[key]);
    const a={
     accountId:'AI-'+String(Number(row.account_id)||i+1).padStart(3,'0'),name:row.name||('AI-'+String(i+1).padStart(3,'0')),
     rp:Number(row.rp||0),skill:Number(row.skill??.25),wins:Number(row.wins||0),losses:Number(row.losses||0),
     generation:Number(row.generation||1),strategy:row.strategy||'balanced',aggression:Number(row.aggression??.55),save:Number(row.save_rate??row.save??.35),
     coins:Number(row.coins??900),playerXP:Number(row.player_xp||0),workerLevel:Number(row.worker_level||1),stageClears:Number(row.stage_clears||0),
-    chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters:Array.isArray(row.owned_characters)?row.owned_characters:[0],
-    formation:Array.isArray(row.formation)?row.formation:[0],charLevels:Array.isArray(row.char_levels)?row.char_levels:(row.char_levels&&typeof row.char_levels==="object"?Array.from({length:cards.length},(_,ci)=>Math.max(1,Number(row.char_levels[String(ci)]||1))):Array.isArray(row.charLevels)?row.charLevels:Array(cards.length).fill(1)),
+    chapterClears:Array.isArray(row.chapter_clears)?row.chapter_clears:[0,0,0],ownedCharacters,
+    formation,charLevels:Array.isArray(row.charLevels)?row.charLevels:charLevels,
     eventClears:row.event_clears&&typeof row.event_clears==='object'?row.event_clears:{},trainingXP:Number(row.training_xp||0),matches:Number(row.matches||0),
-    lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activityState:row.activity&&typeof row.activity==='object'?row.activity:{},activity:typeof row.activity==='string'?row.activity:(row.activity&&typeof row.activity==='object'?(row.activity.currentActivity||row.activity.status||'活動状態を記録中'):'待機中'),
-    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],inventoryItems:row.inventory_items&&typeof row.inventory_items==='object'&&!Array.isArray(row.inventory_items)?row.inventory_items:{},population:Number(row.population||1),bestRP:Number(row.best_rp||0),bestRankTitle:String(row.best_rank||''),rankMatches:Number(row.rank_matches||0),currentRankMatches:Number(row.current_rank_matches||0),rankStreak:Number(row.rank_streak||0),formationPresets:Array.isArray(row.formation_presets)?row.formation_presets:[],
+    lastResult:row.last_result||'',matchHistory:Array.isArray(row.match_history)?row.match_history:[],activityState,activity:typeof row.activity==='string'?row.activity:(row.activity&&typeof row.activity==='object'?(row.activity.currentActivity||row.activity.status||'活動状態を記録中'):'待機中'),
+    activityHistory:Array.isArray(row.activity_history)?row.activity_history:[],inventoryItems:row.inventory_items&&typeof row.inventory_items==='object'&&!Array.isArray(row.inventory_items)?row.inventory_items:{},population:Number(row.population||1),bestRP:Number(row.best_rp||0),bestRankTitle:String(row.best_rank||''),rankMatches:Number(row.rank_matches||0),currentRankMatches:Number(row.current_rank_matches||0),rankStreak:Number(row.rank_streak||0),formationPresets,
     rewardRank:Number(row.reward_rank||0),rewardCycle:Number(row.reward_cycle??-1),rankBadge:String(row.rank_badge||''),limitedCharacterOwned:!!row.limited_character_owned,bestRankTitle:String(row.best_rank||'')
    };
    return normalizeAIAccount(a,i,Number(row.population||1));
@@ -1821,7 +1832,7 @@ for(const halloweenVariant of HALLOWEEN_VARIANT_CARDS){cards.push(halloweenVaria
 CURRENT_CHARACTER_COUNT=cards.length;
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
-while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;
+while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags[0]=true;
 for(let si=0;si<unlocked;si++){if(stages[si].reward&&stages[si].reward-1<cards.length)ownedFlags[stages[si].reward-1]=true;}
 // 章クリア済みの既存プレイヤーには、3体を即時に再付与する。
 for(let ch=1;ch<=3;ch++){if((chapterClears[ch-1]||0)>=48){const ri=chapterRewardIndex(ch);if(ri>=0&&ri<cards.length)ownedFlags[ri]=true;}}
@@ -1946,14 +1957,14 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
     if(i>20)return i-1;
     return i;
    };
-   const newFlags=Array(cards.length).fill(false);
+   const newFlags=Array(Math.max(cards.length,104)).fill(false);
    for(let oi=0;oi<legacyFlags.length;oi++){
     const ni=remap(oi);
     if(ni>=0&&ni<newFlags.length)newFlags[ni]=!!legacyFlags[oi];
    }
    ownedFlags=newFlags;
-   formation=legacyFormation.map(remap).filter(i=>i>=0&&i<cards.length);
-   const newLevels=Array(cards.length).fill(1);
+   formation=legacyFormation.map(remap).filter(i=>i>=0&&i<Math.max(cards.length,104));
+   const newLevels=Array(Math.max(cards.length,104)).fill(1);
    for(let oi=0;oi<legacyLevels.length;oi++){
     const ni=remap(oi);
     if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(legacyLevels[oi]||1)));
@@ -2358,7 +2369,52 @@ function damageTakenBy(u,attacker){
  return miraiKLimitDamage(u,attacker,Math.max(1,Math.round(effectiveAtk*mult)));
 }
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;try{const d=Number.isFinite(Number(duration))?Math.max(0,Number(duration)):0;if(!target.statuses||typeof target.statuses!=='object')target.statuses={};target.statuses[type]={icon:String(icon||''),text:String(text||''),until:performance.now()/1000+d};updateStatusMark(target);}catch(err){console.warn('status mark skipped',err);}}
-function updateStatusMark(target){if(!target?.el)return;try{const now=performance.now()/1000;const statuses=target.statuses&&typeof target.statuses==='object'?target.statuses:{};for(const k of Object.keys(statuses)){const until=Number(statuses[k]?.until);if(!Number.isFinite(until)||until<=now)delete statuses[k];}let mark=target.el.querySelector('.statusTag');if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}if(target.cursedUntil&&target.cursedUntil<=now){target.cursedUntil=0;target.cursedBy=null;target.cursedSpeedFactor=1;target.cursedAttackFactor=1;if(target.curseSealUntil&&Number(target.abilitySealedUntil||0)<=Number(target.curseSealUntil)+.001)target.abilitySealedUntil=0;target.curseSealUntil=0;}if(target.rangeDownUntil&&target.rangeDownUntil<=now){target.rangeDownUntil=0;if(target.rangeOriginal!=null){target.range=target.rangeOriginal;delete target.rangeOriginal;}}const active=Object.values(statuses);if(active.length){const s=statuses.attackBoost||active[active.length-1];if(!mark){mark=document.createElement('div');mark.className='statusTag';target.el.appendChild(mark)}mark.textContent=s.icon+' '+s.text;}else if(mark)mark.remove();}catch(err){console.warn('status update skipped',err)}}
+function updateStatusMark(target){
+ if(!target?.el)return;
+ try{
+  const now=performance.now()/1000,statuses=target.statuses&&typeof target.statuses==='object'?target.statuses:{};
+  for(const k of Object.keys(statuses)){const until=Number(statuses[k]?.until);if(!Number.isFinite(until)||until<=now)delete statuses[k];}
+  if(target.stopUntil&&target.stopUntil<=now){target.stopUntil=0;target.spd=target.spdOriginal??target.spd;}
+  if(target.attackDownUntil&&target.attackDownUntil<=now){target.attackDownUntil=0;target.attackDownFactor=1;}
+  if(target.cursedUntil&&target.cursedUntil<=now){target.cursedUntil=0;target.cursedBy=null;target.cursedSpeedFactor=1;target.cursedAttackFactor=1;if(target.curseSealUntil&&Number(target.abilitySealedUntil||0)<=Number(target.curseSealUntil)+.001)target.abilitySealedUntil=0;target.curseSealUntil=0;}
+  if(target.rangeDownUntil&&target.rangeDownUntil<=now){target.rangeDownUntil=0;if(target.rangeOriginal!=null){target.range=target.rangeOriginal;delete target.rangeOriginal;}}
+  const entries=[],seen=new Set();
+  const push=(key,icon,label,kind)=>{if(seen.has(key)||!label)return;seen.add(key);entries.push({icon:String(icon||'•'),label:String(label),kind});};
+  const buffTypes=new Set(['attackBoost','haifuDefense','haifuGrowth','miraiKInterval','miraiKTrait']);
+  const debuffTypes=new Set(['debuff','stop','slow','attackDown','curse','miraiKRangeDown','mythRune','ivyYabayaba','warp']);
+  for(const [key,value] of Object.entries(statuses)){const kind=buffTypes.has(key)?'buff':debuffTypes.has(key)?'debuff':'status';const until=Number(value?.until||0),remaining=until-now;const timer=remaining>0&&remaining<3600?'（'+Math.ceil(remaining)+'秒）':'';push(key,value?.icon,value?.text+timer,kind);}
+  if(Number(target.stopUntil||0)>now)push('stop','⏸️','停止（'+Math.ceil(target.stopUntil-now)+'秒）','debuff');
+  if(Number(target.slowUntil||0)>now)push('slow','🐌','鈍足（'+Math.ceil(target.slowUntil-now)+'秒）','debuff');
+  if(Number(target.attackDownUntil||0)>now)push('attackDown','⬇️','攻撃力低下（'+Math.ceil(target.attackDownUntil-now)+'秒）','debuff');
+  if(Number(target.cursedUntil||0)>now)push('curse','🪬','呪い（'+Math.ceil(target.cursedUntil-now)+'秒）','debuff');
+  if(Number(target.rangeDownUntil||0)>now)push('rangeDown','🎯','射程低下（'+Math.ceil(target.rangeDownUntil-now)+'秒）','debuff');
+  if(Number(target.abilitySealedUntil||0)>now)push('abilitySeal','🔒','能力封印（'+Math.ceil(target.abilitySealedUntil-now)+'秒）','debuff');
+  if(Number(target.festivalVoidUntil||0)>now)push('festivalVoid','🌑','虚無領域','debuff');
+  if(Number(target.mythDomainUntil||0)>now)push('mythDomain','🌌','神域：攻撃・射程低下','debuff');
+  if(Number(target.ivyYabayabaUntil||0)>now)push('ivyYabayaba','🌿','ヤバヤバ化','debuff');
+  if(Number(target.powerShieldMax||0)>0&&Number(target.powerShield||0)>0)push('powerShield','⚡','パワーシールド '+Math.ceil(target.powerShield).toLocaleString()+'/'+Math.ceil(target.powerShieldMax).toLocaleString(),'buff');
+  const isMythBarrier=!!(target.isEnemy&&Array.isArray(target.ability?.mythologyV2)&&target.ability.mythologyV2.includes('barrier'));
+  const barrierMax=Number(isMythBarrier?(target.mythBarrierMax??target.ability?.barrier??0):(target.barrierMax??target.barrier??0));
+  const barrierNow=Number(isMythBarrier?(target.mythBarrier??barrierMax):(target.barrier??barrierMax));
+  if(barrierMax>0&&barrierNow>0)push('barrier','🛡️',(isMythBarrier?'結界 ':'バリア ')+Math.ceil(barrierNow).toLocaleString()+'/'+Math.ceil(barrierMax).toLocaleString(),'buff');
+  if(target.miraiKFormationFactor>1.001)push('miraiKFormation','🌗','MiraiK：全ステータス +10%','buff');
+  if(target.angelGodAuraApplied)push('angelGodAura','👼','天使神：全ステータス +55%・妨害無効','buff');
+  if(target.haifuFormationBuffApplied){const allyPct=Math.round((Number(target.haifuFormationAllyFactor||1)-1)*100);if(allyPct>0)push('haifuFormation','🌪️','覇風：全味方ステータス +'+allyPct+'%','buff');const selfPct=Math.round((Number(target.haifuFormationSelfFactor||1)-1)*100);if(target.name==='覇風'&&selfPct>0)push('haifuSelf','🌪️','覇風自身 +'+selfPct+'%','buff');}
+  if(target.name==='狂乱の強化木下'&&!target.isEnemy){
+   const cosmicCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
+   const cosmicPct=Math.round(Math.min(1,cosmicCount*.15)*100);if(cosmicPct>0)push('rageCosmic','🌌','宇宙共鳴：攻撃力 +'+cosmicPct+'%','buff');
+   const stacks=Math.max(0,Number(target.killAttackStacks||0)),stackPct=Math.round(Math.min(.5,stacks*.05)*100);if(stackPct>0)push('rageKills','📈','撃破強化：攻撃力 +'+stackPct+'%','buff');
+   if(Number(target.maxhp||0)>0&&Number(target.hp||0)>=Number(target.maxhp)*.5)push('rageHpThreshold','❤️','HP50%以上：攻撃力 +15%','buff');
+  }
+  let box=target.el.querySelector('.unitEffects');
+  if(!entries.length){if(box)box.remove();return;}
+  if(!box){box=document.createElement('div');box.className='unitEffects';target.el.appendChild(box);}
+  const signature=entries.map(x=>x.kind+'|'+x.icon+'|'+x.label).join('¦');
+  if(box.dataset.signature===signature)return;
+  box.dataset.signature=signature;box.replaceChildren();
+  for(const entry of entries){const tag=document.createElement('span');tag.className='unitEffectTag '+entry.kind;tag.textContent=entry.icon+' '+entry.label;box.appendChild(tag);}
+ }catch(err){console.warn('status update skipped',err);}
+}
 function applyFrogAbility(target){
  if(!target)return;
  const now=performance.now()/1000;
@@ -2782,6 +2838,13 @@ function miraiKFormationContext(){
  const angelCount=ids.filter(i=>i!==miraiKIndex).filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;
  return {miraiKIndex,angelCount,damageFactor:1+Math.min(.55,angelCount*.10)};
 }
+function rageKinoshitaFormationContext(){
+ const ids=formation.filter(i=>Number.isInteger(i)&&hasCharacter(i));
+ const rageIndex=ids.find(i=>(activeCard(i)||cards[i])?.name==='狂乱の強化木下');
+ if(rageIndex==null)return null;
+ const cosmicCount=ids.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
+ return {rageIndex,cosmicCount,attackFactor:1+Math.min(1,cosmicCount*.15)};
+}
 function formationBuffSummaryHTML(i){
  const c=activeCard(i)||cards[i],lv=Math.max(1,Number(charLevel[i]||1)),tree=skillTreeFor(i);
  if(!c)return '';
@@ -2793,6 +2856,7 @@ function formationBuffSummaryHTML(i){
  else if(angelGodInFormation&&entityHasTrait(c,'天使')){aura=1.55;auraLabel='天使神の編成バフ +55%';}
  const haifuCtx=haifuFormationContext();
  const miraiKCtx=miraiKFormationContext();
+ const rageCtx=rageKinoshitaFormationContext();
  const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
  const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
  const miraiKAllyFactor=miraiKCtx&&entityHasTrait(c,'天使')?1.1:1;
@@ -2820,6 +2884,13 @@ function formationBuffSummaryHTML(i){
  if(auraLabel)tags.push(auraLabel);
  if(miraiKCtx&&entityHasTrait(c,'天使'))tags.push('MiraiK：天使属性の全ステータス +10%');
  if(miraiKCtx&&c.name==='MiraiK')tags.push('自身以外の天使属性 '+miraiKCtx.angelCount+'体：与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）');
+ if(rageCtx&&c.name==='狂乱の強化木下'){
+  tags.push('宇宙属性 '+rageCtx.cosmicCount+'体：攻撃力 +'+Math.round((rageCtx.attackFactor-1)*100)+'%（最大+100%）');
+  tags.push('敵撃破ごと：攻撃力 +5%（最大+50%）・最大HPの1%回復');
+  tags.push('HP50%以上：攻撃力 +15%');
+  tags.push('天使・赤・浮・黒に3倍／同属性からの被ダメージ25%軽減');
+  tags.push('呪い・停止・烈波・吹っ飛ばす無効／攻撃時25%で烈波Lv2');
+ }
  if(haifuCtx){
   tags.push('覇風：全味方ステータス +'+Math.round((haifuAllyFactor-1)*100)+'%');
   tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
@@ -2834,7 +2905,9 @@ function renderFormationBuffSummary(){
  const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・射程・移動速度 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（攻撃間隔・再生産時間は倍率に応じて短縮）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → HP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuCtx.selfFactor-1)*100)+'%（射程・移動速度は対象外）</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
  const miraiKCtx=miraiKFormationContext();
  const miraiKSummary=miraiKCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #a78bfa;background:#f5f3ff"><h3>🌗 MiraiKの編成バフ</h3><div><b>天使属性の味方：</b>HP・攻撃力・射程・移動速度など全ステータス +10%（攻撃間隔・再生産時間も1.1倍速で短縮）</div><div><b>MiraiK自身：</b>自身以外の天使属性 '+miraiKCtx.angelCount+'体 → 与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）</div></article>':'';
- el.innerHTML=haifuSummary+miraiKSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
+ const rageCtx=rageKinoshitaFormationContext();
+ const rageSummary=rageCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #7c3aed;background:#f5f3ff"><h3>🌌 狂乱の強化木下の編成・戦闘能力</h3><div><b>編成効果：</b>宇宙属性 '+rageCtx.cosmicCount+'体 → 攻撃力 +'+Math.round((rageCtx.attackFactor-1)*100)+'%（1体につき+15%、最大+100%）</div><div><b>戦闘中：</b>敵撃破ごとに攻撃力 +5%（最大+50%）・最大HPの1%回復。HP50%以上で攻撃力 +15%</div><div><b>特性：</b>天使・赤・浮・黒に3倍ダメージ。同属性からの被ダメージ25%軽減</div><div><b>耐性・攻撃：</b>呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv2</div></article>':'';
+ el.innerHTML=haifuSummary+miraiKSummary+rageSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
 }
 function renderFormation(){
  normalizeFormation();
@@ -3178,7 +3251,7 @@ function applyHaifuFormationEffects(unit){
  unit.recharge=Math.max(1,Number(unit.recharge||1)/combatFactor);
  const shield=Math.max(0,Math.round(haifuEffectiveAttack(ctx)*.8));
  unit.powerShieldMax=shield;unit.powerShield=shield;
- unit.haifuFormationBuffApplied=true;
+ unit.haifuFormationBuffApplied=true;unit.haifuFormationAllyFactor=ctx.allyFactor;unit.haifuFormationSelfFactor=selfFactor;
  if(unit.el){const hpFill=unit.el.querySelector('.hp i');if(hpFill)hpFill.style.width=Math.max(0,unit.hp/Math.max(1,unit.maxhp)*100)+'%';}
  updatePowerShieldDisplay(unit);
 }
@@ -3210,6 +3283,7 @@ function updatePowerShieldDisplay(target){
  if(bar&&fill)fill.style.width=(max>0?Math.max(0,Math.min(100,current/max*100)):0)+'%';
  if(label)label.textContent='⚡ パワーシールド '+Math.ceil(current).toLocaleString()+' / '+Math.ceil(max).toLocaleString();
  if(bar)bar.style.opacity=current>0?'1':'.35';
+  updateStatusMark(target);
 }
 function haifuOnSummoned(unit){
  if(!unit||unit.name!=='覇風')return;
@@ -3466,7 +3540,7 @@ try{aiProfiles=JSON.parse(storage.getItem('kinoshitaAIProfilesV2')||'null')}catc
 function aiFreshAccount(index,absoluteIndex){
  const st=aiStrategies[index%aiStrategies.length];
  const n=absoluteIndex+1;
- return {accountId:'AI-'+String(n).padStart(3,'0'),name:['新緑','若木','木霊','森影','葉音','木陰','大樹','芽吹き'][index%8]+' '+['見習い','新人','研究員','挑戦者','開拓者','修行者','戦士','参謀'][Math.floor(index/8)%8]+' #'+String(n).padStart(3,'0'),population:2,rp:0,skill:.25+(index%6)*.025,wins:0,losses:0,generation:1,strategy:st.key,aggression:st.aggression,save:st.save,formation:[0],stageClears:0,chapterClears:[0,0,0,0],ownedCharacters:[0],eventClears:{},charLevels:Array(cards.length).fill(1),trainingXP:0,matches:0,lastResult:'',matchHistory:[],coins:900,playerXP:0,workerLevel:1,activity:'開始準備',activityHistory:[]};
+ return {accountId:'AI-'+String(n).padStart(3,'0'),name:['新緑','若木','木霊','森影','葉音','木陰','大樹','芽吹き'][index%8]+' '+['見習い','新人','研究員','挑戦者','開拓者','修行者','戦士','参謀'][Math.floor(index/8)%8]+' #'+String(n).padStart(3,'0'),population:2,rp:0,skill:.25+(index%6)*.025,wins:0,losses:0,generation:1,strategy:st.key,aggression:st.aggression,save:st.save,formation:[0],stageClears:0,chapterClears:[0,0,0,0],ownedCharacters:[0],eventClears:{},charLevels:Array(Math.max(cards.length,104)).fill(1),trainingXP:0,matches:0,lastResult:'',matchHistory:[],coins:900,playerXP:0,workerLevel:1,activity:'開始準備',activityHistory:[]};
 }
 function aiOwnedFromProgress(ai){
  const owned=new Set([0]);
@@ -3487,15 +3561,15 @@ function normalizeAIAccount(ai,index,population){
  base.rp=Math.max(0,Number(base.rp||0));base.wins=Math.max(0,Number(base.wins||0));base.losses=Math.max(0,Number(base.losses||0));base.matches=Math.max(0,Number(base.matches||0));base.generation=Math.max(1,Number(base.generation||1));
  const aiHigh=loadAIHighRecord(base.accountId);base.maxRP=Math.max(Number(base.maxRP||0),Number(aiHigh.maxRP||0),base.rp);base.bestRank=Math.max(0,Number(base.bestRank||0),Number(aiHigh.bestRank||0));
  base.skill=Math.max(0,Math.min(.995,Number(base.skill??.25)));base.trainingXP=Math.max(0,Number(base.trainingXP||0));
- base.charLevels=Array.from({length:cards.length},(_,i)=>Math.max(1,Math.min(30,Number(base.charLevels?.[i]||1))));
+ base.charLevels=Array.from({length:Math.max(cards.length,104)},(_,i)=>Math.max(1,Math.min(30,Number(base.charLevels?.[i]||1))));
  base.eventClears=base.eventClears&&typeof base.eventClears==='object'?base.eventClears:{};
  const progressOwned=aiOwnedFromProgress(base);
  // ガチャで交換したキャラも保存データから維持する。以前は進行報酬だけで再構築していたため、再読み込み時に交換キャラが消えていた。
- const savedOwnedRaw=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];const savedOwned=savedOwnedRaw.map(i=>Number.isInteger(i)?i:-1).filter(i=>i>=0&&i<CURRENT_CHARACTER_COUNT);
- const rageIdx=cards.findIndex(c=>c.name==='狂乱の木下'); const waveIdx=cards.findIndex(c=>c.name==='波動木下'); const insaneIdx=cards.findIndex(c=>c.name==='ヤバすぎ木下'); const chapterRewardIdx=[1,2,3].map(ch=>chapterRewardIndex(ch)); const gatedOwned=savedOwned.filter(i=>{if(!Number.isInteger(i)||i<0||i>=cards.length)return false;if(i===rageIdx)return base.eventClears['狂乱の木下降臨']===true;if(i===waveIdx)return base.eventClears['波動木下降臨']===true;if(i===insaneIdx)return base.eventClears['ヤバすぎ木下降臨']===true;if(chapterRewardIdx.includes(i)){const ch=chapterRewardIdx.indexOf(i)+1;return base.chapterClears[ch-1]>=48;}return true;});base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])]; if(rageIdx>=0&&base.eventClears['狂乱の木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==rageIdx); if(waveIdx>=0&&base.eventClears['波動木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==waveIdx); if(insaneIdx>=0&&base.eventClears['ヤバすぎ木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==insaneIdx);
+ const savedOwnedRaw=Array.isArray(base.ownedCharacters)?base.ownedCharacters:[];const savedOwned=savedOwnedRaw.map(i=>Number.isInteger(i)?i:-1).filter(i=>i>=0&&i<Math.max(CURRENT_CHARACTER_COUNT,104));
+ const rageIdx=cards.findIndex(c=>c.name==='狂乱の木下'); const waveIdx=cards.findIndex(c=>c.name==='波動木下'); const insaneIdx=cards.findIndex(c=>c.name==='ヤバすぎ木下'); const chapterRewardIdx=[1,2,3].map(ch=>chapterRewardIndex(ch)); const gatedOwned=savedOwned.filter(i=>{if(!Number.isInteger(i)||i<0||i>=Math.max(cards.length,104))return false;if(i===rageIdx)return base.eventClears['狂乱の木下降臨']===true;if(i===waveIdx)return base.eventClears['波動木下降臨']===true;if(i===insaneIdx)return base.eventClears['ヤバすぎ木下降臨']===true;if(chapterRewardIdx.includes(i)){const ch=chapterRewardIdx.indexOf(i)+1;return base.chapterClears[ch-1]>=48;}return true;});base.ownedCharacters=[...new Set([...progressOwned,...gatedOwned])]; if(rageIdx>=0&&base.eventClears['狂乱の木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==rageIdx); if(waveIdx>=0&&base.eventClears['波動木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==waveIdx); if(insaneIdx>=0&&base.eventClears['ヤバすぎ木下降臨']!==true)base.ownedCharacters=base.ownedCharacters.filter(i=>i!==insaneIdx);
  const ownedSet=new Set(base.ownedCharacters);
  base.charLevels=base.charLevels.map((lv,i)=>ownedSet.has(i)?lv:1);
- const validFormation=Array.isArray(base.formation)?base.formation.filter(i=>ownedSet.has(i)&&i>=0&&i<cards.length):[];
+ const validFormation=Array.isArray(base.formation)?base.formation.filter(i=>ownedSet.has(i)&&i>=0&&i<Math.max(cards.length,104)):[];
  base.formation=[...new Set(validFormation)];if(!base.formation.length)base.formation=[0];
  base.matchHistory=Array.isArray(base.matchHistory)?base.matchHistory.slice(0,10):[];base.activityHistory=Array.isArray(base.activityHistory)?base.activityHistory.slice(0,10):[];
  base.lastResult=base.lastResult||'';base.activity=base.activity||'待機中';base.coins=Math.max(0,Number(base.coins??900));base.playerXP=Math.max(0,Number(base.playerXP||0));base.workerLevel=Math.max(1,Math.min(10,Number(base.workerLevel||1)));
@@ -4780,6 +4854,8 @@ cards.push(
 cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:1.2,interval:3,recharge:320,icon:"👼",motion:"super",attackType:"area",kb:2,rarity:"UR",series:"超木下祭",limitedExchange:true,limitedExchangeSeries:"超木下祭",growth:true,trait:"天使",growthDesc:"成長1段階：全ステータスを20%上昇。成長2段階：さらに全ステータスを45%上昇。成長3段階：さらに全ステータスを85%上昇。各段階の必要木下マネーは2,500／5,000／8,500。天使属性の編成数による強化、攻撃命中ごとの攻撃力上昇、再生産時間短縮は成長と別に累積する。",ability:{name:"天使神の超越支配",desc:"自身を含む編成中の天使属性1体につき自身の全ステータス+7%（最大+30%）。自身以外の味方天使属性は編成中にHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間が常時強化され、呪い・波動・烈波を無効化。自身は呪い・烈波・波動・停止・ヤバヤバ化・攻撃力低下・移動速度低下・ふっとばしを無効化。致命傷時に一度だけHP100%で復活し、復活時に最大HPと攻撃力を入れ替える。受ける1回のダメージは最大HPの15%まで。常時、実際に受けたHPダメージの15%を回復。HPが最大値の40%以上なら全属性からのダメージを35%軽減し、受けたダメージの15%を攻撃者へ反射。敵にダメージを与えるたび攻撃力+2%（最大+70%）・再生産残り時間を2%短縮。敵撃破時に最大HPの1.5%を回復し、2秒間移動速度3。古代・赤・黒・浮・神話属性に8倍ダメージ、これらの属性から受けるダメージをさらに20%軽減。",angelGod:true,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,slowImmune:true,attackDownImmune:true,knockbackImmune:true,yabayabaImmune:true,damageCapRatio:.15,damageReflectRatio:.15,damageHealRatio:.15,highHpThreshold:.4,highHpDamageReduction:.35,traitDamageReduction:.2,traitDamageBonus:8}});
  // KBRキャラクターは全既存キャラクターの登録後に追加し、既存キャラクターの配列IDをずらさない。
  for(const [name,cost,hp,atk,range,spd,interval,recharge,icon,rarity,skill,desc,ability] of KBR_CARDS){if(!cards.some(c=>c.name===name)){const card={name,cost,hp,atk,range,spd,interval,recharge,icon,motion:'super',attackType:'area',kb:4,rarity,series:'Kinoshita Ball Run',trait:'宇宙',kbrMounted:true,ability:{name:skill,desc,...ability}};cards.push(card);card.id=cards.length-1;}}
+// 狂乱の強化木下はKBR10体の直後、覇風の直前に登録する。旧ID90から新ID101へ移行。
+if(!cards.some(c=>c?.name==='狂乱の強化木下')){cards.push(RAGE_KINOSHITA_CARD);RAGE_KINOSHITA_CARD.id=cards.length-1;}
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
 if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:20,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方の全ステータス+75%（最大+450%）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
@@ -4858,6 +4934,28 @@ try{
   storage.setItem('kinoshitaCharacterIdSwapV8','done');
  }
 }catch(e){console.warn('Rich Kinoshita/MiraiK ID migration V8 failed',e);}
+
+/* v1.9.40: 狂乱の強化木下をKBR10体の後・覇風の直前へ移動。
+   旧ID: 狂乱=90、天使神=91、KBR=92〜101。新ID: 天使神=90、KBR=91〜100、狂乱=101。
+   覇風=102・MiraiK=103は維持する。 */
+try{
+ if(storage.getItem('kinoshitaCharacterIdOrderV1')!=='done'){
+  const remapId=id=>{const n=Number(id);if(!Number.isInteger(n))return id;if(n===90)return 101;if(n===91)return 90;if(n>=92&&n<=101)return n-1;return n;};
+  const remapArray=arr=>{if(!Array.isArray(arr))return arr;const old=arr.slice(),next=old.slice();next[90]=old[91];for(let oldId=92;oldId<=101;oldId++)next[oldId-1]=old[oldId];next[101]=old[90];return next;};
+  ownedFlags=remapArray(ownedFlags);charLevel=remapArray(charLevel);charMaxLevel=remapArray(charMaxLevel);charForm=remapArray(charForm);normalEvolved=remapArray(normalEvolved);
+  formation=Array.isArray(formation)?formation.map(remapId):[];for(let j=0;j<formationBeforeLateCards.length;j++)formationBeforeLateCards[j]=remapId(formationBeforeLateCards[j]);
+  formationPresets=Array.isArray(formationPresets)?formationPresets.map(p=>Array.isArray(p)?p.map(remapId):p):[];
+  if(Array.isArray(aiProfiles)){for(const profile of aiProfiles){if(!profile||typeof profile!=='object')continue;if(Array.isArray(profile.ownedCharacters))profile.ownedCharacters=profile.ownedCharacters.map(remapId);if(Array.isArray(profile.formation))profile.formation=profile.formation.map(remapId);if(Array.isArray(profile.charLevels))profile.charLevels=remapArray(profile.charLevels);}try{storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}catch(e){console.warn('local AI profile ID migration save skipped',e);}}
+  if(rankMetaStats&&typeof rankMetaStats==='object'){
+   const nextChars={};for(const [key,value] of Object.entries(rankMetaStats.chars||{}))nextChars[String(remapId(Number(key)))]=value;rankMetaStats.chars=nextChars;
+   const nextForms={};for(const [key,value] of Object.entries(rankMetaStats.formations||{})){if(key==='empty'){nextForms[key]=value;continue;}nextForms[key.split('-').map(Number).map(remapId).join('-')]=value;}rankMetaStats.formations=nextForms;
+  }
+  try{const banKey='kinoshitaRankBannedCharacters_'+currentRankSeason(),banned=JSON.parse(storage.getItem(banKey)||'null');if(Array.isArray(banned))storage.setItem(banKey,JSON.stringify(banned.map(remapId)));}catch(e){console.warn('rank ban ID migration skipped',e);}
+  for(const key of ['kinoshitaPreviousSeasonTop5','kinoshitaPreviousSeasonTop10']){try{const ids=JSON.parse(storage.getItem(key)||'null');if(Array.isArray(ids))storage.setItem(key,JSON.stringify(ids.map(remapId)));}catch(e){}}
+  try{if(typeof saveRankMeta==='function')saveRankMeta();}catch(e){console.warn('rank meta ID migration save skipped',e);}
+  storage.setItem('kinoshitaCharacterIdOrderV1','done');
+ }
+}catch(e){console.warn('Rage Kinoshita character ID migration V1 failed',e);}
 
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
