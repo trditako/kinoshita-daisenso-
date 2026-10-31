@@ -1957,14 +1957,14 @@ if(storage.getItem('kinoshitaCharacterIndexMigrationV6')!=='done'){
     if(i>20)return i-1;
     return i;
    };
-   const newFlags=Array(cards.length).fill(false);
+   const newFlags=Array(Math.max(cards.length,104)).fill(false);
    for(let oi=0;oi<legacyFlags.length;oi++){
     const ni=remap(oi);
     if(ni>=0&&ni<newFlags.length)newFlags[ni]=!!legacyFlags[oi];
    }
    ownedFlags=newFlags;
-   formation=legacyFormation.map(remap).filter(i=>i>=0&&i<cards.length);
-   const newLevels=Array(cards.length).fill(1);
+   formation=legacyFormation.map(remap).filter(i=>i>=0&&i<Math.max(cards.length,104));
+   const newLevels=Array(Math.max(cards.length,104)).fill(1);
    for(let oi=0;oi<legacyLevels.length;oi++){
     const ni=remap(oi);
     if(ni>=0&&ni<newLevels.length)newLevels[ni]=Math.max(1,Math.min(20,Number(legacyLevels[oi]||1)));
