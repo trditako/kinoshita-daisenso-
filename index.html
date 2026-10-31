@@ -705,21 +705,7 @@ cards.push(
  {name:"連撃木下",cost:260,hp:980,atk:125,secondAtk:125,range:62,spd:1.35,interval:.72,recharge:7.5,icon:"🥋",motion:"power",attackType:"single",kb:4,series:"ランク戦小型隊",rarity:"SR",gachaCost:4500,multiAttack:[125,125],ability:{name:"二連撃",desc:"短い間隔で2回攻撃する"}}
 );
 
-let /* v1.9.40: 狂乱の強化木下をKBR10体の後・覇風の直前へ移動。
-   旧ID: 狂乱=90、天使神=91、KBR=92〜101。新ID: 天使神=90、KBR=91〜100、狂乱=101。
-   覇風=102・MiraiK=103は維持する。 */
-try{
- if(storage.getItem('kinoshitaCharacterIdOrderV1')!=='done'){
-  const remapId=id=>{const n=Number(id);if(!Number.isInteger(n))return id;if(n===90)return 101;if(n===91)return 90;if(n>=92&&n<=101)return n-1;return n;};
-  const remapArray=arr=>{if(!Array.isArray(arr))return arr;const old=arr.slice(),next=old.slice();next[90]=old[91];for(let oldId=92;oldId<=101;oldId++)next[oldId-1]=old[oldId];next[101]=old[90];return next;};
-  ownedFlags=remapArray(ownedFlags);charLevel=remapArray(charLevel);charMaxLevel=remapArray(charMaxLevel);charForm=remapArray(charForm);normalEvolved=remapArray(normalEvolved);
-  formation=Array.isArray(formation)?formation.map(remapId):[];formationBeforeLateCards=Array.isArray(formationBeforeLateCards)?formationBeforeLateCards.map(remapId):[];
-  formationPresets=Array.isArray(formationPresets)?formationPresets.map(p=>Array.isArray(p)?p.map(remapId):p):[];
-  storage.setItem('kinoshitaCharacterIdOrderV1','done');
- }
-}catch(e){console.warn('Rage Kinoshita character ID migration V1 failed',e);}
-
-CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
+let CURRENT_CHARACTER_COUNT=cards.length;const THOUSAND_STEP_INDEX=cards.findIndex(c=>c.name==='千年に一歩歩く木下');
 
 // 機械防衛隊！木下s
 // 既存キャラクターを1体も上書き・移動せず、全既存カード登録後にこの6体だけを追加する。
@@ -4938,6 +4924,20 @@ try{
   storage.setItem('kinoshitaCharacterIdSwapV8','done');
  }
 }catch(e){console.warn('Rich Kinoshita/MiraiK ID migration V8 failed',e);}
+
+/* v1.9.40: 狂乱の強化木下をKBR10体の後・覇風の直前へ移動。
+   旧ID: 狂乱=90、天使神=91、KBR=92〜101。新ID: 天使神=90、KBR=91〜100、狂乱=101。
+   覇風=102・MiraiK=103は維持する。 */
+try{
+ if(storage.getItem('kinoshitaCharacterIdOrderV1')!=='done'){
+  const remapId=id=>{const n=Number(id);if(!Number.isInteger(n))return id;if(n===90)return 101;if(n===91)return 90;if(n>=92&&n<=101)return n-1;return n;};
+  const remapArray=arr=>{if(!Array.isArray(arr))return arr;const old=arr.slice(),next=old.slice();next[90]=old[91];for(let oldId=92;oldId<=101;oldId++)next[oldId-1]=old[oldId];next[101]=old[90];return next;};
+  ownedFlags=remapArray(ownedFlags);charLevel=remapArray(charLevel);charMaxLevel=remapArray(charMaxLevel);charForm=remapArray(charForm);normalEvolved=remapArray(normalEvolved);
+  formation=Array.isArray(formation)?formation.map(remapId):[];for(let j=0;j<formationBeforeLateCards.length;j++)formationBeforeLateCards[j]=remapId(formationBeforeLateCards[j]);
+  formationPresets=Array.isArray(formationPresets)?formationPresets.map(p=>Array.isArray(p)?p.map(remapId):p):[];
+  storage.setItem('kinoshitaCharacterIdOrderV1','done');
+ }
+}catch(e){console.warn('Rage Kinoshita character ID migration V1 failed',e);}
 
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
