@@ -2412,7 +2412,6 @@ function updateStatusMark(target){
    if(Number(target.muscleRightAtkStacks||0)>0)push('muscleRightGrowth','💪','右手強化 +'+Math.round(Math.min(2,Number(target.muscleRightAtkStacks)*.5)*100)+'%','buff');
    if(Number(target.muscleKillStacks||0)>0)push('muscleKillGrowth','📈','撃破強化 +'+Math.round(Math.min(Number(target.ability?.muscleKillGrowth?.maxBonus||0),Number(target.muscleKillStacks)*Number(target.ability?.muscleKillGrowth?.perKill||0))*100)+'%','buff');
    if(Number(target.muscleDefenseStacks||0)>0)push('muscleDefense','🛡️','防御成長 '+Math.round(Math.min(Number(target.ability?.muscleDefenseGrowth?.maxBonus||0),Number(target.muscleDefenseStacks)*Number(target.ability?.muscleDefenseGrowth?.perHit||0))*100)+'%','buff');
-   if(target.isEnemy)push('muscleAura','🌑','全敵：神話・天使・赤への耐性/妨害無効','buff');
   }
   if(target.muscleGrabbedBy)push('muscleGrabbed','✊',target.muscleGrabbedHand==='left'?'左手で拘束中':'右手で拘束中','debuff');
   if(target.isEnemy&&muscleEnemyAuraActive())push('muscleAuraTeam','🌑','狂乱のマッチョ木下：全体耐性・妨害無効','buff');
@@ -2678,7 +2677,7 @@ function muscleAfterDamage(target,actualDamage,source,abilitySource,now){
  if(target.muscleRightTarget){target.muscleRightDamageTaken=Number(target.muscleRightDamageTaken||0)+actualDamage;const threshold=Number(target.maxhp||1)*Number(target.ability?.muscleHands?.rightDamageThreshold||.2);if(target.muscleRightDamageTaken>=threshold)muscleReleaseRightHand(target,now,true);}
  const hands=target.ability?.muscleHands||{};
  if(target.isEnemy&&target.hp>0&&source?.attackType==='area'&&Number(hands.areaAttackHeal||.5)>0){target.hp=Math.min(target.maxhp,target.hp+Math.round(actualDamage*Number(hands.areaAttackHeal||.5)));muscleUpdateHp(target);}
- if(target.isEnemy&&source&&!source.isEnemy&&abilitySource&&Number(hands.reflectSkillDamage||0)>0&&source.hp>0){
+ if(target.isEnemy&&source&&!source.isEnemy&&abilitySource&&!abilitySource.reflectBounce&&Number(hands.reflectSkillDamage||0)>0&&source.hp>0){
   const reflected=Math.max(1,Math.round(actualDamage*Number(hands.reflectSkillDamage)));
   source.hp=Math.max(0,source.hp-reflected);muscleUpdateHp(source);popup('🪞 スキル反射 -'+reflected,source.x,90,'criticalPop');if(source.hp<=0)removeUnit(source);
  }
@@ -2722,7 +2721,7 @@ function hit(target,damage,source,abilitySource){
  if(target.isEnemy&&target.ability?.mythologyV2){const pre=mythologyV2PreHit(target,dealt,source);if(pre?.handled)return 0;dealt=Number(pre?.damage??dealt);}
  const angelGodTarget=!target.isEnemy&&target.name==='天使神:木下';
  if(target.name==='MiraiK'&&source?.isEnemy)dealt=miraiKLimitDamage(target,source,dealt);
- dealt=haifuPrepareDamage(target,source,dealt);dealt=muscleMitigateIncoming(target,dealt);dealt=muscleInterceptLeftHandDamage(target,dealt,performance.now()/1000);if(absorbPowerShield(target,dealt))dealt=0;
+ dealt=haifuPrepareDamage(target,source,dealt);dealt=muscleMitigateIncoming(target,dealt);dealt=muscleInterceptLeftHandDamage(target,dealt,performance.now()/1000);dealt=absorbPowerShield(target,dealt);
  if(angelGodTarget&&source?.isEnemy){if(target.hp>=target.maxhp*.4)dealt*=.65;if(entityTraitMatch(source,['古代','赤','黒','浮','神話']))dealt*=.8;dealt=Math.min(dealt,Math.max(1,target.maxhp*.15));}
  if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed;if(target.el&&target.barrierMax>0){const bi=target.el.querySelector('.barrierBar i'),bl=target.el.querySelector('.barrierLabel');if(bi)bi.style.width=Math.max(0,target.barrier/target.barrierMax*100)+'%';if(bl)bl.textContent=target.barrier>0?'🛡 バリア '+Math.ceil(target.barrier).toLocaleString()+' / '+Math.ceil(target.barrierMax).toLocaleString():'🛡 バリア破壊！';if(target.barrier<=0&&bl)setTimeout(()=>{if(target.el?.isConnected)bl.remove()},900);}if(absorbed>0)popup('🛡️-'+absorbed,target.x,Math.max(25,field.clientHeight-145));}
  const actualHealthDamage=Math.min(before,Math.max(0,dealt));target.hp=Math.max(0,target.hp-dealt);muscleAfterDamage(target,actualHealthDamage,source,abilitySource,performance.now()/1000);if(target.hp<=0&&source?.name==='狂乱のマッチョ木下')muscleOnKill(source);
@@ -3400,12 +3399,13 @@ function haifuPrepareDamage(target,attacker,damage){
  return Math.min(dealt,Math.max(1,Number(target.maxhp||1)*.2));
 }
 function absorbPowerShield(target,damage){
- if(!target||Number(target.powerShield||0)<=0||damage<=0)return false;
- const before=Number(target.powerShield||0);
- target.powerShield=Math.max(0,before-Math.max(0,Number(damage)||0));
+ const incoming=Math.max(0,Number(damage)||0);
+ if(!target||Number(target.powerShield||0)<=0||incoming<=0)return incoming;
+ const before=Number(target.powerShield||0),absorbed=Math.min(before,incoming);
+ target.powerShield=Math.max(0,before-absorbed);
  updatePowerShieldDisplay(target);
- popup('⚡ パワーシールドで攻撃を防いだ',target.x,Math.max(25,field.clientHeight-145));
- return true;
+ popup('⚡ パワーシールドで'+Math.round(absorbed).toLocaleString()+'ダメージを吸収',target.x,Math.max(25,field.clientHeight-145));
+ return Math.max(0,incoming-absorbed);
 }
 function updatePowerShieldDisplay(target){
  if(!target?.el)return;
@@ -4737,7 +4737,7 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  raw=muscleInterceptLeftHandDamage(t,raw,attackNow);
  if(raw>0&&Number(e.festivalVoidUntil||0)>attackNow)raw=Math.max(1,Math.round(raw*Number(e.festivalVoidAttackFactor||.55)));
  const before=t.hp,targetMaxHpBefore=Math.max(1,Number(t.maxhp||1)),angelGodTarget=!t.isEnemy&&t.name==='天使神:木下';let dealt=raw;
- dealt=haifuPrepareDamage(t,e,dealt);dealt=muscleMitigateIncoming(t,dealt);if(absorbPowerShield(t,dealt))dealt=0;
+ dealt=haifuPrepareDamage(t,e,dealt);dealt=muscleMitigateIncoming(t,dealt);dealt=absorbPowerShield(t,dealt);
  if(angelGodTarget){if(t.hp>=t.maxhp*.4)dealt*=.65;if(entityTraitMatch(e,['古代','赤','黒','浮','神話']))dealt*=.8;dealt=Math.min(dealt,Math.max(1,t.maxhp*.15));}
  if(Number(t.barrier||0)>0){const absorbed=Math.min(t.barrier,dealt);t.barrier-=absorbed;dealt-=absorbed;const bi=t.el?.querySelector('.barrierBar i'),bl=t.el?.querySelector('.barrierLabel');if(bi&&t.barrierMax>0)bi.style.width=Math.max(0,t.barrier/t.barrierMax*100)+'%';if(bl&&t.barrierMax>0)bl.textContent=t.barrier>0?'🛡 バリア '+Math.ceil(t.barrier).toLocaleString()+' / '+Math.ceil(t.barrierMax).toLocaleString():'🛡 バリア破壊！';if(absorbed>0)popup('🛡️-'+absorbed,t.x,Math.max(25,field.clientHeight-145));}
  const actualHealthDamage=Math.min(before,Math.max(0,dealt));t.hp=Math.max(0,t.hp-dealt);muscleAfterDamage(t,actualHealthDamage,e,null,attackNow);if(angelGodTarget&&t.hp<=0&&!t.angelGodRevived){t.angelGodRevived=true;const previousMaxHp=Math.max(1,Number(t.maxhp||1)),previousAtk=Math.max(1,Number(t.atk||1));t.maxhp=previousAtk;t.hp=t.maxhp;t.atk=previousMaxHp;t.angelGodBaseAtk=t.atk;t.angelGodAttackStacks=0;t.angelGodReviveStatSwap={previousMaxHp,previousAtk,newMaxHp:t.maxhp,newAtk:t.atk};setStatusMark(t,'👼','復活済み：HP '+Number(t.hp).toLocaleString()+' / '+Number(t.maxhp).toLocaleString()+'・攻撃力 '+Number(t.atk).toLocaleString(),999999,'angelGodRevive');popup('👼 天使神の復活！ HP・攻撃力を入れ替え、HP100%で復活',t.x,90,'criticalPop');}if(angelGodTarget&&actualHealthDamage>0&&t.hp>0){t.hp=Math.min(t.maxhp,t.hp+Math.round(actualHealthDamage*.15));}if(!t.isEnemy&&t.hp<=0&&t.ability?.causalityReversal&&!t.causalityReversed){t.causalityReversed=true;t.hp=Math.max(1,Math.min(t.maxhp,Math.round(t.maxhp*Number(t.ability.causalityReversal.heal??t.ability.causalityReversal.revivePercent??.4))));t.causalityInvulnUntil=attackNow+Number(t.ability.causalityReversal.invulnerable||3);popup('⏳ 因果反転！',t.x,90,'criticalPop');}if(t.el){t.el.classList.remove('hit');t.el.classList.add('hit');setTimeout(()=>t.el?.classList.remove('hit'),170);const hp=t.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,t.hp/t.maxhp*100)+'%';}
