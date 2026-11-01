@@ -2435,7 +2435,7 @@ function applyFrogAbility(target){
  const now=performance.now()/1000;
  // 3つの妨害判定はそれぞれ独立して25%。同時発動もあり得る。
  if(Math.random()<.25){
-   if(!target.stopImmune){target.stopUntil=now+3;target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',3,'stop');}
+   if(!hasAbilityFlag(target,'stopImmune')){target.stopUntil=now+3;target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',3,'stop');}
  }
  if(Math.random()<.25){
    target.slowUntil=now+3;
