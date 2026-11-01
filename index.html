@@ -2647,7 +2647,7 @@ function muscleReleaseLeftHand(holder,now,grantShield=true){
  if(target&&target.hp>0){
   const remaining=Math.max(0,Number(target.hp||0));
   muscleFreeGrabbedTarget(holder,target,now,true);
-  if(grantShield&&remaining>0){holder.powerShield=Math.max(0,Number(holder.powerShield||0))+remaining;holder.powerShieldMax=Math.max(0,Number(holder.powerShieldMax||0))+remaining;updatePowerShieldDisplay(holder);}
+  if(grantShield&&remaining>0){holder.powerShield=Math.max(0,Number(holder.powerShield||0))+remaining;holder.powerShieldMax=holder.powerShield;updatePowerShieldDisplay(holder);}
  }
  holder.muscleLeftReadyAt=now+Math.max(1,Number(a.leftCooldown||20));
  updateStatusMark(holder);if(grantShield)popup('✋ 左手解放・パワーシールド獲得',holder.x,90,'criticalPop');
@@ -2677,7 +2677,7 @@ function muscleAfterDamage(target,actualDamage,source,abilitySource,now){
  target.muscleDefenseStacks=Math.min(Math.ceil(Number(growth.maxBonus||0)/Math.max(.001,Number(growth.perHit||.05))),Number(target.muscleDefenseStacks||0)+1);
  if(target.muscleRightTarget){target.muscleRightDamageTaken=Number(target.muscleRightDamageTaken||0)+actualDamage;const threshold=Number(target.maxhp||1)*Number(target.ability?.muscleHands?.rightDamageThreshold||.2);if(target.muscleRightDamageTaken>=threshold)muscleReleaseRightHand(target,now,true);}
  const hands=target.ability?.muscleHands||{};
- if(target.isEnemy&&source?.attackType==='area'&&Number(hands.areaAttackHeal||.5)>0){target.hp=Math.min(target.maxhp,target.hp+Math.round(actualDamage*Number(hands.areaAttackHeal||.5)));muscleUpdateHp(target);}
+ if(target.isEnemy&&target.hp>0&&source?.attackType==='area'&&Number(hands.areaAttackHeal||.5)>0){target.hp=Math.min(target.maxhp,target.hp+Math.round(actualDamage*Number(hands.areaAttackHeal||.5)));muscleUpdateHp(target);}
  if(target.isEnemy&&source&&!source.isEnemy&&abilitySource&&Number(hands.reflectSkillDamage||0)>0&&source.hp>0){
   const reflected=Math.max(1,Math.round(actualDamage*Number(hands.reflectSkillDamage)));
   source.hp=Math.max(0,source.hp-reflected);muscleUpdateHp(source);popup('🪞 スキル反射 -'+reflected,source.x,90,'criticalPop');if(source.hp<=0)removeUnit(source);
