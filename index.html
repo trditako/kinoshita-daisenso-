@@ -2646,7 +2646,7 @@ function muscleReleaseLeftHand(holder,now,grantShield=true){
  holder.muscleLeftTarget=null;holder.muscleLeftAbsorbed=0;
  if(target&&target.hp>0){
   const remaining=Math.max(0,Number(target.hp||0));
-  muscleFreeGrabbedTarget(holder,target,now,true);
+  muscleFreeGrabbedTarget(holder,target,now,grantShield);
   if(grantShield&&remaining>0){holder.powerShield=Math.max(0,Number(holder.powerShield||0))+remaining;holder.powerShieldMax=holder.powerShield;updatePowerShieldDisplay(holder);}
  }
  holder.muscleLeftReadyAt=now+Math.max(1,Number(a.leftCooldown||20));
@@ -4735,7 +4735,7 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
  const effectiveEnemy=e.muscleRightBonusAtk>0?{...e,atk:Number(e.atk||1)+Number(e.muscleRightBonusAtk||0)}:e;
  let raw=Math.max(1,Number(damageTakenBy(t,effectiveEnemy))||1)*muscleAuraDamageFactor(e,t);
  raw=muscleInterceptLeftHandDamage(t,raw,attackNow);
- if(Number(e.festivalVoidUntil||0)>attackNow)raw=Math.max(1,Math.round(raw*Number(e.festivalVoidAttackFactor||.55)));
+ if(raw>0&&Number(e.festivalVoidUntil||0)>attackNow)raw=Math.max(1,Math.round(raw*Number(e.festivalVoidAttackFactor||.55)));
  const before=t.hp,targetMaxHpBefore=Math.max(1,Number(t.maxhp||1)),angelGodTarget=!t.isEnemy&&t.name==='天使神:木下';let dealt=raw;
  dealt=haifuPrepareDamage(t,e,dealt);dealt=muscleMitigateIncoming(t,dealt);if(absorbPowerShield(t,dealt))dealt=0;
  if(angelGodTarget){if(t.hp>=t.maxhp*.4)dealt*=.65;if(entityTraitMatch(e,['古代','赤','黒','浮','神話']))dealt*=.8;dealt=Math.min(dealt,Math.max(1,t.maxhp*.15));}
