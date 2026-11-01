@@ -1356,7 +1356,7 @@ eventStages.push(
 
 eventStages.push({name:'狂乱の強化木下降臨',width:2350,baseHp:600000,xp:50000,eventReward:'狂乱の強化木下降臨',rewardCharacter:'狂乱の強化木下',enemies:['狂乱の強化木下','めっちゃ木下','阿修羅王','月読命','酒呑童子'],schedule:[{t:0,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:2,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:3,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:4,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:5,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:6,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:7,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:7,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:8,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},{t:8,enemy:'阿修羅王',mult:4,fixedMultiplier:true},{t:15,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:22,enemy:'月読命',mult:3.5,fixedMultiplier:true},{t:29,enemy:'狂乱の強化木下',mult:1,fixedMultiplier:true,role:'boss'},{t:360,enemy:'酒呑童子',mult:58,fixedMultiplier:true}],repeatSpawns:[{start:39,interval:17,enemy:'月読命',mult:3.5,fixedMultiplier:true}]});
 eventStages.push({name:'狂乱のマッチョ木下降臨',width:2500,baseHp:600000,xp:50000,eventReward:'狂乱のマッチョ木下降臨',rewardCharacter:'狂乱のマッチョ木下',enemies:['狂乱のマッチョ木下','天照大神','古代神木下','めっちゃ木下','酒呑童子'],schedule:[{t:0,enemy:'狂乱のマッチョ木下',mult:1,fixedMultiplier:true,role:'boss'},{t:3,enemy:'天照大神',mult:3,fixedMultiplier:true}],repeatSpawns:[{start:7,interval:23,enemy:'古代神木下',mult:10,fixedMultiplier:true},{start:15,interval:17,enemy:'天照大神',mult:5.55,fixedMultiplier:true},{start:15,interval:13,enemy:'めっちゃ木下',mult:1000,fixedMultiplier:true},{start:60,interval:55,enemy:'酒呑童子',mult:55.55,fixedMultiplier:true}]});
-eventStages.push({name:'アイヴィ降臨',width:2350,baseHp:350000,xp:12000,eventReward:'アイヴィ降臨',rewardCharacter:'アイヴィ',enemies:['酒呑童子','アイヴィ','古代神木下','風神獣','終末ヤバヤバ木下'],schedule:[{t:0,enemy:'酒呅童子',mult:5,fixedMultiplier:true},{t:10,enemy:'アイヴィ',mult:1,fixedMultiplier:true,role:'boss'},{t:13,enemy:'古代神木下',mult:1.5,fixedMultiplier:true},{t:15,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:16,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:17,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:18,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:19,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:20,enemy:'風神獣',mult:3.33,fixedMultiplier:true}],repeatSpawns:[{start:29,interval:40,enemy:'酒呑童子',mult:2,fixedMultiplier:true},{start:33,interval:32,enemy:'終末ヤバヤバ木下',mult:15,fixedMultiplier:true}]});
+eventStages.push({name:'アイヴィ降臨',width:2350,baseHp:350000,xp:12000,eventReward:'アイヴィ降臨',rewardCharacter:'アイヴィ',enemies:['酒呑童子','アイヴィ','古代神木下','風神獣','終末ヤバヤバ木下'],schedule:[{t:0,enemy:'酒呑童子',mult:5,fixedMultiplier:true},{t:10,enemy:'アイヴィ',mult:1,fixedMultiplier:true,role:'boss'},{t:13,enemy:'古代神木下',mult:1.5,fixedMultiplier:true},{t:15,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:16,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:17,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:18,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:19,enemy:'風神獣',mult:3.33,fixedMultiplier:true},{t:20,enemy:'風神獣',mult:3.33,fixedMultiplier:true}],repeatSpawns:[{start:29,interval:40,enemy:'酒呑童子',mult:2,fixedMultiplier:true},{start:33,interval:32,enemy:'終末ヤバヤバ木下',mult:15,fixedMultiplier:true}]});
 // ===== 日本編 第2章・第3章 =====
 function cloneChapterStage(base, stageNo, chapter){
   const out=JSON.parse(JSON.stringify(base));
@@ -2415,6 +2415,7 @@ function updateStatusMark(target){
    if(target.isEnemy)push('muscleAura','🌑','全敵：神話・天使・赤への耐性/妨害無効','buff');
   }
   if(target.muscleGrabbedBy)push('muscleGrabbed','✊',target.muscleGrabbedHand==='left'?'左手で拘束中':'右手で拘束中','debuff');
+  if(target.isEnemy&&muscleEnemyAuraActive())push('muscleAuraTeam','🌑','狂乱のマッチョ木下：全体耐性・妨害無効','buff');
   if(target.name==='狂乱の強化木下'&&!target.isEnemy){
    const cosmicCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
    const cosmicPct=Math.round(Math.min(1,cosmicCount*.15)*100);if(cosmicPct>0)push('rageCosmic','🌌','宇宙共鳴：攻撃力 +'+cosmicPct+'%','buff');
@@ -2666,7 +2667,7 @@ function muscleInterceptLeftHandDamage(holder,incoming,now){
 }
 function muscleMitigateIncoming(target,dealt){
  if(!target||target.name!=='狂乱のマッチョ木下'||dealt<=0)return dealt;
- const a=target.ability||{},growth=a.muscleDefenseGrowth||{},cap=Number(a.damageCap??(target.isEnemy?.07:.25));
+ const a=target.ability||{},growth=a.muscleDefenseGrowth||{},cap=Number(a.damageCap??(target.isEnemy ? 0.07 : 0.25));
  const defense=Math.min(Number(growth.maxBonus||0),Number(target.muscleDefenseStacks||0)*Number(growth.perHit||0));
  return Math.max(0,Math.min(Number(dealt)*(1-defense),Math.max(1,Number(target.maxhp||1)*cap)));
 }
