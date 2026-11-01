@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.44';
+const GAME_VERSION='v1.9.45';
 const UPDATE_LOG=[
+  {date:'2026-11-01',version:'v1.9.45',title:'🛡️ 味方の拘束対象からボスを除外',items:['味方の狂乱のマッチョ木下はボス級の敵を右手・左手で拘束しないよう修正','敵側の拘束能力と通常敵への拘束は従来どおり維持']},
   {date:'2026-11-01',version:'v1.9.44',title:'💪 拘束対象の完全除外・無効化判定を修正',items:['拘束中のキャラクターを敵味方すべての通常攻撃・範囲攻撃・遠方攻撃・烈波の対象から除外','拘束対象への直接ダメージ処理も遮断し、拘束中は誰からも攻撃されないよう修正','狂乱のマッチョ木下の吹っ飛ばし無効を確率・確定ノックバックの両経路に適用','波動・烈波・停止・呪い・吹っ飛ばし無効と波動反射を能力データにも統一']},
   {date:'2026-11-01',version:'v1.9.43',title:'💪 拘束対象の位置と攻撃判定を修正',items:['拘束した相手を拘束者自身の通常攻撃・範囲攻撃・能力攻撃の対象から除外','右手で拘束した相手を狂乱のマッチョ木下の右側、左手なら左側へ配置','拘束中の表示タグを削除し、解除後は通常の位置・ターゲット選択へ復帰']},
   {date:'2026-11-02',version:'v1.9.42',title:'🎯 拘束・戦闘効果表示を改善',items:['右手・左手の拘束対象と拘束中表示を画面上部で大きく識別','拘束中は攻撃・移動・能力発動を停止し、行動クールダウンも進行しないよう修正','編成時に自動発動する全体バフを戦闘中の個別バフ一覧から除外','一時的な能力強化の表示位置を上げ、HPバーと重ならないよう改善']},
@@ -2688,6 +2689,10 @@ function muscleOnKill(holder){
  muscleRefreshAttack(holder);muscleUpdateHp(holder);
 }
 function muscleGrabbedX(holder,target){const side=target?.muscleGrabbedHand==='right'?1:-1;return Math.max(90,Math.min(worldWidth-90,Number(holder?.x||0)+side*72));}
+function muscleCanGrabTarget(holder,target){
+ // 味方側の拘束はボス級の敵を対象にしない。敵側の拘束仕様は維持する。
+ return !!(holder?.isEnemy || !(target?.boss===true || target?.role==='boss' || target?.ability?.boss===true || target?.ability?.muscleKinoshitaBoss));
+}
 function processMuscleKinoshitaHands(holder,now){
  if(!holder||holder.hp<=0||holder.name!=='狂乱のマッチョ木下'||isAbilitySealed(holder))return;
  const a=holder.ability?.muscleHands;if(!a)return;
@@ -2696,14 +2701,14 @@ function processMuscleKinoshitaHands(holder,now){
  if(right&&(!foes.includes(right)||right.hp<=0)){muscleReleaseRightHand(holder,now,false);}
  else if(right){right.x=muscleGrabbedX(holder,right);right.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(right.atk||0));if(right.el)right.el.style.left=right.x+'px';updateStatusMark(right);}
  else if(now>=Number(holder.muscleRightReadyAt||0)){
-  const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy).sort((x,y)=>Number(y.atk||0)-Number(x.atk||0))[0];
+  const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy&&muscleCanGrabTarget(holder,v)).sort((x,y)=>Number(y.atk||0)-Number(x.atk||0))[0];
   if(target){holder.muscleRightTarget=target;holder.muscleRightDamageTaken=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='right';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=muscleGrabbedX(holder,target);target.target=null;target.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(target.atk||0));holder.muscleRightAtkStacks=Math.min(Math.ceil(Number(a.rightAtkMaxBonus||2)/Math.max(.001,Number(a.rightAtkPerGrab||.5))),Number(holder.muscleRightAtkStacks||0)+1);muscleRefreshAttack(holder);muscleUpdateHp(target);updateStatusMark(holder);popup('✊ 右手：'+target.name+'を拘束！',holder.x,90,'criticalPop');}
  }
  const left=holder.muscleLeftTarget;
  if(left&&(!foes.includes(left)||left.hp<=0)){muscleReleaseLeftHand(holder,now,true);}
  else if(left){left.x=muscleGrabbedX(holder,left);left.state='grabbed';if(left.el)left.el.style.left=left.x+'px';updateStatusMark(left);}
  else if(now>=Number(holder.muscleLeftReadyAt||0)){
-  const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy).sort((x,y)=>Number(y.maxhp||0)-Number(x.maxhp||0))[0];
+  const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy&&muscleCanGrabTarget(holder,v)).sort((x,y)=>Number(y.maxhp||0)-Number(x.maxhp||0))[0];
   if(target){holder.muscleLeftTarget=target;holder.muscleLeftAbsorbed=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='left';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=muscleGrabbedX(holder,target);target.target=null;target.state='grabbed';muscleUpdateHp(target);updateStatusMark(holder);popup('✋ 左手：'+target.name+'を拘束！',holder.x,125,'criticalPop');}
  }
 }
