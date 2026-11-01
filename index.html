@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.42';
+const GAME_VERSION='v1.9.43';
 const UPDATE_LOG=[
+  {date:'2026-11-01',version:'v1.9.43',title:'💪 拘束対象の位置と攻撃判定を修正',items:['拘束した相手を拘束者自身の通常攻撃・範囲攻撃・能力攻撃の対象から除外','右手で拘束した相手を狂乱のマッチョ木下の右側、左手なら左側へ配置','拘束中の表示タグを削除し、解除後は通常の位置・ターゲット選択へ復帰']},
   {date:'2026-11-02',version:'v1.9.42',title:'🎯 拘束・戦闘効果表示を改善',items:['右手・左手の拘束対象と拘束中表示を画面上部で大きく識別','拘束中は攻撃・移動・能力発動を停止し、行動クールダウンも進行しないよう修正','編成時に自動発動する全体バフを戦闘中の個別バフ一覧から除外','一時的な能力強化の表示位置を上げ、HPバーと重ならないよう改善']},
   {date:'2026-11-01',version:'v1.9.41',title:'💪 狂乱のマッチョ木下降臨を追加',items:['狂乱シリーズ第3弾のイベントステージとクリア報酬キャラクターを追加','右手・左手の拘束、割合ダメージ、肩代わり、パワーシールドを実装','敵版の全体オーラ、被ダメージ上限、防御成長、撃破強化を追加']},
   {date:'2026-11-01',version:'v1.9.40',title:'🌌 狂乱の強化木下の編成バフ・戦闘効果表示とID順を修正',items:['狂乱の強化木下をKBRキャラクターの後、覇風の直前へ移動し、旧IDから新IDへのセーブ移行を追加','宇宙属性編成数による攻撃力上昇、撃破強化、HP条件バフを編成画面・戦闘中に表示','状態異常・バフ・デバフを複数同時に表示し、パワーシールドとバリアの残量も識別しやすく改善']},
@@ -2411,19 +2412,12 @@ function updateStatusMark(target){
    if(Number(target.muscleKillStacks||0)>0)push('muscleKillGrowth','📈','撃破強化 +'+Math.round(Math.min(Number(target.ability?.muscleKillGrowth?.maxBonus||0),Number(target.muscleKillStacks)*Number(target.ability?.muscleKillGrowth?.perKill||0))*100)+'%','buff');
    if(Number(target.muscleDefenseStacks||0)>0)push('muscleDefense','🛡️','防御成長 '+Math.round(Math.min(Number(target.ability?.muscleDefenseGrowth?.maxBonus||0),Number(target.muscleDefenseStacks)*Number(target.ability?.muscleDefenseGrowth?.perHit||0))*100)+'%','buff');
   }
-  if(target.muscleGrabbedBy)push('muscleGrabbed','✊',target.muscleGrabbedHand==='left'?'左手で拘束中':'右手で拘束中','debuff');
+  
   if(target.name==='狂乱の強化木下'&&!target.isEnemy){
    const cosmicCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
    const stacks=Math.max(0,Number(target.killAttackStacks||0)),stackPct=Math.round(Math.min(.5,stacks*.05)*100);if(stackPct>0)push('rageKills','📈','撃破強化：攻撃力 +'+stackPct+'%','buff');
    if(Number(target.maxhp||0)>0&&Number(target.hp||0)>=Number(target.maxhp)*.5)push('rageHpThreshold','❤️','HP50%以上：攻撃力 +15%','buff');
   }
-  const grabLines=[];
-  if(target.muscleGrabbedBy)grabLines.push((target.muscleGrabbedHand==='left'?'✋ 左手':'✊ 右手')+'で拘束中');
-  if(target.muscleRightTarget)grabLines.push('✊ 右手：'+target.muscleRightTarget.name);
-  if(target.muscleLeftTarget)grabLines.push('✋ 左手：'+target.muscleLeftTarget.name);
-  let grabBanner=target.el.querySelector('.muscleGrabBanner');
-  if(grabLines.length){if(!grabBanner){grabBanner=document.createElement('div');grabBanner.className='muscleGrabBanner';target.el.appendChild(grabBanner);}const grabSignature=grabLines.join('／');if(grabBanner.dataset.signature!==grabSignature){grabBanner.dataset.signature=grabSignature;grabBanner.textContent=grabSignature;}}
-  else if(grabBanner)grabBanner.remove();
   let box=target.el.querySelector('.unitEffects');
   if(!entries.length){if(box)box.remove();return;}
   if(!box){box=document.createElement('div');box.className='unitEffects';target.el.appendChild(box);}
@@ -2692,28 +2686,29 @@ function muscleOnKill(holder){
  holder.hp=Math.min(holder.maxhp,holder.hp+Math.round(holder.maxhp*Number(growth.heal||0)));
  muscleRefreshAttack(holder);muscleUpdateHp(holder);
 }
+function muscleGrabbedX(holder,target){const side=target?.muscleGrabbedHand==='right'?1:-1;return Math.max(90,Math.min(worldWidth-90,Number(holder?.x||0)+side*72));}
 function processMuscleKinoshitaHands(holder,now){
  if(!holder||holder.hp<=0||holder.name!=='狂乱のマッチョ木下'||isAbilitySealed(holder))return;
  const a=holder.ability?.muscleHands;if(!a)return;
  const foes=holder.isEnemy?units:enemies;
  const right=holder.muscleRightTarget;
  if(right&&(!foes.includes(right)||right.hp<=0)){muscleReleaseRightHand(holder,now,false);}
- else if(right){right.x=holder.x;right.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(right.atk||0));if(right.el)right.el.style.left=right.x+'px';updateStatusMark(right);}
+ else if(right){right.x=muscleGrabbedX(holder,right);right.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(right.atk||0));if(right.el)right.el.style.left=right.x+'px';updateStatusMark(right);}
  else if(now>=Number(holder.muscleRightReadyAt||0)){
   const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy).sort((x,y)=>Number(y.atk||0)-Number(x.atk||0))[0];
-  if(target){holder.muscleRightTarget=target;holder.muscleRightDamageTaken=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='right';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=holder.x;target.target=null;target.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(target.atk||0));holder.muscleRightAtkStacks=Math.min(Math.ceil(Number(a.rightAtkMaxBonus||2)/Math.max(.001,Number(a.rightAtkPerGrab||.5))),Number(holder.muscleRightAtkStacks||0)+1);muscleRefreshAttack(holder);muscleUpdateHp(target);updateStatusMark(holder);popup('✊ 右手：'+target.name+'を拘束！',holder.x,90,'criticalPop');}
+  if(target){holder.muscleRightTarget=target;holder.muscleRightDamageTaken=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='right';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=muscleGrabbedX(holder,target);target.target=null;target.state='grabbed';holder.muscleRightBonusAtk=Math.max(0,Number(target.atk||0));holder.muscleRightAtkStacks=Math.min(Math.ceil(Number(a.rightAtkMaxBonus||2)/Math.max(.001,Number(a.rightAtkPerGrab||.5))),Number(holder.muscleRightAtkStacks||0)+1);muscleRefreshAttack(holder);muscleUpdateHp(target);updateStatusMark(holder);popup('✊ 右手：'+target.name+'を拘束！',holder.x,90,'criticalPop');}
  }
  const left=holder.muscleLeftTarget;
  if(left&&(!foes.includes(left)||left.hp<=0)){muscleReleaseLeftHand(holder,now,true);}
- else if(left){left.x=holder.x;left.state='grabbed';if(left.el)left.el.style.left=left.x+'px';updateStatusMark(left);}
+ else if(left){left.x=muscleGrabbedX(holder,left);left.state='grabbed';if(left.el)left.el.style.left=left.x+'px';updateStatusMark(left);}
  else if(now>=Number(holder.muscleLeftReadyAt||0)){
   const target=foes.filter(v=>v&&v.hp>0&&!v.muscleGrabbedBy).sort((x,y)=>Number(y.maxhp||0)-Number(x.maxhp||0))[0];
-  if(target){holder.muscleLeftTarget=target;holder.muscleLeftAbsorbed=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='left';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=holder.x;target.target=null;target.state='grabbed';muscleUpdateHp(target);updateStatusMark(holder);popup('✋ 左手：'+target.name+'を拘束！',holder.x,125,'criticalPop');}
+  if(target){holder.muscleLeftTarget=target;holder.muscleLeftAbsorbed=0;target.muscleGrabbedBy=holder;target.muscleGrabbedHand='left';target.muscleOriginalSpd=target.spd;target.spd=0;target.x=muscleGrabbedX(holder,target);target.target=null;target.state='grabbed';muscleUpdateHp(target);updateStatusMark(holder);popup('✋ 左手：'+target.name+'を拘束！',holder.x,125,'criticalPop');}
  }
 }
 
 function hit(target,damage,source,abilitySource){
- if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack))return;
+ if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack)||target.muscleGrabbedBy===source)return;
  if(!target.isEnemy&&target.causalityInvulnUntil&&performance.now()/1000<target.causalityInvulnUntil)return;
  if(ivyIsEntity(target)&&target.ivyTransferUntil&&performance.now()/1000<target.ivyTransferUntil)return 0;
  if(target.isEnemy&&target.ability?.phaseChance&&Math.random()<Number(target.ability.phaseChance)){mythicPopup('🫥 位相転移',target);target.x=Math.max(120,target.x-55);return 0;}
@@ -4566,18 +4561,18 @@ function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.mi
  }
  for(const ivy of [...units,...enemies])processIvyTransfer(ivy,ivyTransferNow);
  for(const actor of [...units,...enemies])processMuscleKinoshitaHands(actor,ivyTransferNow);
- for(let ui=units.length-1;ui>=0;ui--){const u=units[ui];if(!u||u.hp<=0)continue;if(u.muscleGrabbedBy){u.x=Number(u.muscleGrabbedBy.x||u.x);u.state='grabbed';if(refreshStatuses)updateStatusMark(u);if(u.el){u.el.style.left=u.x+'px';const hp=u.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}continue;}u.cd-=dt;
+ for(let ui=units.length-1;ui>=0;ui--){const u=units[ui];if(!u||u.hp<=0)continue;if(u.muscleGrabbedBy){u.x=muscleGrabbedX(u.muscleGrabbedBy,u);u.state='grabbed';if(refreshStatuses)updateStatusMark(u);if(u.el){u.el.style.left=u.x+'px';const hp=u.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';}continue;}u.cd-=dt;
    const isThousandStep=Number(u.chargeTime||0)>0;
    let target=u.target;
    const effectiveRange=mythologyV2EffectiveRange(u,simNow);const rangeFactor=Number(u.range)>0?effectiveRange/Number(u.range):1;const effectiveMaxRange=Number(u.maxRange??u.range)*rangeFactor;const detectionRange=isThousandStep?Number(u.detectionRange||u.range)*rangeFactor:(effectiveRange+28);
-   const targetValid=target&&target.hp>0&&enemies.includes(target)&&(!target.isFlying||u.airAttack)&&(u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},target):Math.abs(target.x-u.x)<detectionRange)&&simNow>=Number(target.spawnProtectedUntil||0);
+   const targetValid=target&&target.hp>0&&target.muscleGrabbedBy!==u&&enemies.includes(target)&&(!target.isFlying||u.airAttack)&&(u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},target):Math.abs(target.x-u.x)<detectionRange)&&simNow>=Number(target.spawnProtectedUntil||0);
    if(!targetValid){
      target=null;let bestDist=Infinity;
-     for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0||(e.isFlying&&!u.airAttack))continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);const inRange=u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e):d<detectionRange;if(inRange&&d<bestDist){target=e;bestDist=d;}}
+     for(let ei=0;ei<enemies.length;ei++){const e=enemies[ei];if(!e||e.hp<=0||e.muscleGrabbedBy===u||(e.isFlying&&!u.airAttack))continue;if(simNow<Number(e.spawnProtectedUntil||0))continue;const d=Math.abs(e.x-u.x);const inRange=u.attackType==='allrange'?enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e):d<detectionRange;if(inRange&&d<bestDist){target=e;bestDist=d;}}
      u.target=target;
    }
    if(isThousandStep){if(u.chargeRemaining>0){u.state='charging';u.chargeRemaining=Math.max(0,u.chargeRemaining-dt);u.el?.classList.add('charging');if(u.chargeRemaining<=0){const targets=enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)>=u.minRange&&Math.abs(e.x-u.x)<=effectiveRange);attackAnim(u.el);playSE('attack');for(const t of targets){attackEffect(u,t);const dealt=damageAgainst(u,t);hit(t,dealt,u);if(t.hp<=0){if(u.ability?.yabayaba)spawnYabayabaClone(t,u.ability.yabayaba,true);if(u.ability?.killAttackStack&&!isAbilitySealed(u)){u.killAttackStacks=Math.min(Math.ceil(Number(u.ability.killAttackStack.maxBonus||0)/Math.max(.001,Number(u.ability.killAttackStack.perKill||.05))),Number(u.killAttackStacks||0)+1);if(u.ability.healOnKill)u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*Number(u.ability.healOnKill)));}removeEnemy(t)}}applyGlobalSlow(u);applyAreaAttackDown(u);u.cd=Math.max(0,u.interval-u.chargeTime);u.el?.classList.remove('charging');}}else if(target){u.state='attack';const stopped=simNow<(u.stopUntil||0);if(u.cd<=0&&!stopped){u.chargeRemaining=u.chargeTime;u.state='charging';u.el?.classList.add('charging');}}else{u.state='idle';u.el?.classList.remove('charging');}}
-   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){
+   else if(target){u.state='attack';const stopped=(performance.now()/1000)<(u.stopUntil||0);if(u.cd<=0&&!stopped){attackAnim(u.el);playSE('attack');const targets=u.attackType==='allrange'?enemies.filter(e=>e&&e.hp>0&&e.muscleGrabbedBy!==u&&(!e.isFlying||u.airAttack)&&enemyInAllRange({x:u.x,minRange:u.minRange??-500,maxRange:effectiveMaxRange},e)):u.attackType==='area'?enemies.filter(e=>e&&e.hp>0&&e.muscleGrabbedBy!==u&&(!e.isFlying||u.airAttack)&&Math.abs(e.x-u.x)<effectiveRange+28):[target];for(const t of targets){
  attackEffect(u,t);
  const sequence=getAttackSequence(u,t);
  const baseAttack=(sequence[0]?.damage??u.atk)+Number(u.muscleRightBonusAtk||0);
@@ -4733,7 +4728,7 @@ function triggerPhoenixSurge(source,center,hitTargets=[]){
   setTimeout(()=>fx.remove(),surgeDurationMs+50);
 }
 }function enemyAttackTarget(e,t,ea,now2,sourceSealed){
- if(!e||!t||t.hp<=0)return;
+ if(!e||!t||t.hp<=0||t.muscleGrabbedBy===e)return;
  const attackNow=Number(now2||performance.now()/1000);if(t.causalityInvulnUntil&&attackNow<t.causalityInvulnUntil)return;
  const effectiveEnemy=e.muscleRightBonusAtk>0?{...e,atk:Number(e.atk||1)+Number(e.muscleRightBonusAtk||0)}:e;
  let raw=Math.max(1,Number(damageTakenBy(t,effectiveEnemy))||1)*muscleAuraDamageFactor(e,t);
@@ -4809,7 +4804,7 @@ function enemyWaveAttack(e,hitTargets=[],allowReflect=true){
  setTimeout(()=>wave.remove(),520);
 }
 
- for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.muscleGrabbedBy){e.x=Number(e.muscleGrabbedBy.x||e.x);e.state='grabbed';if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.style.left=e.x+'px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed)applyGlobalSlow(e);if(!sourceSealed&&(e.phoenixSurgeLevel??ea.phoenixSurgeLevel))triggerPhoenixSurge(e,e.x,targets);
+ for(let ei=enemies.length-1;ei>=0;ei--){const e=enemies[ei];if(!e)continue;if(e.muscleGrabbedBy){e.x=muscleGrabbedX(e.muscleGrabbedBy,e);e.state='grabbed';if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.style.left=e.x+'px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}if(e.ability?.wyvernFlight)updateWyvernFlight(e);e.cd-=dt;if(e.isFlying){e.target=null;e.state='fly';e.x=Math.min(worldWidth-96,e.x+e.spd*60*dt);if(refreshStatuses)updateStatusMark(e);if(e.el){e.el.classList.add('wyvernFlying');e.el.style.left=e.x+'px';e.el.style.bottom='154px';const hp=e.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,e.hp/e.maxhp*100)+'%';}continue;}let target=e.target;const targetValid=target&&target.hp>0&&target.muscleGrabbedBy!==e&&units.includes(target)&&(e.attackType==='allrange'?enemyInAllRange(e,target):Math.abs(target.x-e.x)<e.range+30);if(!targetValid){target=null;let bestDist=Infinity;for(let ui=0;ui<units.length;ui++){const u=units[ui];if(!u||u.hp<=0||u.muscleGrabbedBy===e)continue;const d=Math.abs(u.x-e.x);const inRange=e.attackType==='allrange'?enemyInAllRange(e,u):d<e.range+30;if(inRange&&d<bestDist){target=u;bestDist=d;}}e.target=target;}if(target){e.state='attack';const stopped=simNow<(e.stopUntil||0);if(e.cd<=0&&!stopped){attackAnim(e.el);const sourceSealed=isAbilitySealed(e);const ea=e.ability||{};const now2=simNow;const targets=e.attackType==='allrange'?units.filter(u=>u&&u.hp>0&&u.muscleGrabbedBy!==e&&enemyInAllRange(e,u)):e.attackType==='area'?units.filter(u=>u&&u.hp>0&&u.muscleGrabbedBy!==e&&Math.abs(u.x-e.x)<e.range+30):[target];for(const t of targets){if(!t||t.hp<=0)continue;attackEffect(e,t);enemyAttackTarget(e,t,ea,now2,sourceSealed);if(pvpMode&&e.isRemote&&t.hp>0)pvpSend({type:'hit',targetId:t.id,damage:Math.max(1,Number(damageTakenBy(t,e))||1),attackerIndex:e.remoteIndex});}if(!sourceSealed)applyGlobalSlow(e);if(!sourceSealed&&(e.phoenixSurgeLevel??ea.phoenixSurgeLevel))triggerPhoenixSurge(e,e.x,targets);
      const enemyWaveLevel=Number(e.waveLevel??ea.waveLevel??0),enemyWaveChance=e.waveChance??ea.waveChance;if(!sourceSealed&&enemyWaveLevel>0&&(enemyWaveChance==null||Math.random()<Number(enemyWaveChance)))enemyWaveAttack(e,targets);
      // 呪いは enemyAttackTarget 内で対象ごとに1回だけ判定する。
       if(!sourceSealed&&ea.areaAttackDownChance&&Math.random()<Number(ea.areaAttackDownChance)){
