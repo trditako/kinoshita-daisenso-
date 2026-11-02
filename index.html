@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.46';
+const GAME_VERSION='v1.9.47';
 const UPDATE_LOG=[
+  {date:'2026-11-03',version:'v1.9.47',title:'🪙 通常交換所に実用キャラクター10体を追加',items:['壁役・量産アタッカー・遠距離攻撃・属性対策・妨害・バリアブレイクなど役割の異なる10体を追加','通常交換所で木下コインを使って確定交換できるように設定','既存キャラクターのID・所持データ・期間限定交換所は維持']},
   {date:'2026-11-02',version:'v1.9.46',title:'🌪️ 覇風の編成バフを弱体化',items:['ウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔を+35%（最大+95%）に変更','覇風のウルトラレア編成バフを射程・再生産時間の対象外に変更','覇風の再生産時間を20秒から32秒へ変更']},
   {date:'2026-11-01',version:'v1.9.45',title:'🛡️ 味方の拘束対象からボスを除外',items:['味方の狂乱のマッチョ木下はボス級の敵を右手・左手で拘束しないよう修正','敵側の拘束能力と通常敵への拘束は従来どおり維持']},
   {date:'2026-11-01',version:'v1.9.44',title:'💪 拘束対象の完全除外・無効化判定を修正',items:['拘束中のキャラクターを敵味方すべての通常攻撃・範囲攻撃・遠方攻撃・烈波の対象から除外','拘束対象への直接ダメージ処理も遮断し、拘束中は誰からも攻撃されないよう修正','狂乱のマッチョ木下の吹っ飛ばし無効を確率・確定ノックバックの両経路に適用','波動・烈波・停止・呪い・吹っ飛ばし無効と波動反射を能力データにも統一']},
@@ -1838,6 +1839,21 @@ const HALLOWEEN_VARIANT_CARDS=[
 {name:"木下（覚醒・ハロウィン）",cost:3000,hp:25000,atk:7200,range:165,spd:.7,interval:1.7,recharge:48,icon:"🌕🎃",motion:"king",attackType:"area",kb:3,series:"ハロウィンナイト2026 第二弾",rarity:"超激レア",specialReward:true,trait:"赤・浮・黒",ability:{name:"トリック・オア・トリート",desc:"赤・浮・黒属性に攻撃2倍。",strong:{"赤":2,"浮":2,"黒":2}}}
 ];
 for(const halloweenVariant of HALLOWEEN_VARIANT_CARDS){cards.push(halloweenVariant);halloweenVariant.id=cards.length-1;}
+
+// 通常交換所・実用隊：既存カードのIDを変えないよう、全キャラクター登録の末尾に追加。
+const NORMAL_EXCHANGE_UTILITY_CARDS=[
+ {name:"木下ガード",cost:300,hp:2400,atk:95,range:55,spd:.48,interval:1.35,recharge:8,icon:"🛡️",motion:"robot",attackType:"area",kb:2,series:"通常交換所・実用隊",rarity:"R",gachaCost:2200,ability:{name:"堅実な装甲",desc:"全属性から受けるダメージを15%軽減する。",resist:{"*":.85}}},
+ {name:"木下ランナー",cost:180, hp:850,atk:250,range:58,spd:1.75,interval:1.0,recharge:7,icon:"🏃",motion:"ninja",attackType:"single",kb:5,series:"通常交換所・実用隊",rarity:"R",gachaCost:2400,ability:{name:"先行突撃",desc:"移動速度が高く、低コストで前線へ素早く到着する。"}},
+ {name:"木下スナイパー",cost:550,hp:900,atk:310,range:190,spd:.48,interval:1.8,recharge:13,icon:"🎯",motion:"scientist",attackType:"single",kb:4,series:"通常交換所・実用隊",rarity:"R",gachaCost:2800,ability:{name:"遠距離射撃",desc:"長めの射程から安定した単体攻撃を行う。"}},
+ {name:"赤対策木下",cost:500,hp:1250,atk:185,range:95,spd:.68,interval:1.2,recharge:12,icon:"🔥",motion:"power",attackType:"area",kb:4,series:"通常交換所・実用隊",rarity:"R",gachaCost:2800,ability:{name:"赤の足止め",desc:"赤属性の敵を30%の確率で2秒間、移動速度30%低下させる。",slow:{trait:"赤",chance:.3,factor:.7,duration:2}}},
+ {name:"木下ブラスター",cost:420,hp:1550,atk:175,range:78,spd:.78,interval:1.15,recharge:11,icon:"💥",motion:"basic",attackType:"area",kb:3,series:"通常交換所・実用隊",rarity:"R",gachaCost:2600,ability:{name:"小範囲攻撃",desc:"複数の敵をまとめて攻撃できる扱いやすい前衛。"}},
+ {name:"天使迎撃木下・改",cost:900,hp:2200,atk:520,range:120,spd:.55,interval:1.45,recharge:18,icon:"✨",motion:"awakened",attackType:"area",kb:4,trait:"天使",series:"通常交換所・実用隊",rarity:"SR",gachaCost:5200,ability:{name:"天使迎撃",desc:"天使属性に1.8倍のダメージを与える。",strong:{"天使":1.8}}},
+ {name:"バリア割り木下",cost:1000,hp:1850,atk:430,range:150,spd:.5,interval:1.65,recharge:19,icon:"🚀",motion:"scientist",attackType:"single",kb:4,trait:"宇宙",series:"通常交換所・実用隊",rarity:"SR",gachaCost:5500,ability:{name:"バリアブレイク",desc:"宇宙属性に少し強く、バリアを破壊できる。",strong:{"宇宙":1.5},barrierBreak:true}},
+ {name:"木下ノックバック",cost:850,hp:1750,atk:360,range:130,spd:.62,interval:1.5,recharge:17,icon:"🥊",motion:"power",attackType:"area",kb:4,series:"通常交換所・実用隊",rarity:"SR",gachaCost:5200,ability:{name:"押し返し",desc:"攻撃時20%の確率で敵を後退させる。",knockbackChance:.2}},
+ {name:"木下サポーター",cost:1200,hp:2600,atk:300,range:170,spd:.45,interval:1.8,recharge:22,icon:"📡",motion:"scientist",attackType:"area",kb:4,series:"通常交換所・実用隊",rarity:"SR",gachaCost:6000,ability:{name:"戦術妨害",desc:"攻撃時20%の確率で敵の移動速度を20%低下させる（2秒）。",slow:{trait:"*",chance:.2,factor:.8,duration:2}}},
+ {name:"木下シールド隊長",cost:1500,hp:6200,atk:440,range:85,spd:.4,interval:1.8,recharge:28,icon:"🛡️",motion:"king",attackType:"area",kb:3,series:"通常交換所・実用隊",rarity:"SR",gachaCost:6500,ability:{name:"防衛指揮",desc:"全属性から受けるダメージを10%軽減する。",resist:{"*":.9}}}
+];
+for(const utilityCard of NORMAL_EXCHANGE_UTILITY_CARDS){cards.push(utilityCard);utilityCard.id=cards.length-1;}
 CURRENT_CHARACTER_COUNT=cards.length;
 let ownedFlags;try{ownedFlags=JSON.parse(storage.getItem('kinoshitaOwnedFlags')||'null')}catch(e){ownedFlags=null}
 if(!Array.isArray(ownedFlags)){const oldOwned=Math.max(1,Math.min(cards.length,Number(storage.getItem('kinoshitaOwned')||1)));ownedFlags=cards.map((_,i)=>i<oldOwned);}
