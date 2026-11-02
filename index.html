@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.47';
+const GAME_VERSION='v1.9.48';
 const UPDATE_LOG=[
+  {date:'2026-11-03',version:'v1.9.48',title:'🆔 通常交換所キャラクター10体のID順を修正',items:['実用キャラクター10体を全キャラクター登録後の最新IDへ移動','既存の所持・育成・編成・AI・ランク統計のIDを一度だけ移行']},
   {date:'2026-11-03',version:'v1.9.47',title:'🪙 通常交換所に実用キャラクター10体を追加',items:['壁役・量産アタッカー・遠距離攻撃・属性対策・妨害・バリアブレイクなど役割の異なる10体を追加','通常交換所で木下コインを使って確定交換できるように設定','既存キャラクターのID・所持データ・期間限定交換所は維持']},
   {date:'2026-11-02',version:'v1.9.46',title:'🌪️ 覇風の編成バフを弱体化',items:['ウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔を+35%（最大+95%）に変更','覇風のウルトラレア編成バフを射程・再生産時間の対象外に変更','覇風の再生産時間を20秒から32秒へ変更']},
   {date:'2026-11-01',version:'v1.9.45',title:'🛡️ 味方の拘束対象からボスを除外',items:['味方の狂乱のマッチョ木下はボス級の敵を右手・左手で拘束しないよう修正','敵側の拘束能力と通常敵への拘束は従来どおり維持']},
@@ -5115,6 +5116,75 @@ try{
   storage.setItem('kinoshitaCharacterIdOrderV1','done');
  }
 }catch(e){console.warn('Rage Kinoshita character ID migration V1 failed',e);}
+
+/* v1.9.48: 通常交換所・実用隊10体を全キャラクター登録後の末尾へ移動。
+   既存セーブのIDを一度だけ変換し、所持・育成・編成・AI・ランク統計を維持する。 */
+try{
+ const utilityNames=new Set(NORMAL_EXCHANGE_UTILITY_CARDS.map(c=>c.name));
+ const utilityOldStart=cards.findIndex(c=>c&&c.name===NORMAL_EXCHANGE_UTILITY_CARDS[0].name);
+ const utilityCards=NORMAL_EXCHANGE_UTILITY_CARDS.map(c=>cards.find(x=>x&&x.name===c.name));
+ if(utilityOldStart>=0&&utilityCards.every(Boolean)){
+  const utilityCount=utilityCards.length;
+  const remainingCards=cards.filter(c=>!utilityNames.has(c?.name));
+  const utilityNewStart=remainingCards.length;
+  const remapUtilityId=id=>{
+   const n=Number(id);
+   if(!Number.isInteger(n)||n<0)return id;
+   if(n>=utilityOldStart&&n<utilityOldStart+utilityCount)return utilityNewStart+(n-utilityOldStart);
+   if(n>=utilityOldStart+utilityCount)return n-utilityCount;
+   return n;
+  };
+  cards.splice(0,cards.length,...remainingCards,...utilityCards);
+  for(let i=0;i<cards.length;i++)if(cards[i])cards[i].id=i;
+  if(storage.getItem('kinoshitaNormalExchangeIdOrderV1')!=='done'){
+   const remapArray=(arr,fillValue)=>{
+    if(!Array.isArray(arr))return arr;
+    const next=Array(Math.max(cards.length,arr.length)).fill(fillValue);
+    for(let oldId=0;oldId<arr.length;oldId++)next[remapUtilityId(oldId)]=arr[oldId];
+    return next;
+   };
+   ownedFlags=remapArray(ownedFlags,false);
+   charLevel=remapArray(charLevel,1);
+   charMaxLevel=remapArray(charMaxLevel,20);
+   charForm=remapArray(charForm,1);
+   normalEvolved=remapArray(normalEvolved,false);
+   formation=Array.isArray(formation)?formation.map(remapUtilityId):[];
+   for(let j=0;j<formationBeforeLateCards.length;j++)formationBeforeLateCards[j]=remapUtilityId(formationBeforeLateCards[j]);
+   formationPresets=Array.isArray(formationPresets)?formationPresets.map(p=>Array.isArray(p)?p.map(remapUtilityId):p):[];
+   if(Array.isArray(aiProfiles)){
+    for(const profile of aiProfiles){
+     if(!profile||typeof profile!=='object')continue;
+     if(Array.isArray(profile.ownedCharacters))profile.ownedCharacters=profile.ownedCharacters.map(remapUtilityId);
+     if(Array.isArray(profile.formation))profile.formation=profile.formation.map(remapUtilityId);
+     if(Array.isArray(profile.charLevels))profile.charLevels=remapArray(profile.charLevels,1);
+     if(Array.isArray(profile.charMaxLevels))profile.charMaxLevels=remapArray(profile.charMaxLevels,20);
+    }
+    try{storage.setItem('kinoshitaAIProfilesV2',JSON.stringify(aiProfiles));}catch(e){console.warn('normal exchange AI ID migration save skipped',e);}
+   }
+   if(rankMetaStats&&typeof rankMetaStats==='object'){
+    const nextChars={};
+    for(const [key,value] of Object.entries(rankMetaStats.chars||{}))nextChars[String(remapUtilityId(Number(key)))]=value;
+    rankMetaStats.chars=nextChars;
+    const nextForms={};
+    for(const [key,value] of Object.entries(rankMetaStats.formations||{})){
+     if(key==='empty'){nextForms[key]=value;continue;}
+     nextForms[key.split('-').map(Number).map(remapUtilityId).join('-')]=value;
+    }
+    rankMetaStats.formations=nextForms;
+   }
+   try{
+    const banKey='kinoshitaRankBannedCharacters_'+currentRankSeason();
+    const banned=JSON.parse(storage.getItem(banKey)||'null');
+    if(Array.isArray(banned))storage.setItem(banKey,JSON.stringify(banned.map(remapUtilityId)));
+   }catch(e){console.warn('normal exchange rank-ban ID migration skipped',e);}
+   for(const key of ['kinoshitaPreviousSeasonTop5','kinoshitaPreviousSeasonTop10']){
+    try{const ids=JSON.parse(storage.getItem(key)||'null');if(Array.isArray(ids))storage.setItem(key,JSON.stringify(ids.map(remapUtilityId)));}catch(e){}
+   }
+   try{if(typeof saveRankMeta==='function')saveRankMeta();}catch(e){console.warn('normal exchange rank-meta migration save skipped',e);}
+   storage.setItem('kinoshitaNormalExchangeIdOrderV1','done');
+  }
+ }
+}catch(e){console.warn('Normal exchange character ID migration V1 failed',e);}
 
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
