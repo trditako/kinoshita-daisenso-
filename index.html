@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.45';
+const GAME_VERSION='v1.9.46';
 const UPDATE_LOG=[
+  {date:'2026-11-02',version:'v1.9.46',title:'🌪️ 覇風の編成バフを弱体化',items:['ウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔を+35%（最大+95%）に変更','覇風のウルトラレア編成バフを射程・再生産時間の対象外に変更','覇風の再生産時間を20秒から32秒へ変更']},
   {date:'2026-11-01',version:'v1.9.45',title:'🛡️ 味方の拘束対象からボスを除外',items:['味方の狂乱のマッチョ木下はボス級の敵を右手・左手で拘束しないよう修正','敵側の拘束能力と通常敵への拘束は従来どおり維持']},
   {date:'2026-11-01',version:'v1.9.44',title:'💪 拘束対象の完全除外・無効化判定を修正',items:['拘束中のキャラクターを敵味方すべての通常攻撃・範囲攻撃・遠方攻撃・烈波の対象から除外','拘束対象への直接ダメージ処理も遮断し、拘束中は誰からも攻撃されないよう修正','狂乱のマッチョ木下の吹っ飛ばし無効を確率・確定ノックバックの両経路に適用','波動・烈波・停止・呪い・吹っ飛ばし無効と波動反射を能力データにも統一']},
   {date:'2026-11-01',version:'v1.9.43',title:'💪 拘束対象の位置と攻撃判定を修正',items:['拘束した相手を拘束者自身の通常攻撃・範囲攻撃・能力攻撃の対象から除外','右手で拘束した相手を狂乱のマッチョ木下の右側、左手なら左側へ配置','拘束中の表示タグを削除し、解除後は通常の位置・ターゲット選択へ復帰']},
@@ -3002,10 +3003,10 @@ function formationBuffSummaryHTML(i){
  const values={
   hp:Math.round(Number(statAt(i,'hp')||0)*totalFactor),
   atk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
-  range:Math.round(Number(statAt(i,'range')||0)*mobilityFactor),
+  range:Math.round(Number(statAt(i,'range')||0)*aura*miraiKAllyFactor),
   spd:Math.round(Number(statAt(i,'spd')||0)*mobilityFactor*100)/100,
   interval:Math.round((Number(statAt(i,'interval')||0)/totalFactor)*100)/100,
-  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/totalFactor)*100)/100
+  recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/(aura*haifuSelfFactor*miraiKAllyFactor))*100)/100
  };
  const base={hp:Number(c.hp||0)*Math.pow(1.04,lv-1),atk:Number(c.atk||0)*Math.pow(1.04,lv-1),range:Number(c.range||0),spd:Number(c.spd||0),interval:Number(c.interval||0),recharge:Number(c.recharge||0)};
  const pct=(value,original,inverse=false)=>{if(!(original>0))return '';const n=(value/original-1)*100;return (n>=0?'+':'')+Math.round(n)+'%';};
@@ -3029,7 +3030,7 @@ function formationBuffSummaryHTML(i){
   tags.push('呪い・停止・烈波・吹っ飛ばす無効／攻撃時25%で烈波Lv2');
  }
  if(haifuCtx){
-  tags.push('覇風：全味方ステータス +'+Math.round((haifuAllyFactor-1)*100)+'%');
+  tags.push('覇風：全味方HP・攻撃力・移動速度・攻撃間隔 +'+Math.round((haifuAllyFactor-1)*100)+'%（射程・再生産時間を除く）');
   tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
   if(c.name==='覇風')tags.push('覇風自身：非UR '+haifuCtx.nonUrCount+'体でHP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuSelfFactor-1)*100)+'%（射程・移動速度は対象外）');
  }
@@ -3039,7 +3040,7 @@ function formationBuffSummaryHTML(i){
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
  const haifuCtx=haifuFormationContext();
- const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・射程・移動速度 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（攻撃間隔・再生産時間は倍率に応じて短縮）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → HP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuCtx.selfFactor-1)*100)+'%（射程・移動速度は対象外）</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
+ const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・移動速度・攻撃間隔 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（1体につき+35%、最大+95%。射程・再生産時間は対象外）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → HP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuCtx.selfFactor-1)*100)+'%（射程・移動速度は対象外）</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
  const miraiKCtx=miraiKFormationContext();
  const miraiKSummary=miraiKCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #a78bfa;background:#f5f3ff"><h3>🌗 MiraiKの編成バフ</h3><div><b>天使属性の味方：</b>HP・攻撃力・射程・移動速度など全ステータス +10%（攻撃間隔・再生産時間も1.1倍速で短縮）</div><div><b>MiraiK自身：</b>自身以外の天使属性 '+miraiKCtx.angelCount+'体 → 与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）</div></article>':'';
  const rageCtx=rageKinoshitaFormationContext();
@@ -3365,7 +3366,7 @@ function haifuFormationContext(){
  const cardsInFormation=ids.map(i=>({i,c:activeCard(i)||cards[i]})).filter(x=>x.c);
  const nonUrCount=cardsInFormation.filter(x=>String(x.c.rarity||'')!=='UR').length;
  const urCount=cardsInFormation.filter(x=>String(x.c.rarity||'')==='UR').length;
- return {haifuIndex,nonUrCount,urCount,allyFactor:1+Math.min(4.5,urCount*.75),selfFactor:1+Math.min(2,nonUrCount*.35)};
+ return {haifuIndex,nonUrCount,urCount,allyFactor:1+Math.min(.95,urCount*.35),selfFactor:1+Math.min(2,nonUrCount*.35)};
 }
 function haifuEffectiveAttack(ctx){
  if(!ctx)return 0;
@@ -3381,11 +3382,11 @@ function applyHaifuFormationEffects(unit){
  unit.maxhp=Math.max(1,Math.round(Number(unit.maxhp||1)*combatFactor));
  unit.hp=Math.min(unit.maxhp,Math.round(Number(unit.hp||unit.maxhp)*combatFactor));
  unit.atk=Math.max(1,Math.round(Number(unit.atk||1)*combatFactor));
- unit.range=Math.max(1,Math.round(Number(unit.range||1)*ctx.allyFactor));
+ /* 覇風のUR編成バフは射程に適用しない */
  unit.spd=Math.max(.01,Number(unit.spd||1)*ctx.allyFactor);
  unit.cardSpeed=unit.spd;
  unit.interval=Math.max(.05,Number(unit.interval||1)/combatFactor);
- unit.recharge=Math.max(1,Number(unit.recharge||1)/combatFactor);
+ unit.recharge=Math.max(1,Number(unit.recharge||1)/selfFactor);
  const shield=Math.max(0,Math.round(haifuEffectiveAttack(ctx)*.8));
  unit.powerShieldMax=shield;unit.powerShield=shield;
  unit.haifuFormationBuffApplied=true;unit.haifuFormationAllyFactor=ctx.allyFactor;unit.haifuFormationSelfFactor=selfFactor;
@@ -4999,7 +5000,7 @@ cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:
 if(!cards.some(c=>c?.name==='狂乱の強化木下')){cards.push(RAGE_KINOSHITA_CARD);RAGE_KINOSHITA_CARD.id=cards.length-1;}
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
-if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:20,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方の全ステータス+75%（最大+450%）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
+if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
  // 新しい特別真髄限定キャラクター。富豪木下の旧IDとは別の末尾IDを割り当てる。
 const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
 cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
