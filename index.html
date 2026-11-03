@@ -4923,6 +4923,7 @@ function renderCards(){
  // iPhone Safariでは、pointerdown中にDOMが再生成されると最初のタップが
  // 取りこぼされることがあるため、ランク戦中は既存カードを維持して表示だけ更新する。
  el.onpointerdown=rankMode?(e=>{
+   if(e.target.closest?.('[data-growth],[data-mode-switch]'))return;
    const card=e.target.closest?.('.card[data-i]');
    if(!card||!el.contains(card))return;
    e.preventDefault();
@@ -4936,7 +4937,8 @@ function renderCards(){
    const sameStructure=current.length===desired.length&&current.every((v,n)=>v===desired[n]);
    if(sameStructure){
      el.querySelectorAll('[data-growth]').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopPropagation();growUnit(Number(btn.dataset.growth));});
-     el.querySelectorAll('[data-mode-switch]').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopPropagation();switchNovaMode(Number(btn.dataset.modeSwitch));});
+     el.querySelectorAll('[data-mode-switch]').forEach(btn=>{const i=Number(btn.dataset.modeSwitch),live=units.find(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0&&u.ability?.modeSwitch);if(live)btn.textContent='切り替え · '+(live.novaMode==='destroy'?'破壊→連射':'連射→破壊')+' · 3,000円';btn.onclick=e=>{e.preventDefault();e.stopPropagation();switchNovaMode(i);};});
+     el.querySelectorAll('.card[data-i]').forEach(x=>{const i=Number(x.dataset.i),live=units.find(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0&&u.ability?.modeSwitch);let btn=x.querySelector('[data-mode-switch]');if(live&&isNovaUpperFormationRow(i)){if(!btn){btn=document.createElement('button');btn.type='button';btn.className='growthButton';btn.dataset.modeSwitch=String(i);x.appendChild(btn);}btn.textContent='切り替え · '+(live.novaMode==='destroy'?'破壊→連射':'連射→破壊')+' · 3,000円';btn.onclick=e=>{e.preventDefault();e.stopPropagation();switchNovaMode(i);};}else if(btn)btn.remove();});
  el.querySelectorAll('.card[data-i]').forEach(x=>{
        const i=Number(x.dataset.i),c=cards[i];
        if(!c)return;
@@ -5254,7 +5256,7 @@ try{
 }catch(e){console.warn('Normal exchange character ID migration V1 failed',e);}
 
 // 呪いの木下達：新UR「ノヴァ木下」。既存カードIDを動かさず、全カード登録後の末尾へ追加。
-cards.push({name:"ノヴァ木下",cost:4500,hp:68750,atk:166666,range:350,spd:1,interval:10,recharge:180,icon:"🌌",motion:"super",attackType:"area",kb:5,trait:"宇宙",rarity:"UR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",airAttack:false,ability:{name:"切り替え・破壊砲・ミニガン",desc:"編成上段から出撃中、木下マネー3,000で破壊モード／連射モードを切り替える。味方の攻撃力・攻撃間隔バフ無効。編成中は初期所持金+750。呪い・波動無効。一度に受けるダメージは最大HPの25%。破壊モード：呪いの木下達1体につき攻撃力+150%・攻撃間隔+2秒。神話1体につき攻撃力-95%（最大-500%）。与ダメージの5%回復。敵撃破で破壊欲を獲得（最大5）：1個につき攻撃力+25%・攻撃間隔-1秒。5個で破壊砲を発射し、敵に攻撃力120%のダメージ。連射モード：対空可能。攻撃ごとに攻撃間隔-0.01秒（最大0.4秒）、攻撃力+3%（最大180%）。黒・天使・神話・無属性に5倍ダメージ、被ダメージ75%軽減。攻撃時15%でミニガン発動（8秒間、破壊モード攻撃力の50%を上乗せ・攻撃時35%吹っ飛ばし、再使用20秒）。",modeSwitch:true,curseImmune:true,waveImmune:true,waveImmunity:true,resist:{"黒":.25,"天使":.25,"神話":.25,"無":.25},strong:{"黒":5,"天使":5,"神話":5,"無":5}}});
+cards.push({id:cards.length,name:"ノヴァ木下",cost:4500,hp:68750,atk:166666,range:350,spd:1,interval:10,recharge:180,icon:"🌌",motion:"super",attackType:"area",kb:5,trait:"宇宙",rarity:"UR",series:"呪いの木下達",limitedExchange:true,limitedExchangeSeries:"呪いの木下達",airAttack:false,ability:{name:"切り替え・破壊砲・ミニガン",desc:"編成上段から出撃中、木下マネー3,000で破壊モード／連射モードを切り替える。味方の攻撃力・攻撃間隔バフ無効。編成中は初期所持金+750。呪い・波動無効。一度に受けるダメージは最大HPの25%。破壊モード：呪いの木下達1体につき攻撃力+150%・攻撃間隔+2秒。神話1体につき攻撃力-95%（最大-500%）。与ダメージの5%回復。敵撃破で破壊欲を獲得（最大5）：1個につき攻撃力+25%・攻撃間隔-1秒。5個で破壊砲を発射し、敵に攻撃力120%のダメージ。連射モード：対空可能。攻撃ごとに攻撃間隔-0.01秒（最大0.4秒）、攻撃力+3%（最大180%）。黒・天使・神話・無属性に5倍ダメージ、被ダメージ75%軽減。攻撃時15%でミニガン発動（8秒間、破壊モード攻撃力の50%を上乗せ・攻撃時35%吹っ飛ばし、再使用20秒）。",modeSwitch:true,curseImmune:true,waveImmune:true,waveImmunity:true,resist:{"黒":.25,"天使":.25,"神話":.25,"無":.25},strong:{"黒":5,"天使":5,"神話":5,"無":5}}});
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
 for(let i=0;i<cards.length;i++){
