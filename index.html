@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.49';
+const GAME_VERSION='v1.9.50';
 const UPDATE_LOG=[
+  {date:'2026-11-04',version:'v1.9.50',title:'🛠️ ノヴァ木下の編成効果・表示を修正',items:['味方の攻撃力・攻撃間隔バフがノヴァ木下に適用されないよう全編成効果を保護','神話属性キャラの人数を正しく判定し、破壊モードの攻撃力デバフを反映','編成画面に発動中のバフ・デバフと、現在レベルの破壊・連射両モードのステータスを表示']},
   {date:'2026-11-04',version:'v1.9.49',title:'🌌 呪いの木下達・ノヴァ木下を追加',items:['期間限定交換所を「呪いの木下達」シリーズへ変更','ウルトラレア「ノヴァ木下」を追加。破壊モード・連射モードと切り替え能力を実装','編成上段限定・切り替えごとに木下マネー3,000消費・切り替え能力持ちは同時出撃1体まで','ノヴァ木下の撃破スタック・破壊砲・ミニガン・初期所持金ボーナスを実装']},
   {date:'2026-11-03',version:'v1.9.48',title:'🆔 通常交換所キャラクター10体のID順を修正',items:['実用キャラクター10体を全キャラクター登録後の最新IDへ移動','既存の所持・育成・編成・AI・ランク統計のIDを一度だけ移行']},
   {date:'2026-11-03',version:'v1.9.47',title:'🪙 通常交換所に実用キャラクター10体を追加',items:['壁役・量産アタッカー・遠距離攻撃・属性対策・妨害・バリアブレイクなど役割の異なる10体を追加','通常交換所で木下コインを使って確定交換できるように設定','既存キャラクターのID・所持データ・期間限定交換所は維持']},
@@ -2434,6 +2435,26 @@ function updateStatusMark(target){
    if(Number(target.muscleDefenseStacks||0)>0)push('muscleDefense','🛡️','防御成長 '+Math.round(Math.min(Number(target.ability?.muscleDefenseGrowth?.maxBonus||0),Number(target.muscleDefenseStacks)*Number(target.ability?.muscleDefenseGrowth?.perHit||0))*100)+'%','buff');
   }
   
+  if(target.name==='ノヴァ木下'){
+   const seriesCount=novaFormationSeriesCount(),mythCount=novaFormationMythCount(),mythFactor=novaMythAttackFactor();
+   const seriesPct=seriesCount*150,attackDownPct=Math.round((1-mythFactor)*100);
+   push('novaMode','🌌',target.novaMode==='rapid'?'連射モード':'破壊モード','status');
+   push('novaAllyBuffLock','🔒','味方の攻撃力・攻撃間隔バフ無効','status');
+   push('novaImmunity','🛡️','呪い・波動無効／被ダメージ上限25%','buff');
+   if(seriesCount>0&&target.novaMode==='destroy')push('novaSeries','☠️','呪いの木下達 '+seriesCount+'体：攻撃力 +'+seriesPct+'%・攻撃間隔 +'+(seriesCount*2)+'秒','buff');
+   if(mythCount>0&&target.novaMode==='destroy')push('novaMyth','📉','神話 '+mythCount+'体：攻撃力 −'+attackDownPct+'%','debuff');
+   if(target.novaMode==='destroy'){
+    push('novaLifesteal','💚','与ダメージの5%をHP回復','buff');
+    if(Number(target.novaDestructionStacks||0)>0)push('novaDestructionStacks','💢','破壊欲 '+Math.min(5,Number(target.novaDestructionStacks||0))+'/5（攻撃力上昇・攻撃間隔短縮）','buff');
+   }else{
+    const rapidAtkStacks=Math.min(60,Number(target.novaRapidAttackStacks||0)),rapidIntervalStacks=Math.min(40,Number(target.novaRapidStacks||0));
+    if(rapidAtkStacks>0)push('novaRapidAttack','📈','連射攻撃力 +'+(rapidAtkStacks*3)+'%','buff');
+    if(rapidIntervalStacks>0)push('novaRapidInterval','⚡','攻撃間隔 −'+(rapidIntervalStacks*.01).toFixed(2)+'秒','buff');
+    if(Number(target.novaMiniGunUntil||0)>now)push('novaMiniGun','🔫','ミニガン発動中（吹っ飛ばし35%・攻撃力上乗せ）','buff');
+    else if(Number(target.novaMiniGunCooldownUntil||0)>now)push('novaMiniGunCooldown','⏳','ミニガン再使用まで '+Math.ceil(target.novaMiniGunCooldownUntil-now)+'秒','status');
+   }
+   if(target.haifuFormationBuffApplied&&Number(target.haifuFormationAllyFactor||1)>1)push('novaHaifu','🌪️','覇風：HP・移動速度 +'+Math.round((Number(target.haifuFormationAllyFactor)-1)*100)+'%（攻撃力・攻撃間隔は対象外）','buff');
+  }
   if(target.name==='狂乱の強化木下'&&!target.isEnemy){
    const cosmicCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
    const stacks=Math.max(0,Number(target.killAttackStacks||0)),stackPct=Math.round(Math.min(.5,stacks*.05)*100);if(stackPct>0)push('rageKills','📈','撃破強化：攻撃力 +'+stackPct+'%','buff');
@@ -3017,14 +3038,22 @@ function formationBuffSummaryHTML(i){
  const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
  const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
  const miraiKAllyFactor=miraiKCtx&&entityHasTrait(c,'天使')?1.1:1;
+ const isNova=c.name==='ノヴァ木下'&&!!c.ability?.modeSwitch;
+ const novaSeriesCount=isNova?novaFormationSeriesCount():0,novaMythCount=isNova?novaFormationMythCount():0;
+ const novaMythFactor=isNova?novaMythAttackFactor():1;
+ const novaBaseAtk=Number(statAt(i,'atk')||0);
+ const novaDestroyAtk=Math.max(1,Math.round(novaBaseAtk*(1+1.5*novaSeriesCount)*novaMythFactor));
+ const novaDestroyInterval=10+2*novaSeriesCount;
+ const novaRapidAtk=Math.max(1,Math.round(4500*(novaBaseAtk/166666)));
+ const novaDestroySpeed=Math.round(haifuAllyFactor*100)/100,novaRapidSpeed=Math.round(1.3*haifuAllyFactor*100)/100;
  const totalFactor=aura*haifuAllyFactor*haifuSelfFactor*miraiKAllyFactor;
  const mobilityFactor=aura*haifuAllyFactor*miraiKAllyFactor;
  const values={
   hp:Math.round(Number(statAt(i,'hp')||0)*totalFactor),
-  atk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
+  atk:isNova?novaDestroyAtk:Math.round(Number(statAt(i,'atk')||0)*totalFactor),
   range:Math.round(Number(statAt(i,'range')||0)*aura*miraiKAllyFactor),
   spd:Math.round(Number(statAt(i,'spd')||0)*mobilityFactor*100)/100,
-  interval:Math.round((Number(statAt(i,'interval')||0)/totalFactor)*100)/100,
+  interval:isNova?novaDestroyInterval:Math.round((Number(statAt(i,'interval')||0)/totalFactor)*100)/100,
   recharge:Math.round((Number(statAt(i,'recharge')||c.recharge||0)/(aura*haifuSelfFactor*miraiKAllyFactor))*100)/100
  };
  const base={hp:Number(c.hp||0)*Math.pow(1.04,lv-1),atk:Number(c.atk||0)*Math.pow(1.04,lv-1),range:Number(c.range||0),spd:Number(c.spd||0),interval:Number(c.interval||0),recharge:Number(c.recharge||0)};
@@ -3049,12 +3078,21 @@ function formationBuffSummaryHTML(i){
   tags.push('呪い・停止・烈波・吹っ飛ばす無効／攻撃時25%で烈波Lv2');
  }
  if(haifuCtx){
-  tags.push('覇風：全味方HP・攻撃力・移動速度・攻撃間隔 +'+Math.round((haifuAllyFactor-1)*100)+'%（射程・再生産時間を除く）');
+  if(isNova)tags.push('覇風：HP・移動速度 +'+Math.round((haifuAllyFactor-1)*100)+'%（攻撃力・攻撃間隔は対象外）');
+  else tags.push('覇風：全味方HP・攻撃力・移動速度・攻撃間隔 +'+Math.round((haifuAllyFactor-1)*100)+'%（射程・再生産時間を除く）');
   tags.push('覇風：パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString());
   if(c.name==='覇風')tags.push('覇風自身：非UR '+haifuCtx.nonUrCount+'体でHP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuSelfFactor-1)*100)+'%（射程・移動速度は対象外）');
  }
+ if(isNova){
+  tags.push('味方の攻撃力・攻撃間隔バフ無効');
+  tags.push('呪いの木下達 '+novaSeriesCount+'体：破壊モード攻撃力 +'+(novaSeriesCount*150)+'%・攻撃間隔 +'+(novaSeriesCount*2)+'秒');
+  if(novaMythCount>0)tags.push('神話属性 '+novaMythCount+'体：破壊モード攻撃力 −'+Math.round((1-novaMythFactor)*100)+'%');
+  tags.push('連射モード：攻撃ごとに攻撃力 +3%（最大+180%）・攻撃間隔 −0.01秒（最大−0.4秒）');
+  tags.push('呪い・波動無効／被ダメージは最大HPの25%まで');
+ }
  const statLine=(label,key)=>'<span>'+label+' <b>'+Number(values[key]).toLocaleString()+'</b> <small style="color:'+(Number(pct(values[key],base[key]).replace('%',''))<0?'#b91c1c':'#64748b')+'">'+pct(values[key],base[key])+'</small></span>';
- return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div><div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')||t.includes('MiraiK')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
+ const novaModeStats=isNova?'<div class="formationBuffStats" style="margin-top:8px;border-top:1px solid #cbd5e1;padding-top:7px"><span style="grid-column:1/-1;font-weight:1000;color:#7c3aed">💥 破壊モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaDestroyAtk.toLocaleString()+'</b></span><span>射程 <b>350</b></span><span>移動速度 <b>'+novaDestroySpeed+'</b></span><span>攻撃間隔 <b>'+novaDestroyInterval+'秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span><span style="grid-column:1/-1;font-weight:1000;color:#0f766e;margin-top:5px">⚡ 連射モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaRapidAtk.toLocaleString()+'</b></span><span>射程 <b>125</b></span><span>移動速度 <b>'+novaRapidSpeed+'</b></span><span>攻撃間隔 <b>0.5秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span></div>':'';
+ return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div>'+novaModeStats+'<div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')||t.includes('MiraiK')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
 }
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
@@ -3355,7 +3393,7 @@ function allyWaveAttack(u,hitTargets=[],baseAttack=null){
  setTimeout(()=>wave.remove(),520);
 }
 function applyMiraiKFormationEffects(unit){
- if(!unit||unit.isEnemy)return;
+ if(!unit||unit.isEnemy||unit.name==='ノヴァ木下')return;
  const miraiKIndex=cards.findIndex(card=>card?.name==='MiraiK');
  const inFormation=miraiKIndex>=0&&formation.includes(miraiKIndex)&&hasCharacter(miraiKIndex);
  const nextFactor=inFormation&&entityHasTrait(unit,'天使')?1.1:1;
@@ -3375,7 +3413,7 @@ function applyMiraiKFormationEffects(unit){
  unit.miraiKFormationFactor=nextFactor;
  if(unit.el){const hp=unit.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,unit.hp/unit.maxhp*100)+'%';}
 }
-function applyAngelGodFormationEffects(unit,cardIndex){if(!unit||unit.isEnemy)return;const angelGodIndex=cards.findIndex(card=>card?.name==='天使神:木下');const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);if(unit.name==='天使神:木下'){const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;const factor=1+Math.min(.30,angelCount*.07);unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=unit.maxhp;unit.atk=Math.round(unit.atk*factor);unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.angelGodBaseAtk=unit.atk;unit.angelGodAttackStacks=0;unit.cardSpeed=Number(unit.spd||1.2);}else if(angelGodInFormation&&entityHasTrait(unit,'天使')){unit.maxhp=Math.round(unit.maxhp*1.55);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*1.55));unit.atk=Math.round(unit.atk*1.55);unit.range=Math.round(unit.range*1.55);unit.spd*=1.55;unit.interval=Math.max(.1,unit.interval/1.55);unit.recharge=Math.max(1,Number(unit.recharge||1)/1.55);unit.angelGodAuraApplied=true;unit.curseImmune=true;unit.waveImmune=true;unit.surgeImmune=true;unit.ability={...(unit.ability||{}),curseImmune:true,waveImmune:true,surgeImmune:true};}}
+function applyAngelGodFormationEffects(unit,cardIndex){if(!unit||unit.isEnemy||unit.name==='ノヴァ木下')return;const angelGodIndex=cards.findIndex(card=>card?.name==='天使神:木下');const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);if(unit.name==='天使神:木下'){const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;const factor=1+Math.min(.30,angelCount*.07);unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=unit.maxhp;unit.atk=Math.round(unit.atk*factor);unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.angelGodBaseAtk=unit.atk;unit.angelGodAttackStacks=0;unit.cardSpeed=Number(unit.spd||1.2);}else if(angelGodInFormation&&entityHasTrait(unit,'天使')){unit.maxhp=Math.round(unit.maxhp*1.55);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*1.55));unit.atk=Math.round(unit.atk*1.55);unit.range=Math.round(unit.range*1.55);unit.spd*=1.55;unit.interval=Math.max(.1,unit.interval/1.55);unit.recharge=Math.max(1,Number(unit.recharge||1)/1.55);unit.angelGodAuraApplied=true;unit.curseImmune=true;unit.waveImmune=true;unit.surgeImmune=true;unit.ability={...(unit.ability||{}),curseImmune:true,waveImmune:true,surgeImmune:true};}}
 
 let haifuSummonCount=0;
 function haifuFormationContext(){
@@ -3490,29 +3528,38 @@ function tickHaifuUnits(now){
 
 function deploy(i){if(!running||!hasCharacter(i)||!formation.includes(i)||money<(activeCard(i)||cards[i]).cost||(rechargeLeft[i]||0)>0)return;const deployCard=activeCard(i)||cards[i];if(deployCard.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))return;if(deployCard.ability?.modeSwitch&&units.some(u=>u.hp>0&&u.ability?.modeSwitch))return;if(rankMode&&isRankCharacterBanned(i))return;const active=activeCard(i)||cards[i];money-=active.cost;playSE('deploy');if(rankMode)rankPlayerUsed.push(i);const c=active,u={...c,growthStage:0,hp:statAt(i,'hp'),maxhp:statAt(i,'hp'),barrier:Number(c.barrier||0),barrierMax:Number(c.barrier||0),atk:statAt(i,'atk'),range:statAt(i,'range'),spd:statAt(i,'spd'),interval:statAt(i,'interval'),id:(pvpMode?'pvp-'+pvpNonce++:Date.now()+Math.random()),x:worldWidth-145,cd:.15,state:'move',ability:(()=>{const a=JSON.parse(JSON.stringify(c.ability||{})),tree=skillTreeFor(i);for(let slot=1;slot<=3;slot++)if(tree['ability'+slot]===1)applySkillTreeEffect(a,skillTreeAbility(i,slot));return a;})(),motion:c.motion,attackType:c.attackType,kb:c.kb,kbRemaining:c.kb,waveLevel:Number(c.waveLevel??c.ability?.waveLevel??0),waveChance:Number(c.waveChance??c.ability?.waveChance??0),waveCarriesEffects:!!(c.waveCarriesEffects??c.ability?.waveCarriesEffects),isEnemy:false,owner:'local',cardIndex:i,novaMode:c.ability?.modeSwitch?'destroy':undefined,novaBaseAtk:c.ability?.modeSwitch?statAt(i,'atk'):undefined,novaRapidStacks:0,novaRapidAttackStacks:0,novaMiniGunUntil:0,novaMiniGunCooldownUntil:0};applyAngelGodFormationEffects(u,i);applyHaifuFormationEffects(u);applyMiraiKFormationEffects(u);if(u.name==='ノヴァ木下')applyNovaMode(u,'destroy',true);if(u.name==='天使神:木下')u.angelGodBaseAtk=u.atk;if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}rechargeLeft[i]=Math.max(1,Number(u.recharge||c.recharge||1)*(1-skillTreeFor(i).recharge*.05));units.push(u);for(const ally of units)applyMiraiKFormationEffects(ally);if(u.name==='覇風')for(const ally of units)applyHaifuFormationEffects(ally);haifuOnSummoned(u);renderUnitElement(u);if(u.name==='ノヴァ木下')applyNovaMode(u,'destroy');if(pvpMode){pvpSend({type:'deploy',index:i,id:u.id});if(u.name==='ノヴァ木下')pvpSend({type:'modeSwitch',id:u.id,mode:u.novaMode,atk:u.atk,range:u.range,spd:u.spd,interval:u.interval,attackType:u.attackType,airAttack:!!u.airAttack});}update(true)}
 function isNovaUpperFormationRow(cardIndex){const slot=formation.indexOf(cardIndex);return slot>=0&&slot<5;}
+function novaFormationSeriesCount(){
+ return formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&card.series==='呪いの木下達';}).length;
+}
+function novaFormationMythCount(){
+ return formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(entityHasTrait(card,'神話')||['MYTH','MYTHIC','神話'].includes(String(card.rarity||'').toUpperCase()));}).length;
+}
+function novaMythAttackFactor(){
+ return Math.max(.01,1-Math.min(5,novaFormationMythCount()*.95));
+}
 function novaDestroyAttackValue(unit){
  const base=Math.max(1,Number(unit?.novaBaseAtk||166666));
- const seriesCount=formation.filter(i=>cards[i]?.series==='呪いの木下達').length;
- const mythCount=formation.filter(i=>cards[i]?.rarity==='神話'||['MYTH','MYTHIC'].includes(String(cards[i]?.rarity||'').toUpperCase())).length;
- const mythFactor=Math.max(.01,1-Math.min(5,mythCount*.95));
+ const seriesCount=novaFormationSeriesCount();
+ const mythFactor=novaMythAttackFactor();
  const stacks=Math.min(5,Math.max(0,Number(unit?.novaDestructionStacks||0)));
  return Math.max(1,Math.round(base*(1+1.5*seriesCount)*mythFactor*(1+.25*stacks)));
 }
 function applyNovaMode(unit,mode='destroy',silent=false){
  if(!unit||unit.name!=='ノヴァ木下')return;
  unit.novaMode=mode==='rapid'?'rapid':'destroy';
+ const allySpeedFactor=Math.max(1,Number(unit.haifuFormationAllyFactor||1));
  if(unit.novaMode==='destroy'){
   if(unit.ability)delete unit.ability.knockbackChance;
   unit.atk=novaDestroyAttackValue(unit);
   const seriesCount=formation.filter(i=>cards[i]?.series==='呪いの木下達').length;
-  unit.range=350;unit.spd=1;unit.interval=Math.max(.1,10+2*seriesCount-Math.min(5,Number(unit.novaDestructionStacks||0)));
+  unit.range=350;unit.spd=1*allySpeedFactor;unit.interval=Math.max(.1,10+2*seriesCount-Math.min(5,Number(unit.novaDestructionStacks||0)));
   unit.attackType='area';unit.airAttack=false;
  }else{
   if(unit.ability&&Number(unit.novaMiniGunUntil||0)>performance.now()/1000)unit.ability.knockbackChance=.35;else if(unit.ability)delete unit.ability.knockbackChance;
   const levelScale=Math.max(.01,Number(unit.novaBaseAtk||166666)/166666);
   const miniGunBonus=Number(unit.novaMiniGunUntil||0)>performance.now()/1000?Number(unit.novaMiniGunBonus||0):0;
   unit.atk=Math.max(1,Math.round(4500*levelScale*(1+.03*Math.min(60,Number(unit.novaRapidAttackStacks||0)))+miniGunBonus));
-  unit.range=125;unit.spd=1.3;unit.interval=Math.max(.1,.5-.01*Math.min(40,Number(unit.novaRapidStacks||0)));
+  unit.range=125;unit.spd=1.3*allySpeedFactor;unit.interval=Math.max(.1,.5-.01*Math.min(40,Number(unit.novaRapidStacks||0)));
   unit.attackType='single';unit.airAttack=true;
  }
  unit.cardSpeed=unit.spd;
