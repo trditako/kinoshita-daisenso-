@@ -3045,6 +3045,7 @@ function formationBuffSummaryHTML(i){
  const novaDestroyAtk=Math.max(1,Math.round(novaBaseAtk*(1+1.5*novaSeriesCount)*novaMythFactor));
  const novaDestroyInterval=10+2*novaSeriesCount;
  const novaRapidAtk=Math.max(1,Math.round(4500*(novaBaseAtk/166666)));
+ const novaDestroySpeed=Math.round(haifuAllyFactor*100)/100,novaRapidSpeed=Math.round(1.3*haifuAllyFactor*100)/100;
  const totalFactor=aura*haifuAllyFactor*haifuSelfFactor*miraiKAllyFactor;
  const mobilityFactor=aura*haifuAllyFactor*miraiKAllyFactor;
  const values={
@@ -3090,7 +3091,7 @@ function formationBuffSummaryHTML(i){
   tags.push('呪い・波動無効／被ダメージは最大HPの25%まで');
  }
  const statLine=(label,key)=>'<span>'+label+' <b>'+Number(values[key]).toLocaleString()+'</b> <small style="color:'+(Number(pct(values[key],base[key]).replace('%',''))<0?'#b91c1c':'#64748b')+'">'+pct(values[key],base[key])+'</small></span>';
- const novaModeStats=isNova?'<div class="formationBuffStats" style="margin-top:8px;border-top:1px solid #cbd5e1;padding-top:7px"><span style="grid-column:1/-1;font-weight:1000;color:#7c3aed">💥 破壊モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaDestroyAtk.toLocaleString()+'</b></span><span>射程 <b>350</b></span><span>移動速度 <b>1</b></span><span>攻撃間隔 <b>'+novaDestroyInterval+'秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span><span style="grid-column:1/-1;font-weight:1000;color:#0f766e;margin-top:5px">⚡ 連射モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaRapidAtk.toLocaleString()+'</b></span><span>射程 <b>125</b></span><span>移動速度 <b>1.3</b></span><span>攻撃間隔 <b>0.5秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span></div>':'';
+ const novaModeStats=isNova?'<div class="formationBuffStats" style="margin-top:8px;border-top:1px solid #cbd5e1;padding-top:7px"><span style="grid-column:1/-1;font-weight:1000;color:#7c3aed">💥 破壊モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaDestroyAtk.toLocaleString()+'</b></span><span>射程 <b>350</b></span><span>移動速度 <b>'+novaDestroySpeed+'</b></span><span>攻撃間隔 <b>'+novaDestroyInterval+'秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span><span style="grid-column:1/-1;font-weight:1000;color:#0f766e;margin-top:5px">⚡ 連射モード（Lv.'+lv+'）</span><span>HP <b>'+values.hp.toLocaleString()+'</b></span><span>攻撃 <b>'+novaRapidAtk.toLocaleString()+'</b></span><span>射程 <b>125</b></span><span>移動速度 <b>'+novaRapidSpeed+'</b></span><span>攻撃間隔 <b>0.5秒</b></span><span>再生産 <b>'+values.recharge+'秒</b></span></div>':'';
  return '<article class="formationBuffCard"><h3>'+String(c.icon||'')+' '+String(c.name||'')+' <small>Lv.'+lv+'</small></h3><div class="formationBuffStats">'+statLine('HP','hp')+statLine('攻撃','atk')+statLine('射程','range')+statLine('移動速度','spd')+statLine('攻撃間隔','interval')+statLine('再生産','recharge')+'</div>'+novaModeStats+'<div class="formationBuffTags">'+(tags.map(t=>'<span class="formationBuffTag '+(t.includes('ランク補正')&&rankFactor<1?'negative':t.includes('天使神')||t.includes('覇風')||t.includes('MiraiK')?'aura':'')+'">'+t+'</span>').join('')||'<span style="color:#64748b">個別バフなし</span>')+'</div></article>';
 }
 function renderFormationBuffSummary(){
@@ -3546,18 +3547,19 @@ function novaDestroyAttackValue(unit){
 function applyNovaMode(unit,mode='destroy',silent=false){
  if(!unit||unit.name!=='ノヴァ木下')return;
  unit.novaMode=mode==='rapid'?'rapid':'destroy';
+ const allySpeedFactor=Math.max(1,Number(unit.haifuFormationAllyFactor||1));
  if(unit.novaMode==='destroy'){
   if(unit.ability)delete unit.ability.knockbackChance;
   unit.atk=novaDestroyAttackValue(unit);
   const seriesCount=formation.filter(i=>cards[i]?.series==='呪いの木下達').length;
-  unit.range=350;unit.spd=1;unit.interval=Math.max(.1,10+2*seriesCount-Math.min(5,Number(unit.novaDestructionStacks||0)));
+  unit.range=350;unit.spd=1*allySpeedFactor;unit.interval=Math.max(.1,10+2*seriesCount-Math.min(5,Number(unit.novaDestructionStacks||0)));
   unit.attackType='area';unit.airAttack=false;
  }else{
   if(unit.ability&&Number(unit.novaMiniGunUntil||0)>performance.now()/1000)unit.ability.knockbackChance=.35;else if(unit.ability)delete unit.ability.knockbackChance;
   const levelScale=Math.max(.01,Number(unit.novaBaseAtk||166666)/166666);
   const miniGunBonus=Number(unit.novaMiniGunUntil||0)>performance.now()/1000?Number(unit.novaMiniGunBonus||0):0;
   unit.atk=Math.max(1,Math.round(4500*levelScale*(1+.03*Math.min(60,Number(unit.novaRapidAttackStacks||0)))+miniGunBonus));
-  unit.range=125;unit.spd=1.3;unit.interval=Math.max(.1,.5-.01*Math.min(40,Number(unit.novaRapidStacks||0)));
+  unit.range=125;unit.spd=1.3*allySpeedFactor;unit.interval=Math.max(.1,.5-.01*Math.min(40,Number(unit.novaRapidStacks||0)));
   unit.attackType='single';unit.airAttack=true;
  }
  unit.cardSpeed=unit.spd;
