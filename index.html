@@ -3041,9 +3041,9 @@ function formationBuffSummaryHTML(i){
  const isNova=c.name==='ノヴァ木下'&&!!c.ability?.modeSwitch;
  const novaSeriesCount=isNova?novaFormationSeriesCount():0,novaMythCount=isNova?novaFormationMythCount():0;
  const novaMythFactor=isNova?novaMythAttackFactor():1;
- const novaBaseAtk=Number(statAt(i,'atk')||0),novaBaseInterval=Number(statAt(i,'interval')||0);
+ const novaBaseAtk=Number(statAt(i,'atk')||0);
  const novaDestroyAtk=Math.max(1,Math.round(novaBaseAtk*(1+1.5*novaSeriesCount)*novaMythFactor));
- const novaDestroyInterval=Math.round((novaBaseInterval+2*novaSeriesCount)*100)/100;
+ const novaDestroyInterval=10+2*novaSeriesCount;
  const novaRapidAtk=Math.max(1,Math.round(4500*(novaBaseAtk/166666)));
  const totalFactor=aura*haifuAllyFactor*haifuSelfFactor*miraiKAllyFactor;
  const mobilityFactor=aura*haifuAllyFactor*miraiKAllyFactor;
