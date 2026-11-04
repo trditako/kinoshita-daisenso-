@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'genesis.js'
+      - 'tests/genesis-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -39,3 +41,7 @@ jobs:
             echo "node --check $file"
             node --check "$file"
           done
+      - name: Check Genesis Kinoshita script and regression tests
+        run: |
+          node --check genesis.js
+          node tests/genesis-kinoshita.test.js
