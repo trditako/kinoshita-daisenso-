@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.join(__dirname,'..');
+const source=fs.readFileSync(path.join(root,'genesis.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
+const abilities=[...source.matchAll(/\{id:(\d+),name:'([^']+)'/g)].map(m=>({id:Number(m[1]),name:m[2]}));
+assert.equal(abilities.length,37,'創世木下は37種類の能力を定義する');
+assert.deepEqual(abilities.map(a=>a.id),Array.from({length:37},(_,i)=>i+1),'能力IDは1〜37で連番');
+assert.equal(new Set(abilities.map(a=>a.name)).size,37,'能力名は重複しない');
+for(const name of ['次元崩壊','神殺し','創世の一撃','絶対防壁','永遠の再生','不滅の創世','世界創造','終焉と始まり','天罰の雷','崩壊連鎖','次元追放','全軍蘇生','世界改変','万物の創造主']){
+ assert.ok(abilities.some(a=>a.name===name),'能力が存在する: '+name);
+}
+assert.match(source,/name:GENESIS_NAME,cost:6000,hp:5000000,atk:250000/,'基本ステータスを定義');
+assert.match(source,/cards\.push\(genesisCard\)/,'既存カードの末尾へ追加');
+assert.match(source,/name:'創世神話'.*?rewardCharacter:GENESIS_NAME/s,'専用ステージのクリア報酬を設定');
+assert.match(source,/name:'原初の虚無木下'/,'専用ステージのボスを定義');
+assert.match(source,/genesisSelfRevived/,'自身の復活処理を実装');
+assert.match(source,/genesisAllyReviveUsed/,'味方の復活処理を実装');
+assert.match(source,/genesisNextEnergyAt/,'20秒ごとの創世エネルギーを実装');
+assert.match(source,/genesisNextGrowthAt/,'60秒ごとの成長を実装');
+assert.match(source,/genesisAbilityBook/,'37能力の詳細UIを実装');
+assert.match(html,/\.\/genesis\.js\?v=20261105-genesis-37/,'ゲーム本体から能力スクリプトを読み込む');
+assert.match(sw,/kinoshita-daisen-v64/,'Service Workerキャッシュを更新');
+assert.match(sw,/\.\/genesis\.js/,'オフラインキャッシュへ能力スクリプトを追加');
+process.stdout.write('創世木下テスト成功：37能力、ID、専用ステージ、報酬、UI、キャッシュを確認しました。\n');
