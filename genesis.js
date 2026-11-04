@@ -94,37 +94,50 @@ try{
  if(typeof saveFormationStableNames==='function')saveFormationStableNames();
  if(typeof syncOwnedCount==='function')syncOwnedCount();
 }catch(e){console.warn('Genesis Kinoshita save restoration skipped',e);}
-if(!enemyTypes['原初の虚無木下']){
- enemyTypes['原初の虚無木下']={
-  name:'原初の虚無木下',icon:'🌑',trait:'神話',hp:950000,atk:26000,range:520,spd:.2,interval:2.4,
-  attackType:'area',kb:3,money:1800,boss:true,
-  ability:{wave:true,waveLevel:6,waveChance:1,stopChance:.35,stopDuration:2,slowChance:.45,slowFactor:.5,slowDuration:4,
-   curseChance:.35,curseDuration:4,attackDownChance:.35,attackDownFactor:.5,attackDownDuration:5,
-   damageReduce:{chance:1,factor:.55},waveImmune:true,surgeImmune:true,knockbackImmune:true}
- };
-}
-if(!eventStages.some(st=>st&&st.name==='創世神話')){
- eventStages.push({
-  name:'創世神話',width:2700,baseHp:1800000,xp:75000,eventReward:GENESIS_NAME,rewardCharacter:GENESIS_NAME,
-  enemies:['原初の虚無木下','天照大神','古代神木下','酒呑童子','めっちゃ木下'],
-  schedule:[
-   {t:0,enemy:'原初の虚無木下',mult:1,fixedMultiplier:true,role:'boss'},
-   {t:4,enemy:'めっちゃ木下',mult:45,fixedMultiplier:true},
-   {t:8,enemy:'天照大神',mult:7,fixedMultiplier:true},
-   {t:14,enemy:'古代神木下',mult:9,fixedMultiplier:true},
-   {t:22,enemy:'原初の虚無木下',mult:1.35,fixedMultiplier:true,role:'boss'},
-   {t:32,enemy:'めっちゃ木下',mult:65,fixedMultiplier:true},
-   {t:42,enemy:'酒呑童子',mult:13,fixedMultiplier:true},
-   {t:55,enemy:'原初の虚無木下',mult:1.7,fixedMultiplier:true,role:'boss'},
-   {t:75,enemy:'古代神木下',mult:12,fixedMultiplier:true},
-   {t:95,enemy:'原初の虚無木下',mult:2.1,fixedMultiplier:true,role:'boss'}
-  ],
-  repeatSpawns:[
-   {start:28,interval:24,enemy:'めっちゃ木下',mult:55,fixedMultiplier:true},
-   {start:50,interval:36,enemy:'天照大神',mult:6,fixedMultiplier:true}
-  ]
- });
-}
+enemyTypes['原初の虚無木下']=enemyTypes['原初の虚無木下']||{
+ name:'原初の虚無木下',icon:'🌑',trait:'神話',hp:950000,atk:26000,range:520,spd:.2,interval:2.4,
+ attackType:'area',kb:3,money:1800,boss:true,
+ ability:{wave:true,waveLevel:6,waveChance:1,stopChance:.35,stopDuration:2,slowChance:.45,slowFactor:.5,slowDuration:4,
+  curseChance:.35,curseDuration:4,attackDownChance:.35,attackDownFactor:.5,attackDownDuration:5,
+  damageReduce:{chance:1,factor:.55},waveImmune:true,surgeImmune:true,knockbackImmune:true}
+};
+enemyTypes['創世木下・終焉形態']={
+ name:'創世木下・終焉形態',icon:'🌌',trait:'神話',hp:50000000,atk:200000,range:700,spd:.18,interval:1.2,
+ attackType:'area',kb:1,money:50000,boss:true,
+ ability:{
+  wave:true,waveLevel:10,waveChance:1,stopChance:.5,stopDuration:3,
+  slowChance:.65,slowFactor:.35,slowDuration:5,
+  curseChance:.5,curseDuration:6,attackDownChance:.5,attackDownFactor:.4,attackDownDuration:6,
+  damageReduce:{chance:1,factor:.35},
+  waveImmune:true,waveImmunity:true,surgeImmune:true,surgeImmunity:true,
+  knockbackImmune:true,stopImmune:true,slowImmune:true,curseImmune:true,
+  sealImmune:true,warpImmune:true,reflectImmune:true
+ }
+};
+const genesisFinalStage={
+ name:'創世神話',width:3600,baseHp:8000000,xp:75000,eventReward:GENESIS_NAME,rewardCharacter:GENESIS_NAME,
+ enemies:['創世木下・終焉形態','原初の虚無木下','天照大神','古代神木下','酒呑童子','めっちゃ木下'],
+ schedule:[
+  {t:0,enemy:'創世木下・終焉形態',mult:1,fixedMultiplier:true,role:'boss'},
+  {t:7,enemy:'めっちゃ木下',mult:90,fixedMultiplier:true},
+  {t:14,enemy:'天照大神',mult:18,fixedMultiplier:true},
+  {t:22,enemy:'原初の虚無木下',mult:5,fixedMultiplier:true,role:'boss'},
+  {t:32,enemy:'古代神木下',mult:24,fixedMultiplier:true},
+  {t:45,enemy:'酒呑童子',mult:28,fixedMultiplier:true},
+  {t:60,enemy:'めっちゃ木下',mult:120,fixedMultiplier:true},
+  {t:78,enemy:'天照大神',mult:28,fixedMultiplier:true},
+  {t:95,enemy:'原初の虚無木下',mult:8,fixedMultiplier:true,role:'boss'},
+  {t:115,enemy:'古代神木下',mult:35,fixedMultiplier:true}
+ ],
+ repeatSpawns:[
+  {start:38,interval:22,enemy:'めっちゃ木下',mult:100,fixedMultiplier:true},
+  {start:52,interval:34,enemy:'天照大神',mult:22,fixedMultiplier:true},
+  {start:72,interval:48,enemy:'酒呑童子',mult:24,fixedMultiplier:true}
+ ]
+};
+const genesisStageIndex=eventStages.findIndex(st=>st&&st.name==='創世神話');
+if(genesisStageIndex>=0)eventStages[genesisStageIndex]=genesisFinalStage;
+else eventStages.push(genesisFinalStage);
 function genesisInFormation(){
  return Array.isArray(formation)&&formation.includes(genesisIndex)&&typeof hasCharacter==='function'&&hasCharacter(genesisIndex);
 }
@@ -434,6 +447,32 @@ setInterval(()=>{
    if(enemy?.genesisIntervalDebuffUntil&&enemy.genesisIntervalDebuffUntil<=now){
     enemy.interval=Number(enemy.genesisBaseInterval||enemy.interval||1);
     enemy.genesisIntervalDebuffUntil=0;
+   }
+   if(enemy?.isEnemy&&enemy.name==='創世木下・終焉形態'&&enemy.hp>0){
+    if(!Number.isFinite(Number(enemy.genesisFinalBaseAtk)))enemy.genesisFinalBaseAtk=Number(enemy.atk||200000);
+    if(!Number.isFinite(Number(enemy.genesisFinalBaseInterval)))enemy.genesisFinalBaseInterval=Number(enemy.interval||1.2);
+    const ratio=Number(enemy.hp)/Math.max(1,Number(enemy.maxhp||enemy.hp));
+    if(ratio<=.5&&!enemy.genesisFinalPhase2){
+     enemy.genesisFinalPhase2=true;
+     enemy.atk=Math.round(enemy.genesisFinalBaseAtk*1.8);
+     enemy.interval=Math.max(.55,enemy.genesisFinalBaseInterval*.72);
+     if(enemy.ability?.damageReduce)enemy.ability.damageReduce.factor=.2;
+     if(enemy.ability)enemy.ability.waveLevel=12;
+     genesisSetMark(enemy,'🌑','第二形態：世界崩壊',999999,'genesisFinalPhase');
+     if(typeof popup==='function')popup('🌑 創世木下・世界崩壊',enemy.x,80,'criticalPop');
+     genesisRefreshUnit(enemy);
+    }
+    if(ratio<=.25&&!enemy.genesisFinalPhase3){
+     enemy.genesisFinalPhase3=true;
+     enemy.atk=Math.round(enemy.genesisFinalBaseAtk*2.6);
+     enemy.interval=Math.max(.35,enemy.genesisFinalBaseInterval*.48);
+     enemy.range=Math.max(Number(enemy.range||0),850);
+     if(enemy.ability?.damageReduce)enemy.ability.damageReduce.factor=.1;
+     if(enemy.ability){enemy.ability.waveLevel=15;enemy.ability.stopChance=.75;enemy.ability.stopDuration=4;enemy.ability.surge=true;enemy.ability.surgeChance=.5;}
+     genesisSetMark(enemy,'🔥','最終形態：終焉と創世',999999,'genesisFinalPhase');
+     if(typeof popup==='function')popup('🔥 創世木下・終焉と創世',enemy.x,80,'criticalPop');
+     genesisRefreshUnit(enemy);
+    }
    }
   }
  }
