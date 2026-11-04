@@ -59,12 +59,12 @@ if(genesisIndex<0){
  };
  cards.push(genesisCard);
  genesisIndex=cards.length-1;
- if(Array.isArray(charLevel))charLevel[genesisIndex]=1;
- if(Array.isArray(charMaxLevel))charMaxLevel[genesisIndex]=20;
- if(Array.isArray(charForm))charForm[genesisIndex]=1;
- if(Array.isArray(normalEvolved))normalEvolved[genesisIndex]=false;
- if(Array.isArray(ownedFlags))ownedFlags[genesisIndex]=false;
- if(Array.isArray(rechargeLeft))rechargeLeft[genesisIndex]=0;
+ if(Array.isArray(charLevel)&&!Number.isFinite(Number(charLevel[genesisIndex])))charLevel[genesisIndex]=1;
+ if(Array.isArray(charMaxLevel)&&!Number.isFinite(Number(charMaxLevel[genesisIndex])))charMaxLevel[genesisIndex]=20;
+ if(Array.isArray(charForm)&&!Number.isFinite(Number(charForm[genesisIndex])))charForm[genesisIndex]=1;
+ if(Array.isArray(normalEvolved)&&normalEvolved[genesisIndex]===undefined)normalEvolved[genesisIndex]=false;
+ if(Array.isArray(ownedFlags)&&ownedFlags[genesisIndex]===undefined)ownedFlags[genesisIndex]=false;
+ if(Array.isArray(rechargeLeft)&&rechargeLeft[genesisIndex]===undefined)rechargeLeft[genesisIndex]=0;
 }
 const genesisCard=cards[genesisIndex];
 genesisCard.id=genesisIndex;
@@ -74,7 +74,26 @@ genesisCard.ability={...(genesisCard.ability||{}),genesis:true,strong:genesisStr
  waveImmune:true,waveImmunity:true,surgeImmune:true,surgeImmunity:true,
  knockbackImmune:true,warpImmune:true,yabayabaImmune:true,reflectImmune:true};
 try{CURRENT_CHARACTER_COUNT=cards.length;}catch(e){}
-try{if(typeof syncOwnedCount==='function')syncOwnedCount();}catch(e){}
+try{
+ const savedNames=Array.isArray(ownedCharacterNamesAtBoot)?ownedCharacterNamesAtBoot:[];
+ if(Array.isArray(ownedFlags)){
+  while(ownedFlags.length<=genesisIndex)ownedFlags.push(false);
+  if(savedNames.includes(GENESIS_NAME))ownedFlags[genesisIndex]=true;
+ }
+ if(Array.isArray(charLevel)){
+  const lv=Number(charLevel[genesisIndex]);charLevel[genesisIndex]=Number.isFinite(lv)&&lv>=1?Math.floor(lv):1;
+ }
+ if(Array.isArray(charMaxLevel))charMaxLevel[genesisIndex]=Math.max(20,Math.min(30,Number(charMaxLevel[genesisIndex])||20));
+ if(Array.isArray(charForm))charForm[genesisIndex]=Number(charForm[genesisIndex])===2?2:1;
+ if(Array.isArray(normalEvolved))normalEvolved[genesisIndex]=!!normalEvolved[genesisIndex];
+ const savedFormation=Array.isArray(formationStableNamesAtBoot)?formationStableNamesAtBoot:(Array.isArray(formationCharacterNamesAtBoot)?formationCharacterNamesAtBoot:[]);
+ if(savedNames.includes(GENESIS_NAME)&&savedFormation.includes(GENESIS_NAME)&&ownedFlags?.[genesisIndex]){
+  formation=[genesisIndex,...formation.filter(i=>i!==genesisIndex)].slice(0,10);
+  if(typeof normalizeFormation==='function')normalizeFormation();
+ }
+ if(typeof saveFormationStableNames==='function')saveFormationStableNames();
+ if(typeof syncOwnedCount==='function')syncOwnedCount();
+}catch(e){console.warn('Genesis Kinoshita save restoration skipped',e);}
 if(!enemyTypes['原初の虚無木下']){
  enemyTypes['原初の虚無木下']={
   name:'原初の虚無木下',icon:'🌑',trait:'神話',hp:950000,atk:26000,range:520,spd:.2,interval:2.4,
@@ -220,7 +239,7 @@ function genesisBanish(target){
  if(!target||target.hp<=0||target.genesisBanishedUntil>performance.now()/1000)return;
  const now=performance.now()/1000,originalX=Number(target.x||0),token=now+3;
  target.genesisBanishedUntil=token;target.genesisBanishedX=originalX;
- target.spawnProtectedUntil=token;target.x=Math.max(Number(worldWidth||0)+400,originalX+1000);
+ target.spawnProtectedUntil=token;target.x=-500;
  genesisSetMark(target,'🌀','次元追放',3,'genesisBanish');
  setTimeout(()=>{
   if(target&&target.hp>0&&target.genesisBanishedUntil===token&&Array.isArray(enemies)&&enemies.includes(target)){
@@ -230,9 +249,16 @@ function genesisBanish(target){
   }
  },3000);
 }
+function genesisScheduleDeadEnemyCleanup(){
+ setTimeout(()=>{
+  if(!Array.isArray(enemies))return;
+  for(const enemy of [...enemies])if(enemy&&enemy.hp<=0&&enemies.includes(enemy))removeEnemy(enemy);
+ },0);
+}
 function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
  if(!source||source.name!==GENESIS_NAME||!target||!target.isEnemy||isAbilitySealed(source))return;
  const now=performance.now()/1000;
+ let needsCleanup=false;
  source.genesisHitCount=(Number(source.genesisHitCount||0)+1);
  // ① 次元崩壊
  if(Math.random()<.5&&target.hp>0)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*2)),source,{genesisInternal:true});
@@ -243,7 +269,7 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
   for(const enemy of [...enemies]){
    if(!enemy||enemy.hp<=0)continue;
    _genesisOriginalHit(enemy,Math.max(1,Math.round(source.atk*3)),source,{genesisInternal:true});
-   if(enemy.hp<=0)removeEnemy(enemy);
+   if(enemy.hp<=0)needsCleanup=true;
   }
   if(typeof popup==='function')popup('⚡ 天罰の雷',source.x,90,'criticalPop');
  }
@@ -252,7 +278,7 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
   for(const enemy of [...enemies]){
    if(!enemy||enemy===target||enemy.hp<=0||Math.abs(Number(enemy.x||0)-Number(target.x||0))>180)continue;
    _genesisOriginalHit(enemy,Math.max(1,Math.round(source.atk*2)),source,{genesisInternal:true});
-   if(enemy.hp<=0)removeEnemy(enemy);
+   if(enemy.hp<=0)needsCleanup=true;
   }
   if(typeof popup==='function')popup('💥 崩壊連鎖',target.x,90,'criticalPop');
  }
@@ -291,13 +317,13 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
  }
  // ㉜ 次元追放
  if(target.hp>0&&Math.random()<.05)genesisBanish(target);
+ if(needsCleanup)genesisScheduleDeadEnemyCleanup();
 }
 const _genesisOriginalHit=hit;
 hit=function(target,damage,source,abilitySource){
  const before=Number(target?.hp||0);
  const sourceIsGenesis=source?.name===GENESIS_NAME&&!abilitySource?.genesisInternal;
  const targetIsGenesis=target?.name===GENESIS_NAME&&!target?.isEnemy;
- const targetBeforeMax=Number(target?.maxhp||1);
  const result=_genesisOriginalHit(target,damage,source,abilitySource);
  const after=Number(target?.hp||0);
  if(sourceIsGenesis&&target?.isEnemy&&before>after){
@@ -322,6 +348,13 @@ const _genesisOriginalDamageAgainst=damageAgainst;
 damageAgainst=function(source,target,baseAtk){
  let dealt=_genesisOriginalDamageAgainst(source,target,baseAtk);
  const now=performance.now()/1000;
+ if(source?.name===GENESIS_NAME&&target?.isEnemy){
+  const resist=target?.ability?.resist||target?.resist;
+  if(resist&&typeof traitMultiplier==='function'){
+   const factor=Math.max(.01,Math.min(1,Number(traitMultiplier(resist,source,'min'))||1));
+   if(factor<1)dealt=Math.round(dealt*(1+factor)/(2*factor));
+  }
+ }
  if(source?.name===GENESIS_NAME&&target?.genesisVulnerabilityUntil>now)dealt=Math.round(dealt*1.3);
  return Math.max(1,dealt);
 };
@@ -397,7 +430,15 @@ renderFormationBuffSummary=function(){
 let genesisLastTick=performance.now()/1000;
 setInterval(()=>{
  const now=performance.now()/1000,dt=Math.max(0,Math.min(1,now-genesisLastTick));genesisLastTick=now;
- if(typeof running==='undefined'||!running)return;
+ if(typeof running==='undefined'||!running||(typeof paused!=='undefined'&&paused))return;
+ if(Array.isArray(enemies)){
+  for(const enemy of enemies){
+   if(enemy?.genesisIntervalDebuffUntil&&enemy.genesisIntervalDebuffUntil<=now){
+    enemy.interval=Number(enemy.genesisBaseInterval||enemy.interval||1);
+    enemy.genesisIntervalDebuffUntil=0;
+   }
+  }
+ }
  const creator=genesisAlive();
  if(!creator)return;
  if(!isAbilitySealed(creator)){
@@ -426,7 +467,6 @@ setInterval(()=>{
  }
  const energy=1+.2*Number(creator.genesisEnergyStacks||0);
  const growth=1+.1*Number(creator.genesisGrowthStacks||0);
- const awakened=creator.genesisAwakenedUntil>now;
  if(creator.hp<=creator.maxhp*.25&&!creator.genesisAwakeningUsed){
   // ⑰ 終焉と始まり
   creator.genesisAwakeningUsed=true;creator.genesisAwakenedUntil=now+20;
