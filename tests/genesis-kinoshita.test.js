@@ -18,12 +18,17 @@ assert.match(source,/name:GENESIS_NAME,cost:6000,hp:5000000,atk:250000/,'基本�
 assert.match(source,/cards\.push\(genesisCard\)/,'既存カードの末尾へ追加');
 assert.match(source,/name:'創世神話'.*?rewardCharacter:GENESIS_NAME/s,'専用ステージのクリア報酬を設定');
 assert.match(source,/name:'原初の虚無木下'/,'専用ステージのボスを定義');
+assert.match(source,/enemyTypes\['創世木下・終焉形態'\]=\{[\s\S]*?hp:50000000,atk:200000,range:700/,'敵版創世木下の最終ボス性能を定義');
+assert.match(source,/genesisFinalPhase2/,'HP50%で第二形態へ移行');
+assert.match(source,/genesisFinalPhase3/,'HP25%で最終形態へ移行');
+assert.match(source,/width:3600,baseHp:8000000/,'専用ステージを高難易度に調整');
+assert.match(source,/enemy:'創世木下・終焉形態'/,'敵版創世木下を開幕ボスに設定');
 assert.match(source,/genesisSelfRevived/,'自身の復活処理を実装');
 assert.match(source,/genesisAllyReviveUsed/,'味方の復活処理を実装');
 assert.match(source,/genesisNextEnergyAt/,'20秒ごとの創世エネルギーを実装');
 assert.match(source,/genesisNextGrowthAt/,'60秒ごとの成長を実装');
 assert.match(source,/genesisAbilityBook/,'37能力の詳細UIを実装');
 assert.match(html,/\.\/genesis\.js\?v=20261105-genesis-37/,'ゲーム本体から能力スクリプトを読み込む');
-assert.match(sw,/kinoshita-daisen-v64/,'Service Workerキャッシュを更新');
+assert.match(sw,/kinoshita-daisen-v65/,'Service Workerキャッシュを更新');
 assert.match(sw,/\.\/genesis\.js/,'オフラインキャッシュへ能力スクリプトを追加');
 process.stdout.write('創世木下テスト成功：37能力、ID、専用ステージ、報酬、UI、キャッシュを確認しました。\n');
