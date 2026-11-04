@@ -3,7 +3,7 @@
 const GENESIS_NAME='創世木下';
 const GENESIS_ABILITY_DEFS=[
  {id:1,name:'次元崩壊',desc:'攻撃時50%で通常攻撃の200%の追加攻撃'},
- {id:2,name:'神殺し',desc:'全属性に2.5倍ダメージ。敵のダメージ軽減を一部貫通'},
+ {id:2,name:'神殺し',desc:'全属性に2.5倍ダメージ'},
  {id:3,name:'創世の一撃',desc:'10%で通常攻撃の500%の追加攻撃'},
  {id:4,name:'空間断裂',desc:'範囲内の敵をまとめて攻撃'},
  {id:5,name:'絶対防壁',desc:'被ダメージ90%軽減。主要な妨害・能力封印に耐性'},
@@ -19,7 +19,7 @@ const GENESIS_ABILITY_DEFS=[
  {id:15,name:'神速の祝福',desc:'編成中、味方全員の移動速度を20%上昇'},
  {id:16,name:'世界創造',desc:'出撃20秒ごとに攻撃力+20%。最大3段階'},
  {id:17,name:'終焉と始まり',desc:'HP25%以下で一度覚醒。攻撃力2倍、攻撃間隔0.5秒、被ダメージ95%軽減。20秒'},
- {id:18,name:'天罰の雷',desc:'5回攻撃するごとに敵全体へ攻撃力300%の雷撃'},
+ {id:18,name:'天罰の雷',desc:'5回の攻撃動作ごとに敵全体へ攻撃力300%の雷撃'},
  {id:19,name:'無限貫通',desc:'範囲攻撃で射程内の敵すべてを攻撃'},
  {id:20,name:'崩壊連鎖',desc:'敵撃破時、周囲へ攻撃力200%の爆発'},
  {id:21,name:'神域の追撃',desc:'攻撃時25%で通常攻撃の50%の追撃を3回'},
@@ -259,13 +259,18 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
  if(!source||source.name!==GENESIS_NAME||!target||!target.isEnemy||isAbilitySealed(source))return;
  const now=performance.now()/1000;
  let needsCleanup=false;
- source.genesisHitCount=(Number(source.genesisHitCount||0)+1);
+ const attackToken=Math.floor(performance.now()/50);
+ if(source.genesisLastAttackToken!==attackToken){
+  source.genesisLastAttackToken=attackToken;
+  source.genesisHitCount=Number(source.genesisHitCount||0)+1;
+ }
  // ① 次元崩壊
  if(Math.random()<.5&&target.hp>0)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*2)),source,{genesisInternal:true});
  // ③ 創世の一撃
  if(target.hp>0&&Math.random()<.1)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*5)),source,{genesisInternal:true});
  // ⑱ 天罰の雷：5ヒットごとに敵全体へ攻撃力300%
- if(source.genesisHitCount%5===0){
+ if(source.genesisHitCount%5===0&&source.genesisThunderToken!==attackToken){
+  source.genesisThunderToken=attackToken;
   for(const enemy of [...enemies]){
    if(!enemy||enemy.hp<=0)continue;
    _genesisOriginalHit(enemy,Math.max(1,Math.round(source.atk*3)),source,{genesisInternal:true});
@@ -348,13 +353,6 @@ const _genesisOriginalDamageAgainst=damageAgainst;
 damageAgainst=function(source,target,baseAtk){
  let dealt=_genesisOriginalDamageAgainst(source,target,baseAtk);
  const now=performance.now()/1000;
- if(source?.name===GENESIS_NAME&&target?.isEnemy){
-  const resist=target?.ability?.resist||target?.resist;
-  if(resist&&typeof traitMultiplier==='function'){
-   const factor=Math.max(.01,Math.min(1,Number(traitMultiplier(resist,source,'min'))||1));
-   if(factor<1)dealt=Math.round(dealt*(1+factor)/(2*factor));
-  }
- }
  if(source?.name===GENESIS_NAME&&target?.genesisVulnerabilityUntil>now)dealt=Math.round(dealt*1.3);
  return Math.max(1,dealt);
 };
@@ -396,7 +394,7 @@ const _genesisOriginalShowCharacterDetail=showCharacterDetail;
 showCharacterDetail=function(i){
  const result=_genesisOriginalShowCharacterDetail(i);
  if(i!==genesisIndex)return result;
- const root=document.getElementById('detail'),panel=root?.querySelector('.panel');
+ const root=document.getElementById('detail'),panel=root?.querySelector('.panel')||root;
  if(!panel)return result;
  panel.querySelector('#genesisAbilityBook')?.remove();
  const section=document.createElement('section');section.id='genesisAbilityBook';
@@ -450,7 +448,11 @@ setInterval(()=>{
   if(!ally||ally.isEnemy||ally.hp<=0)continue;
   ally.genesisStatusGuard=genesisInFormation();
   ally.genesisAuraActive=Math.abs(Number(ally.x||0)-Number(creator.x||0))<=180;
-  if(ally!==creator)ally.hp=Math.min(ally.maxhp,ally.hp+ally.maxhp*.005*dt);
+  if(ally!==creator){
+   const beforeHeal=ally.hp;
+   ally.hp=Math.min(ally.maxhp,ally.hp+ally.maxhp*.005*dt);
+   if(ally.hp>beforeHeal)genesisRefreshUnit(ally);
+  }
  }
  // ⑯ 世界創造：20秒ごとに攻撃力+20%、最大3段階
  if(stageTime>=Number(creator.genesisNextEnergyAt||Infinity)&&Number(creator.genesisEnergyStacks||0)<3){
