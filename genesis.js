@@ -552,4 +552,130 @@ try{
  if(typeof renderFormationBuffSummary==='function')renderFormationBuffSummary();
 }catch(e){console.warn('Genesis Kinoshita initialization UI refresh failed',e);}
 window.GENESIS_KINOSHITA_TEST_API={index:genesisIndex,abilities:GENESIS_ABILITY_DEFS};
+}
+
+// 創世木下対策専用キャラクター
+const GENESIS_COUNTER_NAME='創世討伐兵器・零式';
+let genesisCounterIndex=cards.findIndex(c=>c&&c.name===GENESIS_COUNTER_NAME);
+if(genesisCounterIndex<0){
+ const genesisCounterCard={
+  name:GENESIS_COUNTER_NAME,cost:5200,hp:4500000,atk:700000,range:950,spd:.35,interval:3.2,recharge:240,
+  icon:'🛡️',motion:'super',attackType:'area',kb:2,trait:'無',rarity:'UR',series:'創世神話',
+  specialReward:true,eventReward:GENESIS_COUNTER_NAME,
+  ability:{
+   name:'終焉特化・創世核破壊',
+   desc:'創世木下・終焉形態に20倍、その他の神話属性に4倍のダメージ。終焉形態から受けるダメージを75%軽減。波動・停止・鈍足・呪い・攻撃力低下・能力封印・吹っ飛ばし・ワープを無効化。攻撃時20%で攻撃力300%の追加砲撃。',
+   genesisCounter:true,
+   stopImmune:true,slowImmune:true,curseImmune:true,attackDownImmune:true,sealImmune:true,
+   waveImmune:true,waveImmunity:true,surgeImmune:true,surgeImmunity:true,
+   knockbackImmune:true,warpImmune:true
+  }
+ };
+ cards.push(genesisCounterCard);
+ genesisCounterIndex=cards.length-1;
+}
+const genesisCounterCard=cards[genesisCounterIndex];
+genesisCounterCard.id=genesisCounterIndex;
+genesisCounterCard.ability={
+ ...(genesisCounterCard.ability||{}),
+ name:'終焉特化・創世核破壊',
+ desc:'創世木下・終焉形態に20倍、その他の神話属性に4倍のダメージ。終焉形態から受けるダメージを75%軽減。波動・停止・鈍足・呪い・攻撃力低下・能力封印・吹っ飛ばし・ワープを無効化。攻撃時20%で攻撃力300%の追加砲撃。',
+ genesisCounter:true,
+ stopImmune:true,slowImmune:true,curseImmune:true,attackDownImmune:true,sealImmune:true,
+ waveImmune:true,waveImmunity:true,surgeImmune:true,surgeImmunity:true,
+ knockbackImmune:true,warpImmune:true
+};
+try{
+ if(Array.isArray(charLevel)&&!Number.isFinite(Number(charLevel[genesisCounterIndex])))charLevel[genesisCounterIndex]=1;
+ if(Array.isArray(charMaxLevel)&&!Number.isFinite(Number(charMaxLevel[genesisCounterIndex])))charMaxLevel[genesisCounterIndex]=30;
+ if(Array.isArray(charForm)&&!Number.isFinite(Number(charForm[genesisCounterIndex])))charForm[genesisCounterIndex]=1;
+ if(Array.isArray(normalEvolved)&&normalEvolved[genesisCounterIndex]===undefined)normalEvolved[genesisCounterIndex]=false;
+ if(Array.isArray(ownedFlags)){
+  while(ownedFlags.length<=genesisCounterIndex)ownedFlags.push(false);
+  const savedNames=Array.isArray(ownedCharacterNamesAtBoot)?ownedCharacterNamesAtBoot:[];
+  if(savedNames.includes(GENESIS_COUNTER_NAME))ownedFlags[genesisCounterIndex]=true;
+ }
+ if(Array.isArray(rechargeLeft)&&!Number.isFinite(Number(rechargeLeft[genesisCounterIndex])))rechargeLeft[genesisCounterIndex]=0;
+ CURRENT_CHARACTER_COUNT=cards.length;
+}catch(e){console.warn('Genesis counter save restoration skipped',e);}
+enemyTypes['創世討伐訓練用・虚無木下']=enemyTypes['創世討伐訓練用・虚無木下']||{
+ name:'創世討伐訓練用・虚無木下',icon:'🌑',trait:'神話',hp:1900000,atk:52000,range:520,spd:.2,interval:2.4,
+ attackType:'area',kb:3,money:3000,boss:true,
+ ability:{wave:true,waveLevel:5,waveChance:1,stopChance:.25,stopDuration:1.5,
+  slowChance:.3,slowFactor:.6,slowDuration:3,damageReduce:{chance:1,factor:.55},
+  waveImmune:true,surgeImmune:true,knockbackImmune:true}
+};
+const genesisCounterStage={
+ name:'創世討伐訓練',width:2600,baseHp:2500000,xp:45000,
+ eventReward:GENESIS_COUNTER_NAME,rewardCharacter:GENESIS_COUNTER_NAME,
+ enemies:['創世討伐訓練用・虚無木下','めっちゃ木下','天照大神','酒呑童子'],
+ schedule:[
+  {t:0,enemy:'創世討伐訓練用・虚無木下',mult:1,fixedMultiplier:true,role:'boss'},
+  {t:6,enemy:'めっちゃ木下',mult:35,fixedMultiplier:true},
+  {t:14,enemy:'天照大神',mult:10,fixedMultiplier:true},
+  {t:24,enemy:'酒呑童子',mult:12,fixedMultiplier:true},
+  {t:38,enemy:'めっちゃ木下',mult:45,fixedMultiplier:true}
+ ],
+ repeatSpawns:[
+  {start:48,interval:28,enemy:'めっちゃ木下',mult:40,fixedMultiplier:true},
+  {start:58,interval:42,enemy:'天照大神',mult:10,fixedMultiplier:true}
+ ]
+};
+const genesisCounterStageIndex=eventStages.findIndex(st=>st&&st.name==='創世討伐訓練');
+if(genesisCounterStageIndex>=0)eventStages[genesisCounterStageIndex]=genesisCounterStage;
+else eventStages.push(genesisCounterStage);
+
+// 与ダメージ補正。終焉形態の最終段階でも有効な専用特効。
+const _genesisCounterOriginalDamageAgainst=damageAgainst;
+damageAgainst=function(source,target,baseAtk){
+ let dealt=_genesisCounterOriginalDamageAgainst(source,target,baseAtk);
+ if(source?.name===GENESIS_COUNTER_NAME&&target?.isEnemy){
+  if(target.name==='創世木下・終焉形態')dealt=Math.round(dealt*20);
+  else if(target.trait==='神話')dealt=Math.round(dealt*4);
+ }
+ return Math.max(1,dealt);
+};
+// 終焉形態からの被ダメージを75%軽減。
+const _genesisCounterOriginalDamageTakenBy=damageTakenBy;
+damageTakenBy=function(target,attacker){
+ let dealt=_genesisCounterOriginalDamageTakenBy(target,attacker);
+ if(target?.name===GENESIS_COUNTER_NAME&&attacker?.isEnemy&&attacker.name==='創世木下・終焉形態'){
+  dealt=Math.round(dealt*.25);
+ }
+ return Math.max(1,dealt);
+};
+// 20%で攻撃力300%の追加砲撃。内部追加攻撃では再抽選しない。
+const _genesisCounterOriginalHit=hit;
+hit=function(target,damage,source,abilitySource){
+ const result=_genesisCounterOriginalHit(target,damage,source,abilitySource);
+ if(source?.name===GENESIS_COUNTER_NAME&&target?.isEnemy&&target.hp>0&&
+    !abilitySource?.genesisCounterInternal&&Math.random()<.2){
+  _genesisOriginalHit(target,Math.max(1,Math.round(Number(source.atk||0)*3)),source,{genesisCounterInternal:true});
+  if(typeof popup==='function')popup('🛡️ 創世核破壊・追加砲撃',target.x,85,'criticalPop');
+ }
+ return result;
+};
+const _genesisCounterOriginalShowCharacterDetail=showCharacterDetail;
+showCharacterDetail=function(i){
+ const result=_genesisCounterOriginalShowCharacterDetail(i);
+ if(i!==genesisCounterIndex)return result;
+ const root=document.getElementById('detail'),panel=root?.querySelector('.panel')||root;
+ if(!panel)return result;
+ panel.querySelector('#genesisCounterAbilityInfo')?.remove();
+ const section=document.createElement('section');section.id='genesisCounterAbilityInfo';
+ section.style.cssText='margin:10px 0;padding:12px;border:2px solid #0f766e;border-radius:12px;background:linear-gradient(135deg,#082f49,#134e4a);color:#fff;text-align:left';
+ const heading=document.createElement('h3');heading.textContent='🛡️ 創世木下・終焉形態 対策能力';heading.style.cssText='margin:0 0 8px;font-size:17px';
+ const body=document.createElement('div');body.style.cssText='font-size:13px;line-height:1.7';
+ body.textContent='終焉形態への特効20倍／神話属性への特効4倍。終焉形態からの被ダメージ75%軽減。波動・停止・鈍足・呪い・攻撃力低下・能力封印・吹っ飛ばし・ワープ無効。攻撃時20%で攻撃力300%の追加砲撃。';
+ const note=document.createElement('p');note.style.cssText='margin:8px 0 0;color:#a7f3d0;font-size:12px';note.textContent='入手方法：イベント「創世討伐訓練」クリア報酬';
+ section.append(heading,body,note);panel.appendChild(section);
+ return result;
+};
+try{
+ if(typeof save==='function')save();
+ if(typeof renderCards==='function')renderCards();
+ if(typeof renderOwnedStart==='function')renderOwnedStart();
+ if(typeof renderStageSelect==='function')renderStageSelect();
+}catch(e){console.warn('Genesis counter initialization UI refresh failed',e);}
+
 })();
