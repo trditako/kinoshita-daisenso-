@@ -29,6 +29,14 @@ assert.match(source,/genesisNextEnergyAt/,'20秒ごとの創世エネルギー�
 assert.match(source,/genesisNextGrowthAt/,'60秒ごとの成長を実装');
 assert.match(source,/genesisAbilityBook/,'37能力の詳細UIを実装');
 assert.match(html,/\.\/genesis\.js\?v=20261105-genesis-37/,'ゲーム本体から能力スクリプトを読み込む');
-assert.match(sw,/kinoshita-daisen-v65/,'Service Workerキャッシュを更新');
+assert.match(sw,/kinoshita-daisen-v67/,'Service Workerキャッシュを更新');
 assert.match(sw,/\.\/genesis\.js/,'オフラインキャッシュへ能力スクリプトを追加');
 process.stdout.write('創世木下テスト成功：37能力、ID、専用ステージ、報酬、UI、キャッシュを確認しました。\n');
+
+assert.match(source,/name:GENESIS_COUNTER_NAME,cost:5200,hp:4500000,atk:700000,range:950/,'創世討伐兵器・零式の基本ステータス');
+assert.match(source,/target\.name==='創世木下・終焉形態'\)dealt=Math\.round\(dealt\*20\)/,'終焉形態への専用特効20倍');
+assert.match(source,/target\.trait==='神話'\)dealt=Math\.round\(dealt\*4\)/,'神話属性への特効4倍');
+assert.match(source,/dealt=Math\.round\(dealt\*\.25\)/,'終焉形態からの被ダメージ75%軽減');
+assert.match(source,/Math\.random\(\)<\.2/,'追加砲撃の発動率');
+assert.match(source,/name:'創世討伐訓練'.*?rewardCharacter:GENESIS_COUNTER_NAME/s,'対策キャラクターの入手ステージ');
+assert.match(source,/genesisCounterAbilityInfo/,'対策能力のキャラクター詳細UI');
