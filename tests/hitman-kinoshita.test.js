@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.join(__dirname, '..');
+const source = fs.readFileSync(path.join(root, 'hitman.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const sw = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
+const workflow = fs.readFileSync(path.join(root, '.github/workflows/validate-index.yml'), 'utf8');
+
+assert.match(source, /name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5100/);
+assert.match(source, /multiAttack: \[8900, 5100\], range: 220, spd: 0\.8, interval: 1/);
+assert.match(source, /recharge: 75/);
+assert.match(source, /trait: '黒', rarity: '伝説レア'/);
+assert.match(source, /strong: \{ 神話: 5 \ }, resist: \{ 神話: 0\.15 \ }/);
+assert.match(source, /curseImmune: true, stopImmune: true, waveImmune: true/);
+assert.match(source, /reflectImmune: true/);
+assert.match(source, /safeDamage = Math\.min\(safeDamage, Math\.max\(1, Number\(target\.maxhp \|\| 1\) \* 0\.1\)/);
+assert.match(source, /Math\.round\(actual \* 0\.8\)/);
+assert.match(source, /Math\.random\(\) >= 0\.25/);
+assert.match(source, /Number\(unit\.atk \|\| 8900\) \* 15/);
+assert.match(source, /Number\(dealt \|\| 0\) \* 0\.5/);
+assert.match(source, /hitmanSkill2Uses \|\| 0\) >= 2/);
+assert.match(source, /hitmanRideUntil = Number\(stageTime \|\| 0\) \+ 3/);
+assert.match(source, /unit\.hitmanNextRideAt \+= 15/);
+assert.match(source, /unit\.spd = Math\.max\(0\.01, core\.spd \* factor \+ \(unit\.hitmanRiding \? 2 : 0\)\)/);
+assert.match(source, /target\.festivalRegenDisabledUntil/);
+assert.match(source, /Number\(money \|\| 0\) \+ 75/);
+assert.match(source, /rechargeLeft\[unit\.cardIndex\] \* 0\.97/);
+assert.match(source, /unit\.hitmanKillStacks = Math\.min\(20/);
+assert.match(source, /\[0, 200, 400\]/);
+assert.match(source, /x -= 120 \* dt/);
+assert.match(source, /Math\.round\(Number\(unit\.atk \|\| 8900\) \* 5\)/);
+assert.match(source, /setTimeout\(\(\) => originalFollowup\(source, target, baseAttack, hitIndex\), 100\)/);
+assert.match(source, /selectedChapter\) === 7/);
+assert.match(source, /selectedStage\) === 48/);
+assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
+
+assert.match(html, /GAME_VERSION='v1\.9\.52'/);
+assert.match(html, /ヒットマン木下/);
+assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
+assert.match(sw, /kinoshita-daisen-v68/);
+assert.match(sw, /\.\/hitman\.js/);
+assert.match(workflow, /node --check hitman\.js/);
+assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
+process.stdout.write('ヒットマン木下テスト成功：基本性能、特性、固有能力、解放条件、追跡マーカー、キャッシュを確認しました。\n');
