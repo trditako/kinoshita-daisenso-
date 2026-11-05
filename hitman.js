@@ -293,6 +293,19 @@ hit = function(target, damage, source, abilitySource) {
   return result;
 };
 
+const originalEnemyAttackTarget = enemyAttackTarget;
+enemyAttackTarget = function(e, t, ea, now2, sourceSealed) {
+  const attackNow = Number(now2 || performance.now() / 1000);
+  const suppressHealing = !!(e && e.ability && Number(e.festivalRegenDisabledUntil || 0) > attackNow);
+  const originalHealOnKill = suppressHealing ? e.ability.healOnKill : undefined;
+  if (suppressHealing && originalHealOnKill) e.ability.healOnKill = 0;
+  try {
+    return originalEnemyAttackTarget(e, t, ea, now2, sourceSealed);
+  } finally {
+    if (suppressHealing) e.ability.healOnKill = originalHealOnKill;
+  }
+};
+
 const originalGetAttackSequence = getAttackSequence;
 getAttackSequence = function(source, target) {
   if (source && source.name === NAME) {

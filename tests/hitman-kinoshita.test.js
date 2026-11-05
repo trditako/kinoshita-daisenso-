@@ -26,6 +26,8 @@ assert.match(source, /hitmanRideUntil = Number\(stageTime \|\| 0\) \+ 3/);
 assert.match(source, /unit\.hitmanNextRideAt \+= 15/);
 assert.match(source, /unit\.spd = Math\.max\(0\.01, core\.spd \* factor \+ \(unit\.hitmanRiding \? 2 : 0\)\)/);
 assert.match(source, /target\.festivalRegenDisabledUntil/);
+assert.match(source, /const originalEnemyAttackTarget = enemyAttackTarget/);
+assert.match(source, /if \(suppressHealing && originalHealOnKill\) e\.ability\.healOnKill = 0/);
 assert.match(source, /Number\(money \|\| 0\) \+ 75/);
 assert.match(source, /rechargeLeft\[unit\.cardIndex\] \* 0\.97/);
 assert.match(source, /unit\.hitmanKillStacks = Math\.min\(20/);
