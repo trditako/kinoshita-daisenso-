@@ -13,7 +13,7 @@ assert.match(source, /name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5
 assert.match(source, /multiAttack: \[8900, 5100\], range: 220, spd: 0\.8, interval: 1/);
 assert.match(source, /recharge: 75/);
 assert.match(source, /trait: '黒', rarity: '伝説レア'/);
-assert.match(source, /strong: \{ 神話: 5 \ }, resist: \{ 神話: 0\.15 \ }/);
+assert.match(source, /strong: \{ 神話: 5 \}, resist: \{ 神話: 0\.15 \}/);
 assert.match(source, /curseImmune: true, stopImmune: true, waveImmune: true/);
 assert.match(source, /reflectImmune: true/);
 assert.match(source, /safeDamage = Math\.min\(safeDamage, Math\.max\(1, Number\(target\.maxhp \|\| 1\) \* 0\.1\)/);
