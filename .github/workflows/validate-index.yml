@@ -4,7 +4,9 @@ on:
     paths:
       - 'index.html'
       - 'genesis.js'
+      - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
+      - 'tests/hitman-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -12,6 +14,8 @@ on:
       - feat/chokinoshita-festival-and-growth-ability
     paths:
       - 'index.html'
+      - 'hitman.js'
+      - 'tests/hitman-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
@@ -44,4 +48,6 @@ jobs:
       - name: Check Genesis Kinoshita script and regression tests
         run: |
           node --check genesis.js
+          node --check hitman.js
           node tests/genesis-kinoshita.test.js
+          node tests/hitman-kinoshita.test.js
