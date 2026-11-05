@@ -552,7 +552,6 @@ try{
  if(typeof renderFormationBuffSummary==='function')renderFormationBuffSummary();
 }catch(e){console.warn('Genesis Kinoshita initialization UI refresh failed',e);}
 window.GENESIS_KINOSHITA_TEST_API={index:genesisIndex,abilities:GENESIS_ABILITY_DEFS};
-}
 
 // 創世木下対策専用キャラクター
 const GENESIS_COUNTER_NAME='創世討伐兵器・零式';
