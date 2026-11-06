@@ -5,9 +5,12 @@ on:
       - 'index.html'
       - 'genesis.js'
       - 'hitman.js'
+      - 'service-worker.js'
+      - 'formation-detail-enhancements.js'
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
+      - 'tests/character-skill-combat-effects.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -16,8 +19,11 @@ on:
     paths:
       - 'index.html'
       - 'hitman.js'
+      - 'service-worker.js'
+      - 'formation-detail-enhancements.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
+      - 'tests/character-skill-combat-effects.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
@@ -34,8 +40,8 @@ jobs:
           import re
           from pathlib import Path
           html = Path('index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script\b([^>]*)>([\s\S]*?)</script\s*>', html, re.I)
-          inline = [(attrs, body) for attrs, body in scripts if not re.search(r'\bsrc\s*=', attrs, re.I) and body.strip()]
+          scripts = re.findall(r'<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>', html, re.I)
+          inline = [(attrs, body) for attrs, body in scripts if not re.search(r'\\bsrc\\s*=', attrs, re.I) and body.strip()]
           if not inline:
               raise SystemExit('No inline JavaScript blocks found')
           Path('/tmp/inline-js').mkdir(exist_ok=True)
@@ -47,10 +53,13 @@ jobs:
             echo "node --check $file"
             node --check "$file"
           done
-      - name: Check Genesis Kinoshita script and regression tests
+      - name: Check game scripts and regression tests
         run: |
           node --check genesis.js
           node --check hitman.js
+          node --check service-worker.js
+          node --check formation-detail-enhancements.js
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
+          node tests/character-skill-combat-effects.test.js
