@@ -1,5 +1,11 @@
 const CACHE_NAME="kinoshita-daisen-v73";
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./genesis.js","./hitman.js","./formation-detail-enhancements.js"]))});
+self.addEventListener('install',e=>{
+ self.skipWaiting();
+ e.waitUntil((async()=>{
+  const cache=await caches.open(CACHE_NAME);
+  await cache.addAll(["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./genesis.js","./hitman.js","./formation-detail-enhancements.js"]);
+ })());
+});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE_NAME).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
  if(e.request.method!=="GET")return;
