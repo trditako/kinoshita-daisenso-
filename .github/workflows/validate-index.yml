@@ -4,11 +4,9 @@ on:
     paths:
       - 'index.html'
       - 'genesis.js'
-      - 'genesis.js'
       - 'hitman.js'
       - 'balance.js'
       - 'tests/balance-overhaul.test.js'
-      - 'tests/genesis-kinoshita.test.js'
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
@@ -22,6 +20,7 @@ on:
       - 'hitman.js'
       - 'balance.js'
       - 'tests/balance-overhaul.test.js'
+      - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
@@ -52,7 +51,7 @@ jobs:
             echo "node --check $file"
             node --check "$file"
           done
-      - name: Check Genesis Kinoshita script and regression tests
+      - name: Check character scripts and regression tests
         run: |
           node --check genesis.js
           node --check hitman.js
