@@ -2412,7 +2412,7 @@ function updateStatusMark(target){
   const entries=[],seen=new Set();
   const push=(key,icon,label,kind)=>{if(seen.has(key)||!label)return;seen.add(key);entries.push({icon:String(icon||'•'),label:String(label),kind});};
   const buffTypes=new Set(['attackBoost','haifuDefense','haifuGrowth','miraiKInterval','miraiKTrait']);
-  const debuffTypes=new Set(['debuff','stop','slow','attackDown','curse','miraiKRangeDown','mythRune','ivyYabayaba','warp']);
+  const debuffTypes=new Set(['debuff','stop','slow','attackDown','curse','haifuAttackDown','miraiKRangeDown','mythRune','ivyYabayaba','warp']);
   for(const [key,value] of Object.entries(statuses)){const kind=buffTypes.has(key)?'buff':debuffTypes.has(key)?'debuff':'status';const until=Number(value?.until||0),remaining=until-now;const timer=remaining>0&&remaining<3600?'（'+Math.ceil(remaining)+'秒）':'';push(key,value?.icon,value?.text+timer,kind);}
   if(Number(target.stopUntil||0)>now)push('stop','⏸️','停止（'+Math.ceil(target.stopUntil-now)+'秒）','debuff');
   if(Number(target.slowUntil||0)>now)push('slow','🐌','鈍足（'+Math.ceil(target.slowUntil-now)+'秒）','debuff');
@@ -3454,6 +3454,12 @@ function applyHaifuFormationEffects(unit){
  if(unit.el){const hpFill=unit.el.querySelector('.hp i');if(hpFill)hpFill.style.width=Math.max(0,unit.hp/Math.max(1,unit.maxhp)*100)+'%';}
  updatePowerShieldDisplay(unit);
 }
+const _haifuOriginalDamageAgainst=damageAgainst;
+damageAgainst=function(source,target,baseAtk){
+ let dealt=_haifuOriginalDamageAgainst(source,target,baseAtk);
+ if(source?.isEnemy&&Array.isArray(units)&&units.some(u=>u&&!u.isEnemy&&u.name==='覇風'&&u.hp>0))dealt=Math.round(dealt*.8);
+ return Math.max(1,dealt);
+};
 function haifuPrepareDamage(target,attacker,damage){
  let dealt=Math.max(0,Number(damage)||0);
  if(target?.name!=='覇風')return dealt;
@@ -3511,6 +3517,8 @@ function haifuOnAttack(unit,target){
 }
 function tickHaifuUnits(now){
  const formationContext=haifuFormationContext();if(formationContext)for(const ally of units)applyHaifuFormationEffects(ally);
+ const haifuActive=Array.isArray(units)&&units.some(u=>u&&!u.isEnemy&&u.name==='覇風'&&u.hp>0);
+ for(const enemy of Array.isArray(enemies)?enemies:[]){if(!enemy||enemy.hp<=0)continue;enemy.statuses=enemy.statuses||{};if(haifuActive&&!enemy.statuses.haifuAttackDown){enemy.statuses.haifuAttackDown={icon:'⬇️',text:'攻撃力-20%（覇風）',until:0};if(typeof updateStatusMark==='function')updateStatusMark(enemy);}else if(!haifuActive&&enemy.statuses.haifuAttackDown){delete enemy.statuses.haifuAttackDown;if(typeof updateStatusMark==='function')updateStatusMark(enemy);}}
  for(const unit of units){
   if(!unit||unit.isEnemy||unit.name!=='覇風'||unit.hp<=0)continue;
   if(unit.haifuBaseMaxHp==null){unit.haifuBaseMaxHp=unit.maxhp;unit.haifuBaseAtk=unit.atk;unit.haifuNextGrowthAt=now+4;}
