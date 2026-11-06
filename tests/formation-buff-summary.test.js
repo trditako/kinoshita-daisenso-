@@ -37,7 +37,12 @@ assert.ok(html.includes('function addFormationVisualCondition(condition){')&&htm
 const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
 for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
 for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
-assert.ok(html.includes("GAME_VERSION='v1.9.59'"),'ゲームバージョンを更新');
+assert.ok(html.includes("GAME_VERSION='v1.9.60'"),'ゲームバージョンを更新');
+assert.ok(html.includes("skills:[{id:'haifu_five_summon_storm'"),'覇風の召喚スキルを独立データとして登録');
+assert.ok(html.includes("id:'haifu_guts'"),'覇風の攻撃スキルを独立データとして登録');
+assert.ok(html.includes("find(s=>s.id==='haifu_five_summon_storm')"),'召喚スキルを独立データから発動');
+assert.ok(html.includes("find(s=>s.id==='haifu_guts')"),'攻撃スキルを独立データから発動');
+assert.ok(!html.includes('haifuSkill:{chance:'),'スキル効果を固有能力データに混在させない');
 const formationStart=html.indexOf('function renderFormation(){');
 const formationEnd=html.indexOf('function clampCamera',formationStart);
 assert.ok(formationStart>=0&&formationEnd>formationStart,'編成画面の検索イベント登録範囲を確認');
@@ -68,4 +73,4 @@ assert.match(html,/現在の性能（レベル・形態反映後）/,'キャラ�
 assert.match(html,/固有能力（キャラクター固有の特性）/,'固有能力を明示してスキルと混同しない');
 assert.match(html,/background:#f1f5f9;border:2px solid #cbd5e1/,'詳細ステータスを高コントラスト表示にする');
 assert.match(html,/max-height:36vh;overflow-y:auto/,'編成バフ一覧を独立スクロール可能にする');
-process.stdout.write('編成効果・詳細表示テスト成功：詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
+process.stdout.write('編成効果・詳細表示テスト成功：独立スキル、詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
