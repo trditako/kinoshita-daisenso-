@@ -73,7 +73,7 @@ assert.match(html,/function formatCharacterAbilityDetails/,'固有能力の専�
 assert.match(html,/⚔️ スキル詳細/,'キャラクター詳細にスキル詳細欄を表示する');
 assert.match(html,/📗 固有能力の詳細/,'キャラクター詳細に固有能力詳細欄を表示する');
 assert.match(html,/genesisAbilities/,'創世木下の37能力を能力欄に分類する');
-assert.match(html,/mythologyV2AbilityDetail\(key,a,c\)/,'神話系効果を固有能力として説明する');
+assert.match(html,/mythologyV2AbilityDetail\(k,a,c\)/,'神話系効果を固有能力として説明する');
 assert.match(html,/kbrAttackSkill/,'KBRの攻撃時スキルを個別表示する');
 assert.match(html,/haifuSkill/,'覇風の固有技をスキル欄に分類する');
 assert.doesNotMatch(html,/神話系スキルの個別効果/,'神話能力をスキル扱いしない');
