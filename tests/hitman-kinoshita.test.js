@@ -34,7 +34,7 @@ assert.match(source, /unit\.hitmanKillStacks = Math\.min\(20/);
 assert.match(source, /\[0, 200, 400\]/);
 assert.match(source, /document\.getElementById\('world'\)/, '追跡マーカーはマップ本体に配置する');
 assert.match(source, /worldElement\.appendChild\(marker\)/, '追跡マーカーはマップ座標系に所属させる');
-assert.match(source, /bottom:105px/, '追跡マーカーはユニットと同じレーン高さに表示する');
+assert.match(source, /bottom:67px/, '追跡マーカーはユニットと同じレーン高さに表示する');
 assert.doesNotMatch(source, /fieldElement\.appendChild\(marker\)/, '画面側のfieldに配置しない');
 assert.match(source, /x -= 120 \* dt/);
 assert.match(source, /Math\.round\(Number\(unit\.atk \|\| 8900\) \* 5\)/);
