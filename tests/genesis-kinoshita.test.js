@@ -28,8 +28,8 @@ assert.match(source,/genesisAllyReviveUsed/,'味方の復活処理を実装');
 assert.match(source,/genesisNextEnergyAt/,'20秒ごとの創世エネルギーを実装');
 assert.match(source,/genesisNextGrowthAt/,'60秒ごとの成長を実装');
 assert.match(source,/genesisAbilityBook/,'37能力の詳細UIを実装');
-assert.match(html,/\.\/genesis\.js\?v=20261105-genesis-37/,'ゲーム本体から能力スクリプトを読み込む');
-assert.match(sw,/kinoshita-daisen-v69/,'Service Workerキャッシュを更新');
+assert.match(html,/\.\/genesis\.js\?v=20261107-detail-cleanup/,'ゲーム本体から能力スクリプトを読み込む');
+assert.match(sw,/kinoshita-daisen-v70/,'Service Workerキャッシュを更新');
 assert.match(sw,/\.\/genesis\.js/,'オフラインキャッシュへ能力スクリプトを追加');
 process.stdout.write('創世木下テスト成功：37能力、ID、専用ステージ、報酬、UI、キャッシュを確認しました。\n');
 

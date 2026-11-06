@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.52';
+const GAME_VERSION='v1.9.53';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.53',title:'🧩 キャラクター詳細と編成効果の表示漏れを修正',items:['創世木下の37能力と創世討伐兵器・零式の対策能力が、別キャラクターの詳細に残る問題を修正','編成画面に天使神:木下とノヴァ木下の編成効果を追加表示','編成中の味方強化をキャラクター別・効果別に確認できるよう改善']},
   {date:'2026-11-05',version:'v1.9.52',title:'🎯 神話編全48ステージ報酬「ヒットマン木下」を追加',items:['神話編第1章の全48ステージクリアで伝説レア「ヒットマン木下」を獲得','1段目8,900・0.2秒後に2段目5,100の単体二連撃と、出撃時3回の追跡マーカーを実装','神話特効・被ダメージ軽減と反射・回復封印・撃破成長・乗馬・転移反撃を実装','既存キャラクターIDと所持・育成・編成データを維持']},
   {date:'2026-11-05',version:'v1.9.51',title:'🌌 歴代最強UR「創世木下」を追加',items:['37種類の固有能力を持つ創世木下を追加。編成中の味方強化・戦闘中の回復・妨害・覚醒・復活を実装','専用超高難易度イベント「創世神話」を追加し、初回クリア報酬に創世木下を設定','能力一覧をキャラクター詳細に表示し、編成効果と戦闘中の能力状態を確認可能に変更','既存キャラクターIDと既存の所持・育成データを維持']},
   {date:'2026-11-04',version:'v1.9.50',title:'🛠️ ノヴァ木下の編成効果・表示を修正',items:['味方の攻撃力・攻撃間隔バフがノヴァ木下に適用されないよう全編成効果を保護','神話属性キャラの人数を正しく判定し、破壊モードの攻撃力デバフを反映','編成画面に発動中のバフ・デバフと、現在レベルの破壊・連射両モードのステータスを表示']},
@@ -3098,13 +3099,21 @@ function formationBuffSummaryHTML(i){
 }
 function renderFormationBuffSummary(){
  const el=document.getElementById('formationBuffSummary');if(!el)return;
+ const ids=formation.filter(i=>Number.isInteger(i)&&hasCharacter(i));
+ const angelGodIndex=ids.find(i=>(activeCard(i)||cards[i])?.name==='天使神:木下');
+ const angelCount=ids.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;
+ const angelAllyCount=ids.filter(i=>i!==angelGodIndex).filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;
+ const angelGodFactor=1+Math.min(.30,angelCount*.07);
+ const angelGodSummary=angelGodIndex!=null?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #f59e0b;background:#fffbeb"><h3>👼 天使神:木下の編成効果</h3><div><b>天使神自身：</b>天使属性 '+angelCount+'体 → HP・攻撃力・射程・移動速度・攻撃間隔・再生産時間 +'+Math.round((angelGodFactor-1)*100)+'%（最大+30%）</div><div><b>自身以外の天使属性の味方：</b>'+angelAllyCount+'体 → HP・攻撃力・射程・移動速度・攻撃間隔・再生産時間 +55%</div><div><b>天使属性の味方：</b>呪い・波動・烈波無効</div><div><b>天使神自身：</b>呪い・烈波・波動・停止・ヤバヤバ化・攻撃力低下・移動速度低下・ふっとばし無効</div></article>':'';
+ const novaIndex=ids.find(i=>(activeCard(i)||cards[i])?.name==='ノヴァ木下');
+ const novaSummary=novaIndex!=null?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #7c3aed;background:#f5f3ff"><h3>🌌 ノヴァ木下の編成効果</h3><div><b>通常・イベント・PvP開始時：</b>初期所持金 +750</div><div><b>ノヴァ木下自身：</b>味方の攻撃力・攻撃間隔バフを受けない</div><div><b>モード切替：</b>編成上段（1〜5枠）から出撃中のみ使用可能</div></article>':'';
  const haifuCtx=haifuFormationContext();
  const haifuSummary=haifuCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #0ea5e9;background:#ecfeff"><h3>🌪️ 覇風の編成バフ</h3><div><b>全味方：</b>UR '+haifuCtx.urCount+'体 → HP・攻撃力・移動速度・攻撃間隔 +'+Math.round((haifuCtx.allyFactor-1)*100)+'%（1体につき+35%、最大+95%。射程・再生産時間は対象外）</div><div><b>覇風自身：</b>非UR '+haifuCtx.nonUrCount+'体 → HP・攻撃力・攻撃間隔・再生産時間 +'+Math.round((haifuCtx.selfFactor-1)*100)+'%（射程・移動速度は対象外）</div><div><b>全味方：</b>パワーシールド '+Math.round(haifuEffectiveAttack(haifuCtx)*.8).toLocaleString()+' 耐久</div><div><b>戦場効果：</b>覇風が出撃中、敵の攻撃力 −35%（複数体で最大 −70%）</div></article>':'';
  const miraiKCtx=miraiKFormationContext();
  const miraiKSummary=miraiKCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #a78bfa;background:#f5f3ff"><h3>🌗 MiraiKの編成バフ</h3><div><b>天使属性の味方：</b>HP・攻撃力・射程・移動速度など全ステータス +10%（攻撃間隔・再生産時間も1.1倍速で短縮）</div><div><b>MiraiK自身：</b>自身以外の天使属性 '+miraiKCtx.angelCount+'体 → 与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）</div></article>':'';
  const rageCtx=rageKinoshitaFormationContext();
  const rageSummary=rageCtx?'<article class="formationBuffCard" style="grid-column:1/-1;border:2px solid #7c3aed;background:#f5f3ff"><h3>🌌 狂乱の強化木下の編成・戦闘能力</h3><div><b>編成効果：</b>宇宙属性 '+rageCtx.cosmicCount+'体 → 攻撃力 +'+Math.round((rageCtx.attackFactor-1)*100)+'%（1体につき+15%、最大+100%）</div><div><b>戦闘中：</b>敵撃破ごとに攻撃力 +5%（最大+50%）・最大HPの1%回復。HP50%以上で攻撃力 +15%</div><div><b>特性：</b>天使・赤・浮・黒に3倍ダメージ。同属性からの被ダメージ25%軽減</div><div><b>耐性・攻撃：</b>呪い・停止・烈波・吹っ飛ばす無効。攻撃時25%で烈波Lv2</div></article>':'';
- el.innerHTML=haifuSummary+miraiKSummary+rageSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
+ el.innerHTML=angelGodSummary+novaSummary+haifuSummary+miraiKSummary+rageSummary+(formation.map(i=>formationBuffSummaryHTML(i)).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:#64748b;background:#f8fafc;border-radius:8px">編成キャラを追加すると、ステータスとバフがここに表示されます。</div>');
 }
 function renderFormation(){
  normalizeFormation();
@@ -7194,6 +7203,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 <script src="./trade.js?v=20261028-ai-auctions-30s"></script>
-<script src="./genesis.js?v=20261105-genesis-37"></script>
+<script src="./genesis.js?v=20261107-detail-cleanup"></script>
 <script src="./hitman.js?v=20261105-hitman"></script>
 </body></html>
