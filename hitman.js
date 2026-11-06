@@ -195,7 +195,7 @@ function spawnTrackingMarker(unit) {
   marker.textContent = '✦';
   marker.setAttribute('aria-hidden', 'true');
   marker.dataset.hitmanTrackingMarker = 'true';
-  marker.style.cssText = 'position:absolute;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border:2px solid #67e8f9;border-radius:50%;background:radial-gradient(circle,#ecfeff 0%,#0891b2 72%,#164e63 100%);color:#fff;font-size:17px;font-weight:900;box-shadow:0 0 10px #22d3ee,0 0 20px #0891b2;z-index:60;pointer-events:none;bottom:105px;';
+  marker.style.cssText = 'position:absolute;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border:2px solid #67e8f9;border-radius:50%;background:radial-gradient(circle,#ecfeff 0%,#0891b2 72%,#164e63 100%);color:#fff;font-size:17px;font-weight:900;box-shadow:0 0 10px #22d3ee,0 0 20px #0891b2;z-index:60;pointer-events:none;bottom:67px;';
   let x = Number(unit.x || (worldWidth || 1100) - 145);
   marker.style.left = x + 'px';
   worldElement.appendChild(marker);
