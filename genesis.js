@@ -2,43 +2,43 @@
 'use strict';
 const GENESIS_NAME='創世木下';
 const GENESIS_ABILITY_DEFS=[
- {id:1,name:'次元崩壊',desc:'攻撃時50%で通常攻撃の200%の追加攻撃'},
- {id:2,name:'神殺し',desc:'全属性に2.5倍ダメージ'},
- {id:3,name:'創世の一撃',desc:'10%で通常攻撃の500%の追加攻撃'},
+ {id:1,name:'次元崩壊',desc:'攻撃時30%で通常攻撃の125%の追加攻撃'},
+ {id:2,name:'神殺し',desc:'全属性に1.6倍ダメージ'},
+ {id:3,name:'創世の一撃',desc:'5%で通常攻撃の250%の追加攻撃'},
  {id:4,name:'空間断裂',desc:'範囲内の敵をまとめて攻撃'},
- {id:5,name:'絶対防壁',desc:'被ダメージ90%軽減。主要な妨害・能力封印に耐性'},
- {id:6,name:'永遠の再生',desc:'自身の最大HPの1%を毎秒回復'},
- {id:7,name:'不滅の創世',desc:'撃破時に一度だけ最大HPの50%で復活'},
- {id:8,name:'ダメージ変換',desc:'実際に受けたHPダメージの10%を回復'},
- {id:9,name:'時間支配',desc:'攻撃時30%で敵全体を3秒停止'},
- {id:10,name:'全能の呪縛',desc:'攻撃した敵の攻撃力・移動速度を50%低下、攻撃間隔を2倍。10秒'},
- {id:11,name:'能力封印',desc:'攻撃時20%で敵の特殊能力を5秒封印'},
- {id:12,name:'重力支配',desc:'攻撃範囲内の敵の移動速度を80%低下。5秒'},
- {id:13,name:'歴史の頂点',desc:'編成中、味方全員のHP・攻撃力を50%上昇'},
- {id:14,name:'全軍再生',desc:'出撃中、味方全員の最大HPの0.5%を毎秒回復'},
- {id:15,name:'神速の祝福',desc:'編成中、味方全員の移動速度を20%上昇'},
- {id:16,name:'世界創造',desc:'出撃20秒ごとに攻撃力+20%。最大3段階'},
- {id:17,name:'終焉と始まり',desc:'HP25%以下で一度覚醒。攻撃力2倍、攻撃間隔0.5秒、被ダメージ95%軽減。20秒'},
- {id:18,name:'天罰の雷',desc:'5回の攻撃動作ごとに敵全体へ攻撃力300%の雷撃'},
+ {id:5,name:'絶対防壁',desc:'被ダメージ75%軽減。主要な妨害・能力封印に耐性'},
+ {id:6,name:'永遠の再生',desc:'自身の最大HPの0.5%を毎秒回復'},
+ {id:7,name:'不滅の創世',desc:'撃破時に一度だけ最大HPの30%で復活'},
+ {id:8,name:'ダメージ変換',desc:'実際に受けたHPダメージの5%を回復'},
+ {id:9,name:'時間支配',desc:'攻撃時15%で敵全体を1.5秒停止'},
+ {id:10,name:'全能の呪縛',desc:'攻撃した敵の攻撃力・移動速度を30%低下、攻撃間隔を1.5倍。6秒'},
+ {id:11,name:'能力封印',desc:'攻撃時10%で敵の特殊能力を3秒封印'},
+ {id:12,name:'重力支配',desc:'攻撃範囲内の敵の移動速度を50%低下。3秒'},
+ {id:13,name:'歴史の頂点',desc:'編成中、味方全員のHP・攻撃力を20%上昇'},
+ {id:14,name:'全軍再生',desc:'出撃中、味方全員の最大HPの0.25%を毎秒回復'},
+ {id:15,name:'神速の祝福',desc:'編成中、味方全員の移動速度を10%上昇'},
+ {id:16,name:'世界創造',desc:'出撃25秒ごとに攻撃力+10%。最大2段階'},
+ {id:17,name:'終焉と始まり',desc:'HP25%以下で一度覚醒。攻撃力1.5倍、攻撃間隔0.8秒、被ダメージ80%軽減。15秒'},
+ {id:18,name:'天罰の雷',desc:'5回の攻撃動作ごとに敵全体へ攻撃力150%の雷撃'},
  {id:19,name:'無限貫通',desc:'範囲攻撃で射程内の敵すべてを攻撃'},
- {id:20,name:'崩壊連鎖',desc:'敵撃破時、周囲へ攻撃力200%の爆発'},
- {id:21,name:'神域の追撃',desc:'攻撃時25%で通常攻撃の50%の追撃を3回'},
- {id:22,name:'存在消去',desc:'攻撃時5%で通常攻撃の500%の追加ダメージ'},
- {id:23,name:'七彩神壁',desc:'10秒ごとに最大HPの10%分のシールドを獲得'},
- {id:24,name:'絶対領域',desc:'自身の周囲の味方の被ダメージを30%軽減'},
- {id:25,name:'災厄吸収',desc:'自身への状態異常を50%の確率で無効化し、HP5%回復'},
+ {id:20,name:'崩壊連鎖',desc:'敵撃破時、周囲へ攻撃力100%の爆発'},
+ {id:21,name:'神域の追撃',desc:'攻撃時15%で通常攻撃の35%の追撃を2回'},
+ {id:22,name:'存在消去',desc:'攻撃時2%で通常攻撃の250%の追加ダメージ'},
+ {id:23,name:'七彩神壁',desc:'15秒ごとに最大HPの5%分のシールドを獲得'},
+ {id:24,name:'絶対領域',desc:'自身の周囲の味方の被ダメージを15%軽減'},
+ {id:25,name:'災厄吸収',desc:'自身への状態異常を30%の確率で無効化し、HP3%回復'},
  {id:26,name:'不動の神体',desc:'停止・鈍足・吹っ飛ばし・ワープなど主要妨害を無効化'},
- {id:27,name:'終末装甲',desc:'HP50%以下で被ダメージをさらに20%軽減'},
- {id:28,name:'永劫拘束',desc:'攻撃時15%で敵を5秒停止'},
+ {id:27,name:'終末装甲',desc:'HP50%以下で被ダメージをさらに10%軽減'},
+ {id:28,name:'永劫拘束',desc:'攻撃時8%で敵を2.5秒停止'},
  {id:29,name:'神威剥奪',desc:'攻撃した敵の強化効果を10秒間無効化'},
- {id:30,name:'空間封鎖',desc:'攻撃時、敵のワープ・瞬間移動能力を8秒封印'},
- {id:31,name:'永久刻印',desc:'攻撃した敵が受けるダメージを30%増加。10秒'},
+ {id:30,name:'空間封鎖',desc:'攻撃時、敵のワープ・瞬間移動能力を4秒封印'},
+ {id:31,name:'永久刻印',desc:'攻撃した敵が受けるダメージを15%増加。6秒'},
  {id:32,name:'次元追放',desc:'攻撃時5%で敵を3秒間戦場から退場させる'},
- {id:33,name:'全軍蘇生',desc:'味方1体をステージ中一度だけHP30%で復活'},
- {id:34,name:'創世の加護',desc:'編成中、味方全員の状態異常を50%の確率で無効化'},
- {id:35,name:'無限供給',desc:'編成中、味方の再生産時間を15%短縮'},
+ {id:33,name:'全軍蘇生',desc:'味方1体をステージ中一度だけHP20%で復活'},
+ {id:34,name:'創世の加護',desc:'編成中、味方全員の状態異常を30%の確率で無効化'},
+ {id:35,name:'無限供給',desc:'編成中、味方の再生産時間を8%短縮'},
  {id:36,name:'世界改変',desc:'開始30秒後から20秒ごとに敵全体へランダムな弱体効果'},
- {id:37,name:'万物の創造主',desc:'60秒ごとに攻撃力・最大HPが10%上昇。最大5段階'}
+ {id:37,name:'万物の創造主',desc:'75秒ごとに攻撃力・最大HPが5%上昇。最大3段階'}
 ];
 const GENESIS_TRAITS=['無','赤','青','黒','浮','鋼','天使','宇宙','古代','神話','ゾンビ','光','闇','白'];
 const genesisStrong={};
@@ -315,8 +315,8 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
   genesisAttackDown(target,.7,6);genesisSlow(target,.7,6);
   if(target.genesisBaseInterval==null)target.genesisBaseInterval=Number(target.interval||1);
   target.interval=Math.max(Number(target.interval||1),Number(target.genesisBaseInterval||1)*1.5);
-  target.genesisIntervalDebuffUntil=now+10;
-  if(typeof applyCurseStatus==='function')applyCurseStatus({ability:{curseChance:1,curseDuration:10}},target);
+  target.genesisIntervalDebuffUntil=now+6;
+  if(typeof applyCurseStatus==='function')applyCurseStatus({ability:{curseChance:1,curseDuration:6}},target);
  }
  // ⑪ 能力封印
  if(target.hp>0&&Math.random()<.1)genesisSeal(target,3);
@@ -327,11 +327,11 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
  // ㉙ 神威剥奪
  genesisClearEnemyBuffs(target);
  // ㉚ 空間封鎖
- if(target.hp>0&&Math.random()<.2)genesisSeal(target,8);
+ if(target.hp>0&&Math.random()<.1)genesisSeal(target,4);
  // ㉛ 永久刻印
  if(target.hp>0){
-  target.genesisVulnerabilityUntil=now+10;
-  genesisSetMark(target,'🎯','被ダメージ+15%',10,'genesisVulnerability');
+  target.genesisVulnerabilityUntil=now+6;
+  genesisSetMark(target,'🎯','被ダメージ+15%',6,'genesisVulnerability');
  }
  // ㉜ 次元追放
  if(target.hp>0&&Math.random()<.02)genesisBanish(target);
@@ -510,7 +510,7 @@ setInterval(()=>{
  const growth=1+.05*Number(creator.genesisGrowthStacks||0);
  if(creator.hp<=creator.maxhp*.25&&!creator.genesisAwakeningUsed){
   // ⑰ 終焉と始まり
-  creator.genesisAwakeningUsed=true;creator.genesisAwakenedUntil=now+20;
+  creator.genesisAwakeningUsed=true;creator.genesisAwakenedUntil=now+15;
   creator.interval=.8;
   if(creator.ability?.damageReduce)creator.ability.damageReduce.factor=.2;
   genesisSetMark(creator,'🔥','終焉と始まり：覚醒',20,'genesisAwakening');
@@ -520,7 +520,7 @@ setInterval(()=>{
   creator.genesisAwakenedUntil=0;creator.interval=Number(creator.genesisBaseInterval||2);
   if(creator.ability?.damageReduce)creator.ability.damageReduce.factor=.25;
  }
- creator.atk=Math.max(1,Math.round(Number(creator.genesisCoreAtk||creator.atk)*energy*growth*(creator.genesisAwakenedUntil>now?2:1)));
+ creator.atk=Math.max(1,Math.round(Number(creator.genesisCoreAtk||creator.atk)*energy*growth*(creator.genesisAwakenedUntil>now?1.5:1)));
  // ㉓ 七彩神壁：10秒ごとに最大HPの10%シールドを補充
  if(stageTime>=Number(creator.genesisNextShieldAt||Infinity)){
   creator.barrierMax=Math.max(Number(creator.barrierMax||0),Math.round(creator.maxhp*.05));
