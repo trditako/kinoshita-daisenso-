@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.58';
+const GAME_VERSION='v1.9.59';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.59',title:'🧩 スキル表示・戦闘中効果表示・検索条件の重複を改善',items:['キャラクター詳細にスキル専用欄を追加し、固有能力と完全に分離。スキルを持たないキャラクターには欄自体を表示しない','戦闘中の常時編成効果・固有パッシブ表示を除外し、撃破成長・発動中スキル・一時的なバフ／デバフのみ表示','検索条件の追加時に同一条件が重複登録されないよう、条件キーで二重追加を防止']},
   {date:'2026-11-07',version:'v1.9.58',title:'🔧 編成検索の条件が重複追加される問題を修正',items:['編成画面の再描画ごとに検索条件追加イベントが重複登録される問題を修正','条件追加・項目変更・名前検索のイベントを常に1つだけ登録する方式に変更']},
   {date:'2026-11-07',version:'v1.9.57',title:'🧩 編成検索をボタン式の条件追加に改善',items:['編成画面で属性・レア度・能力・攻撃タイプ・シリーズ・各種ステータス・所持状況を選択式で絞り込み可能に変更','条件をチップ表示し、個別削除とAND／OR切り替えに対応','複雑な検索式の手入力を不要にし、名前検索だけ任意入力として残す']},
   {date:'2026-11-07',version:'v1.9.55',title:'🔎 編成画面のキャラクター検索・並び替えを強化',items:['AND・OR・括弧を使った複合検索と、HP・攻撃力・射程・属性・能力などの条件検索を編成画面の所持キャラクター一覧に追加','HP・攻撃力・合計ステータス・速度・射程・コスト・攻撃間隔・再生産時間・ヒットバック・能力数・名前・レア度で並び替え可能に変更','木下図鑑の検索・並び替えは従来仕様に戻し、保存編成10枠は維持']},
@@ -2444,29 +2445,12 @@ function updateStatusMark(target){
   }
   
   if(target.name==='ノヴァ木下'){
-   const seriesCount=novaFormationSeriesCount(),mythCount=novaFormationMythCount(),mythFactor=novaMythAttackFactor();
-   const seriesPct=seriesCount*150,attackDownPct=Math.round((1-mythFactor)*100);
-   push('novaMode','🌌',target.novaMode==='rapid'?'連射モード':'破壊モード','status');
-   push('novaAllyBuffLock','🔒','味方の攻撃力・攻撃間隔バフ無効','status');
-   push('novaImmunity','🛡️','呪い・波動無効／被ダメージ上限25%','buff');
-   if(seriesCount>0&&target.novaMode==='destroy')push('novaSeries','☠️','呪いの木下達 '+seriesCount+'体：攻撃力 +'+seriesPct+'%・攻撃間隔 +'+(seriesCount*2)+'秒','buff');
-   if(mythCount>0&&target.novaMode==='destroy')push('novaMyth','📉','神話 '+mythCount+'体：攻撃力 −'+attackDownPct+'%','debuff');
-   if(target.novaMode==='destroy'){
-    push('novaLifesteal','💚','与ダメージの5%をHP回復','buff');
-    if(Number(target.novaDestructionStacks||0)>0)push('novaDestructionStacks','💢','破壊欲 '+Math.min(5,Number(target.novaDestructionStacks||0))+'/5（攻撃力上昇・攻撃間隔短縮）','buff');
-   }else{
-    const rapidAtkStacks=Math.min(60,Number(target.novaRapidAttackStacks||0)),rapidIntervalStacks=Math.min(40,Number(target.novaRapidStacks||0));
-    if(rapidAtkStacks>0)push('novaRapidAttack','📈','連射攻撃力 +'+(rapidAtkStacks*3)+'%','buff');
-    if(rapidIntervalStacks>0)push('novaRapidInterval','⚡','攻撃間隔 −'+(rapidIntervalStacks*.01).toFixed(2)+'秒','buff');
-    if(Number(target.novaMiniGunUntil||0)>now)push('novaMiniGun','🔫','ミニガン発動中（吹っ飛ばし35%・攻撃力上乗せ）','buff');
-    else if(Number(target.novaMiniGunCooldownUntil||0)>now)push('novaMiniGunCooldown','⏳','ミニガン再使用まで '+Math.ceil(target.novaMiniGunCooldownUntil-now)+'秒','status');
-   }
-   if(target.haifuFormationBuffApplied&&Number(target.haifuFormationAllyFactor||1)>1)push('novaHaifu','🌪️','覇風：HP・移動速度 +'+Math.round((Number(target.haifuFormationAllyFactor)-1)*100)+'%（攻撃力・攻撃間隔は対象外）','buff');
+   // 編成由来の常時効果・固有パッシブはここに表示しない。戦闘中に蓄積／発動した効果だけ表示する。
+   if(target.novaMode==='destroy'){if(Number(target.novaDestructionStacks||0)>0)push('novaDestructionStacks','💢','破壊欲 '+Math.min(5,Number(target.novaDestructionStacks||0))+'/5（攻撃力上昇・攻撃間隔短縮）','buff');}
+   else{const rapidAtkStacks=Math.min(60,Number(target.novaRapidAttackStacks||0)),rapidIntervalStacks=Math.min(40,Number(target.novaRapidStacks||0));if(rapidAtkStacks>0)push('novaRapidAttack','📈','連射攻撃力 +'+(rapidAtkStacks*3)+'%','buff');if(rapidIntervalStacks>0)push('novaRapidInterval','⚡','攻撃間隔 −'+(rapidIntervalStacks*.01).toFixed(2)+'秒','buff');if(Number(target.novaMiniGunUntil||0)>now)push('novaMiniGun','🔫','ミニガン発動中（吹っ飛ばし35%・攻撃力上乗せ）','buff');}
   }
   if(target.name==='狂乱の強化木下'&&!target.isEnemy){
-   const cosmicCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&(card.trait==='宇宙'||allyTraits[card.name]==='宇宙');}).length;
    const stacks=Math.max(0,Number(target.killAttackStacks||0)),stackPct=Math.round(Math.min(.5,stacks*.05)*100);if(stackPct>0)push('rageKills','📈','撃破強化：攻撃力 +'+stackPct+'%','buff');
-   if(Number(target.maxhp||0)>0&&Number(target.hp||0)>=Number(target.maxhp)*.5)push('rageHpThreshold','❤️','HP50%以上：攻撃力 +15%','buff');
   }
   let box=target.el.querySelector('.unitEffects');
   if(!entries.length){if(box)box.remove();return;}
@@ -2923,7 +2907,20 @@ function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=
   if(c.ability?.angelGod){ability='全ステータスを'+[20,45,85][n-1]+'%上昇。天使属性の編成数による最大+30%補正と、攻撃命中による攻撃力累積は別計算。';}else if(c.ability?.dimensionalRend){const rate=Math.round((Number(c.ability.dimensionalRend.factor||.02)+n*.01)*100);const bossCap=Number(c.ability.dimensionalRend.bossCap||8000);ability='次元断裂：通常攻撃命中後、対象の残りHPの'+rate+'%を追加ダメージ。ボスへの追加ダメージは1回最大'+bossCap.toLocaleString()+'。';}else if(c.ability?.voidField){const radius=Number(c.ability.voidField.radius||180)+60*n;ability='虚無領域：範囲半径 '+radius+'px。範囲内の敵の攻撃ダメージを通常時の'+Math.round(Number(c.ability.voidField.attackSlow??.55)*100)+'%、移動速度を'+Math.round(Number(c.ability.voidField.speedSlow??.65)*100)+'%に低下。召喚・結界再生を3秒間封印し、範囲内では効果時間を更新。';}else if(c.ability?.causalityReversal){const heal=Math.round(Number(c.ability.causalityReversal.heal??c.ability.causalityReversal.revivePercent??.4)*100);const invuln=Number(c.ability.causalityReversal.invulnerable||3);ability='因果反転：致命傷を1回だけ回避し、最大HPの'+heal+'%で復帰。その後'+invuln+'秒間無敵。成長では固有能力の回復率・無敵時間は変化しない。';}else if(c.ability?.genesisPulse){const heal=Math.min(.15,Number(c.ability.genesisPulse.allyHeal||.03)+.02*n);const damage=Math.min(.6,Number(c.ability.genesisPulse.enemyDamage||.2)+.1*n);ability='創世律動：'+Number(c.ability.genesisPulse.cooldown||12)+'秒ごとに味方全員を各自の最大HPの'+Math.round(heal*100)+'%回復し、敵全体に自身の攻撃力の'+Math.round(damage*100)+'%分の追加ダメージ。';}rows+='<div style="padding:9px;margin-top:7px;border:1px solid #cbd5e1;border-radius:9px;background:#fff"><b>成長'+n+'段階</b><div style="font-size:11px;color:#6b21a8;font-weight:900;margin-top:3px">今回：HP・攻撃力 ×'+factor+' ／ 累計：HP・攻撃力 ×'+cumulativeHpAtk.toFixed(3)+'、移動速度 ×'+cumulativeSpd.toFixed(3)+'、攻撃間隔 ×'+cumulativeInterval.toFixed(3)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;font-size:12px"><span>❤️ HP：'+hp.toLocaleString()+'（今回 +'+(hp-prev.hp).toLocaleString()+'）</span><span>⚔️ 攻撃力：'+atk.toLocaleString()+'（今回 +'+(atk-prev.atk).toLocaleString()+'）</span><span>🎯 射程：'+range+'（今回 '+(isAngelGod?'×'+factor:'+'+rangeAdd[n-1])+'）</span><span>💨 移動速度：'+spd.toFixed(3)+'（今回 ×'+(isAngelGod?factor:1.12).toFixed(2)+'）</span><span>⏱️ 攻撃間隔：'+interval.toFixed(3)+'秒（今回 ×'+(isAngelGod?(1/factor):.86).toFixed(3)+'）</span><span>💥 ヒットバック：'+kb+'回（今回 '+(isAngelGod?'×'+factor:'+1')+'）</span></div><div style="margin-top:7px;padding:7px;background:#f5f3ff;border-radius:6px;font-size:12px;color:#5b21b6;font-weight:800">'+ability+'</div><div style="font-size:11px;color:#64748b;margin-top:5px">必要木下マネー：'+([2500,5000,8500][n-1]).toLocaleString()+'円</div></div>';
  }
  return '<section class="xpBox" style="margin-top:8px;background:#f5f3ff;border:2px solid #8b5cf6;color:#1e1b4b"><b style="font-size:16px">🌱 成長ステータス詳細</b><div style="font-size:12px;margin-top:5px">下記は現在のレベル・形態のステータスから、実際の成長処理と同じ順番で3段階まで計算した値です。「今回の増加量」と「累計値」を分けて表示しています。成長は編成上段（1〜5番）に配置したキャラクターのみ、戦闘中に使用できます。</div>'+rows+'</section>';
-} function showCharacterDetail(i){
+} function escapeCharacterSkillText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function formatCharacterSkillSection(character){
+ const c=character||{},rows=[],seen=new Set();
+ const add=(label,value)=>{if(value==null||value===false||value==='')return;for(const item of(Array.isArray(value)?value:[value])){
+  if(item==null||item===false||item==='')continue;let name='',description='',meta=[];
+  if(typeof item==='string'||typeof item==='number')description=String(item);
+  else if(typeof item==='object'){name=String(item.name||item.title||'');description=String(item.description||item.desc||item.effect||'');const trigger=item.trigger??item.activation,chance=item.chance??item.activationChance,cooldown=item.cooldown??item.cooldownSeconds,duration=item.duration??item.durationSeconds;if(trigger)meta.push('発動条件：'+trigger);if(chance!=null&&chance!=='')meta.push('発動率：'+(typeof chance==='number'?Math.round(chance*100)+'%':chance));if(cooldown!=null&&cooldown!=='')meta.push('再使用：'+cooldown+(typeof cooldown==='number'?'秒':''));if(duration!=null&&duration!=='')meta.push('効果時間：'+duration+(typeof duration==='number'?'秒':''));}else continue;
+  if(!name&&!description&&!meta.length)continue;const signature=label+'|'+name+'|'+description+'|'+meta.join('|');if(seen.has(signature))continue;seen.add(signature);
+  rows.push('<article style="padding:8px;margin-top:6px;border:1px solid #c4b5fd;border-radius:8px;background:#fff"><b style="color:#5b21b6">'+escapeCharacterSkillText(label)+(name?'：'+escapeCharacterSkillText(name):'')+'</b>'+(description?'<div style="margin-top:3px">'+escapeCharacterSkillText(description)+'</div>':'')+(meta.length?'<div style="margin-top:4px;font-size:11px;color:#6b7280;font-weight:800">'+meta.map(escapeCharacterSkillText).join('　／　')+'</div>':'')+'</article>');
+ }};
+ add('スキル',c.skills);add('スキル',c.skill);add('アクティブスキル',c.activeSkill);add('パッシブスキル',c.passiveSkill);
+ if(!rows.length)return '';return '<section style="margin:10px 0;padding:10px;border:2px solid #8b5cf6;border-radius:10px;background:#faf5ff;text-align:left"><h3 style="margin:0;color:#5b21b6">🌀 スキル</h3>'+rows.join('')+'</section>';
+}
+function showCharacterDetail(i){
  const c=activeCard(i);if(!c)return;
  const base=cards[i],lv=charLevel[i]||1,maxLv=charMaxLevel[i]||20,need=xpNeed(i),can=lv<maxLv,detailStat=(key)=>{if(base.name==='吉田'){const raw=Number(c[key]||0);return key==='hp'||key==='atk'?Math.round(raw*Math.pow(1.04,Math.max(0,lv-1))):raw;}return statAt(i,key);},bookNo=String(base===PHOENIX_REWARD_CARD?cards.length:Number(base.id??i+1)).padStart(3,'0');
  const isNormal=i<10,isHarland=base.name==='突撃ハーランド木下',isAnomalous=base.name==='異常木下',isRich=base.name==='富豪木下',isYoshida=base.name==='吉田',req=normalPowerRequirements(i),reqText=Object.entries(req).map(([color,n])=>color+'×'+n+'（所持 '+(colorPowers[color]||0)+'）').join('　');
@@ -2942,7 +2939,7 @@ function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=
  }
  const cosmeticSection=renderCharacterCosmeticSection(i);
  document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name+((isNormal||isHarland||isAnomalous||!!EARLY_SECOND_FORM_CONFIG[base.name]||isRich||isYoshida)&&charForm[i]===2?'【第二形態】':'');
- document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<h3 class="detailSectionTitle">📊 現在の性能（レベル・形態反映後）</h3><div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b><div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+c.recharge.toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3 class="detailSectionTitle">⭐ 固有能力（キャラクター固有の特性）</h3><p class="detailAbility">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
+ document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<h3 class="detailSectionTitle">📊 現在の性能（レベル・形態反映後）</h3><div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b><div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+c.recharge.toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div>'+formatCharacterSkillSection(c)+'<h3 class="detailSectionTitle">⭐ 固有能力（キャラクター固有の特性）</h3><p class="detailAbility">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
  document.getElementById('detail').style.display='flex';
 }function levelUpCharacter(i){if(running||!Number.isInteger(i)||!cards[i]||!hasCharacter(i))return;const max=Math.max(20,Math.min(30,Number(charMaxLevel[i])||20));const raw=Number(charLevel[i]);const current=Number.isFinite(raw)&&raw>=1?Math.min(max,Math.floor(raw)):1;charMaxLevel[i]=max;charLevel[i]=current;if(current>=max)return;const need=xpNeed(i);if(!Number.isFinite(need)||need<=0||playerXP<need)return;charLevel[i]=current+1;playerXP=Math.max(0,playerXP-need);save();showCharacterDetail(i);renderCards();renderStageSelect()}
 function openKinoshitaBook(){
@@ -2962,6 +2959,7 @@ function closeKinoshitaBook(){
 let kinoshitaBookFilter='all',kinoshitaBookQuery='',kinoshitaBookRarity='all',kinoshitaBookSort='number';
 let formationSearchSort='number',formationSearchSortDirection='auto';
 let formationVisualConditions=[],formationVisualLogic='AND';
+function addFormationVisualCondition(condition){if(!condition||!condition.query||formationVisualConditions.some(existing=>existing.query===condition.query))return false;formationVisualConditions.push(condition);return true;}
 function openKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(!el)return;document.getElementById('start').style.display='none';el.style.display='flex';renderKinoshitaBook()}
 function closeKinoshitaBook(){const el=document.getElementById('kinoshitaBook');if(el)el.style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();renderCards()}
 function displayCharacterRarity(c){
@@ -3161,7 +3159,7 @@ function renderFormation(){
  const refreshFilterValue=()=>{const field=fieldEl?.value||'trait',numeric=numericFields.includes(field);if(valueEl)valueEl.style.display=numeric?'none':'block';if(numberEl)numberEl.style.display=numeric?'block':'none';if(opEl)opEl.style.display=numeric?'block':'none';if(valueEl)valueEl.innerHTML=(filterOptions[field]||[]).map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'">'+v+'</option>').join('');};
  const renderFilterChips=()=>{if(!chipsEl)return;chipsEl.innerHTML=formationVisualConditions.map((c,i)=>'<span class="formationFilterChip">'+fieldLabels[c.field]+'：'+c.label+' <button type="button" data-remove-filter="'+i+'" aria-label="条件を削除">×</button></span>').join('');if(emptyEl)emptyEl.style.display=formationVisualConditions.length?'none':'block';chipsEl.querySelectorAll('[data-remove-filter]').forEach(b=>b.onclick=()=>{formationVisualConditions.splice(Number(b.dataset.removeFilter),1);renderFilterChips();renderAvailable();});document.querySelectorAll('[data-filter-logic]').forEach(b=>b.classList.toggle('active',b.dataset.filterLogic===formationVisualLogic));};
  if(fieldEl)fieldEl.onchange=refreshFilterValue;refreshFilterValue();
- if(addFilterBtn)addFilterBtn.onclick=()=>{const field=fieldEl.value,numeric=numericFields.includes(field),value=numeric?numberEl.value:valueEl.value;if(numeric&&(value===''||!Number.isFinite(Number(value))||Number(value)<0)){numberEl.focus();return;}const op=numeric?opEl.value:':';const query=numeric?field+op+value:field+':'+value;formationVisualConditions.push({field,value,op,query,label:numeric?(op==='>='?'':op==='<='?'以下 ':op==='='?'=':op==='>'?'より大きい ':'より小さい ')+value:value});renderFilterChips();renderAvailable();};
+ if(addFilterBtn)addFilterBtn.onclick=()=>{const field=fieldEl.value,numeric=numericFields.includes(field),value=numeric?numberEl.value:valueEl.value;if(numeric&&(value===''||!Number.isFinite(Number(value))||Number(value)<0)){numberEl.focus();return;}const op=numeric?opEl.value:':';const query=numeric?field+op+value:field+':'+value;if(!addFormationVisualCondition({field,value,op,query,label:numeric?(op==='>='?'':op==='<='?'以下 ':op==='='?'=':op==='>'?'より大きい ':'より小さい ')+value:value}))return;renderFilterChips();renderAvailable();};
  document.querySelectorAll('[data-filter-logic]').forEach(b=>b.onclick=()=>{formationVisualLogic=b.dataset.filterLogic;renderFilterChips();renderAvailable();});
  renderFilterChips();
  if(sortSelect){sortSelect.value=formationSearchSort;sortSelect.onchange=()=>{formationSearchSort=sortSelect.value;renderAvailable();};}

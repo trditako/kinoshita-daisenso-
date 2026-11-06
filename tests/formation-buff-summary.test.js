@@ -29,7 +29,15 @@ assert.ok(summary.includes('覇風の編成バフ'),'覇風の既存編成効果
 assert.ok(summary.includes('MiraiKの編成バフ'),'MiraiKの既存編成効果表示を維持');
 assert.ok(summary.includes('狂乱の強化木下の編成・戦闘能力'),'狂乱の強化木下の既存表示を維持');
 assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効果表示を維持');
-assert.ok(html.includes("GAME_VERSION='v1.9.58'"),'ゲームバージョンを更新');
+assert.ok(html.includes('function formatCharacterSkillSection(character){'),'スキル専用表示関数');
+assert.ok(html.includes("add('スキル',c.skills);")&&html.includes("add('スキル',c.skill);")&&html.includes("add('アクティブスキル',c.activeSkill);")&&html.includes("add('パッシブスキル',c.passiveSkill);"),'スキルと固有能力を別データとして扱う');
+assert.ok(html.includes("if(!rows.length)return '';"),'スキル未所持時は欄を非表示');
+assert.ok(html.includes('formatCharacterSkillSection(c)+'),'スキル欄を独立表示');
+assert.ok(html.includes('function addFormationVisualCondition(condition){')&&html.includes('existing.query===condition.query'),'同一検索条件の二重追加防止');
+const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
+for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
+for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
+assert.ok(html.includes("GAME_VERSION='v1.9.59'"),'ゲームバージョンを更新');
 const formationStart=html.indexOf('function renderFormation(){');
 const formationEnd=html.indexOf('function clampCamera',formationStart);
 assert.ok(formationStart>=0&&formationEnd>formationStart,'編成画面の検索イベント登録範囲を確認');
@@ -39,7 +47,7 @@ assert.ok(!formation.includes("addFilterBtn?.addEventListener('click'"),'条件�
 assert.ok(formation.includes('if(fieldEl)fieldEl.onchange='),'条件項目の変更イベントを1つに保つ');
 assert.ok(formation.includes('if(search)search.oninput='),'名前検索イベントを1つに保つ');
 
-assert.ok(sw.includes('kinoshita-daisen-v72'),'Service Workerキャッシュを更新');
+assert.ok(sw.includes('kinoshita-daisen-v73'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
 const urGoldEnd=html.indexOf("\n",urGoldStart);
