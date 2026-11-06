@@ -179,7 +179,7 @@ setStatusMark=function(target,icon,label,duration,type){
   const full=isGenesis&&['stop','slow','warp','knockback'].includes(kind);
   if(full||Math.random()<.7){
    genesisClearDebuff(target,kind);
-   if(isGenesis||isGuarded)target.hp=Math.min(Number(target.maxhp||1),Number(target.hp||0)+(isGenesis?Number(target.maxhp||1)*.05:Number(target.maxhp||1)*.02));
+   if(isGenesis||isGuarded)target.hp=Math.min(Number(target.maxhp||1),Number(target.hp||0)+(isGenesis?Number(target.maxhp||1)*.03:Number(target.maxhp||1)*.02));
    genesisRefreshUnit(target);
    return;
   }
@@ -349,7 +349,7 @@ hit=function(target,damage,source,abilitySource){
  }
  if(targetIsGenesis&&source?.isEnemy&&before>after&&target.hp>0){
   // ⑧ ダメージ変換：実際のHPダメージの10%を回復
-  target.hp=Math.min(target.maxhp,target.hp+Math.round((before-after)*.1));
+  target.hp=Math.min(target.maxhp,target.hp+Math.round((before-after)*.05));
   genesisRefreshUnit(target);
  }
  return result;
@@ -358,22 +358,22 @@ const _genesisOriginalDamageTakenBy=damageTakenBy;
 damageTakenBy=function(target,attacker){
  let dealt=_genesisOriginalDamageTakenBy(target,attacker);
  const now=performance.now()/1000;
- if(target?.genesisAuraActive&&!target.isEnemy)dealt=Math.round(dealt*.7);
- if(target?.name===GENESIS_NAME&&!target.isEnemy&&target.hp<=target.maxhp*.5&&!(target.genesisAwakenedUntil>now))dealt=Math.round(dealt*.8);
+ if(target?.genesisAuraActive&&!target.isEnemy)dealt=Math.round(dealt*.85);
+ if(target?.name===GENESIS_NAME&&!target.isEnemy&&target.hp<=target.maxhp*.5&&!(target.genesisAwakenedUntil>now))dealt=Math.round(dealt*.9);
  return Math.max(1,dealt);
 };
 const _genesisOriginalDamageAgainst=damageAgainst;
 damageAgainst=function(source,target,baseAtk){
  let dealt=_genesisOriginalDamageAgainst(source,target,baseAtk);
  const now=performance.now()/1000;
- if(source?.name===GENESIS_NAME&&target?.genesisVulnerabilityUntil>now)dealt=Math.round(dealt*1.3);
+ if(source?.name===GENESIS_NAME&&target?.genesisVulnerabilityUntil>now)dealt=Math.round(dealt*1.15);
  return Math.max(1,dealt);
 };
 const _genesisOriginalRemoveUnit=removeUnit;
 removeUnit=function(unit){
  if(unit&&!unit.isEnemy&&unit.name===GENESIS_NAME&&!unit.genesisSelfRevived){
-  // ⑦ 不滅の創世：自身は一度だけ最大HPの50%で復活
-  unit.genesisSelfRevived=true;unit.hp=Math.max(1,Math.round(unit.maxhp*.5));
+  // ⑦ 不滅の創世：自身は一度だけ最大HPの30%で復活
+  unit.genesisSelfRevived=true;unit.hp=Math.max(1,Math.round(unit.maxhp*.2));
   genesisSetMark(unit,'♾️','不滅の創世：復活済み',999999,'genesisRevive');
   genesisRefreshUnit(unit);
   if(typeof popup==='function')popup('♾️ 創世木下が復活！',unit.x,90,'criticalPop');
@@ -381,9 +381,9 @@ removeUnit=function(unit){
  }
  const creator=genesisAlive();
  if(unit&&!unit.isEnemy&&unit.name!==GENESIS_NAME&&creator&&!creator.genesisAllyReviveUsed&&!unit.genesisAllyRevived){
-  // ㉝ 全軍蘇生：味方1体をステージ中一度だけHP30%で復活
+  // ㉝ 全軍蘇生：味方1体をステージ中一度だけHP20%で復活
   creator.genesisAllyReviveUsed=true;unit.genesisAllyRevived=true;
-  unit.hp=Math.max(1,Math.round(unit.maxhp*.3));
+  unit.hp=Math.max(1,Math.round(unit.maxhp*.2));
   genesisSetMark(unit,'🌟','全軍蘇生：復活済み',999999,'genesisAllyRevive');
   genesisRefreshUnit(unit);
   if(typeof popup==='function')popup('🌟 全軍蘇生！ '+unit.name,unit.x,90,'criticalPop');
@@ -399,7 +399,7 @@ deploy=function(i){
  if(genesisInFormation()){
   genesisApplyFormationToAll();
   const created=(Array.isArray(units)?units:[]).find(u=>u&&!before.has(u.id));
-  if(created&&Array.isArray(rechargeLeft)&&Number.isFinite(Number(rechargeLeft[i])))rechargeLeft[i]=Math.max(0,Number(rechargeLeft[i])*.85);
+  if(created&&Array.isArray(rechargeLeft)&&Number.isFinite(Number(rechargeLeft[i])))rechargeLeft[i]=Math.max(0,Number(rechargeLeft[i])*.92);
  }
  return result;
 };
@@ -493,12 +493,12 @@ setInterval(()=>{
    if(ally.hp>beforeHeal)genesisRefreshUnit(ally);
   }
  }
- // ⑯ 世界創造：20秒ごとに攻撃力+20%、最大3段階
+ // ⑯ 世界創造：25秒ごとに攻撃力+10%、最大2段階
  if(stageTime>=Number(creator.genesisNextEnergyAt||Infinity)&&Number(creator.genesisEnergyStacks||0)<2){
   creator.genesisEnergyStacks=Number(creator.genesisEnergyStacks||0)+1;
   creator.genesisNextEnergyAt+=25;
  }
- // ㊲ 万物の創造主：60秒ごとに攻撃力・最大HP+10%、最大5段階
+ // ㊲ 万物の創造主：75秒ごとに攻撃力・最大HP+5%、最大3段階
  if(stageTime>=Number(creator.genesisNextGrowthAt||Infinity)&&Number(creator.genesisGrowthStacks||0)<3){
   const ratio=creator.hp/Math.max(1,creator.maxhp);
   creator.genesisGrowthStacks=Number(creator.genesisGrowthStacks||0)+1;
@@ -521,7 +521,7 @@ setInterval(()=>{
   if(creator.ability?.damageReduce)creator.ability.damageReduce.factor=.25;
  }
  creator.atk=Math.max(1,Math.round(Number(creator.genesisCoreAtk||creator.atk)*energy*growth*(creator.genesisAwakenedUntil>now?1.5:1)));
- // ㉓ 七彩神壁：10秒ごとに最大HPの10%シールドを補充
+ // ㉓ 七彩神壁：15秒ごとに最大HPの5%シールドを補充
  if(stageTime>=Number(creator.genesisNextShieldAt||Infinity)){
   creator.barrierMax=Math.max(Number(creator.barrierMax||0),Math.round(creator.maxhp*.05));
   creator.barrier=Math.max(Number(creator.barrier||0),Math.round(creator.maxhp*.05));
