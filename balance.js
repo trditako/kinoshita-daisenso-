@@ -58,6 +58,30 @@ tune('大富豪木下',{hp:.9,atk:.5,interval:1.15,recharge:1.12},{criticalChanc
 tune('超越木下・創世神',{hp:.85,atk:.75,interval:1.08,recharge:1.1});
 tune('狂乱の強化木下',{hp:.95,atk:.78,interval:1.08,recharge:1.1});
 tune('狂乱のマッチョ木下',{hp:.95,atk:.82,interval:1.08,recharge:1.1});
+// 直近ランクシーズン20の使用率・勝率を参照した低採用キャラの個別救済。
+tune('呪木下',{hp:1.3,atk:1.35});
+tune('前衛木下',{hp:1.2,atk:1.25,recharge:.9});
+tune('天使迎撃木下',{hp:1.25,atk:1.3});
+tune('未来探査木下',{hp:1.25,atk:1.35});
+tune('日本防衛木下',{hp:1.15,atk:1.15});
+tune('日本制圧木下',{hp:1.25,atk:1.35});
+tune('哲学の賢者ゾクラテス',{hp:1.35,atk:1.35});
+tune('最終攻略木下',{hp:1.25,atk:1.3});
+const setTrait=(name,trait,strong,resist)=>{
+ const c=byName(name);if(!c)return;
+ const holder=c.ability&&c.ability.strong?c.ability:c;
+ if(strong!=null&&holder.strong)holder.strong[trait]=strong;
+ const resistance=c.ability&&c.ability.resist?c.ability:c;
+ if(resist!=null&&resistance.resist)resistance.resist[trait]=resist;
+};
+setTrait('天使迎撃木下','天使',2.5,.5);
+setTrait('未来探査木下','宇宙',2.5);
+setTrait('日本防衛木下','無',2.0,.48);setTrait('日本防衛木下','赤',2.0,.48);
+setTrait('日本制圧木下','無',2.4,.5);setTrait('日本制圧木下','赤',2.4,.5);setTrait('日本制圧木下','黒',2.4,.5);
+setTrait('最終攻略木下','無',2.3,.48);setTrait('最終攻略木下','赤',2.3,.48);setTrait('最終攻略木下','黒',2.3,.48);setTrait('最終攻略木下','天使',2.3,.48);setTrait('最終攻略木下','宇宙',2.3,.48);
+// 勝率が高めの呪王・銀河攻略は採用を維持しつつ、突出した妨害・特効倍率だけを小幅に抑える。
+tune('呪王木下',{hp:.95,atk:.92},{curseDuration:2.5,attackDownChance:.3,curseSlowChance:.2,cursedAttackMultiplier:1.25});
+setTrait('銀河攻略','宇宙',2.5);
 const genesis=byName('創世木下');
 if(genesis&&genesis.ability){if(genesis.ability.strong)for(const k of Object.keys(genesis.ability.strong))genesis.ability.strong[k]=Math.min(1.6,Number(genesis.ability.strong[k])||1);if(genesis.ability.damageReduce)genesis.ability.damageReduce.factor=.25;}
 const haifu=byName('覇風');
