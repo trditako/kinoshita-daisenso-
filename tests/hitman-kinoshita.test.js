@@ -43,10 +43,10 @@ assert.match(source, /selectedChapter\) === 7/);
 assert.match(source, /selectedStage\) === 48/);
 assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
 
-assert.match(html, /GAME_VERSION='v1\.9\.52'/);
+assert.match(html, /GAME_VERSION='v1\.9\.53'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v69/);
+assert.match(sw, /kinoshita-daisen-v70/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
