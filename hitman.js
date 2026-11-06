@@ -81,7 +81,7 @@ function refreshHitmanStats(unit) {
   if (!unit || !unit.hitmanCoreStats) return;
   const core = unit.hitmanCoreStats;
   const ratio = Math.max(0, Math.min(1, Number(unit.hp || 0) / Math.max(1, Number(unit.maxhp || 1))));
-  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.1;
+  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.05;
   unit.maxhp = Math.max(1, Math.round(core.maxhp * factor));
   unit.hp = Math.max(1, Math.min(unit.maxhp, Math.round(unit.maxhp * ratio)));
   unit.atk = Math.max(1, Math.round(core.atk * factor));
@@ -236,7 +236,7 @@ deploy = function(i) {
     const unit = (Array.isArray(units) ? units : []).find(u => !before.has(u) && u && u.cardIndex === i && u.hp > 0);
     if (unit) {
       unit.hitmanCoreStats = {
-        maxhp: Number(unit.maxhp || 95800), atk: Number(unit.atk || 6200),
+        maxhp: Number(unit.maxhp || 72000), atk: Number(unit.atk || 6200),
         range: Number(unit.range || 220), spd: Number(unit.spd || 0.8),
         interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 100)
       };
@@ -255,11 +255,11 @@ const originalHaifuOnAttack = haifuOnAttack;
 haifuOnAttack = function(unit, target) {
   const result = originalHaifuOnAttack(unit, target);
   if (unit && unit.name === NAME && target && target.hp > 0) {
-    money = Math.min(Number(workerMax || 999999999), Number(money || 0) + 75);
+    money = Math.min(Number(workerMax || 999999999), Number(money || 0) + 50);
     if (Array.isArray(rechargeLeft) && Number.isInteger(unit.cardIndex) && rechargeLeft[unit.cardIndex] > 0) {
       rechargeLeft[unit.cardIndex] = Math.max(0, rechargeLeft[unit.cardIndex] * 0.985);
     }
-    if (typeof popup === 'function') popup('+75円', target.x, 105, 'criticalPop');
+    if (typeof popup === 'function') popup('+50円', target.x, 105, 'criticalPop');
     if (typeof update === 'function') update(true);
   }
   return result;
