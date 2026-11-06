@@ -403,8 +403,14 @@ deploy=function(i){
  }
  return result;
 };
+function clearGenesisDetailSections(){
+ const root=document.getElementById('detail'),panel=root?.querySelector('.panel')||root;
+ panel?.querySelector('#genesisAbilityBook')?.remove();
+ panel?.querySelector('#genesisCounterAbilityInfo')?.remove();
+}
 const _genesisOriginalShowCharacterDetail=showCharacterDetail;
 showCharacterDetail=function(i){
+ clearGenesisDetailSections();
  const result=_genesisOriginalShowCharacterDetail(i);
  if(i!==genesisIndex)return result;
  const root=document.getElementById('detail'),panel=root?.querySelector('.panel')||root;
@@ -656,6 +662,7 @@ hit=function(target,damage,source,abilitySource){
 };
 const _genesisCounterOriginalShowCharacterDetail=showCharacterDetail;
 showCharacterDetail=function(i){
+ clearGenesisDetailSections();
  const result=_genesisCounterOriginalShowCharacterDetail(i);
  if(i!==genesisCounterIndex)return result;
  const root=document.getElementById('detail'),panel=root?.querySelector('.panel')||root;
