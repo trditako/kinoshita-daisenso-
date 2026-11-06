@@ -91,7 +91,7 @@ if(haifu&&haifu.ability){
  if(a.haifuSkill){a.haifuSkill.chance=.1;a.haifuSkill.multiplier=2;a.haifuSkill.cooldown=16;}
  if(a.strong)for(const k of Object.keys(a.strong))a.strong[k]=Math.min(4,Number(a.strong[k])||1);
  if(a.resist)for(const k of Object.keys(a.resist))a.resist[k]=Math.max(.65,Number(a.resist[k])||1);
- a.desc='編成中のUR1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+15%（最大+45%）。非UR1体につき覇風自身のHP・攻撃力・攻撃間隔・再生産時間+15%（最大+90%）。敵全体の攻撃力を最大45%低下。全味方に攻撃力35%分のパワーシールド。5回召喚ごとの全体攻撃は攻撃力150%、回復量は与ダメージの25%。成長は4秒ごとに+3%（最大+15%）。';
+ a.desc='編成中のUR1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+15%（最大+45%）。非UR1体につき覇風自身のHP・攻撃力・攻撃間隔・再生産時間+15%（最大+90%）。場にいる間、敵全体の攻撃力を20%低下。全味方に攻撃力35%分のパワーシールド。5回召喚ごとの全体攻撃は攻撃力150%、回復量は与ダメージの25%。成長は4秒ごとに+3%（最大+15%）。';
 }
 const angel=byName('天使神:木下');
 if(angel&&angel.ability){
