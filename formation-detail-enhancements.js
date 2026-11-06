@@ -125,7 +125,9 @@
     '覇風：HP・移動速度',
     '呪いの木下達 ',
     '神話 ',
-    'HP50%以上：攻撃力 +15%'
+    'HP50%以上：攻撃力 +15%',
+    '破壊モード',
+    '連射モード'
   ];
   const persistentClasses = new Set([
     'novaMode', 'novaAllyBuffLock', 'novaImmunity',
