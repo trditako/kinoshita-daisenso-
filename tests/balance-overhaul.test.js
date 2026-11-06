@@ -11,7 +11,7 @@ const cards=[
  {name:'超激レア木下',rarity:'SSR',hp:100,atk:100,recharge:10},
  {name:'UR木下',rarity:'UR',hp:100,atk:100,recharge:10},
  {name:'LR木下',rarity:'LR',hp:100,atk:100,recharge:10},
- {name:'創世木下',rarity:'UR',hp:5000000,atk:250000,interval:2,recharge:180,ability:{strong:{神話:2.5},damageReduce:{factor:.1}}},
+ {name:'創世木下',rarity:'UR',hp:1600000,atk:70000,interval:2,recharge:180,ability:{strong:{神話:2.5},damageReduce:{factor:.1}}},
  {name:'天使神:木下',rarity:'UR',hp:200000,atk:28000,interval:3,recharge:320,ability:{strong:{神話:8}}},
  {name:'ノヴァ木下',rarity:'UR',hp:68000,atk:166666,interval:10,recharge:180,ability:{strong:{神話:5}}},
  {name:'覇風',rarity:'UR',hp:58500,atk:12500,interval:.6,recharge:32,ability:{strong:{赤:8},resist:{赤:.45},haifuSkill:{chance:.15,multiplier:3,cooldown:13}}},
