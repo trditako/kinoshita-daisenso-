@@ -35,8 +35,10 @@ assert.match(source,/dealt=Math\.round\(dealt\*1\.15\)/,'被ダメージ増加�
 assert.match(source,/Number\(rechargeLeft\[i\]\)\*\.92/,'再生産短縮は8%');
 assert.match(source,/genesisAuraActive&&!target\.isEnemy\)dealt=Math\.round\(dealt\*\.85\)/,'味方の被ダメージ軽減は15%');
 assert.match(source,/genesisAbilityBook/,'37能力の詳細UIを実装');
+assert.match(html,/formatCharacterAbilityDetails/,'創世木下の37能力を固有能力欄へ表示する');
+assert.match(html,/創世の固有能力/,'創世木下の能力をスキル欄へ混在させない');
 assert.match(html,/\.\/genesis\.js\?v=20261105-genesis-37/,'ゲーム本体から能力スクリプトを読み込む');
-assert.match(sw,/kinoshita-daisen-v74/,'Service Workerキャッシュを更新');
+assert.match(sw,/kinoshita-daisen-v75/,'Service Workerキャッシュを更新');
 assert.match(sw,/\.\/genesis\.js/,'オフラインキャッシュへ能力スクリプトを追加');
 process.stdout.write('創世木下テスト成功：37能力、ID、専用ステージ、報酬、UI、キャッシュを確認しました。\n');
 
