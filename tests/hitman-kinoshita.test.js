@@ -9,9 +9,9 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
 const workflow = fs.readFileSync(path.join(root, '.github/workflows/validate-index.yml'), 'utf8');
 
-assert.match(source, /name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5100/);
+assert.match(source, /name: NAME, cost: 2200, hp: 72000, atk: 6200, secondAtk: 3400/);
 assert.match(source, /multiAttack: \[8900, 5100\], range: 220, spd: 0\.8, interval: 1/);
-assert.match(source, /recharge: 75/);
+assert.match(source, /recharge: 100/);
 assert.match(source, /trait: '黒', rarity: '伝説レア'/);
 assert.match(source, /strong: \{ 神話: 5 \}, resist: \{ 神話: 0\.15 \}/);
 assert.match(source, /curseImmune: true, stopImmune: true, waveImmune: true/);
@@ -46,7 +46,7 @@ assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マ�
 assert.match(html, /GAME_VERSION='v1\.9\.52'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v69/);
+assert.match(sw, /kinoshita-daisen-v70/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
