@@ -2854,7 +2854,7 @@ function formatAbilityInfo(obj,opts={}){
  const c=obj||{},a=c.ability||{},parts=[];
  if(a.name&&a.name!=='基本攻撃')parts.push('<b>'+a.name+'</b>');
  // 調整履歴・変更理由の文章は表示せず、現行能力データから効果を組み立てる。
- if(a.desc&&a.desc!=='特殊能力なし'&&!/(調整|弱体化|強化|抑制|維持|見直し|変更)/.test(a.desc))parts.push(a.desc);
+ if(a.desc&&a.desc!=='特殊能力なし'&&!/(調整|弱体化|抑制|維持|見直し|変更)/.test(a.desc))parts.push(a.desc);
  const traitNames={赤:'赤',青:'青',黒:'黒',浮:'浮',天使:'天使',宇宙:'宇宙',無:'無',古代:'古代',ゾンビ:'ゾンビ',神話:'神話'};
  const strong=a.strong||c.strong,resist=a.resist||c.resist;
  if(strong&&typeof strong==='object'){
