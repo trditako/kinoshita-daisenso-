@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.53';
+const GAME_VERSION='v1.9.54';
 const UPDATE_LOG=[
+  {date:'2026-11-06',version:'v1.9.54',title:'📘 スキルと固有能力の表示を分離',items:['実際に発動する技だけをスキル詳細へ表示し、固有能力・耐性・属性特効・神話能力・創世の37能力を能力詳細へ分類','覇風の固有技、KBRの発動技、ヒットマン木下の追跡マーカー・乗馬・転移反撃をスキルとして個別表示','能力データをスキル欄へ誤分類する表示を修正']},
   {date:'2026-11-06',version:'v1.9.53',title:'⚖️ 全キャラクター環境再調整',items:['レアリティ別に基礎HP・攻撃力・再生産時間を見直し、初期・低使用率キャラクターを強化','創世木下・天使神:木下・ノヴァ木下・覇風など突出したキャラクターの能力倍率と支援効果を調整','射程・耐久・属性特効・反射・成長能力の過剰な重複を抑制し、編成の選択肢を拡大']},
   {date:'2026-11-05',version:'v1.9.52',title:'🎯 神話編全48ステージ報酬「ヒットマン木下」を追加',items:['神話編第1章の全48ステージクリアで伝説レア「ヒットマン木下」を獲得','1段目8,900・0.2秒後に2段目5,100の単体二連撃と、出撃時3回の追跡マーカーを実装','神話特効・被ダメージ軽減と反射・回復封印・撃破成長・乗馬・転移反撃を実装','既存キャラクターIDと所持・育成・編成データを維持']},
   {date:'2026-11-05',version:'v1.9.51',title:'🌌 歴代最強UR「創世木下」を追加',items:['37種類の固有能力を持つ創世木下を追加。編成中の味方強化・戦闘中の回復・妨害・覚醒・復活を実装','専用超高難易度イベント「創世神話」を追加し、初回クリア報酬に創世木下を設定','能力一覧をキャラクター詳細に表示し、編成効果と戦闘中の能力状態を確認可能に変更','既存キャラクターIDと既存の所持・育成データを維持']},
@@ -2852,9 +2853,9 @@ function showEnemyBook(){
 }
 function formatAbilityInfo(obj,opts={}){
  const c=obj||{},a=c.ability||{},parts=[];
- if(a.name&&a.name!=='基本攻撃')parts.push('<b>'+a.name+'</b>');
+ if(a.name&&a.name!=='基本攻撃'&&!a.kbrMounted)parts.push('<b>'+a.name+'</b>');
  // 調整履歴・変更理由の文章は表示せず、現行能力データから効果を組み立てる。
- if(a.desc&&a.desc!=='特殊能力なし'&&!/(調整|弱体化|抑制|維持|見直し|変更)/.test(a.desc))parts.push(a.desc);
+ if(a.desc&&a.desc!=='特殊能力なし'&&!a.kbrMounted&&!/(調整|弱体化|抑制|維持|見直し|変更)/.test(a.desc))parts.push(a.desc);
  const traitNames={赤:'赤',青:'青',黒:'黒',浮:'浮',天使:'天使',宇宙:'宇宙',無:'無',古代:'古代',ゾンビ:'ゾンビ',神話:'神話'};
  const strong=a.strong||c.strong,resist=a.resist||c.resist;
  if(strong&&typeof strong==='object'){
@@ -2912,7 +2913,7 @@ function formatAbilityInfo(obj,opts={}){
    for(const [child,v] of Object.entries(value))if(child!=='name'&&child!=='desc')add(child,v,full);
   }
  };
- for(const [key,value] of Object.entries(a))if(!['name','desc','strong','resist','mythologyV2'].includes(key))add(key,value);
+ for(const [key,value] of Object.entries(a))if(!['name','desc','strong','resist','mythologyV2','haifuSkill','skills','kbrSkill','kbrAttackSkill','kbrMounted','extraAttackChance'].includes(key))add(key,value);
  for(const key of ['waveLevel','waveChance','phoenixSurgeLevel','phoenixSurgeMin','phoenixSurgeMax','curseChance','curseDuration','stopChance','stopDuration','slowChance','slowDuration','warpChance','warpDuration','sealChance','sealDuration','attackDownChance','attackDownDuration','barrier','barrierCooldown','metal','healAura','airAttack','curseImmune','stopImmune','slowImmune','waveImmune','surgeImmune','warpImmune','knockbackImmune','attackDownImmune','sealImmune','zombieKiller'])if(c[key]!=null)add(key,c[key]);
  if(lines.length)parts.push('<b>現在の能力数値</b><br>'+lines.join('<br>'));
  if(a.revive)parts.push('撃破時に復活効果を発動');
@@ -2926,6 +2927,7 @@ function formatAbilityInfo(obj,opts={}){
  if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');
  if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');
  if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');
+ if(a.kbrMounted){const d=String(a.desc||''),e=d.startsWith('騎乗中は')?d.split('。')[0]+'。':'騎乗型キャラクター';parts.push('騎乗特性：'+e);}
  return parts.length?parts.join(' / '):'特殊能力なし';
 }
 function mythologyV2AbilityName(key){return ({barrier:'結界',distanceArmor:'距離装甲',longReflect:'遠隔反射',rune:'神紋蓄積',summon:'召喚',split:'核分裂',timeSurge:'時間加速',causality:'因果転換',absorb:'吸収',domain:'神域',omen:'天罰予告',soulFeast:'魂喰い',reincarnate:'再臨',gravityWell:'重力圏',finalPhase:'終端化'})[key]||key}
@@ -2995,47 +2997,29 @@ function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=
   if(c.ability?.angelGod){ability='全ステータスを'+[20,45,85][n-1]+'%上昇。天使属性の編成数による最大+30%補正と、攻撃命中による攻撃力累積は別計算。';}else if(c.ability?.dimensionalRend){const rate=Math.round((Number(c.ability.dimensionalRend.factor||.02)+n*.01)*100);const bossCap=Number(c.ability.dimensionalRend.bossCap||8000);ability='次元断裂：通常攻撃命中後、対象の残りHPの'+rate+'%を追加ダメージ。ボスへの追加ダメージは1回最大'+bossCap.toLocaleString()+'。';}else if(c.ability?.voidField){const radius=Number(c.ability.voidField.radius||180)+60*n;ability='虚無領域：範囲半径 '+radius+'px。範囲内の敵の攻撃ダメージを通常時の'+Math.round(Number(c.ability.voidField.attackSlow??.55)*100)+'%、移動速度を'+Math.round(Number(c.ability.voidField.speedSlow??.65)*100)+'%に低下。召喚・結界再生を3秒間封印し、範囲内では効果時間を更新。';}else if(c.ability?.causalityReversal){const heal=Math.round(Number(c.ability.causalityReversal.heal??c.ability.causalityReversal.revivePercent??.4)*100);const invuln=Number(c.ability.causalityReversal.invulnerable||3);ability='因果反転：致命傷を1回だけ回避し、最大HPの'+heal+'%で復帰。その後'+invuln+'秒間無敵。成長では固有能力の回復率・無敵時間は変化しない。';}else if(c.ability?.genesisPulse){const heal=Math.min(.15,Number(c.ability.genesisPulse.allyHeal||.03)+.02*n);const damage=Math.min(.6,Number(c.ability.genesisPulse.enemyDamage||.2)+.1*n);ability='創世律動：'+Number(c.ability.genesisPulse.cooldown||12)+'秒ごとに味方全員を各自の最大HPの'+Math.round(heal*100)+'%回復し、敵全体に自身の攻撃力の'+Math.round(damage*100)+'%分の追加ダメージ。';}rows+='<div style="padding:9px;margin-top:7px;border:1px solid #cbd5e1;border-radius:9px;background:#fff"><b>成長'+n+'段階</b><div style="font-size:11px;color:#6b21a8;font-weight:900;margin-top:3px">今回：HP・攻撃力 ×'+factor+' ／ 累計：HP・攻撃力 ×'+cumulativeHpAtk.toFixed(3)+'、移動速度 ×'+cumulativeSpd.toFixed(3)+'、攻撃間隔 ×'+cumulativeInterval.toFixed(3)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;font-size:12px"><span>❤️ HP：'+hp.toLocaleString()+'（今回 +'+(hp-prev.hp).toLocaleString()+'）</span><span>⚔️ 攻撃力：'+atk.toLocaleString()+'（今回 +'+(atk-prev.atk).toLocaleString()+'）</span><span>🎯 射程：'+range+'（今回 '+(isAngelGod?'×'+factor:'+'+rangeAdd[n-1])+'）</span><span>💨 移動速度：'+spd.toFixed(3)+'（今回 ×'+(isAngelGod?factor:1.12).toFixed(2)+'）</span><span>⏱️ 攻撃間隔：'+interval.toFixed(3)+'秒（今回 ×'+(isAngelGod?(1/factor):.86).toFixed(3)+'）</span><span>💥 ヒットバック：'+kb+'回（今回 '+(isAngelGod?'×'+factor:'+1')+'）</span></div><div style="margin-top:7px;padding:7px;background:#f5f3ff;border-radius:6px;font-size:12px;color:#5b21b6;font-weight:800">'+ability+'</div><div style="font-size:11px;color:#64748b;margin-top:5px">必要木下マネー：'+([2500,5000,8500][n-1]).toLocaleString()+'円</div></div>';
  }
  return '<section class="xpBox" style="margin-top:8px;background:#f5f3ff;border:2px solid #8b5cf6;color:#1e1b4b"><b style="font-size:16px">🌱 成長ステータス詳細</b><div style="font-size:12px;margin-top:5px">下記は現在のレベル・形態のステータスから、実際の成長処理と同じ順番で3段階まで計算した値です。「今回の増加量」と「累計値」を分けて表示しています。成長は編成上段（1〜5番）に配置したキャラクターのみ、戦闘中に使用できます。</div>'+rows+'</section>';
-} function formatCharacterSkillDetails(c){
+} function formatCharacterAbilityDetails(c){
  const a=c?.ability||{},blocks=[];
- const adjustmentText=/(調整履歴|調整内容|弱体化|上方修正|下方修正|変更理由|調整後)/;
- const desc=String(a.desc||'').trim();
- if(desc&&desc!=='特殊能力なし'&&!adjustmentText.test(desc)){
-  blocks.push('<div class="abilityCard"><b>基本効果</b><div>'+desc+'</div></div>');
+ const names={slow:'鈍足',stop:'停止',curse:'呪い',attackDown:'攻撃力低下',knockback:'ふっとばし',warp:'ワープ',seal:'能力封印',damageReduce:'被ダメージ軽減',damageReflect:'ダメージ反射',heal:'回復',barrier:'バリア'};
+ const labels={trait:'対象属性',chance:'発動確率',factor:'効果倍率',duration:'持続時間',cooldown:'再使用時間',range:'効果射程',radius:'効果範囲',damage:'ダメージ',ratio:'割合',count:'発動回数',maxStacks:'最大蓄積数',multiplier:'攻撃倍率',interval:'発動間隔',stacks:'必要蓄積数'};
+ const fmt=(k,v)=>typeof v==='boolean'?(v?'あり':'なし'):typeof v==='number'?(k==='chance'||/Chance$/.test(k)?Math.round(v*100)+'%':/duration|cooldown|interval|seconds/i.test(k)?v+'秒':/multiplier|factor/i.test(k)?v+'倍':/ratio|percent/i.test(k)?Math.round(v*100)+'%':Number(v.toFixed(3)).toLocaleString()):String(v);
+ for(const [k,n] of Object.entries(names)){const e=a[k];if(!e||typeof e!=='object'||Array.isArray(e))continue;const fs=Object.entries(e).filter(([,v])=>v!=null&&typeof v!=='object').map(([x,v])=>(labels[x]||x)+'：'+fmt(x,v));blocks.push('<div class="abilityCard"><b>'+n+'</b><div>'+fs.join('　／ ')+'</div></div>');}
+ const myths=Array.isArray(a.mythologyV2)?a.mythologyV2:[];if(myths.length)blocks.push('<div class="abilityCard"><b>神話系固有能力</b>'+myths.map(k=>mythologyV2AbilityDetail(k,a,c)).join('')+'</div>');
+ const genesis=Array.isArray(c.genesisAbilities)?c.genesisAbilities:[];if(genesis.length)blocks.push('<div class="abilityCard"><b>創世の固有能力（'+genesis.length+'種類）</b>'+genesis.map((v,i)=>'<div style="padding:5px 0;border-top:1px solid #cbd5e1"><b>'+String(v.name||('能力'+(i+1)))+'</b><div>'+String(v.desc||'')+'</div></div>').join('')+'</div>');
+ if(!blocks.length)return '';return '<div class="xpBox" style="margin-top:8px;background:#f0f7ff;border:2px solid #93c5fd;color:#123b63;text-align:left"><b style="font-size:16px">📗 固有能力の詳細</b><div style="display:grid;gap:7px;margin-top:8px">'+blocks.join('')+'</div></div>';
+}
+function formatCharacterSkillDetails(c){
+ const a=c?.ability||{},blocks=[],labels={chance:'発動確率',factor:'効果倍率',duration:'持続時間',cooldown:'再使用時間',interval:'発動間隔',radius:'効果範囲',threshold:'発動条件',count:'発動回数'};
+ const fmt=(k,v)=>typeof v==='boolean'?(v?'あり':'なし'):typeof v==='number'?(k==='chance'||/Chance$/.test(k)?Math.round(v*100)+'%':k==='threshold'||/Ratio$|Percent$/.test(k)?Math.round(v*100)+'%':/duration|cooldown|interval|seconds/i.test(k)?v+'秒':/multiplier|factor/i.test(k)?v+'倍':Number(v.toFixed(3)).toLocaleString()):String(v);
+ const add=(s,i)=>{if(!s||typeof s!=='object')return;const n=String(s.name||('スキル'+(i+1))),d=String(s.desc||s.description||''),fs=Object.entries(s).filter(([k,v])=>!['name','desc','description','skills'].includes(k)&&v!=null&&typeof v!=='object').map(([k,v])=>(labels[k]||k)+'：'+fmt(k,v));blocks.push('<div class="abilityCard"><b>'+n+'</b><div>'+d+(fs.length?'<br>'+fs.join('　／ '):'')+'</div></div>');};
+ (Array.isArray(c.skills)?c.skills:Array.isArray(a.skills)?a.skills:[]).forEach(add);
+ if(a.haifuSkill&&typeof a.haifuSkill==='object'){const s=a.haifuSkill;blocks.push('<div class="abilityCard"><b>根性だけで勝ちます</b><div>攻撃時'+Math.round(Number(s.chance||0)*100)+'%で、対象の攻撃力と自身の攻撃力の合計に効果倍率'+Number(s.multiplier||1)+'倍を掛けたダメージ。再使用時間：'+Number(s.cooldown||0)+'秒。</div></div>');}
+ const ka=a.kbrAttackSkill||c.kbrAttackSkill||(Number.isFinite(Number(a.extraAttackChance))?{type:'damage',chance:Number(a.extraAttackChance)}:null),ks=a.kbrSkill||c.kbrSkill;
+ if(ka||ks){const n=String(a.name||'KBR固有スキル'),raw=String(a.desc||''),passive=raw.startsWith('騎乗中は')?raw.split('。')[0]+'。':'',d=passive?raw.slice(passive.length).trim():raw,parts=[],types={damage:'攻撃時の追加攻撃',speed:'速度強化',slow:'範囲鈍足',heal:'味方回復',stop:'範囲停止',awakening:'条件発動の覚醒',storm:'定期的な嵐',champion:'特殊突撃'};
+  if(ka){const fs=Object.entries(ka).filter(([k,v])=>k!=='type'&&v!=null&&typeof v!=='object').map(([k,v])=>(labels[k]||k)+'：'+fmt(k,v));parts.push('<div><b>攻撃時スキル：</b>'+(types[ka.type]||String(ka.type||'攻撃効果'))+(fs.length?'（'+fs.join('／')+'）':'')+'</div>');}
+  if(ks){const fs=Object.entries(ks).filter(([k,v])=>k!=='type'&&v!=null&&typeof v!=='object').map(([k,v])=>(labels[k]||k)+'：'+fmt(k,v));parts.push('<div><b>固有スキル：</b>'+(types[ks.type]||String(ks.type||'特殊効果'))+(fs.length?'（'+fs.join('／')+'）':'')+'</div>');}
+  blocks.push('<div class="abilityCard"><b>'+n+'</b><div>'+d+parts.join('')+'</div></div>');
  }
- const effectNames={slow:'鈍足',stop:'停止',curse:'呪い',attackDown:'攻撃力低下',knockback:'ふっとばし',warp:'ワープ',seal:'能力封印',damageReduce:'被ダメージ軽減',damageReflect:'ダメージ反射',heal:'回復',barrier:'バリア',haifuSkill:'覇風の固有技'};
- const fieldNames={trait:'対象属性',chance:'発動確率',factor:'効果倍率',duration:'持続時間',cooldown:'再使用時間',range:'効果射程',radius:'効果範囲',damage:'ダメージ',ratio:'割合',count:'発動回数',maxStacks:'最大蓄積数',multiplier:'攻撃倍率',interval:'発動間隔',stacks:'必要蓄積数'};
- const formatValue=(key,value)=>{
-  if(typeof value==='boolean')return value?'あり':'なし';
-  if(typeof value==='number'){
-   if(key==='chance'||/Chance$/.test(key))return Math.round(value*100)+'%';
-   if(/duration|cooldown|interval|seconds/i.test(key))return value+'秒';
-   if(/multiplier|factor/i.test(key))return value+'倍';
-   if(/ratio|percent/i.test(key))return Math.round(value*100)+'%';
-   return Number(value.toFixed(3)).toLocaleString();
-  }
-  return String(value);
- };
- for(const [key,label] of Object.entries(effectNames)){
-  const effect=a[key];
-  if(!effect||typeof effect!=='object'||Array.isArray(effect))continue;
-  const fields=Object.entries(effect).filter(([,v])=>v!=null&&typeof v!=='object').map(([k,v])=>(fieldNames[k]||k)+'：'+formatValue(k,v));
-  blocks.push('<div class="abilityCard"><b>'+label+'</b><div>'+fields.join('　／ ')+'</div></div>');
- }
- if(Array.isArray(a.skills)){
-  a.skills.forEach((skill,index)=>{
-   if(!skill||typeof skill!=='object')return;
-   const name=String(skill.name||('スキル'+(index+1)));
-   const text=String(skill.desc||skill.description||'');
-   const fields=Object.entries(skill).filter(([k,v])=>!['name','desc','description'].includes(k)&&v!=null&&typeof v!=='object').map(([k,v])=>(fieldNames[k]||k)+'：'+formatValue(k,v));
-   blocks.push('<div class="abilityCard"><b>'+name+'</b><div>'+text+(fields.length?'<br>'+fields.join('　／ '):'')+'</div></div>');
-  });
- }
- const mythKeys=Array.isArray(a.mythologyV2)?a.mythologyV2:[];
- if(mythKeys.length){
-  blocks.push('<div class="abilityCard"><b>神話系スキルの個別効果</b>'+mythKeys.map(key=>mythologyV2AbilityDetail(key,a,c)).join('')+'</div>');
- }
- if(!blocks.length)return '';
- return '<div class="xpBox" style="margin-top:8px;background:#f0f7ff;border:2px solid #93c5fd;color:#123b63;text-align:left"><b style="font-size:16px">📘 スキル詳細</b><div style="display:grid;gap:7px;margin-top:8px">'+blocks.join('')+'</div></div>';
+ if(!blocks.length)return '';return '<div class="xpBox" style="margin-top:8px;background:#fff7ed;border:2px solid #fdba74;color:#7c2d12;text-align:left"><b style="font-size:16px">⚔️ スキル詳細</b><div style="display:grid;gap:7px;margin-top:8px">'+blocks.join('')+'</div></div>';
 }
 function showCharacterDetail(i){
  const c=activeCard(i);if(!c)return;
@@ -3059,7 +3043,7 @@ function showCharacterDetail(i){
  const attackBreakdown=hitValues.length>1?'<div>🥊 連撃内訳</div><b>'+hitValues.map((v,n)=>(n+1)+'段目 '+Number(v).toLocaleString()).join(' ／ ')+'</b><div>📊 連撃合計</div><b>'+comboTotal.toLocaleString()+'</b><div>⚡ 連撃合計DPS</div><b>'+Math.round(comboDps).toLocaleString()+'</b>':'<div>⚡ DPS</div><b>'+Math.round(comboDps).toLocaleString()+'</b>';
  const cosmeticSection=renderCharacterCosmeticSection(i);
  document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name+((isNormal||isHarland||isAnomalous||!!EARLY_SECOND_FORM_CONFIG[base.name]||isRich||isYoshida)&&charForm[i]===2?'【第二形態】':'');
- document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b>'+attackBreakdown+'<div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+detailStat('recharge').toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p>'+formatCharacterSkillDetails(c)+'<p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
+ document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b>'+attackBreakdown+'<div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+detailStat('recharge').toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p>'+formatCharacterAbilityDetails(c)+formatCharacterSkillDetails(c)+'<p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
  document.getElementById('detail').style.display='flex';
 }function levelUpCharacter(i){if(running||!Number.isInteger(i)||!cards[i]||!hasCharacter(i))return;const max=Math.max(20,Math.min(30,Number(charMaxLevel[i])||20));const raw=Number(charLevel[i]);const current=Number.isFinite(raw)&&raw>=1?Math.min(max,Math.floor(raw)):1;charMaxLevel[i]=max;charLevel[i]=current;if(current>=max)return;const need=xpNeed(i);if(!Number.isFinite(need)||need<=0||playerXP<need)return;charLevel[i]=current+1;playerXP=Math.max(0,playerXP-need);save();showCharacterDetail(i);renderCards();renderStageSelect()}
 function openKinoshitaBook(){
@@ -7327,5 +7311,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./trade.js?v=20261028-ai-auctions-30s"></script>
 <script src="./genesis.js?v=20261105-genesis-37"></script>
 <script src="./hitman.js?v=20261105-hitman"></script>
-<script src="./balance.js?v=20261106-balance1"></script>
+<script src="./balance.js?v=20261106-balance2"></script>
 </body></html>
