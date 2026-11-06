@@ -21,9 +21,8 @@ const tierOf=c=>{
  if(r==='R'||r==='レア')return 'r';
  return 'normal';
 };
-for(const c of cards){
- if(!c||typeof c!=='object'||!Number.isFinite(Number(c.hp))||!Number.isFinite(Number(c.atk)))continue;
- const t=TIERS[tierOf(c)];
+const scaleCard=(c,t)=>{
+ if(!c||typeof c!=='object'||!Number.isFinite(Number(c.hp))||!Number.isFinite(Number(c.atk)))return;
  c.hp=round(c.hp*t.hp);
  c.atk=round(c.atk*t.atk);
  if(Number.isFinite(Number(c.recharge)))c.recharge=Math.max(1,Number((c.recharge*t.recharge).toFixed(2)));
@@ -40,8 +39,22 @@ for(const c of cards){
    if(holder.damageReduce&&Number(holder.damageReduce.factor)<.25)holder.damageReduce.factor=.25;
   }
  }
+};
+for(const c of cards){
+ if(!c||typeof c!=='object')continue;
+ const t=TIERS[tierOf(c)];
+ scaleCard(c,t);
+ if(c.secondForm&&typeof c.secondForm==='object')scaleCard(c.secondForm,TIERS[tierOf(c.secondForm.rarity?c.secondForm:c)]);
 }
-const byName=name=>cards.find(c=>c&&c.name===name);
+if(typeof NORMAL_SECOND_FORMS!=='undefined'&&NORMAL_SECOND_FORMS&&typeof NORMAL_SECOND_FORMS==='object'){
+ for(const [id,form] of Object.entries(NORMAL_SECOND_FORMS)){
+  const base=cards[Number(id)];
+  scaleCard(form,TIERS[tierOf(base||{})]);
+ }
+}
+const byName=name=>cards.find(c=>c&&c.name===name)||cards.map(c=>c&&c.secondForm).find(c=>c&&c.name===name)||(
+ typeof NORMAL_SECOND_FORMS!=='undefined'&&NORMAL_SECOND_FORMS?Object.values(NORMAL_SECOND_FORMS).find(c=>c&&c.name===name):null
+);
 const tune=(name,values,ability)=>{
  const c=byName(name);if(!c)return;
  for(const [key,factor] of Object.entries(values)){
@@ -82,6 +95,8 @@ setTrait('最終攻略木下','無',2.3,.48);setTrait('最終攻略木下','赤'
 // 勝率が高めの呪王・銀河攻略は採用を維持しつつ、突出した妨害・特効倍率だけを小幅に抑える。
 tune('呪王木下',{hp:.95,atk:.92},{curseDuration:2.5,attackDownChance:.3,curseSlowChance:.2,cursedAttackMultiplier:1.25});
 setTrait('銀河攻略','宇宙',2.5);
+const hitman=byName('ヒットマン木下');
+if(hitman&&hitman.ability)hitman.ability.desc='神話属性に3倍ダメージ。神話属性から受けるダメージを65%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目5,208、0.2秒後に2段目2,856。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の200%ダメージ。攻撃ごとに再出撃時間を1.5%短縮し、50円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。';
 const genesis=byName('創世木下');
 if(genesis&&genesis.ability){if(genesis.ability.strong)for(const k of Object.keys(genesis.ability.strong))genesis.ability.strong[k]=Math.min(1.6,Number(genesis.ability.strong[k])||1);if(genesis.ability.damageReduce)genesis.ability.damageReduce.factor=.25;}
 const haifu=byName('覇風');
