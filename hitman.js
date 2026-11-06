@@ -18,7 +18,7 @@ const definition = {
   ],
   ability: {
     name: '神話狩り・追跡戦術',
-    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,900、0.2秒後に2段目5,100。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の500%ダメージ。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
+    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,900、0.2秒後に2段目5,100。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
     strong: { 神話: 5 }, resist: { 神話: 0.15 },
     curseImmune: true, stopImmune: true, waveImmune: true,
     reflectImmune: true
@@ -94,7 +94,7 @@ function refreshHitmanStats(unit) {
   unit.hp = Math.max(1, Math.min(unit.maxhp, Math.round(unit.maxhp * ratio)));
   unit.atk = Math.max(1, Math.round(core.atk * factor));
   unit.range = Math.max(1, Math.round(core.range * factor));
-  unit.spd = Math.max(0.01, core.spd * factor + (unit.hitmanRiding ? 2 : 0));
+  unit.spd = Math.max(0.01, core.spd * factor + (unit.hitmanRiding ? Number(hitmanSkill('hitman_ride')?.speedBonus || 2) : 0));
   unit.interval = Math.max(0.05, core.interval / factor);
   unit.recharge = Math.max(1, core.recharge / factor);
   unit.cardSpeed = unit.spd;
@@ -183,7 +183,7 @@ function tryHitmanCounter(unit, attacker) {
   unit.target = attacker;
   unit.state = 'attack';
   if (unit.el) unit.el.style.left = unit.x + 'px';
-  if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/2', 15, 'hitmanCounter');
+  if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/' + Number(skill.maxUses || 2), Number(skill.cooldown || 15), 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
   const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8900) * Number(skill.damageMultiplier || 15)));
   const damage = damageAgainst(unit, attacker, baseAttack);
@@ -259,7 +259,7 @@ deploy = function(i) {
       unit.hitmanKillStacks = 0;
       unit.hitmanSkill2Uses = 0;
       unit.hitmanSkill2ReadyAt = Number(stageTime || 0);
-      unit.hitmanNextRideAt = Number(stageTime || 0) + 15;
+      unit.hitmanNextRideAt = Number(stageTime || 0) + Number(hitmanSkill('hitman_ride')?.interval || 15);
       startRide(unit);
       launchTrackingMarkers(unit);
     }
