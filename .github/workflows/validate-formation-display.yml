@@ -1,0 +1,21 @@
+name: Validate formation display enhancements
+on:
+  pull_request:
+    paths:
+      - 'service-worker.js'
+      - 'formation-detail-enhancements.js'
+      - 'tests/character-skill-combat-effects.test.js'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check service-worker.js
+          node --check formation-detail-enhancements.js
+      - name: Run regression checks
+        run: node tests/character-skill-combat-effects.test.js
