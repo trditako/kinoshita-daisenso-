@@ -5,16 +5,16 @@ if (window.__HITMAN_KINOSHITA_V1__) return;
 window.__HITMAN_KINOSHITA_V1__ = true;
 
 const definition = {
-  name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5100,
-  multiAttack: [8900, 5100], range: 220, spd: 0.8, interval: 1,
-  recharge: 75, icon: '🎯', motion: 'super', attackType: 'single',
+  name: NAME, cost: 2200, hp: 72000, atk: 6200, secondAtk: 3400,
+  multiAttack: [6200, 3400], range: 220, spd: 0.8, interval: 1,
+  recharge: 100, icon: '🎯', motion: 'super', attackType: 'single',
   kb: 2, trait: '黒', rarity: '伝説レア',
   series: '神話編全48ステージクリア報酬',
   specialReward: true, chapterReward: 7,
   ability: {
     name: '神話狩り・追跡戦術',
-    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,900、0.2秒後に2段目5,100。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の500%ダメージ。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
-    strong: { 神話: 5 }, resist: { 神話: 0.15 },
+    desc: '神話属性に3倍ダメージ。神話属性から受けるダメージを65%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目6,200、0.2秒後に2段目3,400。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の200%ダメージ。攻撃ごとに再出撃時間を1.5%短縮し、50円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。',
+    strong: { 神話: 3 }, resist: { 神話: 0.35 },
     curseImmune: true, stopImmune: true, waveImmune: true,
     reflectImmune: true
   },
@@ -81,7 +81,7 @@ function refreshHitmanStats(unit) {
   if (!unit || !unit.hitmanCoreStats) return;
   const core = unit.hitmanCoreStats;
   const ratio = Math.max(0, Math.min(1, Number(unit.hp || 0) / Math.max(1, Number(unit.maxhp || 1))));
-  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.1;
+  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.05;
   unit.maxhp = Math.max(1, Math.round(core.maxhp * factor));
   unit.hp = Math.max(1, Math.min(unit.maxhp, Math.round(unit.maxhp * ratio)));
   unit.atk = Math.max(1, Math.round(core.atk * factor));
@@ -130,7 +130,7 @@ function tickHitmanUnits() {
     if (!unit || unit.isEnemy || unit.name !== NAME || unit.hp <= 0) continue;
     if (unit.hitmanRiding && now >= Number(unit.hitmanRideUntil || 0)) stopRide(unit);
     if (!unit.hitmanRiding && now >= Number(unit.hitmanNextRideAt || Infinity)) {
-      while (unit.hitmanNextRideAt <= now) unit.hitmanNextRideAt += 15;
+      while (unit.hitmanNextRideAt <= now) unit.hitmanNextRideAt += 20;
       startRide(unit);
     }
   }
@@ -148,12 +148,12 @@ function addHitmanKillStack(unit) {
     unit.hitmanCoreStats = {
       maxhp: Number(unit.maxhp || unit.hp || 1), atk: Number(unit.atk || 1),
       range: Number(unit.range || 1), spd: Number(unit.spd || 0.01),
-      interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 75)
+      interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 100)
     };
   }
   unit.hitmanKillStacks = Math.min(20, Number(unit.hitmanKillStacks || 0) + 1);
   refreshHitmanStats(unit);
-  const bonus = unit.hitmanKillStacks * 10;
+  const bonus = unit.hitmanKillStacks * 5;
   if (typeof setStatusMark === 'function') setStatusMark(unit, '📈', '全ステータス +' + bonus + '%（撃破強化）', 999999, 'hitmanGrowth');
   if (typeof popup === 'function') popup('🎯 撃破強化 +' + bonus + '%', unit.x, 90, 'criticalPop');
 }
@@ -163,9 +163,9 @@ function tryHitmanCounter(unit, attacker) {
   if (Number(unit.hitmanSkill2Uses || 0) >= 2) return;
   const now = Number(stageTime || 0);
   if (now < Number(unit.hitmanSkill2ReadyAt || 0)) return;
-  if (Math.random() >= 0.25) return;
+  if (Math.random() >= 0.15) return;
   unit.hitmanSkill2Uses = Number(unit.hitmanSkill2Uses || 0) + 1;
-  unit.hitmanSkill2ReadyAt = now + 15;
+  unit.hitmanSkill2ReadyAt = now + 20;
   const maxX = Math.max(130, Number(worldWidth || 1100) - 145);
   unit.x = Math.max(130, Math.min(maxX, Number(attacker.x || 130) + 70));
   unit.target = attacker;
@@ -173,11 +173,11 @@ function tryHitmanCounter(unit, attacker) {
   if (unit.el) unit.el.style.left = unit.x + 'px';
   if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/2', 15, 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
-  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8900) * 15));
+  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 6200) * 4));
   const damage = damageAgainst(unit, attacker, baseAttack);
   const dealt = hit(attacker, damage, unit, { hitmanCounter: true });
   if (attacker.hp <= 0 && Array.isArray(enemies) && enemies.includes(attacker)) removeEnemy(attacker);
-  const heal = Math.max(0, Math.round(Number(dealt || 0) * 0.5));
+  const heal = Math.max(0, Math.round(Number(dealt || 0) * 0.2));
   if (heal > 0) {
     unit.hp = Math.min(unit.maxhp, unit.hp + heal);
     refreshHp(unit);
@@ -212,7 +212,7 @@ function spawnTrackingMarker(unit) {
       .filter(e => e && e.hp > 0 && !e.muscleGrabbedBy && e.x <= oldX + 12 && e.x >= x - 18)
       .sort((a, b) => b.x - a.x)[0];
     if (target) {
-      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 8900) * 5)));
+      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 6200) * 2)));
       hit(target, damage, unit, { hitmanMarker: true });
       if (target.hp <= 0 && enemies.includes(target)) removeEnemy(target);
       marker.remove();
@@ -236,9 +236,9 @@ deploy = function(i) {
     const unit = (Array.isArray(units) ? units : []).find(u => !before.has(u) && u && u.cardIndex === i && u.hp > 0);
     if (unit) {
       unit.hitmanCoreStats = {
-        maxhp: Number(unit.maxhp || 95800), atk: Number(unit.atk || 8900),
+        maxhp: Number(unit.maxhp || 72000), atk: Number(unit.atk || 6200),
         range: Number(unit.range || 220), spd: Number(unit.spd || 0.8),
-        interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 75)
+        interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 100)
       };
       unit.hitmanKillStacks = 0;
       unit.hitmanSkill2Uses = 0;
@@ -255,11 +255,11 @@ const originalHaifuOnAttack = haifuOnAttack;
 haifuOnAttack = function(unit, target) {
   const result = originalHaifuOnAttack(unit, target);
   if (unit && unit.name === NAME && target && target.hp > 0) {
-    money = Math.min(Number(workerMax || 999999999), Number(money || 0) + 75);
+    money = Math.min(Number(workerMax || 999999999), Number(money || 0) + 50);
     if (Array.isArray(rechargeLeft) && Number.isInteger(unit.cardIndex) && rechargeLeft[unit.cardIndex] > 0) {
-      rechargeLeft[unit.cardIndex] = Math.max(0, rechargeLeft[unit.cardIndex] * 0.97);
+      rechargeLeft[unit.cardIndex] = Math.max(0, rechargeLeft[unit.cardIndex] * 0.985);
     }
-    if (typeof popup === 'function') popup('+75円', target.x, 105, 'criticalPop');
+    if (typeof popup === 'function') popup('+50円', target.x, 105, 'criticalPop');
     if (typeof update === 'function') update(true);
   }
   return result;
@@ -280,7 +280,7 @@ hit = function(target, damage, source, abilitySource) {
 
   if (target && target.name === NAME && source && source.isEnemy && actual > 0 &&
       entityHasTrait(source, '神話') && !(abilitySource && abilitySource.hitmanReflection)) {
-    const reflected = Math.max(1, Math.round(actual * 0.8));
+    const reflected = Math.max(1, Math.round(actual * 0.35));
     hit(source, reflected, target, { hitmanReflection: true });
     if (source.hp <= 0 && Array.isArray(enemies) && enemies.includes(source)) removeEnemy(source);
   }
@@ -310,10 +310,10 @@ enemyAttackTarget = function(e, t, ea, now2, sourceSealed) {
 const originalGetAttackSequence = getAttackSequence;
 getAttackSequence = function(source, target) {
   if (source && source.name === NAME) {
-    const factor = Math.max(0.01, Number(source.atk || 8900) / 8900);
+    const factor = Math.max(0.01, Number(source.atk || 6200) / 6200);
     return [
-      { damage: Math.max(1, Math.round(8900 * factor)), index: 0 },
-      { damage: Math.max(1, Math.round(5100 * factor)), index: 1 }
+      { damage: Math.max(1, Math.round(6200 * factor)), index: 0 },
+      { damage: Math.max(1, Math.round(3400 * factor)), index: 1 }
     ];
   }
   return originalGetAttackSequence(source, target);

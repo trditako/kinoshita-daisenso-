@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.52';
+const GAME_VERSION='v1.9.53';
 const UPDATE_LOG=[
+  {date:'2026-11-06',version:'v1.9.53',title:'⚖️ 全キャラクター環境再調整',items:['レアリティ別に基礎HP・攻撃力・再生産時間を見直し、初期・低使用率キャラクターを強化','創世木下・天使神:木下・ノヴァ木下・覇風など突出したキャラクターの能力倍率と支援効果を調整','射程・耐久・属性特効・反射・成長能力の過剰な重複を抑制し、編成の選択肢を拡大']},
   {date:'2026-11-05',version:'v1.9.52',title:'🎯 神話編全48ステージ報酬「ヒットマン木下」を追加',items:['神話編第1章の全48ステージクリアで伝説レア「ヒットマン木下」を獲得','1段目8,900・0.2秒後に2段目5,100の単体二連撃と、出撃時3回の追跡マーカーを実装','神話特効・被ダメージ軽減と反射・回復封印・撃破成長・乗馬・転移反撃を実装','既存キャラクターIDと所持・育成・編成データを維持']},
   {date:'2026-11-05',version:'v1.9.51',title:'🌌 歴代最強UR「創世木下」を追加',items:['37種類の固有能力を持つ創世木下を追加。編成中の味方強化・戦闘中の回復・妨害・覚醒・復活を実装','専用超高難易度イベント「創世神話」を追加し、初回クリア報酬に創世木下を設定','能力一覧をキャラクター詳細に表示し、編成効果と戦闘中の能力状態を確認可能に変更','既存キャラクターIDと既存の所持・育成データを維持']},
   {date:'2026-11-04',version:'v1.9.50',title:'🛠️ ノヴァ木下の編成効果・表示を修正',items:['味方の攻撃力・攻撃間隔バフがノヴァ木下に適用されないよう全編成効果を保護','神話属性キャラの人数を正しく判定し、破壊モードの攻撃力デバフを反映','編成画面に発動中のバフ・デバフと、現在レベルの破壊・連射両モードのステータスを表示']},
@@ -2411,7 +2412,7 @@ function updateStatusMark(target){
   const entries=[],seen=new Set();
   const push=(key,icon,label,kind)=>{if(seen.has(key)||!label)return;seen.add(key);entries.push({icon:String(icon||'•'),label:String(label),kind});};
   const buffTypes=new Set(['attackBoost','haifuDefense','haifuGrowth','miraiKInterval','miraiKTrait']);
-  const debuffTypes=new Set(['debuff','stop','slow','attackDown','curse','miraiKRangeDown','mythRune','ivyYabayaba','warp']);
+  const debuffTypes=new Set(['debuff','stop','slow','attackDown','curse','haifuAttackDown','miraiKRangeDown','mythRune','ivyYabayaba','warp']);
   for(const [key,value] of Object.entries(statuses)){const kind=buffTypes.has(key)?'buff':debuffTypes.has(key)?'debuff':'status';const until=Number(value?.until||0),remaining=until-now;const timer=remaining>0&&remaining<3600?'（'+Math.ceil(remaining)+'秒）':'';push(key,value?.icon,value?.text+timer,kind);}
   if(Number(target.stopUntil||0)>now)push('stop','⏸️','停止（'+Math.ceil(target.stopUntil-now)+'秒）','debuff');
   if(Number(target.slowUntil||0)>now)push('slow','🐌','鈍足（'+Math.ceil(target.slowUntil-now)+'秒）','debuff');
@@ -2631,7 +2632,7 @@ function tickChokinoshitaVoidField(now){
 function tickChokinoshitaGenesisPulse(now){
  for(const source of units){if(!source||source.isEnemy||source.hp<=0||isAbilitySealed(source)||!source.ability?.genesisPulse)continue;const a=source.ability.genesisPulse;if(source.genesisPulseNext==null){source.genesisPulseNext=now+Number(a.cooldown||12);continue;}if(now<source.genesisPulseNext)continue;source.genesisPulseNext=now+Number(a.cooldown||12);for(const ally of units){if(ally&&!ally.isEnemy&&ally.hp>0)ally.hp=Math.min(ally.maxhp,ally.hp+Math.max(1,Math.round(ally.maxhp*Number(a.allyHeal||.03))));}for(const enemy of [...enemies]){if(!enemy||enemy.hp<=0)continue;const pulseDamage=Math.max(1,Math.round(source.atk*Number(a.enemyDamage||.2)));hit(enemy,pulseDamage,source,source);if(enemy.hp<=0)removeEnemy(enemy);}popup('✨ 創世律動',source.x,90,'criticalPop');}
 }
-function angelGodOnDamage(source,target,actualDamage,abilitySource){if(!source||source.name!=='天使神:木下'||source.isEnemy||!target?.isEnemy||actualDamage<=0||abilitySource?.angelGodReflection)return;source.angelGodAttackStacks=Math.min(35,Number(source.angelGodAttackStacks||0)+1);source.atk=Math.round(Number(source.angelGodBaseAtk||source.atk)*(1+source.angelGodAttackStacks*.02));setStatusMark(source,'⚔️','攻撃力上昇 +'+(source.angelGodAttackStacks*2)+'%（現在 '+Number(source.atk).toLocaleString()+'）',999999,'attackBoost');if(Number.isInteger(source.cardIndex)&&rechargeLeft[source.cardIndex]>0)rechargeLeft[source.cardIndex]=Math.max(0,rechargeLeft[source.cardIndex]*.98);if(target.hp<=0){source.hp=Math.min(source.maxhp,source.hp+Math.max(1,Math.round(source.maxhp*.015)));source.spdBeforeAngelGodBoost=Number(source.spdBeforeAngelGodBoost||source.cardSpeed||1.2);source.spd=3;source.angelGodSpeedBoostUntil=performance.now()+2000;const boosted=source;setTimeout(()=>{if(boosted&&boosted.hp>0&&boosted.angelGodSpeedBoostUntil<=performance.now())boosted.spd=Number(boosted.spdBeforeAngelGodBoost||1.2);},2050);popup('👼 撃破回復・神速',source.x,90,'criticalPop');}}
+function angelGodOnDamage(source,target,actualDamage,abilitySource){if(!source||source.name!=='天使神:木下'||source.isEnemy||!target?.isEnemy||actualDamage<=0||abilitySource?.angelGodReflection)return;source.angelGodAttackStacks=Math.min(20,Number(source.angelGodAttackStacks||0)+1);source.atk=Math.round(Number(source.angelGodBaseAtk||source.atk)*(1+source.angelGodAttackStacks*.015));setStatusMark(source,'⚔️','攻撃力上昇 +'+(source.angelGodAttackStacks*1.5)+'%（現在 '+Number(source.atk).toLocaleString()+'）',999999,'attackBoost');if(Number.isInteger(source.cardIndex)&&rechargeLeft[source.cardIndex]>0)rechargeLeft[source.cardIndex]=Math.max(0,rechargeLeft[source.cardIndex]*.98);if(target.hp<=0){source.hp=Math.min(source.maxhp,source.hp+Math.max(1,Math.round(source.maxhp*.01)));source.spdBeforeAngelGodBoost=Number(source.spdBeforeAngelGodBoost||source.cardSpeed||1.2);source.spd=3;source.angelGodSpeedBoostUntil=performance.now()+2000;const boosted=source;setTimeout(()=>{if(boosted&&boosted.hp>0&&boosted.angelGodSpeedBoostUntil<=performance.now())boosted.spd=Number(boosted.spdBeforeAngelGodBoost||1.2);},2050);popup('👼 撃破回復・神速',source.x,90,'criticalPop');}}
 
 function muscleEnemyAuraActive(){return Array.isArray(enemies)&&enemies.some(e=>e&&e.hp>0&&e.name==='狂乱のマッチョ木下'&&e.ability?.enemyTeamAura);}
 function muscleAllyAuraActive(){return Array.isArray(units)&&units.some(u=>u&&u.hp>0&&!u.isEnemy&&u.name==='狂乱のマッチョ木下');}
@@ -3032,7 +3033,7 @@ function formationBuffSummaryHTML(i){
  const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);
  const angelCount=formation.filter(idx=>{const card=activeCard(idx)||cards[idx];return !!card&&entityHasTrait(card,'天使');}).length;
  let aura=1,auraLabel='';
- if(c.name==='天使神:木下'){aura=1+Math.min(.30,angelCount*.07);auraLabel='天使神自身 '+Math.round((aura-1)*100)+'%';}
+ if(c.name==='天使神:木下'){aura=1+Math.min(.20,angelCount*.05);auraLabel='天使神自身 '+Math.round((aura-1)*100)+'%';}
  else if(angelGodInFormation&&entityHasTrait(c,'天使')){aura=1.55;auraLabel='天使神の編成バフ +55%';}
  const haifuCtx=haifuFormationContext();
  const miraiKCtx=miraiKFormationContext();
@@ -3415,7 +3416,7 @@ function applyMiraiKFormationEffects(unit){
  unit.miraiKFormationFactor=nextFactor;
  if(unit.el){const hp=unit.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,unit.hp/unit.maxhp*100)+'%';}
 }
-function applyAngelGodFormationEffects(unit,cardIndex){if(!unit||unit.isEnemy||unit.name==='ノヴァ木下')return;const angelGodIndex=cards.findIndex(card=>card?.name==='天使神:木下');const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);if(unit.name==='天使神:木下'){const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;const factor=1+Math.min(.30,angelCount*.07);unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=unit.maxhp;unit.atk=Math.round(unit.atk*factor);unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.angelGodBaseAtk=unit.atk;unit.angelGodAttackStacks=0;unit.cardSpeed=Number(unit.spd||1.2);}else if(angelGodInFormation&&entityHasTrait(unit,'天使')){unit.maxhp=Math.round(unit.maxhp*1.55);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*1.55));unit.atk=Math.round(unit.atk*1.55);unit.range=Math.round(unit.range*1.55);unit.spd*=1.55;unit.interval=Math.max(.1,unit.interval/1.55);unit.recharge=Math.max(1,Number(unit.recharge||1)/1.55);unit.angelGodAuraApplied=true;unit.curseImmune=true;unit.waveImmune=true;unit.surgeImmune=true;unit.ability={...(unit.ability||{}),curseImmune:true,waveImmune:true,surgeImmune:true};}}
+function applyAngelGodFormationEffects(unit,cardIndex){if(!unit||unit.isEnemy||unit.name==='ノヴァ木下')return;const angelGodIndex=cards.findIndex(card=>card?.name==='天使神:木下');const angelGodInFormation=angelGodIndex>=0&&formation.includes(angelGodIndex)&&hasCharacter(angelGodIndex);if(unit.name==='天使神:木下'){const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return !!card&&entityHasTrait(card,'天使');}).length;const factor=1+Math.min(.20,angelCount*.05);unit.maxhp=Math.round(unit.maxhp*factor);unit.hp=unit.maxhp;unit.atk=Math.round(unit.atk*factor);unit.range=Math.round(unit.range*factor);unit.spd*=factor;unit.interval=Math.max(.1,unit.interval/factor);unit.recharge=Math.max(1,Number(unit.recharge||1)/factor);unit.angelGodBaseAtk=unit.atk;unit.angelGodAttackStacks=0;unit.cardSpeed=Number(unit.spd||1.2);}else if(angelGodInFormation&&entityHasTrait(unit,'天使')){unit.maxhp=Math.round(unit.maxhp*1.25);unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*1.25));unit.atk=Math.round(unit.atk*1.25);unit.range=Math.round(unit.range*1.25);unit.spd*=1.25;unit.interval=Math.max(.1,unit.interval/1.25);unit.recharge=Math.max(1,Number(unit.recharge||1)/1.25);unit.angelGodAuraApplied=true;unit.curseImmune=true;unit.waveImmune=true;unit.surgeImmune=true;unit.ability={...(unit.ability||{}),curseImmune:true,waveImmune:true,surgeImmune:true};}}
 
 let haifuSummonCount=0;
 function haifuFormationContext(){
@@ -3425,7 +3426,7 @@ function haifuFormationContext(){
  const cardsInFormation=ids.map(i=>({i,c:activeCard(i)||cards[i]})).filter(x=>x.c);
  const nonUrCount=cardsInFormation.filter(x=>String(x.c.rarity||'')!=='UR').length;
  const urCount=cardsInFormation.filter(x=>String(x.c.rarity||'')==='UR').length;
- return {haifuIndex,nonUrCount,urCount,allyFactor:1+Math.min(.95,urCount*.35),selfFactor:1+Math.min(2,nonUrCount*.35)};
+ return {haifuIndex,nonUrCount,urCount,allyFactor:1+Math.min(.45,urCount*.15),selfFactor:1+Math.min(.9,nonUrCount*.15)};
 }
 function haifuEffectiveAttack(ctx){
  if(!ctx)return 0;
@@ -3447,21 +3448,27 @@ function applyHaifuFormationEffects(unit){
  unit.cardSpeed=unit.spd;
  unit.interval=Math.max(.05,Number(unit.interval||1)/attackIntervalFactor);
  unit.recharge=Math.max(1,Number(unit.recharge||1)/selfFactor);
- const shield=Math.max(0,Math.round(haifuEffectiveAttack(ctx)*.8));
+ const shield=Math.max(0,Math.round(haifuEffectiveAttack(ctx)*.35));
  unit.powerShieldMax=shield;unit.powerShield=shield;
  unit.haifuFormationBuffApplied=true;unit.haifuFormationAllyFactor=ctx.allyFactor;unit.haifuFormationSelfFactor=selfFactor;
  if(unit.el){const hpFill=unit.el.querySelector('.hp i');if(hpFill)hpFill.style.width=Math.max(0,unit.hp/Math.max(1,unit.maxhp)*100)+'%';}
  updatePowerShieldDisplay(unit);
 }
+const _haifuOriginalDamageAgainst=damageAgainst;
+damageAgainst=function(source,target,baseAtk){
+ let dealt=_haifuOriginalDamageAgainst(source,target,baseAtk);
+ if(source?.isEnemy&&Array.isArray(units)&&units.some(u=>u&&!u.isEnemy&&u.name==='覇風'&&u.hp>0))dealt=Math.round(dealt*.8);
+ return Math.max(1,dealt);
+};
 function haifuPrepareDamage(target,attacker,damage){
  let dealt=Math.max(0,Number(damage)||0);
  if(target?.name!=='覇風')return dealt;
  if(dealt>0){
-  const stacks=Math.min(8,Math.max(0,Number(target.haifuDefenseStacks||0)));
-  dealt*=1-stacks*.025;
-  if(stacks<8){target.haifuDefenseStacks=stacks+1;setStatusMark(target,'🛡️','防御力上昇 +'+(target.haifuDefenseStacks*2.5)+'%',999999,'haifuDefense');}
+  const stacks=Math.min(6,Math.max(0,Number(target.haifuDefenseStacks||0)));
+  dealt*=1-stacks*.02;
+  if(stacks<6){target.haifuDefenseStacks=stacks+1;setStatusMark(target,'🛡️','防御力上昇 +'+(target.haifuDefenseStacks*2)+'%',999999,'haifuDefense');}
  }
- return Math.min(dealt,Math.max(1,Number(target.maxhp||1)*.2));
+ return Math.min(dealt,Math.max(1,Number(target.maxhp||1)*.3));
 }
 function absorbPowerShield(target,damage){
  const incoming=Math.max(0,Number(damage)||0);
@@ -3491,39 +3498,41 @@ function haifuOnSummoned(unit){
  let totalDamage=0;
  for(const enemy of [...enemies]){
   if(!enemy||enemy.hp<=0)continue;
-  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*2.5))),unit);
+  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*1.5))),unit);
   totalDamage+=Math.max(0,before-enemy.hp);
   if(enemy.hp<=0)removeEnemy(enemy);
  }
- const heal=Math.max(0,Math.round(totalDamage*.5));
+ const heal=Math.max(0,Math.round(totalDamage*.25));
  if(heal>0)for(const ally of units){if(ally&&!ally.isEnemy&&ally.hp>0)ally.hp=Math.min(ally.maxhp,ally.hp+heal);}
  popup('🌪️ 覇風・五召喚の大嵐！ 味方全体回復 '+heal.toLocaleString(),unit.x,90,'criticalPop');
 }
 function haifuOnAttack(unit,target){
  const skill=unit?.ability?.haifuSkill,now=performance.now()/1000;
  if(!unit||unit.name!=='覇風'||!target||target.hp<=0||isAbilitySealed(unit)||!skill)return;
- if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance||.15))return;
- unit.haifuSkillReadyAt=now+Number(skill.cooldown||13);
- const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.multiplier||3)));
+ if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance||.1))return;
+ unit.haifuSkillReadyAt=now+Number(skill.cooldown||16);
+ const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.multiplier||2)));
  const before=target.hp;hit(target,damage,unit,{haifuSkill:true});
  popup('🔥 根性だけで勝ちます！ -'+Math.max(0,Math.min(before,damage)).toLocaleString(),target.x,90,'criticalPop');
 }
 function tickHaifuUnits(now){
  const formationContext=haifuFormationContext();if(formationContext)for(const ally of units)applyHaifuFormationEffects(ally);
+ const haifuActive=Array.isArray(units)&&units.some(u=>u&&!u.isEnemy&&u.name==='覇風'&&u.hp>0);
+ for(const enemy of Array.isArray(enemies)?enemies:[]){if(!enemy||enemy.hp<=0)continue;enemy.statuses=enemy.statuses||{};if(haifuActive&&!enemy.statuses.haifuAttackDown){enemy.statuses.haifuAttackDown={icon:'⬇️',text:'攻撃力-20%（覇風）',until:0};if(typeof updateStatusMark==='function')updateStatusMark(enemy);}else if(!haifuActive&&enemy.statuses.haifuAttackDown){delete enemy.statuses.haifuAttackDown;if(typeof updateStatusMark==='function')updateStatusMark(enemy);}}
  for(const unit of units){
   if(!unit||unit.isEnemy||unit.name!=='覇風'||unit.hp<=0)continue;
-  if(unit.haifuBaseMaxHp==null){unit.haifuBaseMaxHp=unit.maxhp;unit.haifuBaseAtk=unit.atk;unit.haifuNextGrowthAt=now+2;}
+  if(unit.haifuBaseMaxHp==null){unit.haifuBaseMaxHp=unit.maxhp;unit.haifuBaseAtk=unit.atk;unit.haifuNextGrowthAt=now+4;}
   while(Number(unit.haifuGrowthStacks||0)<5&&now>=Number(unit.haifuNextGrowthAt||Infinity)){
-   const previous=1+Number(unit.haifuGrowthStacks||0)*.07;
+   const previous=1+Number(unit.haifuGrowthStacks||0)*.03;
    unit.haifuGrowthStacks=Number(unit.haifuGrowthStacks||0)+1;
-   const next=1+unit.haifuGrowthStacks*.07,ratio=next/previous;
+   const next=1+unit.haifuGrowthStacks*.03,ratio=next/previous;
    unit.maxhp=Math.max(1,Math.round(unit.haifuBaseMaxHp*next));
    unit.hp=Math.min(unit.maxhp,Math.round(unit.hp*ratio));
    unit.atk=Math.max(1,Math.round(unit.haifuBaseAtk*next));
-   unit.haifuNextGrowthAt+=2;
+   unit.haifuNextGrowthAt+=4;
    if(unit.el){const hp=unit.el.querySelector('.hp i');if(hp)hp.style.width=Math.max(0,unit.hp/unit.maxhp*100)+'%';}
-   setStatusMark(unit,'📈','HP・攻撃力 '+Math.round(unit.haifuGrowthStacks*7)+'%上昇',999999,'haifuGrowth');
-   popup('🌪️ 覇風 成長 +7%',unit.x,90,'criticalPop');
+   setStatusMark(unit,'📈','HP・攻撃力 '+Math.round(unit.haifuGrowthStacks*3)+'%上昇',999999,'haifuGrowth');
+   popup('🌪️ 覇風 成長 +3%',unit.x,90,'criticalPop');
   }
  }
 }
@@ -3540,11 +3549,11 @@ function novaMythAttackFactor(){
  return Math.max(.01,1-Math.min(5,novaFormationMythCount()*.95));
 }
 function novaDestroyAttackValue(unit){
- const base=Math.max(1,Number(unit?.novaBaseAtk||166666));
+ const base=Math.max(1,Number(unit?.novaBaseAtk||70000));
  const seriesCount=novaFormationSeriesCount();
  const mythFactor=novaMythAttackFactor();
  const stacks=Math.min(5,Math.max(0,Number(unit?.novaDestructionStacks||0)));
- return Math.max(1,Math.round(base*(1+1.5*seriesCount)*mythFactor*(1+.25*stacks)));
+ return Math.max(1,Math.round(base*(1+.75*seriesCount)*mythFactor*(1+.15*stacks)));
 }
 function applyNovaMode(unit,mode='destroy',silent=false){
  if(!unit||unit.name!=='ノヴァ木下')return;
@@ -3554,14 +3563,14 @@ function applyNovaMode(unit,mode='destroy',silent=false){
   if(unit.ability)delete unit.ability.knockbackChance;
   unit.atk=novaDestroyAttackValue(unit);
   const seriesCount=formation.filter(i=>cards[i]?.series==='呪いの木下達').length;
-  unit.range=350;unit.spd=1*allySpeedFactor;unit.interval=Math.max(.1,10+2*seriesCount-Math.min(5,Number(unit.novaDestructionStacks||0)));
+  unit.range=320;unit.spd=1*allySpeedFactor;unit.interval=Math.max(1,12+2*seriesCount-Math.min(4,Number(unit.novaDestructionStacks||0)));
   unit.attackType='area';unit.airAttack=false;
  }else{
   if(unit.ability&&Number(unit.novaMiniGunUntil||0)>performance.now()/1000)unit.ability.knockbackChance=.35;else if(unit.ability)delete unit.ability.knockbackChance;
-  const levelScale=Math.max(.01,Number(unit.novaBaseAtk||166666)/166666);
+  const levelScale=Math.max(.01,Number(unit.novaBaseAtk||70000)/70000);
   const miniGunBonus=Number(unit.novaMiniGunUntil||0)>performance.now()/1000?Number(unit.novaMiniGunBonus||0):0;
-  unit.atk=Math.max(1,Math.round(4500*levelScale*(1+.03*Math.min(60,Number(unit.novaRapidAttackStacks||0)))+miniGunBonus));
-  unit.range=125;unit.spd=1.3*allySpeedFactor;unit.interval=Math.max(.1,.5-.01*Math.min(40,Number(unit.novaRapidStacks||0)));
+  unit.atk=Math.max(1,Math.round(2500*levelScale*(1+.02*Math.min(30,Number(unit.novaRapidAttackStacks||0)))+miniGunBonus));
+  unit.range=125;unit.spd=1.3*allySpeedFactor;unit.interval=Math.max(.35,.5-.01*Math.min(15,Number(unit.novaRapidStacks||0)));
   unit.attackType='single';unit.airAttack=true;
  }
  unit.cardSpeed=unit.spd;
@@ -7196,4 +7205,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./trade.js?v=20261028-ai-auctions-30s"></script>
 <script src="./genesis.js?v=20261105-genesis-37"></script>
 <script src="./hitman.js?v=20261105-hitman"></script>
+<script src="./balance.js?v=20261106-balance1"></script>
 </body></html>
