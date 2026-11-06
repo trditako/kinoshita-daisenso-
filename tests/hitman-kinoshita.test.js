@@ -24,7 +24,7 @@ assert.match(source, /Number\(dealt \|\| 0\) \* 0\.2/);
 assert.match(source, /hitmanSkill2Uses \|\| 0\) >= 2/);
 assert.match(source, /hitmanRideUntil = Number\(stageTime \|\| 0\) \+ 3/);
 assert.match(source, /unit\.hitmanNextRideAt \+= 20/);
-assert.match(source, /unit\.hitmanKillStacks \|\| 0\)\) \* 0\.05/);
+assert.match(source, /unit\.hitmanKillStacks \|\| 0\)\)\) \* 0\.05/);
 assert.match(source, /target\.festivalRegenDisabledUntil/);
 assert.match(source, /const originalEnemyAttackTarget = enemyAttackTarget/);
 assert.match(source, /if \(suppressHealing && originalHealOnKill\) e\.ability\.healOnKill = 0/);
