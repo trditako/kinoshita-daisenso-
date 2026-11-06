@@ -11,24 +11,7 @@
       return window.eval(`(() => {
         const i = ${Number(index)};
         const card = (typeof activeCard === 'function' ? activeCard(i) : null) || cards[i];
-        const tree = typeof skillTreeFor === 'function' ? skillTreeFor(i) : null;
-        const profiles = typeof SKILL_TREE_ABILITY_PROFILES !== 'undefined' ? SKILL_TREE_ABILITY_PROFILES : [];
-        const treeSkills = [];
-        if (tree) {
-          for (const key of ['hp','atk','range','spd','interval','recharge']) {
-            if (Number(tree[key] || 0) > 0) treeSkills.push({name: ({
-              hp:'HP強化', atk:'攻撃力強化', range:'射程強化',
-              spd:'移動速度強化', interval:'攻撃間隔短縮', recharge:'再生産短縮'
-            })[key], desc: 'スキルツリー Lv.' + tree[key]});
-          }
-          for (let slot = 1; slot <= 3; slot++) {
-            if (Number(tree['ability' + slot] || 0) === 1) {
-              const profile = profiles[i]?.[slot - 1];
-              if (profile) treeSkills.push({name:profile.name,desc:profile.desc});
-            }
-          }
-        }
-        return {card, treeSkills};
+        return {card};
       })()`);
     } catch (error) {
       console.warn('character skill data unavailable', error);
@@ -44,7 +27,7 @@
     return {name:String(name), desc:typeof desc === 'string' ? desc : JSON.stringify(desc)};
   }
 
-  function collectSkills(card, treeSkills) {
+  function collectSkills(card) {
     const result = [];
     const add = value => {
       if (Array.isArray(value)) value.forEach(add);
@@ -80,7 +63,6 @@
         desc: kbr.desc || descriptions[kbr.type] || '発動条件・効果はスキル設定に従います。'
       });
     }
-    result.push(...(treeSkills || []));
     const seen = new Set();
     return result.filter(skill => {
       const key = String(skill.name || '') + '|' + String(skill.desc || '');
@@ -98,7 +80,7 @@
       const body = document.getElementById('detailBody');
       if (!body || !data?.card) return result;
       body.querySelector('.characterSkillSection')?.remove();
-      const skills = collectSkills(data.card, data.treeSkills);
+      const skills = collectSkills(data.card);
       if (!skills.length) return result;
 
       const section = document.createElement('section');
