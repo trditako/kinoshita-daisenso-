@@ -33,7 +33,7 @@ assert.ok(html.includes("GAME_VERSION='v1.9.54'"),'ゲームバージョンを�
 assert.ok(sw.includes('kinoshita-daisen-v71'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
-const urGoldEnd=html.indexOf("\\n",urGoldStart);
+const urGoldEnd=html.indexOf("\n",urGoldStart);
 assert.ok(urGoldStart>=0,'ウルトラレア金集めの専用難易度を定義');
 const urGold=html.slice(urGoldStart,urGoldEnd);
 for(const value of ["width=3000","baseHp=8000000","xp=60000","mult:12","start:72,interval:24","start:90,interval:30"])assert.ok(urGold.includes(value),'UR金集め設定 '+value);
