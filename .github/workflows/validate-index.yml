@@ -7,6 +7,7 @@ on:
       - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
+      - 'tests/formation-buff-summary.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -16,6 +17,7 @@ on:
       - 'index.html'
       - 'hitman.js'
       - 'tests/hitman-kinoshita.test.js'
+      - 'tests/formation-buff-summary.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
@@ -51,3 +53,4 @@ jobs:
           node --check hitman.js
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
+          node tests/formation-buff-summary.test.js
