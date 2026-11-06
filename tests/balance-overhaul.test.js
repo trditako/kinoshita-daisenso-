@@ -63,7 +63,7 @@ assert.equal(cards[20].secondForm.ability.wyvernStrongMultiplier,3,'大富豪木
 assert.equal(cards[20].secondForm.ability.hpBelowThresholdMultiplier,2.2,'大富豪木下のHP条件倍率を抑える');
 assert.ok(normalSecondForms[0].hp>5000&&normalSecondForms[0].atk>1200,'通常キャラの第二形態も強化する');
 assert.match(cards[21].ability.desc,/5,208/,'ヒットマン木下の最終攻撃力表示を実数値に合わせる');
-assert.match(html,/dealt=Math\\.round\\(dealt\\*\\.8\\)/,'覇風の敵攻撃力20%低下を実装する');
+assert.match(html,/dealt=Math\.round\(dealt\*\.8\)/,'覇風の敵攻撃力20%低下を実装する');
 assert.match(html,/haifuAttackDown/,'覇風の敵デバフを戦闘状態表示に反映する');
 assert.equal(context.window.KINOSHITA_BALANCE_REPORT.adjusted,cards.length);
 process.stdout.write('環境調整テスト成功：レアリティ別調整、上位キャラ弱体化、配列順維持を確認しました。\n');
