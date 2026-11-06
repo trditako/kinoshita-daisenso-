@@ -31,7 +31,7 @@ assert.match(source, /if \(suppressHealing && originalHealOnKill\) e\.ability\.h
 assert.match(source, /Number\(money \|\| 0\) \+ 75/);
 assert.match(source, /rechargeLeft\[unit\.cardIndex\] \* 0\.97/);
 assert.match(source, /unit\.hitmanKillStacks = Math\.min\(20/);
-assert.match(source, /\[0, 200, 400\]/);
+assert.match(source, /\[0, 200, 400\]/);\nassert.match(source, /document\.getElementById\('world'\)/, '追跡マーカーはマップ本体に配置する');\nassert.match(source, /worldElement\.appendChild\(marker\)/, '追跡マーカーはマップ座標系に所属させる');\nassert.match(source, /bottom:105px/, '追跡マーカーはユニットと同じレーン高さに表示する');\nassert.doesNotMatch(source, /fieldElement\.appendChild\(marker\)/, '画面側のfieldに配置しない');
 assert.match(source, /x -= 120 \* dt/);
 assert.match(source, /Math\.round\(Number\(unit\.atk \|\| 8900\) \* 5\)/);
 assert.match(source, /setTimeout\(\(\) => originalFollowup\(source, target, baseAttack, hitIndex\), 100\)/);
@@ -42,7 +42,7 @@ assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マ�
 assert.match(html, /GAME_VERSION='v1\.9\.52'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v68/);
+assert.match(sw, /kinoshita-daisen-v69/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
