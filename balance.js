@@ -96,7 +96,7 @@ setTrait('最終攻略木下','無',2.3,.48);setTrait('最終攻略木下','赤'
 tune('呪王木下',{hp:.95,atk:.92},{curseDuration:2.5,attackDownChance:.3,curseSlowChance:.2,cursedAttackMultiplier:1.25});
 setTrait('銀河攻略','宇宙',2.5);
 const hitman=byName('ヒットマン木下');
-if(hitman&&hitman.ability)hitman.ability.desc='神話属性に3倍ダメージ。神話属性から受けるダメージを65%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目5,208、0.2秒後に2段目2,856。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の200%ダメージ。攻撃ごとに再出撃時間を1.5%短縮し、50円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。';
+if(hitman&&hitman.ability)hitman.ability.desc='神話属性に3倍ダメージ。神話属性から受けるダメージを65%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。攻撃ごとに再出撃時間を1.5%短縮し、50円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。';
 const genesis=byName('創世木下');
 if(genesis&&genesis.ability){if(genesis.ability.strong)for(const k of Object.keys(genesis.ability.strong))genesis.ability.strong[k]=Math.min(1.6,Number(genesis.ability.strong[k])||1);if(genesis.ability.damageReduce)genesis.ability.damageReduce.factor=.25;}
 const haifu=byName('覇風');
