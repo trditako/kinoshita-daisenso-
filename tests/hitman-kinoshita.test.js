@@ -12,6 +12,11 @@ const workflow = fs.readFileSync(path.join(root, '.github/workflows/validate-ind
 assert.match(source, /name: NAME, cost: 2200, hp: 72000, atk: 6200, secondAtk: 3400/);
 assert.match(source, /multiAttack: \[6200, 3400\], range: 220, spd: 0\.8, interval: 1/);
 assert.match(source, /recharge: 100/);
+assert.match(source, /skills: \[/, '実際の発動技をスキルデータとして定義する');
+assert.match(source, /追跡マーカー/);
+assert.match(source, /戦闘術：転移反撃/);
+assert.match(source, /乗馬/);
+assert.doesNotMatch(source, /通常攻撃は1段目6,200.*追跡マーカー/, 'スキルを固有能力の説明文へ混在させない');
 assert.match(source, /trait: '黒', rarity: '伝説レア'/);
 assert.match(source, /strong: \{ 神話: 3 \}, resist: \{ 神話: 0\.35 \}/);
 assert.match(source, /curseImmune: true, stopImmune: true, waveImmune: true/);
@@ -43,10 +48,10 @@ assert.match(source, /selectedChapter\) === 7/);
 assert.match(source, /selectedStage\) === 48/);
 assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
 
-assert.match(html, /GAME_VERSION='v1\.9\.53'/);
+assert.match(html, /GAME_VERSION='v1.9.54'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v74/);
+assert.match(sw, /kinoshita-daisen-v75/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
