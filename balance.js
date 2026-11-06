@@ -58,6 +58,8 @@ tune('大富豪木下',{hp:.9,atk:.5,interval:1.15,recharge:1.12},{criticalChanc
 tune('超越木下・創世神',{hp:.85,atk:.75,interval:1.08,recharge:1.1});
 tune('狂乱の強化木下',{hp:.95,atk:.78,interval:1.08,recharge:1.1});
 tune('狂乱のマッチョ木下',{hp:.95,atk:.82,interval:1.08,recharge:1.1});
+const genesis=byName('創世木下');
+if(genesis&&genesis.ability){if(genesis.ability.strong)for(const k of Object.keys(genesis.ability.strong))genesis.ability.strong[k]=Math.min(1.6,Number(genesis.ability.strong[k])||1);if(genesis.ability.damageReduce)genesis.ability.damageReduce.factor=.25;}
 const haifu=byName('覇風');
 if(haifu&&haifu.ability){
  const a=haifu.ability;
