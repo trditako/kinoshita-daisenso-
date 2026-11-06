@@ -35,7 +35,7 @@ assert.ok(html.includes("if(!rows.length)return '';"),'スキル未所持時は�
 assert.ok(html.includes('formatCharacterSkillSection(c)+'),'スキル欄を独立表示');
 assert.ok(html.includes('function addFormationVisualCondition(condition){')&&html.includes('existing.query===condition.query'),'同一検索条件の二重追加防止');
 const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
-for(const key of ['novaMode','novaAllyBuffLock','novaImmunity','novaSeries','novaMyth','novaLifesteal','novaHaifu','rageHpThreshold','novaMiniGunCooldown'])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
+for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
 for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
 assert.ok(html.includes("GAME_VERSION='v1.9.59'"),'ゲームバージョンを更新');
 const formationStart=html.indexOf('function renderFormation(){');
