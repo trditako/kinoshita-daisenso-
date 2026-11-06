@@ -15,7 +15,17 @@ const cards=[
  {name:'天使神:木下',rarity:'UR',hp:200000,atk:28000,interval:3,recharge:320,ability:{strong:{神話:8}}},
  {name:'ノヴァ木下',rarity:'UR',hp:68000,atk:166666,interval:10,recharge:180,ability:{strong:{神話:5}}},
  {name:'覇風',rarity:'UR',hp:58500,atk:12500,interval:.6,recharge:32,ability:{strong:{赤:8},resist:{赤:.45},haifuSkill:{chance:.15,multiplier:3,cooldown:13}}},
- {name:'MiraiK',rarity:'UR',hp:69000,atk:2550,interval:2.5,recharge:65,ability:{wyvernStrongMultiplier:5,wyvernResistMultiplier:.25}}
+ {name:'MiraiK',rarity:'UR',hp:69000,atk:2550,interval:2.5,recharge:65,ability:{wyvernStrongMultiplier:5,wyvernResistMultiplier:.25}},
+ {name:'呪木下',rarity:'SSR',hp:3200,atk:620,ability:{curseDuration:4}},
+ {name:'前衛木下',rarity:'R',hp:850,atk:72,recharge:3.8},
+ {name:'天使迎撃木下',rarity:'R',hp:1250,atk:240,ability:{strong:{天使:2},resist:{天使:.55}}},
+ {name:'未来探査木下',rarity:'SR',hp:1800,atk:360,ability:{strong:{宇宙:2}}},
+ {name:'日本防衛木下',rarity:'SR',hp:4000,atk:400,ability:{strong:{無:1.8,赤:1.8},resist:{無:.5,赤:.5}}},
+ {name:'日本制圧木下',rarity:'SSR',hp:5000,atk:650,ability:{strong:{無:2.2,赤:2.2,黒:2.2},resist:{無:.55,赤:.55,黒:.55}}},
+ {name:'哲学の賢者ゾクラテス',rarity:'LR',hp:19500,atk:3200},
+ {name:'最終攻略木下',rarity:'SSR',hp:7000,atk:950,ability:{strong:{無:2,赤:2,黒:2,天使:2,宇宙:2},resist:{無:.5,赤:.5,黒:.5,天使:.5,宇宙:.5}}},
+ {name:'呪王木下',rarity:'SSR',hp:14000,atk:3800,ability:{curseDuration:3,attackDownChance:.4,curseSlowChance:.3,cursedAttackMultiplier:1.4}},
+ {name:'銀河攻略',rarity:'SSR',hp:1,atk:1,ability:{strong:{宇宙:3}}}
 ];
 const originalOrder=cards.map(c=>c.name);
 const context={cards,window:{},CURRENT_CHARACTER_COUNT:cards.length};
@@ -34,5 +44,15 @@ assert.ok(cards[7].atk<70000,'ノヴァ木下を調整する');
 assert.equal(cards[8].ability.haifuSkill.multiplier,2,'覇風の固有技倍率を調整する');
 assert.equal(cards[8].ability.resist.赤,.65,'覇風の耐性を調整する');
 assert.equal(cards[9].ability.wyvernStrongMultiplier,3,'MiraiKの特効倍率を調整する');
+assert.ok(cards[10].hp>3200&&cards[10].atk>620,'使用率・勝率が低い呪木下を強化する');
+assert.ok(cards[11].hp>850&&cards[11].atk>72,'前衛木下を強化する');
+assert.equal(cards[12].ability.strong.天使,2.5,'天使迎撃木下の対天使性能を強化する');
+assert.equal(cards[13].ability.strong.宇宙,2.5,'未来探査木下の対宇宙性能を強化する');
+assert.ok(cards[14].hp>4000&&cards[14].atk>400,'日本防衛木下を小幅強化する');
+assert.equal(cards[15].ability.strong.無,2.4,'日本制圧木下を強化する');
+assert.ok(cards[16].hp>19500&&cards[16].atk>3200,'ゾクラテスを強化する');
+assert.equal(cards[17].ability.strong.宇宙,2.3,'最終攻略木下を強化する');
+assert.ok(cards[18].ability.attackDownChance<.4&&cards[18].ability.cursedAttackMultiplier<1.4,'呪王木下の妨害重複を抑える');
+assert.equal(cards[19].ability.strong.宇宙,2.5,'銀河攻略の特効を適正化する');
 assert.equal(context.window.KINOSHITA_BALANCE_REPORT.adjusted,cards.length);
 process.stdout.write('環境調整テスト成功：レアリティ別調整、上位キャラ弱体化、配列順維持を確認しました。\n');
