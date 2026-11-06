@@ -27,7 +27,7 @@ assert.match(source, /Math\.round\(actual \* 0\.8\)/);
 assert.ok(source.includes('Math.random() >= Number(skill.chance ?? 0.25)'));
 assert.ok(source.includes('Number(unit.atk || 8900) * Number(skill.damageMultiplier || 15)'));
 assert.ok(source.includes('Number(dealt || 0) * Number(skill.healRatio ?? 0.5)'));
-assert.match(source, /hitmanSkill2Uses \|\| 0\) >= 2/);
+assert.ok(source.includes("Number(unit.hitmanSkill2Uses || 0) >= Number(skill.maxUses || 2)"));
 assert.ok(source.includes('hitmanRideUntil = Number(stageTime || 0) + Number(skill?.duration || 3)'));
 assert.ok(source.includes('unit.hitmanNextRideAt += interval'));
 assert.ok(source.includes("unit.hitmanRiding ? Number(hitmanSkill('hitman_ride')?.speedBonus || 2)"));
