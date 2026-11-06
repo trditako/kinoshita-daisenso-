@@ -373,7 +373,7 @@ const _genesisOriginalRemoveUnit=removeUnit;
 removeUnit=function(unit){
  if(unit&&!unit.isEnemy&&unit.name===GENESIS_NAME&&!unit.genesisSelfRevived){
   // ⑦ 不滅の創世：自身は一度だけ最大HPの30%で復活
-  unit.genesisSelfRevived=true;unit.hp=Math.max(1,Math.round(unit.maxhp*.2));
+  unit.genesisSelfRevived=true;unit.hp=Math.max(1,Math.round(unit.maxhp*.3));
   genesisSetMark(unit,'♾️','不滅の創世：復活済み',999999,'genesisRevive');
   genesisRefreshUnit(unit);
   if(typeof popup==='function')popup('♾️ 創世木下が復活！',unit.x,90,'criticalPop');
