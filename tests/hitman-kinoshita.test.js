@@ -50,5 +50,4 @@ assert.match(sw, /kinoshita-daisen-v69/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
-process.stdout.write('ヒットマン木下テスト成功：基本性能、特性、固有能力、解放条件、追跡マーカー、キャッシュを確認しました。
-');
+process.stdout.write('ヒットマン木下テスト成功：基本性能、特性、固有能力、解放条件、追跡マーカー、キャッシュを確認しました。\n');
