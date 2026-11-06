@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.54';
+const GAME_VERSION='v1.9.55';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.55',title:'🔎 編成画面のキャラクター検索・並び替えを強化',items:['AND・OR・括弧を使った複合検索と、HP・攻撃力・射程・属性・能力などの条件検索を編成画面の所持キャラクター一覧に追加','HP・攻撃力・合計ステータス・速度・射程・コスト・攻撃間隔・再生産時間・ヒットバック・能力数・名前・レア度で並び替え可能に変更','木下図鑑の検索・並び替えは従来仕様に戻し、保存編成10枠は維持']},
   {date:'2026-11-07',version:'v1.9.54',title:'🪙 ウルトラレアの金集めを最高難易度に調整',items:['ウルトラレアの金集めを伝説レアの金集めより大幅に高難易度化','ステージ幅3,000・城HP8,000,000に拡張し、強敵の連続出現と高倍率の無限増援を追加','報酬はウルトラレアの金×1。既存の金素材・最大Lv解放処理は維持']},
   {date:'2026-11-07',version:'v1.9.53',title:'🧩 キャラクター詳細と編成効果の表示漏れを修正',items:['創世木下の37能力と創世討伐兵器・零式の対策能力が、別キャラクターの詳細に残る問題を修正','編成画面に天使神:木下とノヴァ木下の編成効果を追加表示','編成中の味方強化をキャラクター別・効果別に確認できるよう改善']},
   {date:'2026-11-05',version:'v1.9.52',title:'🎯 神話編全48ステージ報酬「ヒットマン木下」を追加',items:['神話編第1章の全48ステージクリアで伝説レア「ヒットマン木下」を獲得','1段目8,900・0.2秒後に2段目5,100の単体二連撃と、出撃時3回の追跡マーカーを実装','神話特効・被ダメージ軽減と反射・回復封印・撃破成長・乗馬・転移反撃を実装','既存キャラクターIDと所持・育成・編成データを維持']},
@@ -2976,7 +2977,7 @@ function characterSearchMatchesQuery(card,index,query){const tokens=characterSea
  const f=t.match(/^(rarity|trait|type|series|ability|skill|name|id|owned):(.+)$/i);if(f){const k=f[1].toLowerCase(),v=f[2].toLocaleLowerCase('ja');if(k==='rarity')return displayCharacterRarity(card).toLocaleLowerCase('ja').includes(v);if(k==='trait')return String(card.trait||'無').toLocaleLowerCase('ja').includes(v);if(k==='type')return (String(card.attackType||'')+(card.attackType==='area'?' 範囲攻撃':card.attackType==='allrange'?' 全方位攻撃':' 単体攻撃')).toLocaleLowerCase('ja').includes(v);if(k==='series')return String(card.series||'通常木下').toLocaleLowerCase('ja').includes(v);if(k==='ability')return JSON.stringify(card.ability||{}).toLocaleLowerCase('ja').includes(v);if(k==='skill')return JSON.stringify({skills:card.skills,skill:card.skill,activeSkill:card.activeSkill,passiveSkill:card.passiveSkill}).toLocaleLowerCase('ja').includes(v);if(k==='name')return String(card.name||'').toLocaleLowerCase('ja').includes(v);if(k==='id')return String(card.id??index+1)===v;if(k==='owned')return ['true','yes','所持'].includes(v)?hasCharacter(index):!hasCharacter(index);}
  if(t.startsWith('-')&&t.length>1)return !corpus.includes(t.slice(1).toLocaleLowerCase('ja'));return corpus.includes(low);};
  const primary=()=>{if(tokens[pos]==='('){pos++;const v=orExpr();if(tokens[pos]===')')pos++;return v;}return atom(tokens[pos++]);};
- const andExpr=()=>{let v=primary();while(pos<tokens.length&&tokens[pos]!==')'&&tokens[pos]!=='OR'){if(tokens[pos]==='AND'){pos++;continue;}v=v&&primary();}return v;};
+ const andExpr=()=>{let v=primary();while(pos<tokens.length&&tokens[pos]!==')'&&tokens[pos]!=='OR'){if(tokens[pos]==='AND'){pos++;continue;}const next=primary();v=v&&next;}return v;};
  const orExpr=()=>{let v=andExpr();while(tokens[pos]==='OR'){pos++;const r=andExpr();v=v||r;}return v;};
  try{const v=orExpr();return pos===tokens.length?v:tokens.filter(t=>!['AND','OR','(',')'].includes(t)).every(atom);}catch(e){return tokens.filter(t=>!['AND','OR','(',')'].includes(t)).every(atom);}}
 function renderKinoshitaBook(){
