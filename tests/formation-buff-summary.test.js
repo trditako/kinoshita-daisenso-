@@ -42,6 +42,11 @@ assert.ok(html.includes("skills:[{id:'haifu_five_summon_storm'"),'覇風の召�
 assert.ok(html.includes("id:'haifu_guts'"),'覇風の攻撃スキルを独立データとして登録');
 assert.ok(html.includes("find(s=>s.id==='haifu_five_summon_storm')"),'召喚スキルを独立データから発動');
 assert.ok(html.includes("find(s=>s.id==='haifu_guts')"),'攻撃スキルを独立データから発動');
+assert.ok(html.includes("const attack=data.kbrAttackSkill,periodic=data.kbrSkill;"),'KBRの攻撃・定期スキルを能力データから分離');
+assert.ok(html.includes("find(s=>s.id==='kbr_periodic')"),'KBRの定期スキルを独立データから発動');
+assert.ok(html.includes("find(s=>s.id==='kbr_attack')"),'KBRの攻撃スキルを独立データから発動');
+assert.ok(html.includes("ability:{name:'騎乗特性'"),'KBRの騎乗パッシブを固有能力として維持');
+assert.ok(html.includes("interval=item.interval??item.activationInterval"),'スキル欄に発動間隔を表示');
 assert.ok(!html.includes('haifuSkill:{chance:'),'スキル効果を固有能力データに混在させない');
 const formationStart=html.indexOf('function renderFormation(){');
 const formationEnd=html.indexOf('function clampCamera',formationStart);
