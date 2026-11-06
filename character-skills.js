@@ -97,7 +97,7 @@ if (hitman) {
   ensureSkill(hitman, {
     id: 'hitman_ride',
     name: '乗馬',
-    description: '出撃直後に発動し、以後15秒ごとに3秒間騎乗する。騎乗中は移動速度+2・烈波無効。',
+    description: '出撃時に即発動し、以後15秒ごとに3秒間騎乗する。騎乗中は移動速度+2・烈波無効。',
     trigger: '出撃時／15秒ごと',
     interval: 15,
     duration: 3
