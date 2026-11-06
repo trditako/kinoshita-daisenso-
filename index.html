@@ -2850,7 +2850,84 @@ function showEnemyBook(){
  body.querySelectorAll('[data-enemy-book]').forEach(btn=>btn.onclick=()=>showEnemyDetail(btn.dataset.enemyBook));
  detail.style.setProperty('display','flex','important');
 }
-function formatAbilityInfo(obj,opts={}){const c=obj||{},a=c.ability||{},parts=[];if(a.name&&a.name!=='基本攻撃')parts.push(a.name);if(a.desc&&a.desc!=='特殊能力なし')parts.push(a.desc);if(c.barrier||a.barrier)parts.push('結界/バリア '+Number(a.barrier??c.barrier)+'（'+(a.barrierCooldown?'約'+Number(a.barrierCooldown)+'秒ごとに再生':'ダメージを吸収')+'）');if(c.metal||a.metal)parts.push('メタル特性');if(c.healAura||a.healAura)parts.push('回復支援（周囲の味方を回復）');const waveLevel=Number(c.waveLevel??a.waveLevel??0);if(waveLevel>0&&!parts.some(x=>String(x).includes('波動Lv')))parts.push('波動Lv'+waveLevel);const surgeLevel=Number(c.phoenixSurgeLevel??a.phoenixSurgeLevel??0);if(surgeLevel>0)parts.push('烈波Lv'+surgeLevel+'（射程 '+(a.phoenixSurgeMin??c.phoenixSurgeMin??1)+'〜'+(a.phoenixSurgeMax??c.phoenixSurgeMax??200)+'）');const curseChance=Number(c.curseChance??a.curseChance??0),stopChance=Number(c.stopChance??a.stopChance??0),slowChance=Number(c.slowChance??a.slowChance??0);if(curseChance>0)parts.push('呪い '+Math.round(curseChance*100)+'%・'+Number(c.curseDuration??a.curseDuration??3)+'秒');if(stopChance>0)parts.push('停止 '+Math.round(stopChance*100)+'%・'+Number(c.stopDuration??a.stopDuration??1)+'秒');if(slowChance>0)parts.push('鈍足 '+Math.round(slowChance*100)+'%・'+Number(c.slowDuration??a.slowDuration??1)+'秒');if(c.warpChance||a.warpChance)parts.push('ワープ '+Math.round(Number(c.warpChance??a.warpChance)*100)+'%');if(c.sealChance||a.sealChance)parts.push('呪い '+Math.round(Number(c.sealChance??a.sealChance)*100)+'%・'+Number(c.sealDuration??a.sealDuration??0)+'秒');if(c.attackDownChance||a.attackDownChance)parts.push('攻撃力低下 '+Math.round(Number(c.attackDownChance??a.attackDownChance)*100)+'%・'+Number(c.attackDownDuration??a.attackDownDuration??0)+'秒');if(c.damageReduce||a.damageReduce)parts.push('被ダメージ軽減 '+Math.round(Number(c.damageReduce??a.damageReduce)*100)+'%');if(c.guaranteeKnockback||a.guaranteeKnockback)parts.push('確定ノックバック');if(c.yabayaba||a.yabayaba)parts.push('ヤバヤバLv'+Number(c.yabayaba??a.yabayaba));if(a.revive)parts.push('撃破時3秒後に1回だけ覚醒復活');if(a.phoenixAura)parts.push('覚醒中：味方HP・攻撃力25%低下');if(a.phoenixLowHpMultiplier)parts.push('自身HP50%未満で与ダメージ3倍');if(a.curseImmune||c.curseImmune)parts.push('呪い無効');if(a.stopImmune||c.stopImmune)parts.push('停止無効');if(a.slowImmune||c.slowImmune)parts.push('鈍足無効');if(a.waveImmune||c.waveImmune)parts.push('波動無効');if(a.surgeImmune||c.surgeImmune)parts.push('烈波無効');if(a.curseTargets?.length)parts.push('呪い対象：'+a.curseTargets.join('・'));if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');return parts.length?parts.join(' / '):'なし';}
+function formatAbilityInfo(obj,opts={}){
+ const c=obj||{},a=c.ability||{},parts=[];
+ if(a.name&&a.name!=='基本攻撃')parts.push('<b>'+a.name+'</b>');
+ // 調整履歴・変更理由の文章は表示せず、現行能力データから効果を組み立てる。
+ if(a.desc&&a.desc!=='特殊能力なし'&&!/(調整|弱体化|抑制|維持|見直し|変更)/.test(a.desc))parts.push(a.desc);
+ const traitNames={赤:'赤',青:'青',黒:'黒',浮:'浮',天使:'天使',宇宙:'宇宙',無:'無',古代:'古代',ゾンビ:'ゾンビ',神話:'神話'};
+ const strong=a.strong||c.strong,resist=a.resist||c.resist;
+ if(strong&&typeof strong==='object'){
+  const entries=Object.entries(strong).filter(([,v])=>Number.isFinite(Number(v))&&Number(v)>1);
+  if(entries.length)parts.push('属性特効：'+entries.map(([k,v])=>(traitNames[k]||k)+'に'+Number(v)+'倍ダメージ').join('、'));
+ }
+ if(resist&&typeof resist==='object'){
+  const entries=Object.entries(resist).filter(([,v])=>Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<1);
+  if(entries.length)parts.push('属性耐性：'+entries.map(([k,v])=>(traitNames[k]||k)+'からの被ダメージ'+Math.round(Number(v)*100)+'%').join('、'));
+ }
+ const labels={
+  criticalChance:'クリティカル発生率',criticalDamage:'クリティカル倍率',waveLevel:'波動レベル',waveChance:'波動発生率',
+  phoenixSurgeLevel:'烈波レベル',phoenixSurgeMin:'烈波最小射程',phoenixSurgeMax:'烈波最大射程',
+  curseChance:'呪い発生率',curseDuration:'呪い時間',stopChance:'停止発生率',stopDuration:'停止時間',
+  slowChance:'鈍足発生率',slowDuration:'鈍足時間',warpChance:'ワープ発生率',warpDuration:'ワープ時間',
+  sealChance:'呪い発生率',sealDuration:'呪い時間',attackDownChance:'攻撃力低下発生率',attackDownDuration:'攻撃力低下時間',
+  damageReduce:'被ダメージ倍率',damageReduceFactor:'被ダメージ倍率',damageReflectRatio:'ダメージ反射率',
+  damageHealRatio:'与ダメージ吸収率',traitDamageBonus:'属性特効倍率',damageCapRatio:'被ダメージ上限率',
+  highHpDamageReduction:'高HP時の被ダメージ倍率',revive:'復活',reviveCount:'復活回数',reviveHpRatio:'復活時HP割合',
+  barrier:'バリア耐久値',barrierCooldown:'バリア再生間隔',healAmount:'回復量',healRatio:'回復率',
+  attackDownFactor:'攻撃力低下後の攻撃倍率',knockbackChance:'ふっとばし発生率',
+  wyvernStrongMultiplier:'対象属性への攻撃倍率',wyvernResistMultiplier:'対象属性からの被ダメージ倍率',
+  hpBelowThresholdMultiplier:'HP条件成立時の攻撃倍率',haifuSkill:'固有技',chance:'発動率',
+  multiplier:'効果倍率',cooldown:'再使用時間',duration:'効果時間',factor:'効果倍率',
+  radius:'効果範囲',range:'効果射程',count:'発動回数',maxStacks:'最大蓄積数',
+  growthRate:'時間成長率',growthMax:'成長上限',attackInterval:'攻撃間隔',
+  curseImmune:'呪い無効',stopImmune:'停止無効',slowImmune:'鈍足無効',
+  waveImmune:'波動無効',surgeImmune:'烈波無効',warpImmune:'ワープ無効',
+  knockbackImmune:'ふっとばし無効',attackDownImmune:'攻撃力低下無効',
+  sealImmune:'能力封印無効',zombieKiller:'ゾンビキラー',airAttack:'空中攻撃'
+ };
+ const pctKeys=/Chance$|Ratio$|Rate$|Percent$/i;
+ const secKeys=/(Duration|Cooldown|Interval|Seconds)$/i;
+ const multiplierKeys=/(Multiplier|Factor)$/i;
+ const lines=[],seen=new Set();
+ const add=(key,value,path='')=>{
+  if(value==null||typeof value==='function')return;
+  const full=path?path+'.'+key:key;
+  if(typeof value==='boolean'){
+   if(value)lines.push((labels[key]||labels[full]||key)+'：あり');
+   return;
+  }
+  if(typeof value==='number'&&Number.isFinite(value)){
+   if(seen.has(full))return;seen.add(full);
+   let shown=String(Number(value.toFixed(3)));
+   if(pctKeys.test(key))shown=Math.round(value*100)+'%';
+   else if(secKeys.test(key))shown=shown+'秒';
+   else if(multiplierKeys.test(key))shown=shown+'倍';
+   else if(/Ratio$/.test(key))shown=Math.round(value*100)+'%';
+   const label=labels[key]||labels[full]||full;
+   lines.push(label+'：'+shown);
+   return;
+  }
+  if(value&&typeof value==='object'&&!Array.isArray(value)){
+   for(const [child,v] of Object.entries(value))if(child!=='name'&&child!=='desc')add(child,v,full);
+  }
+ };
+ for(const [key,value] of Object.entries(a))if(!['name','desc','strong','resist','mythologyV2'].includes(key))add(key,value);
+ for(const key of ['waveLevel','waveChance','phoenixSurgeLevel','phoenixSurgeMin','phoenixSurgeMax','curseChance','curseDuration','stopChance','stopDuration','slowChance','slowDuration','warpChance','warpDuration','sealChance','sealDuration','attackDownChance','attackDownDuration','barrier','barrierCooldown','metal','healAura','airAttack','curseImmune','stopImmune','slowImmune','waveImmune','surgeImmune','warpImmune','knockbackImmune','attackDownImmune','sealImmune','zombieKiller'])if(c[key]!=null)add(key,c[key]);
+ if(lines.length)parts.push('<b>現在の能力数値</b><br>'+lines.join('<br>'));
+ if(a.revive)parts.push('撃破時に復活効果を発動');
+ if(a.phoenixAura)parts.push('覚醒中：味方HP・攻撃力低下オーラ');
+ if(a.phoenixLowHpMultiplier)parts.push('自身HP条件による攻撃倍率：'+Number(a.phoenixLowHpMultiplier)+'倍');
+ if(a.curseTargets?.length)parts.push('呪い対象：'+a.curseTargets.join('・'));
+ if(c.metal||a.metal)parts.push('メタル特性');
+ if(c.healAura||a.healAura)parts.push('回復支援');
+ if(c.guaranteeKnockback||a.guaranteeKnockback)parts.push('確定ノックバック');
+ if(c.yabayaba||a.yabayaba)parts.push('ヤバヤバLv'+Number(c.yabayaba??a.yabayaba));
+ if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');
+ if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');
+ if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');
+ return parts.length?parts.join(' / '):'特殊能力なし';
+}
 function mythologyV2AbilityName(key){return ({barrier:'結界',distanceArmor:'距離装甲',longReflect:'遠隔反射',rune:'神紋蓄積',summon:'召喚',split:'核分裂',timeSurge:'時間加速',causality:'因果転換',absorb:'吸収',domain:'神域',omen:'天罰予告',soulFeast:'魂喰い',reincarnate:'再臨',gravityWell:'重力圏',finalPhase:'終端化'})[key]||key}
 function mythologyV2AbilityDetail(key,a,e){
  const n=mythologyV2AbilityName(key);
@@ -2935,9 +3012,12 @@ function normalEvolutionPreview(i){const form=NORMAL_SECOND_FORMS[i];const base=
   const canEvolve=hasCharacter(i)&&isSecondFormGloballyUnlocked(i)&&Number(charLevel[i]||0)>=30&&Number(charMaxLevel[i]||0)>=30&&!evolved&&Object.entries(cfg.materials).every(([color,n])=>Number(colorPowers[color]||0)>=n);
   extra='<div class="xpBox" style="margin-top:8px;background:#312e81;border:2px solid #a78bfa;color:#fff"><b style="font-size:16px">✨ 第二形態：'+form.name+'</b><div style="margin:6px 0">進化条件：Lv30／最大Lv30</div><div style="margin:6px 0">進化素材：各色パワー '+Object.values(cfg.materials)[0]+'個ずつ</div><div>現在：Lv.'+lv+' / '+maxLv+'</div><div>所持素材：'+materials+'</div><div style="margin-top:8px;background:#1e293b;border-radius:8px;padding:8px;line-height:1.6"><b>進化後性能</b><br>HP '+form.hp.toLocaleString()+'　攻撃力 '+form.atk.toLocaleString()+'<br>射程 '+form.range+'　移動速度 '+form.spd+'　攻撃間隔 '+Number(form.interval).toFixed(2)+'秒<br>'+String(form.ability?.desc||'固有能力あり')+'</div>'+(charForm[i]===2?'<button class="levelUpBtn" onclick="toggleChapterRewardForm('+i+')">第一形態に戻す</button>':evolved?'<button class="levelUpBtn" onclick="toggleChapterRewardForm('+i+')">第二形態に切り替える</button>':canEvolve?'<button class="levelUpBtn" onclick="evolveEarlySecondForm('+i+')">✨ 第二形態へ進化</button>':'<button class="levelUpBtn" disabled>Lv30・最大Lv30・進化素材が必要</button>')+'</div>';
  }
+ const hitValues=Array.isArray(c.multiAttack)&&c.multiAttack.length?c.multiAttack.map(v=>Math.round(Number(v)||0)):([detailStat('atk'),...(Number(c.secondAtk)>0?[Number(c.secondAtk)]:[]),...(Number(c.thirdAtk)>0?[Number(c.thirdAtk)]:[])]);
+ const comboTotal=hitValues.reduce((sum,v)=>sum+v,0),comboDps=comboTotal/Math.max(.01,detailStat('interval'));
+ const attackBreakdown=hitValues.length>1?'<div>🥊 連撃内訳</div><b>'+hitValues.map((v,n)=>(n+1)+'段目 '+Number(v).toLocaleString()).join(' ／ ')+'</b><div>📊 連撃合計</div><b>'+comboTotal.toLocaleString()+'</b><div>⚡ 連撃合計DPS</div><b>'+Math.round(comboDps).toLocaleString()+'</b>':'<div>⚡ DPS</div><b>'+Math.round(comboDps).toLocaleString()+'</b>';
  const cosmeticSection=renderCharacterCosmeticSection(i);
  document.getElementById('detailTitle').textContent='図鑑No.'+bookNo+'　'+c.icon+' '+c.name+((isNormal||isHarland||isAnomalous||!!EARLY_SECOND_FORM_CONFIG[base.name]||isRich||isYoshida)&&charForm[i]===2?'【第二形態】':'');
- document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b><div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+c.recharge.toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
+ document.getElementById('detailBody').innerHTML='<div class="detailIcon">'+c.icon+'</div><div class="xpBox"><b>Lv.'+lv+' / '+maxLv+'</b><div>プレイヤーXP：'+playerXP+'</div><div>次のレベルまで：'+(can?need+' XP':'MAX')+'</div><button class="levelUpBtn" '+(can&&playerXP>=need?'':'disabled')+' onclick="levelUpCharacter('+i+')">'+(can?(playerXP>=need?'このキャラをレベルアップ':'XPが足りません'):'最大レベル')+'</button></div>'+extra+cosmeticSection+growthDetailHTML(i,c,detailStat)+'<div class="detailGrid"><div>💰 コスト</div><b>'+c.cost+'円</b><div>❤️ HP</div><b>'+detailStat('hp')+'</b><div>⚔️ 攻撃力</div><b>'+detailStat('atk')+'</b>'+attackBreakdown+'<div>🎯 射程</div><b>'+detailStat('range')+'</b><div>💨 移動速度</div><b>'+detailStat('spd')+'</b><div>⏱️ 攻撃間隔</div><b>'+detailStat('interval').toFixed(2)+'秒</b><div>🔄 再生時間</div><b>'+detailStat('recharge').toFixed(1)+'秒</b><div>📊 攻撃回数/秒</div><b>'+(1/detailStat('interval')).toFixed(2)+'回</b><div>🎯 攻撃タイプ</div><b>'+(c.attackType==='area'?'範囲攻撃':c.attackType==='allrange'?'全方位攻撃':'単体攻撃')+'</b><div>💥 ヒットバック</div><b>'+c.kb+'回</b><div>🏷️ 属性</div><b>'+(c.trait||'無')+'</b></div><h3>⭐ 固有能力</h3><p style="text-align:left;background:#eef6ff;border-radius:10px;padding:10px;font-weight:800;color:#135a9e">'+formatAbilityInfo(c,{trait:c.trait||'無',attackType:c.attackType})+'</p><p style="text-align:left;font-size:12px;font-weight:800;color:#555">※再生時間はレベルアップでは短縮されません。</p>';
  document.getElementById('detail').style.display='flex';
 }function levelUpCharacter(i){if(running||!Number.isInteger(i)||!cards[i]||!hasCharacter(i))return;const max=Math.max(20,Math.min(30,Number(charMaxLevel[i])||20));const raw=Number(charLevel[i]);const current=Number.isFinite(raw)&&raw>=1?Math.min(max,Math.floor(raw)):1;charMaxLevel[i]=max;charLevel[i]=current;if(current>=max)return;const need=xpNeed(i);if(!Number.isFinite(need)||need<=0||playerXP<need)return;charLevel[i]=current+1;playerXP=Math.max(0,playerXP-need);save();showCharacterDetail(i);renderCards();renderStageSelect()}
 function openKinoshitaBook(){
