@@ -4,9 +4,11 @@ on:
     paths:
       - 'index.html'
       - 'genesis.js'
+      - 'genesis.js'
       - 'hitman.js'
       - 'balance.js'
       - 'tests/balance-overhaul.test.js'
+      - 'tests/genesis-kinoshita.test.js'
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - '.github/workflows/validate-index.yml'
@@ -16,6 +18,7 @@ on:
       - feat/chokinoshita-festival-and-growth-ability
     paths:
       - 'index.html'
+      - 'genesis.js'
       - 'hitman.js'
       - 'balance.js'
       - 'tests/balance-overhaul.test.js'
