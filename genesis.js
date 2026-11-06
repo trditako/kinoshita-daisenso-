@@ -177,7 +177,7 @@ setStatusMark=function(target,icon,label,duration,type){
  const debuff=['debuff','stop','slow','attackDown','curse','abilitySeal','warp','rangeDown','knockback'].includes(kind);
  if(debuff&&(isGenesis||isGuarded)){
   const full=isGenesis&&['stop','slow','warp','knockback'].includes(kind);
-  if(full||Math.random()<.7){
+  if(full||Math.random()<.3){
    genesisClearDebuff(target,kind);
    if(isGenesis||isGuarded)target.hp=Math.min(Number(target.maxhp||1),Number(target.hp||0)+(isGenesis?Number(target.maxhp||1)*.03:Number(target.maxhp||1)*.02));
    genesisRefreshUnit(target);
