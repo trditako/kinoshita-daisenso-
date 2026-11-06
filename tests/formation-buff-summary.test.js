@@ -29,7 +29,7 @@ assert.ok(summary.includes('覇風の編成バフ'),'覇風の既存編成効果
 assert.ok(summary.includes('MiraiKの編成バフ'),'MiraiKの既存編成効果表示を維持');
 assert.ok(summary.includes('狂乱の強化木下の編成・戦闘能力'),'狂乱の強化木下の既存表示を維持');
 assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効果表示を維持');
-assert.ok(html.includes("GAME_VERSION='v1.9.54'"),'ゲームバージョンを更新');
+assert.ok(html.includes("GAME_VERSION='v1.9.55'"),'ゲームバージョンを更新');
 assert.ok(sw.includes('kinoshita-daisen-v71'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
