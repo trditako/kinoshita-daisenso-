@@ -44,4 +44,11 @@ assert.ok(html.includes("eventStages.filter(st=>st.itemReward).map((st,i)=>stage
 const legendGoldStart=html.indexOf("const legendGoldStage=eventStages.find");
 const legendGold=html.slice(legendGoldStart,urGoldStart);
 assert.ok(legendGold.includes("legendGoldStage.width=1900")&&legendGold.includes("legendGoldStage.baseHp=900000"),'伝説レア金集めの既存難易度を変更しない');
+assert.match(html,/\.unitEffectTag\.shield/,'パワーシールドを通常バフと異なる表示色にする');
+assert.match(html,/push\('powerShield','⚡',[^;]*'shield'\)/,'パワーシールドを専用ステータス種別で表示');
+assert.match(html,/max-height:78px/,'戦闘中の状態表示を複数行まで見やすくする');
+assert.match(html,/現在の性能（レベル・形態反映後）/,'キャラ詳細に現在性能の見出しを表示');
+assert.match(html,/固有能力（キャラクター固有の特性）/,'固有能力を明示してスキルと混同しない');
+assert.match(html,/background:#f1f5f9;border:2px solid #cbd5e1/,'詳細ステータスを高コントラスト表示にする');
+assert.match(html,/max-height:36vh;overflow-y:auto/,'編成バフ一覧を独立スクロール可能にする');
 process.stdout.write('編成効果・詳細表示テスト成功：詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
