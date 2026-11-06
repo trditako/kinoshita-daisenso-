@@ -65,5 +65,9 @@ assert.ok(normalSecondForms[0].hp>5000&&normalSecondForms[0].atk>1200,'通常キ
 assert.match(cards[21].ability.desc,/5,208/,'ヒットマン木下の最終攻撃力表示を実数値に合わせる');
 assert.match(html,/dealt=Math\.round\(dealt\*\.8\)/,'覇風の敵攻撃力20%低下を実装する');
 assert.match(html,/haifuAttackDown/,'覇風の敵デバフを戦闘状態表示に反映する');
+assert.match(html,/現在の能力数値/,'キャラ詳細に現在の能力数値を表示する');
+assert.match(html,/連撃合計DPS/,'キャラ詳細に連撃内訳とDPSを表示する');
+assert.match(html,/detailStat\\('recharge'\\)/,'キャラ詳細の再生産時間は現在の補正値を表示する');
+assert.match(html,/調整履歴・変更理由の文章は表示せず/,'調整履歴ではなく実際の能力値を表示する');
 assert.equal(context.window.KINOSHITA_BALANCE_REPORT.adjusted,cards.length);
 process.stdout.write('環境調整テスト成功：レアリティ別調整、上位キャラ弱体化、配列順維持を確認しました。\n');
