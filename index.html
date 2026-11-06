@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.59';
+const GAME_VERSION='v1.9.60';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.60',title:'🌀 戦闘スキルを固有能力から独立',items:['覇風の「五召喚の大嵐」「根性だけで勝ちます」を独立したスキルデータとして登録','スキルごとに発動条件・発動率・再使用時間・効果をキャラクター詳細の専用欄へ表示','スキル発動処理も固有能力データから分離し、既存の発動条件・威力・回復量を維持']},
   {date:'2026-11-07',version:'v1.9.59',title:'🧩 スキル表示・戦闘中効果表示・検索条件の重複を改善',items:['キャラクター詳細にスキル専用欄を追加し、固有能力と完全に分離。スキルを持たないキャラクターには欄自体を表示しない','戦闘中の常時編成効果・固有パッシブ表示を除外し、撃破成長・発動中スキル・一時的なバフ／デバフのみ表示','検索条件の追加時に同一条件が重複登録されないよう、条件キーで二重追加を防止']},
   {date:'2026-11-07',version:'v1.9.58',title:'🔧 編成検索の条件が重複追加される問題を修正',items:['編成画面の再描画ごとに検索条件追加イベントが重複登録される問題を修正','条件追加・項目変更・名前検索のイベントを常に1つだけ登録する方式に変更']},
   {date:'2026-11-07',version:'v1.9.57',title:'🧩 編成検索をボタン式の条件追加に改善',items:['編成画面で属性・レア度・能力・攻撃タイプ・シリーズ・各種ステータス・所持状況を選択式で絞り込み可能に変更','条件をチップ表示し、個別削除とAND／OR切り替えに対応','複雑な検索式の手入力を不要にし、名前検索だけ任意入力として残す']},
@@ -2913,7 +2914,7 @@ function formatCharacterSkillSection(character){
  const add=(label,value)=>{if(value==null||value===false||value==='')return;for(const item of(Array.isArray(value)?value:[value])){
   if(item==null||item===false||item==='')continue;let name='',description='',meta=[];
   if(typeof item==='string'||typeof item==='number')description=String(item);
-  else if(typeof item==='object'){name=String(item.name||item.title||'');description=String(item.description||item.desc||item.effect||'');const trigger=item.trigger??item.activation,chance=item.chance??item.activationChance,cooldown=item.cooldown??item.cooldownSeconds,duration=item.duration??item.durationSeconds;if(trigger)meta.push('発動条件：'+trigger);if(chance!=null&&chance!=='')meta.push('発動率：'+(typeof chance==='number'?Math.round(chance*100)+'%':chance));if(cooldown!=null&&cooldown!=='')meta.push('再使用：'+cooldown+(typeof cooldown==='number'?'秒':''));if(duration!=null&&duration!=='')meta.push('効果時間：'+duration+(typeof duration==='number'?'秒':''));}else continue;
+  else if(typeof item==='object'){name=String(item.name||item.title||'');description=String(item.description||item.desc||item.effect||'');const trigger=item.trigger??item.activation,chance=item.chance??item.activationChance,cooldown=item.cooldown??item.cooldownSeconds,duration=item.duration??item.durationSeconds,interval=item.interval??item.activationInterval;if(trigger)meta.push('発動条件：'+trigger);if(chance!=null&&chance!=='')meta.push('発動率：'+(typeof chance==='number'?Math.round(chance*100)+'%':chance));if(interval!=null&&interval!=='')meta.push('発動間隔：'+interval+(typeof interval==='number'?'秒':''));if(cooldown!=null&&cooldown!=='')meta.push('再使用：'+cooldown+(typeof cooldown==='number'?'秒':''));if(duration!=null&&duration!=='')meta.push('効果時間：'+duration+(typeof duration==='number'?'秒':''));}else continue;
   if(!name&&!description&&!meta.length)continue;const signature=label+'|'+name+'|'+description+'|'+meta.join('|');if(seen.has(signature))continue;seen.add(signature);
   rows.push('<article style="padding:8px;margin-top:6px;border:1px solid #c4b5fd;border-radius:8px;background:#fff"><b style="color:#5b21b6">'+escapeCharacterSkillText(label)+(name?'：'+escapeCharacterSkillText(name):'')+'</b>'+(description?'<div style="margin-top:3px">'+escapeCharacterSkillText(description)+'</div>':'')+(meta.length?'<div style="margin-top:4px;font-size:11px;color:#6b7280;font-weight:800">'+meta.map(escapeCharacterSkillText).join('　／　')+'</div>':'')+'</article>');
  }};
@@ -3529,25 +3530,29 @@ function updatePowerShieldDisplay(target){
 }
 function haifuOnSummoned(unit){
  if(!unit||unit.name!=='覇風')return;
+ const skill=(unit.skills||[]).find(s=>s.id==='haifu_five_summon_storm');
+ if(!skill)return;
  haifuSummonCount++;
- if(haifuSummonCount%5!==0)return;
+ const required=Math.max(1,Math.floor(Number(skill.everySummons||5)));
+ if(haifuSummonCount%required!==0)return;
  let totalDamage=0;
+ const multiplier=Math.max(0,Number(skill.damageMultiplier??2.5));
  for(const enemy of [...enemies]){
   if(!enemy||enemy.hp<=0)continue;
-  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*2.5))),unit);
+  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*multiplier))),unit);
   totalDamage+=Math.max(0,before-enemy.hp);
   if(enemy.hp<=0)removeEnemy(enemy);
  }
- const heal=Math.max(0,Math.round(totalDamage*.5));
+ const heal=Math.max(0,Math.round(totalDamage*Math.max(0,Number(skill.healRatio??.5))));
  if(heal>0)for(const ally of units){if(ally&&!ally.isEnemy&&ally.hp>0)ally.hp=Math.min(ally.maxhp,ally.hp+heal);}
  popup('🌪️ 覇風・五召喚の大嵐！ 味方全体回復 '+heal.toLocaleString(),unit.x,90,'criticalPop');
 }
 function haifuOnAttack(unit,target){
- const skill=unit?.ability?.haifuSkill,now=performance.now()/1000;
+ const skill=(unit?.skills||[]).find(s=>s.id==='haifu_guts'),now=performance.now()/1000;
  if(!unit||unit.name!=='覇風'||!target||target.hp<=0||isAbilitySealed(unit)||!skill)return;
- if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance||.15))return;
+ if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance??.15))return;
  unit.haifuSkillReadyAt=now+Number(skill.cooldown||13);
- const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.multiplier||3)));
+ const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.damageMultiplier||3)));
  const before=target.hp;hit(target,damage,unit,{haifuSkill:true});
  popup('🔥 根性だけで勝ちます！ -'+Math.max(0,Math.min(before,damage)).toLocaleString(),target.x,90,'criticalPop');
 }
@@ -4712,8 +4717,19 @@ function mythologyV2Tick(now2,dt){
 function updateWyvernFlight(e){if(!e||!e.ability?.wyvernFlight)return;const interval=Number(e.ability.flightInterval||17),duration=Number(e.ability.flightDuration||3);if(e.isFlying&&stageTime>=Number(e.flightUntil||0)){e.isFlying=false;e.spd=Number(e.wyvernGroundSpd??1.7);e.el?.classList.remove('wyvernFlying');mythicPopup('🪽 飛行終了',e);}if(!e.isFlying&&stageTime>=Number(e.flightNextAt||Infinity)){e.isFlying=true;e.flightUntil=stageTime+duration;e.flightNextAt=stageTime+interval;e.wyvernGroundSpd=e.wyvernGroundSpd??e.spd;e.spd=Number(e.ability.flightSpeed||1.3);e.target=null;e.el?.classList.add('wyvernFlying');mythicPopup('🪽 ワイバーン飛行！',e);}}
 
 function kbrWeatherFactor(u,stage,now){const w=stage?.kbrWeather;if(!w)return 1;const cycle=Math.max(1,Number(w.cycle||12)),p=now%cycle,active=Number(w.active||5);let f=1;if(w.type==='wind')f=p<Number(w.head||cycle/3)?Number(w.headFactor||.76):p>cycle-Number(w.tail||cycle/3)?Number(w.tailFactor||1.18):1;else if(w.type==='tailwind')f=p<active?Number(w.factor||1.25):1;else if(['sand','rock','quicksand','night','storm'].includes(w.type))f=p<active?Number(w.factor||.75):1;else if(w.type==='final')f=p<active?[Number(w.factor||.62),.78,.55,.68][Math.floor(now/cycle)%4]:1;if(u?.kbrMounted)f=f<1?1-(1-f)*.55:1+(f-1)*1.12;if(u?.ability?.kbrSpeedUntil&&now<u.ability.kbrSpeedUntil)f*=Number(u.ability.kbrSpeedFactor||1.35);return Math.max(.35,Math.min(1.65,f));}
-function kbrTickUnit(u,stage,now){const k=u?.ability?.kbrSkill;if(!u||u.hp<=0||!k||isAbilitySealed(u))return;u.kbrBaseAtk=Number(u.kbrBaseAtk||u.atk||1);if(k.type==='awakening'&&!u.kbrAwakened&&u.hp<=u.maxhp*Number(k.threshold||.5)){u.kbrAwakened=true;u.atk=Math.round(u.atk*Number(k.factor||1.5));u.spd*=1.2;mythicPopup('👑 王者覚醒',u);return;}u.kbrNextAt=Number(u.kbrNextAt??Number(k.interval||10));if(stageTime<u.kbrNextAt)return;u.kbrNextAt=stageTime+Math.max(2,Number(k.interval||10));if(k.type==='speed'){u.ability.kbrSpeedUntil=now+Number(k.duration||3);u.ability.kbrSpeedFactor=Number(k.factor||1.4);mythicPopup('🌬️ 騎乗スキル発動',u);}else if(k.type==='heal'){for(const a of units)if(a&&a.hp>0)a.hp=Math.min(a.maxhp,a.hp+Math.max(1,Math.round(a.maxhp*Number(k.factor||.08))));mythicPopup('💚 味方全体を回復',u);}else if(['slow','stop','storm'].includes(k.type)){let n=0;for(const e of enemies){if(!e||e.hp<=0||Math.abs(e.x-u.x)>Number(k.radius||300))continue;if(k.type==='stop')e.stopUntil=Math.max(Number(e.stopUntil||0),now+Number(k.duration||1));else{e.slowUntil=Math.max(Number(e.slowUntil||0),now+Number(k.duration||3));e.slowFactor=Math.min(Number(e.slowFactor||1),Number(k.factor||.62));if(k.type==='storm'&&Math.random()<.35){e.hp=Math.max(0,e.hp-Math.round(u.atk*.45));if(e.hp<=0)removeEnemy(e);}}n++;}if(n)mythicPopup(k.type==='slow'?'🌪️ 砂煙幕':k.type==='stop'?'⏱️ 時刻停止':'🌩️ 雷雨襲来',u);}else if(k.type==='champion'){u.atk=Math.min(Math.round(Number(u.kbrBaseAtk||u.atk)*2.2),Math.round(u.atk*Number(k.factor||1.5)));mythicPopup('🏆 覇者の特殊突撃',u);}}
-function kbrOnAttack(u,t,dealt){const k=u?.ability?.kbrAttackSkill;if(!k||!t||t.hp<=0||isAbilitySealed(u)||Math.random()>=Number(k.chance||0))return;hit(t,Math.max(1,Math.round(Number(dealt||u.atk)*Number(k.factor||2)-Number(dealt||u.atk))),u);if(k.knockback&&t.hp>0){t.x=Math.max(120,t.x-85);t.cd=Math.max(t.cd||0,.35);}mythicPopup('🎲 '+u.ability.name+' 発動',u);}
+function kbrTickUnit(u,stage,now){
+ const skill=(u?.skills||[]).find(s=>s.id==='kbr_periodic'),k=skill?.effect;
+ if(!u||u.hp<=0||!k||isAbilitySealed(u))return;
+ u.kbrBaseAtk=Number(u.kbrBaseAtk||u.atk||1);
+ if(k.type==='awakening'&&!u.kbrAwakened&&u.hp<=u.maxhp*Number(k.threshold||.5)){u.kbrAwakened=true;u.atk=Math.round(u.atk*Number(k.factor||1.5));u.spd*=1.2;mythicPopup('👑 王者覚醒',u);return;}
+ u.kbrNextAt=Number(u.kbrNextAt??Number(k.interval||10));if(stageTime<u.kbrNextAt)return;
+ u.kbrNextAt=stageTime+Math.max(2,Number(k.interval||10));
+ if(k.type==='speed'){u.ability.kbrSpeedUntil=now+Number(k.duration||3);u.ability.kbrSpeedFactor=Number(k.factor||1.4);mythicPopup('🌬️ '+skill.name+' 発動',u);}
+ else if(k.type==='heal'){for(const a of units)if(a&&a.hp>0)a.hp=Math.min(a.maxhp,a.hp+Math.max(1,Math.round(a.maxhp*Number(k.factor||.08))));mythicPopup('💚 味方全体を回復',u);}
+ else if(['slow','stop','storm'].includes(k.type)){let n=0;for(const e of enemies){if(!e||e.hp<=0||Math.abs(e.x-u.x)>Number(k.radius||300))continue;if(k.type==='stop')e.stopUntil=Math.max(Number(e.stopUntil||0),now+Number(k.duration||1));else{e.slowUntil=Math.max(Number(e.slowUntil||0),now+Number(k.duration||3));e.slowFactor=Math.min(Number(e.slowFactor||1),Number(k.factor||.62));if(k.type==='storm'&&Math.random()<.35){e.hp=Math.max(0,e.hp-Math.round(u.atk*.45));if(e.hp<=0)removeEnemy(e);}}n++;}if(n)mythicPopup(k.type==='slow'?'🌪️ 砂煙幕':k.type==='stop'?'⏱️ 時刻停止':'🌩️ 雷雨襲来',u);}
+ else if(k.type==='champion'){u.atk=Math.min(Math.round(Number(u.kbrBaseAtk||u.atk)*2.2),Math.round(u.atk*Number(k.factor||1.5)));mythicPopup('🏆 覇者の特殊突撃',u);}
+}
+function kbrOnAttack(u,t,dealt){const skill=(u?.skills||[]).find(s=>s.id==='kbr_attack'),k=skill?.effect;if(!k||!t||t.hp<=0||isAbilitySealed(u)||Math.random()>=Number(k.chance||0))return;hit(t,Math.max(1,Math.round(Number(dealt||u.atk)*Number(k.factor||2)-Number(dealt||u.atk))),u);if(k.knockback&&t.hp>0){t.x=Math.max(120,t.x-85);t.cd=Math.max(t.cd||0,.35);}mythicPopup('🎲 '+skill.name+' 発動',u);}
 
 function loop(t){if(!running||paused)return;if(!last)last=t;const realDt=Math.min(.035,(t-last)/1000);const dt=realDt*((rankMode||pvpMode)?1:gameSpeed);last=t;
  const simNow=t/1000;
@@ -5173,12 +5189,32 @@ cards.push(
 );
 cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:1.2,interval:3,recharge:320,icon:"👼",motion:"super",attackType:"area",kb:2,rarity:"UR",series:"超木下祭",limitedExchange:true,limitedExchangeSeries:"超木下祭",growth:true,trait:"天使",growthDesc:"成長1段階：全ステータスを20%上昇。成長2段階：さらに全ステータスを45%上昇。成長3段階：さらに全ステータスを85%上昇。各段階の必要木下マネーは2,500／5,000／8,500。天使属性の編成数による強化、攻撃命中ごとの攻撃力上昇、再生産時間短縮は成長と別に累積する。",ability:{name:"天使神の超越支配",desc:"自身を含む編成中の天使属性1体につき自身の全ステータス+7%（最大+30%）。自身以外の味方天使属性は編成中にHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間が常時強化され、呪い・波動・烈波を無効化。自身は呪い・烈波・波動・停止・ヤバヤバ化・攻撃力低下・移動速度低下・ふっとばしを無効化。致命傷時に一度だけHP100%で復活し、復活時に最大HPと攻撃力を入れ替える。受ける1回のダメージは最大HPの15%まで。常時、実際に受けたHPダメージの15%を回復。HPが最大値の40%以上なら全属性からのダメージを35%軽減し、受けたダメージの15%を攻撃者へ反射。敵にダメージを与えるたび攻撃力+2%（最大+70%）・再生産残り時間を2%短縮。敵撃破時に最大HPの1.5%を回復し、2秒間移動速度3。古代・赤・黒・浮・神話属性に8倍ダメージ、これらの属性から受けるダメージをさらに20%軽減。",angelGod:true,curseImmune:true,waveImmune:true,surgeImmune:true,stopImmune:true,slowImmune:true,attackDownImmune:true,knockbackImmune:true,yabayabaImmune:true,damageCapRatio:.15,damageReflectRatio:.15,damageHealRatio:.15,highHpThreshold:.4,highHpDamageReduction:.35,traitDamageReduction:.2,traitDamageBonus:8}});
  // KBRキャラクターは全既存キャラクターの登録後に追加し、既存キャラクターの配列IDをずらさない。
- for(const [name,cost,hp,atk,range,spd,interval,recharge,icon,rarity,skill,desc,ability] of KBR_CARDS){if(!cards.some(c=>c.name===name)){const card={name,cost,hp,atk,range,spd,interval,recharge,icon,motion:'super',attackType:'area',kb:4,rarity,series:'Kinoshita Ball Run',trait:'宇宙',kbrMounted:true,ability:{name:skill,desc,...ability}};cards.push(card);card.id=cards.length-1;}}
+ function kbrSkillDescription(kind,k){
+ if(kind==='attack')return '攻撃時'+Math.round(Number(k.chance||0)*100)+'%で通常攻撃に追加ダメージ（追加分は通常攻撃の'+Math.max(0,Number(k.factor||2)-1).toFixed(2)+'倍相当）。'+(k.knockback?'命中時に敵を後退させる。':'');
+ if(k.type==='speed')return '自身の移動速度を'+Number(k.factor||1.4)+'倍にする（'+Number(k.duration||3)+'秒）。';
+ if(k.type==='heal')return '味方全体のHPを最大HPの'+Math.round(Number(k.factor||.08)*100)+'%回復する。';
+ if(k.type==='slow')return '範囲'+Number(k.radius||300)+'以内の敵の移動速度を'+Math.round(Number(k.factor||.62)*100)+'%に低下させる（'+Number(k.duration||3)+'秒）。';
+ if(k.type==='stop')return '範囲'+Number(k.radius||260)+'以内の敵を'+Number(k.duration||1)+'秒間停止させる。';
+ if(k.type==='awakening')return 'HP'+Math.round(Number(k.threshold||.5)*100)+'%以下で一度だけ、攻撃力を'+Number(k.factor||1.5)+'倍・移動速度を1.2倍にする。';
+ if(k.type==='storm')return '範囲'+Number(k.radius||330)+'以内の敵に'+Number(k.duration||4)+'秒間雷雨を発生させ、35%の確率で攻撃力の45%分の追加ダメージ。';
+ if(k.type==='champion')return '走行中に定期発動し、攻撃力を強化。最大で基礎攻撃力の2.2倍まで上昇する。';
+ return '戦闘中に特殊効果を発動する。';
+}
+for(const [name,cost,hp,atk,range,spd,interval,recharge,icon,rarity,skill,desc,ability] of KBR_CARDS){
+ if(cards.some(c=>c.name===name))continue;
+ const data={...(ability||{})},skills=[];
+ const attack=data.kbrAttackSkill,periodic=data.kbrSkill;
+ delete data.kbrAttackSkill;delete data.kbrSkill;
+ if(attack)skills.push({id:'kbr_attack',name:skill+(periodic?'（攻撃時）':''),description:kbrSkillDescription('attack',attack),trigger:'攻撃時',chance:Number(attack.chance||0),effect:attack});
+ if(periodic)skills.push({id:'kbr_periodic',name:skill+(attack?'（定期発動）':''),description:kbrSkillDescription('periodic',periodic),trigger:periodic.type==='awakening'?'HP条件を満たした時':'定期発動',interval:Number(periodic.interval||0)||undefined,duration:Number(periodic.duration||0)||undefined,effect:periodic});
+ const card={name,cost,hp,atk,range,spd,interval,recharge,icon,motion:'super',attackType:'area',kb:4,rarity,series:'Kinoshita Ball Run',trait:'宇宙',kbrMounted:true,skills,ability:{name:'騎乗特性',desc:'騎乗中は悪天候による移動速度低下を軽減する。',...data}};
+ cards.push(card);card.id=cards.length-1;
+}
 // 狂乱の強化木下はKBR10体の直後、覇風の直前に登録する。旧ID90から新ID101へ移行。
 if(!cards.some(c=>c?.name==='狂乱の強化木下')){cards.push(RAGE_KINOSHITA_CARD);RAGE_KINOSHITA_CARD.id=cards.length-1;}
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
-if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
+if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,skills:[{id:'haifu_five_summon_storm',name:'五召喚の大嵐',description:'覇風が5回召喚されるごとに、敵全体へ自身の攻撃力250%分のダメージを与え、与えたダメージの50%分を味方全体へ回復する。',trigger:'5回目の召喚時',everySummons:5,damageMultiplier:2.5,healRatio:.5},{id:'haifu_guts',name:'根性だけで勝ちます',description:'攻撃時15%で、対象の攻撃力と自身の攻撃力の合計×3の追加ダメージを与える。',trigger:'攻撃時',chance:.15,cooldown:13,damageMultiplier:3}],ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。',waveImmune:true,reflectImmune:true}});
  // 新しい特別真髄限定キャラクター。富豪木下の旧IDとは別の末尾IDを割り当てる。
 const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
 cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
