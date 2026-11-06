@@ -32,4 +32,16 @@ assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効�
 assert.ok(html.includes("GAME_VERSION='v1.9.54'"),'ゲームバージョンを更新');
 assert.ok(sw.includes('kinoshita-daisen-v71'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
+const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
+const urGoldEnd=html.indexOf("\\n",urGoldStart);
+assert.ok(urGoldStart>=0,'ウルトラレア金集めの専用難易度を定義');
+const urGold=html.slice(urGoldStart,urGoldEnd);
+for(const value of ["width=3000","baseHp=8000000","xp=60000","mult:12","start:72,interval:24","start:90,interval:30"])assert.ok(urGold.includes(value),'UR金集め設定 '+value);
+for(const enemy of ['パーフェクト木下','古代井上','狂乱の木下','黒王木下'])assert.ok(urGold.includes(enemy),'UR金集めに強敵 '+enemy+' を配置');
+assert.ok(html.includes("GOLD_RARITIES=['ノーマル','レア','激レア','超激レア','伝説レア','ウルトラレア']"),'URの金素材データを維持');
+assert.ok(html.includes("itemReward:{type:'rarityGold',rarity,amount:1}"),'URの金を1個報酬にする共通生成処理を維持');
+assert.ok(html.includes("eventStages.filter(st=>st.itemReward).map((st,i)=>stageCardHTML(st,i+1,'growth',1))"),'強化素材画面にUR金集めを表示');
+const legendGoldStart=html.indexOf("const legendGoldStage=eventStages.find");
+const legendGold=html.slice(legendGoldStart,urGoldStart);
+assert.ok(legendGold.includes("legendGoldStage.width=1900")&&legendGold.includes("legendGoldStage.baseHp=900000"),'伝説レア金集めの既存難易度を変更しない');
 process.stdout.write('編成効果・詳細表示テスト成功：詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
