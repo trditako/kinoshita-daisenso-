@@ -12,6 +12,12 @@ const workflow = fs.readFileSync(path.join(root, '.github/workflows/validate-ind
 assert.match(source, /name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5100/);
 assert.match(source, /multiAttack: \[8900, 5100\], range: 220, spd: 0\.8, interval: 1/);
 assert.match(source, /recharge: 75/);
+assert.match(source, /id: 'hitman_tracking'/, '追跡マーカーを独立スキルとして登録');
+assert.match(source, /id: 'hitman_ride'/, '騎乗を独立スキルとして登録');
+assert.match(source, /id: 'hitman_counter'/, '転移反撃を独立スキルとして登録');
+assert.match(source, /function hitmanSkill\(id\)/, '戦闘処理は独立スキルデータを参照');
+assert.match(source, /Number\(skill\?\.damageMultiplier \|\| 5\)/, '追跡マーカーの倍率をスキルデータから参照');
+assert.match(source, /Number\(skill\.damageMultiplier \|\| 15\)/, '転移反撃の倍率をスキルデータから参照');
 assert.match(source, /trait: '黒', rarity: '伝説レア'/);
 assert.match(source, /strong: \{ 神話: 5 \}, resist: \{ 神話: 0\.15 \}/);
 assert.match(source, /curseImmune: true, stopImmune: true, waveImmune: true/);
@@ -43,10 +49,10 @@ assert.match(source, /selectedChapter\) === 7/);
 assert.match(source, /selectedStage\) === 48/);
 assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
 
-assert.match(html, /GAME_VERSION='v1\.9\.60'/);
+assert.match(html, /GAME_VERSION='v1.9.61'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v74/);
+assert.match(sw, /kinoshita-daisen-v75/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
