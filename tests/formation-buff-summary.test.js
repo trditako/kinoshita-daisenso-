@@ -29,7 +29,7 @@ assert.ok(summary.includes('覇風の編成バフ'),'覇風の既存編成効果
 assert.ok(summary.includes('MiraiKの編成バフ'),'MiraiKの既存編成効果表示を維持');
 assert.ok(summary.includes('狂乱の強化木下の編成・戦闘能力'),'狂乱の強化木下の既存表示を維持');
 assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効果表示を維持');
-assert.ok(html.includes("GAME_VERSION='v1.9.53'"),'ゲームバージョンを更新');
-assert.ok(sw.includes('kinoshita-daisen-v70'),'Service Workerキャッシュを更新');
+assert.ok(html.includes("GAME_VERSION='v1.9.54'"),'ゲームバージョンを更新');
+assert.ok(sw.includes('kinoshita-daisen-v71'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 process.stdout.write('編成効果・詳細表示テスト成功：詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
