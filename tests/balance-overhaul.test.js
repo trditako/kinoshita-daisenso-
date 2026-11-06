@@ -75,6 +75,8 @@ assert.match(html,/📗 固有能力の詳細/,'キャラクター詳細に固�
 assert.match(html,/genesisAbilities/,'創世木下の37能力を能力欄に分類する');
 assert.match(html,/mythologyV2AbilityDetail\(k,a,c\)/,'神話系効果を固有能力として説明する');
 assert.match(html,/kbrAttackSkill/,'KBRの攻撃時スキルを個別表示する');
+assert.match(html,/KBR_PASSIVE_DESCS/,'KBRの騎乗特性をスキルと分けて能力欄へ表示する');
+assert.match(html,/kbrPassiveDesc/,'KBRの受動効果を個別に分類する');
 assert.match(html,/haifuSkill/,'覇風の固有技をスキル欄に分類する');
 assert.doesNotMatch(html,/神話系スキルの個別効果/,'神話能力をスキル扱いしない');
 assert.match(html,/連撃合計DPS/,'キャラ詳細に連撃内訳とDPSを表示する');
