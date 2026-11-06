@@ -66,6 +66,10 @@ assert.match(cards[21].ability.desc,/5,208/,'ヒットマン木下の最終攻�
 assert.match(html,/dealt=Math\.round\(dealt\*\.8\)/,'覇風の敵攻撃力20%低下を実装する');
 assert.match(html,/haifuAttackDown/,'覇風の敵デバフを戦闘状態表示に反映する');
 assert.match(html,/現在の能力数値/,'キャラ詳細に現在の能力数値を表示する');
+assert.match(html,/function formatCharacterSkillDetails/,'スキル詳細の専用表示関数を定義する');
+assert.match(html,/📘 スキル詳細/,'キャラクター詳細にスキル詳細欄を表示する');
+assert.match(html,/mythologyV2AbilityDetail\(key,a,c\)/,'神話系スキルを個別説明へ展開する');
+assert.match(html,/effectNames=\{slow:'鈍足',stop:'停止',curse:'呪い'/,'妨害スキルを種類別に説明する');
 assert.match(html,/連撃合計DPS/,'キャラ詳細に連撃内訳とDPSを表示する');
 assert.match(html,/detailStat\('recharge'\)/,'キャラ詳細の再生産時間は現在の補正値を表示する');
 assert.match(html,/調整履歴・変更理由の文章は表示せず/,'調整履歴ではなく実際の能力値を表示する');
