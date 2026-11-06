@@ -11,6 +11,11 @@ const definition = {
   kb: 2, trait: '黒', rarity: '伝説レア',
   series: '神話編全48ステージクリア報酬',
   specialReward: true, chapterReward: 7,
+  skills: [
+    { id: 'hitman_tracking', name: '追跡マーカー', description: '出撃時に追跡マーカーを3発発射する。各マーカーは命中した敵に攻撃力の500%分のダメージを与える。', trigger: '出撃時', count: 3, interval: 0.2, damageMultiplier: 5 },
+    { id: 'hitman_ride', name: '騎乗', description: '出撃直後に発動し、以後15秒ごとに3秒間騎乗する。騎乗中は移動速度+2、烈波無効。', trigger: '出撃時・以後15秒ごと', interval: 15, duration: 3, speedBonus: 2 },
+    { id: 'hitman_counter', name: '転移反撃', description: '敵からダメージを受けた時、25%の確率で発動（最大2回）。敵の近くへ転移し、攻撃力の1500%分のダメージを与え、実ダメージの50%を回復する。再使用まで15秒。', trigger: '敵からダメージを受けた時', chance: 0.25, cooldown: 15, maxUses: 2, damageMultiplier: 15, healRatio: 0.5, teleportOffset: 70 }
+  ],
   ability: {
     name: '神話狩り・追跡戦術',
     desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,900、0.2秒後に2段目5,100。出撃時、敵陣へ0.2秒間隔で3回追跡マーカーを飛ばし、命中した敵に1段目攻撃力の500%ダメージ。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
@@ -31,6 +36,9 @@ if (index < 0) {
 }
 const card = cards[index];
 card.id = index;
+function hitmanSkill(id) {
+  return Array.isArray(card.skills) ? card.skills.find(skill => skill && skill.id === id) : null;
+}
 if (typeof CURRENT_CHARACTER_COUNT !== 'undefined') CURRENT_CHARACTER_COUNT = cards.length;
 
 function extendArray(arr, length, value) {
@@ -98,8 +106,9 @@ function refreshHitmanStats(unit) {
 
 function startRide(unit) {
   if (!unit || unit.hp <= 0 || unit.hitmanRiding) return;
+  const skill = hitmanSkill('hitman_ride');
   unit.hitmanRiding = true;
-  unit.hitmanRideUntil = Number(stageTime || 0) + 3;
+  unit.hitmanRideUntil = Number(stageTime || 0) + Number(skill?.duration || 3);
   unit.hitmanOriginalSurgeImmune = {
     direct: unit.surgeImmune,
     ability: unit.ability ? unit.ability.surgeImmune : undefined
@@ -130,7 +139,9 @@ function tickHitmanUnits() {
     if (!unit || unit.isEnemy || unit.name !== NAME || unit.hp <= 0) continue;
     if (unit.hitmanRiding && now >= Number(unit.hitmanRideUntil || 0)) stopRide(unit);
     if (!unit.hitmanRiding && now >= Number(unit.hitmanNextRideAt || Infinity)) {
-      while (unit.hitmanNextRideAt <= now) unit.hitmanNextRideAt += 15;
+      const skill = hitmanSkill('hitman_ride');
+      const interval = Math.max(1, Number(skill?.interval || 15));
+      while (unit.hitmanNextRideAt <= now) unit.hitmanNextRideAt += interval;
       startRide(unit);
     }
   }
@@ -160,24 +171,25 @@ function addHitmanKillStack(unit) {
 
 function tryHitmanCounter(unit, attacker) {
   if (!unit || unit.hp <= 0 || !attacker || !attacker.isEnemy || attacker.hp <= 0) return;
-  if (Number(unit.hitmanSkill2Uses || 0) >= 2) return;
+  const skill = hitmanSkill('hitman_counter');
+  if (!skill || Number(unit.hitmanSkill2Uses || 0) >= Number(skill.maxUses || 2)) return;
   const now = Number(stageTime || 0);
   if (now < Number(unit.hitmanSkill2ReadyAt || 0)) return;
-  if (Math.random() >= 0.25) return;
+  if (Math.random() >= Number(skill.chance ?? 0.25)) return;
   unit.hitmanSkill2Uses = Number(unit.hitmanSkill2Uses || 0) + 1;
-  unit.hitmanSkill2ReadyAt = now + 15;
+  unit.hitmanSkill2ReadyAt = now + Number(skill.cooldown || 15);
   const maxX = Math.max(130, Number(worldWidth || 1100) - 145);
-  unit.x = Math.max(130, Math.min(maxX, Number(attacker.x || 130) + 70));
+  unit.x = Math.max(130, Math.min(maxX, Number(attacker.x || 130) + Number(skill.teleportOffset || 70)));
   unit.target = attacker;
   unit.state = 'attack';
   if (unit.el) unit.el.style.left = unit.x + 'px';
   if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/2', 15, 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
-  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8900) * 15));
+  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8900) * Number(skill.damageMultiplier || 15)));
   const damage = damageAgainst(unit, attacker, baseAttack);
   const dealt = hit(attacker, damage, unit, { hitmanCounter: true });
   if (attacker.hp <= 0 && Array.isArray(enemies) && enemies.includes(attacker)) removeEnemy(attacker);
-  const heal = Math.max(0, Math.round(Number(dealt || 0) * 0.5));
+  const heal = Math.max(0, Math.round(Number(dealt || 0) * Number(skill.healRatio ?? 0.5)));
   if (heal > 0) {
     unit.hp = Math.min(unit.maxhp, unit.hp + heal);
     refreshHp(unit);
@@ -212,7 +224,8 @@ function spawnTrackingMarker(unit) {
       .filter(e => e && e.hp > 0 && !e.muscleGrabbedBy && e.x <= oldX + 12 && e.x >= x - 18)
       .sort((a, b) => b.x - a.x)[0];
     if (target) {
-      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 8900) * 5)));
+      const skill = hitmanSkill('hitman_tracking');
+      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 8900) * Number(skill?.damageMultiplier || 5))));
       hit(target, damage, unit, { hitmanMarker: true });
       if (target.hp <= 0 && enemies.includes(target)) removeEnemy(target);
       marker.remove();
@@ -225,7 +238,10 @@ function spawnTrackingMarker(unit) {
   requestAnimationFrame(animate);
 }
 function launchTrackingMarkers(unit) {
-  [0, 200, 400].forEach(delay => setTimeout(() => spawnTrackingMarker(unit), delay));
+  const skill = hitmanSkill('hitman_tracking');
+  const count = Math.max(1, Math.floor(Number(skill?.count || 3)));
+  const interval = Math.max(0, Number(skill?.interval ?? 0.2) * 1000);
+  for (let i = 0; i < count; i++) setTimeout(() => spawnTrackingMarker(unit), i * interval);
 }
 
 const originalDeploy = deploy;
