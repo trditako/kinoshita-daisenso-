@@ -37,11 +37,15 @@ assert.ok(html.includes('function addFormationVisualCondition(condition){')&&htm
 const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
 for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
 for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
-assert.ok(html.includes("GAME_VERSION='v1.9.60'"),'ゲームバージョンを更新');
+assert.ok(html.includes("GAME_VERSION='v1.9.61'"),'ゲームバージョンを更新');
 assert.ok(html.includes("skills:[{id:'haifu_five_summon_storm'"),'覇風の召喚スキルを独立データとして登録');
 assert.ok(html.includes("id:'haifu_guts'"),'覇風の攻撃スキルを独立データとして登録');
 assert.ok(html.includes("find(s=>s.id==='haifu_five_summon_storm')"),'召喚スキルを独立データから発動');
 assert.ok(html.includes("find(s=>s.id==='haifu_guts')"),'攻撃スキルを独立データから発動');
+assert.ok(html.includes("id:'miraiK_reverse'"),'MiraiKの反転スキルを独立登録');
+assert.ok(html.includes("id:'miraiK_reversal'"),'MiraiKの再反転スキルを独立登録');
+assert.ok(html.includes("find(skill=>skill.id==='miraiK_reverse')"),'反転の戦闘処理がスキルデータを参照');
+assert.ok(html.includes("find(skill=>skill.id==='miraiK_reversal')"),'再反転の戦闘処理がスキルデータを参照');
 assert.ok(html.includes("const attack=data.kbrAttackSkill,periodic=data.kbrSkill;"),'KBRの攻撃・定期スキルを能力データから分離');
 assert.ok(html.includes("find(s=>s.id==='kbr_periodic')"),'KBRの定期スキルを独立データから発動');
 assert.ok(html.includes("find(s=>s.id==='kbr_attack')"),'KBRの攻撃スキルを独立データから発動');
@@ -57,7 +61,7 @@ assert.ok(!formation.includes("addFilterBtn?.addEventListener('click'"),'条件�
 assert.ok(formation.includes('if(fieldEl)fieldEl.onchange='),'条件項目の変更イベントを1つに保つ');
 assert.ok(formation.includes('if(search)search.oninput='),'名前検索イベントを1つに保つ');
 
-assert.ok(sw.includes('kinoshita-daisen-v74'),'Service Workerキャッシュを更新');
+assert.ok(sw.includes('kinoshita-daisen-v75'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
 const urGoldEnd=html.indexOf("\n",urGoldStart);
