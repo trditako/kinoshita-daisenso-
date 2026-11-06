@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'..','balance.js'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const cards=[
  {name:'初期木下',cost:50,hp:100,atk:100,recharge:10},
  {name:'レア木下',rarity:'R',hp:100,atk:100,recharge:10},
@@ -25,10 +26,13 @@ const cards=[
  {name:'哲学の賢者ゾクラテス',rarity:'LR',hp:19500,atk:3200},
  {name:'最終攻略木下',rarity:'SSR',hp:7000,atk:950,ability:{strong:{無:2,赤:2,黒:2,天使:2,宇宙:2},resist:{無:.5,赤:.5,黒:.5,天使:.5,宇宙:.5}}},
  {name:'呪王木下',rarity:'SSR',hp:14000,atk:3800,ability:{curseDuration:3,attackDownChance:.4,curseSlowChance:.3,cursedAttackMultiplier:1.4}},
- {name:'銀河攻略',rarity:'SSR',hp:1,atk:1,ability:{strong:{宇宙:3}}}
+ {name:'銀河攻略',rarity:'SSR',hp:1,atk:1,ability:{strong:{宇宙:3}}},
+ {name:'富豪木下',rarity:'LR',hp:30000,atk:1500,secondForm:{name:'大富豪木下',hp:85000,atk:300000,interval:20,recharge:150,ability:{criticalChance:.5,wyvernStrongMultiplier:5,hpBelowThresholdMultiplier:4}}},
+ {name:'ヒットマン木下',rarity:'LR',hp:72000,atk:6200,secondAtk:3400,multiAttack:[6200,3400],ability:{desc:'old'}}
 ];
 const originalOrder=cards.map(c=>c.name);
-const context={cards,window:{},CURRENT_CHARACTER_COUNT:cards.length};
+const normalSecondForms={0:{name:'木下・覚醒',hp:5000,atk:1200}};
+const context={cards,window:{},NORMAL_SECOND_FORMS:normalSecondForms,CURRENT_CHARACTER_COUNT:cards.length};
 vm.runInNewContext(source,context);
 assert.deepEqual(cards.map(c=>c.name),originalOrder,'カード順・ID順を変更しない');
 assert.ok(cards[0].hp>100&&cards[0].atk>100,'初期キャラを強化する');
@@ -54,5 +58,12 @@ assert.ok(cards[16].hp>19500&&cards[16].atk>3200,'ゾクラテスを強化する
 assert.equal(cards[17].ability.strong.宇宙,2.3,'最終攻略木下を強化する');
 assert.ok(cards[18].ability.attackDownChance<.4&&cards[18].ability.cursedAttackMultiplier<1.4,'呪王木下の妨害重複を抑える');
 assert.equal(cards[19].ability.strong.宇宙,2.5,'銀河攻略の特効を適正化する');
+assert.ok(cards[20].secondForm.atk<150000,'富豪木下の第二形態を弱体化する');
+assert.equal(cards[20].secondForm.ability.wyvernStrongMultiplier,3,'大富豪木下の特効倍率を抑える');
+assert.equal(cards[20].secondForm.ability.hpBelowThresholdMultiplier,2.2,'大富豪木下のHP条件倍率を抑える');
+assert.ok(normalSecondForms[0].hp>5000&&normalSecondForms[0].atk>1200,'通常キャラの第二形態も強化する');
+assert.match(cards[21].ability.desc,/5,208/,'ヒットマン木下の最終攻撃力表示を実数値に合わせる');
+assert.match(html,/dealt=Math\\.round\\(dealt\\*\\.8\\)/,'覇風の敵攻撃力20%低下を実装する');
+assert.match(html,/haifuAttackDown/,'覇風の敵デバフを戦闘状態表示に反映する');
 assert.equal(context.window.KINOSHITA_BALANCE_REPORT.adjusted,cards.length);
 process.stdout.write('環境調整テスト成功：レアリティ別調整、上位キャラ弱体化、配列順維持を確認しました。\n');
