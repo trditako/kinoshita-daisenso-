@@ -29,8 +29,17 @@ assert.ok(summary.includes('覇風の編成バフ'),'覇風の既存編成効果
 assert.ok(summary.includes('MiraiKの編成バフ'),'MiraiKの既存編成効果表示を維持');
 assert.ok(summary.includes('狂乱の強化木下の編成・戦闘能力'),'狂乱の強化木下の既存表示を維持');
 assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効果表示を維持');
-assert.ok(html.includes("GAME_VERSION='v1.9.57'"),'ゲームバージョンを更新');
-assert.ok(sw.includes('kinoshita-daisen-v71'),'Service Workerキャッシュを更新');
+assert.ok(html.includes("GAME_VERSION='v1.9.58'"),'ゲームバージョンを更新');
+const formationStart=html.indexOf('function renderFormation(){');
+const formationEnd=html.indexOf('function clampCamera',formationStart);
+assert.ok(formationStart>=0&&formationEnd>formationStart,'編成画面の検索イベント登録範囲を確認');
+const formation=html.slice(formationStart,formationEnd);
+assert.ok(formation.includes('if(addFilterBtn)addFilterBtn.onclick='),'条件追加ボタンのイベントを再描画ごとに上書きし、重複登録を防ぐ');
+assert.ok(!formation.includes("addFilterBtn?.addEventListener('click'"),'条件追加ボタンに重複するclickリスナーを登録しない');
+assert.ok(formation.includes('if(fieldEl)fieldEl.onchange='),'条件項目の変更イベントを1つに保つ');
+assert.ok(formation.includes('if(search)search.oninput='),'名前検索イベントを1つに保つ');
+
+assert.ok(sw.includes('kinoshita-daisen-v72'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
 const urGoldEnd=html.indexOf("\n",urGoldStart);

@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.57';
+const GAME_VERSION='v1.9.58';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.58',title:'🔧 編成検索の条件が重複追加される問題を修正',items:['編成画面の再描画ごとに検索条件追加イベントが重複登録される問題を修正','条件追加・項目変更・名前検索のイベントを常に1つだけ登録する方式に変更']},
   {date:'2026-11-07',version:'v1.9.57',title:'🧩 編成検索をボタン式の条件追加に改善',items:['編成画面で属性・レア度・能力・攻撃タイプ・シリーズ・各種ステータス・所持状況を選択式で絞り込み可能に変更','条件をチップ表示し、個別削除とAND／OR切り替えに対応','複雑な検索式の手入力を不要にし、名前検索だけ任意入力として残す']},
   {date:'2026-11-07',version:'v1.9.55',title:'🔎 編成画面のキャラクター検索・並び替えを強化',items:['AND・OR・括弧を使った複合検索と、HP・攻撃力・射程・属性・能力などの条件検索を編成画面の所持キャラクター一覧に追加','HP・攻撃力・合計ステータス・速度・射程・コスト・攻撃間隔・再生産時間・ヒットバック・能力数・名前・レア度で並び替え可能に変更','木下図鑑の検索・並び替えは従来仕様に戻し、保存編成10枠は維持']},
   {date:'2026-11-07',version:'v1.9.54',title:'🪙 ウルトラレアの金集めを最高難易度に調整',items:['ウルトラレアの金集めを伝説レアの金集めより大幅に高難易度化','ステージ幅3,000・城HP8,000,000に拡張し、強敵の連続出現と高倍率の無限増援を追加','報酬はウルトラレアの金×1。既存の金素材・最大Lv解放処理は維持']},
@@ -3159,8 +3160,8 @@ function renderFormation(){
  const fieldLabels={trait:'属性',rarity:'レア度',ability:'能力',type:'攻撃タイプ',series:'シリーズ',hp:'HP',atk:'攻撃力',range:'射程',spd:'移動速度',cost:'コスト',interval:'攻撃間隔',recharge:'再生産時間',kb:'ヒットバック'};
  const refreshFilterValue=()=>{const field=fieldEl?.value||'trait',numeric=numericFields.includes(field);if(valueEl)valueEl.style.display=numeric?'none':'block';if(numberEl)numberEl.style.display=numeric?'block':'none';if(opEl)opEl.style.display=numeric?'block':'none';if(valueEl)valueEl.innerHTML=(filterOptions[field]||[]).map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'">'+v+'</option>').join('');};
  const renderFilterChips=()=>{if(!chipsEl)return;chipsEl.innerHTML=formationVisualConditions.map((c,i)=>'<span class="formationFilterChip">'+fieldLabels[c.field]+'：'+c.label+' <button type="button" data-remove-filter="'+i+'" aria-label="条件を削除">×</button></span>').join('');if(emptyEl)emptyEl.style.display=formationVisualConditions.length?'none':'block';chipsEl.querySelectorAll('[data-remove-filter]').forEach(b=>b.onclick=()=>{formationVisualConditions.splice(Number(b.dataset.removeFilter),1);renderFilterChips();renderAvailable();});document.querySelectorAll('[data-filter-logic]').forEach(b=>b.classList.toggle('active',b.dataset.filterLogic===formationVisualLogic));};
- fieldEl?.addEventListener('change',refreshFilterValue);refreshFilterValue();
- addFilterBtn?.addEventListener('click',()=>{const field=fieldEl.value,numeric=numericFields.includes(field),value=numeric?numberEl.value:valueEl.value;if(numeric&&(value===''||!Number.isFinite(Number(value))||Number(value)<0)){numberEl.focus();return;}const op=numeric?opEl.value:':';const query=numeric?field+op+value:field+':'+value;formationVisualConditions.push({field,value,op,query,label:numeric?(op==='>='?'':op==='<='?'以下 ':op==='='?'=':op==='>'?'より大きい ':'より小さい ')+value:value});renderFilterChips();renderAvailable();});
+ if(fieldEl)fieldEl.onchange=refreshFilterValue;refreshFilterValue();
+ if(addFilterBtn)addFilterBtn.onclick=()=>{const field=fieldEl.value,numeric=numericFields.includes(field),value=numeric?numberEl.value:valueEl.value;if(numeric&&(value===''||!Number.isFinite(Number(value))||Number(value)<0)){numberEl.focus();return;}const op=numeric?opEl.value:':';const query=numeric?field+op+value:field+':'+value;formationVisualConditions.push({field,value,op,query,label:numeric?(op==='>='?'':op==='<='?'以下 ':op==='='?'=':op==='>'?'より大きい ':'より小さい ')+value:value});renderFilterChips();renderAvailable();};
  document.querySelectorAll('[data-filter-logic]').forEach(b=>b.onclick=()=>{formationVisualLogic=b.dataset.filterLogic;renderFilterChips();renderAvailable();});
  renderFilterChips();
  if(sortSelect){sortSelect.value=formationSearchSort;sortSelect.onchange=()=>{formationSearchSort=sortSelect.value;renderAvailable();};}
@@ -3185,7 +3186,7 @@ function renderFormation(){
    av.querySelectorAll('.availableChar').forEach(el=>el.onclick=e=>{if(e.target.closest('.infoBtn'))return;const i=+el.dataset.i;if(!hasCharacter(i)||formation.includes(i)||formation.length>=10)return;formation.push(i);normalizeFormation();save();saveFormationStableNames();renderFormation();renderCards()});
    av.querySelectorAll('.infoBtn').forEach(b=>b.onclick=e=>{e.stopPropagation();showCharacterDetail(+b.dataset.info)});
  };
- search?.addEventListener('input',renderAvailable);renderAvailable();renderFormationBuffSummary();
+ if(search)search.oninput=renderAvailable;renderAvailable();renderFormationBuffSummary();
 }
 function clampCamera(x){return Math.max(0,Math.min(Math.max(0,worldWidth-field.clientWidth),x));}
 function applyCamera(){cameraX=clampCamera(cameraX);world.style.transform=`translate3d(${-cameraX}px,0,0)`;}
