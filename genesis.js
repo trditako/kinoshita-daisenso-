@@ -197,9 +197,9 @@ function genesisApplyFormationBuff(unit){
  unit.genesisFormationApplied=true;
  if(unit.name===GENESIS_NAME){
   unit.genesisCoreAtk=unit.atk;unit.genesisCoreMaxHp=unit.maxhp;unit.genesisBaseInterval=unit.interval;
-  unit.genesisNextEnergyAt=(typeof stageTime==='number'?stageTime:0)+20;
-  unit.genesisNextGrowthAt=(typeof stageTime==='number'?stageTime:0)+60;
-  unit.genesisNextShieldAt=(typeof stageTime==='number'?stageTime:0)+10;
+  unit.genesisNextEnergyAt=(typeof stageTime==='number'?stageTime:0)+25;
+  unit.genesisNextGrowthAt=(typeof stageTime==='number'?stageTime:0)+75;
+  unit.genesisNextShieldAt=(typeof stageTime==='number'?stageTime:0)+15;
   unit.genesisWorldPulseAt=(typeof stageTime==='number'?stageTime:0)+30;
  }
  genesisRefreshUnit(unit);
@@ -280,7 +280,7 @@ function genesisOnAttack(source,target,dealt,beforeHp,afterHp){
  // ① 次元崩壊
  if(Math.random()<.3&&target.hp>0)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*1.25)),source,{genesisInternal:true});
  // ③ 創世の一撃
- if(target.hp>0&&Math.random()<.1)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*2.5)),source,{genesisInternal:true});
+ if(target.hp>0&&Math.random()<.05)_genesisOriginalHit(target,Math.max(1,Math.round(dealt*2.5)),source,{genesisInternal:true});
  // ⑱ 天罰の雷：5ヒットごとに敵全体へ攻撃力300%
  if(source.genesisHitCount%5===0&&source.genesisThunderToken!==attackToken){
   source.genesisThunderToken=attackToken;
