@@ -8,6 +8,7 @@ on:
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
+      - 'tests/ability-regression.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -18,6 +19,7 @@ on:
       - 'hitman.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
+      - 'tests/ability-regression.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
@@ -54,3 +56,4 @@ jobs:
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
+          node tests/ability-regression.test.js
