@@ -919,7 +919,7 @@ const allyTraits={
   '木下（AI）':'鋼','星読み木下':'光','流星木下':'浮','星王木下':'光','狂乱の木下':'黒','突撃ハーランド木下':'無','異常木下':'赤','吉田':'赤','対無木下':'無','赤狩り木下':'赤','黒追撃木下':'黒','天使迎撃木下':'天使','宇宙観測木下':'宇宙','宇宙突破木下':'宇宙','赤壁木下':'赤','無敵壁木下':'無','黒速攻木下':'黒','天使封殺木下':'天使','宇宙砕き木下':'宇宙','未来探査木下':'宇宙','攻略隊長木下':'宇宙','日本防衛木下':'無','日本制圧木下':'無','未来制圧木下':'宇宙','四属性討伐木下':'赤','銀河攻略木下':'宇宙','最終攻略木下':'無','宇宙決戦木下':'宇宙','波動木下':'宇宙','ファイティング木下':'赤','炎撃木下':'赤','水帝木下':'青','大地木下':'黒','疾風木下':'浮','雷光木下':'宇宙','機甲前線木下':'鋼','電磁砲木下':'鋼','高速機動木下':'鋼','古代掃討砲木下':'鋼','超装甲木下':'鋼','機神木下':'鋼','木下&吉田':'宇宙','千年に一歩歩く木下':'宇宙','ヤバすぎ木下':'宇宙','呪木下':'無','呪怨木下':'黒','呪詛木下':'天使','呪影木下':'浮','呪王木下':'鋼','呪神木下':'無'
 ,'哲学の賢者ゾクラテス':'天使','発明の賢者アルキメデェス':'鋼','星空の賢者ガリレオ・ガリレェン':'宇宙','重力の賢者ニュトーン':'無','芸術の賢者レオナルド・ダ・ピンチ':'浮','教えの賢者コウシィ':'無'};
 cards.forEach(c=>{c.trait=allyTraits[c.name]||'無';});
-const KBR_TRAITS={'駆け出しの木下':'無','白銀の疾走者':'浮','荒野の狙撃手':'無','砂塵の機巧騎手':'鋼','大地の調教師':'無','紅蓮の突撃騎手':'赤','時渡りの旅人':'宇宙','黄金の王道騎手':'光','黒嵐の競争者':'黒','KBRの覇者・木下':'宇宙'};for(const c of KBR_CARDS){const card=cards.find(x=>x.name===c[0]);if(card)card.trait=KBR_TRAITS[c[0]]||'無';}const halloweenCardIndex=cards.findIndex(c=>c.name==='パンプキン木下');if(halloweenCardIndex>=0)cards[halloweenCardIndex].trait='黒・浮';
+const KBR_TRAITS={'駆け出しの木下':'無','白銀の疾走者':'浮','荒野の狙撃手':'無','砂塵の機巧騎手':'鋼','大地の調教師':'無','紅蓮の突撃騎手':'赤','時渡りの旅人':'宇宙','黄金の王道騎手':'光','黒嵐の競争者':'黒','KBRの覇者・木下':'宇宙'};const KBR_PASSIVE_DESCS={'駆け出しの木下':'騎乗中は悪天候の減速を軽減。','白銀の疾走者':'向かい風の影響を軽減。','KBRの覇者・木下':'走行時間に応じて攻撃強化。'};for(const c of KBR_CARDS){const card=cards.find(x=>x.name===c[0]);if(card){card.trait=KBR_TRAITS[c[0]]||'無';if(KBR_PASSIVE_DESCS[c[0]]&&card.ability)card.ability.kbrPassiveDesc=KBR_PASSIVE_DESCS[c[0]];}}const halloweenCardIndex=cards.findIndex(c=>c.name==='パンプキン木下');if(halloweenCardIndex>=0)cards[halloweenCardIndex].trait='黒・浮';
 
 const enemyTypes={
 鬼木下:{name:"鬼木下",icon:"👹",trait:"無",hp:180,atk:25,range:50,spd:.6,interval:.9,attackType:"single",kb:3,money:40},
@@ -2913,7 +2913,7 @@ function formatAbilityInfo(obj,opts={}){
    for(const [child,v] of Object.entries(value))if(child!=='name'&&child!=='desc')add(child,v,full);
   }
  };
- for(const [key,value] of Object.entries(a))if(!['name','desc','strong','resist','mythologyV2','haifuSkill','skills','kbrSkill','kbrAttackSkill','kbrMounted','extraAttackChance'].includes(key))add(key,value);
+ for(const [key,value] of Object.entries(a))if(!['name','desc','strong','resist','mythologyV2','haifuSkill','skills','kbrSkill','kbrAttackSkill','kbrMounted','kbrPassiveDesc','extraAttackChance'].includes(key))add(key,value);
  for(const key of ['waveLevel','waveChance','phoenixSurgeLevel','phoenixSurgeMin','phoenixSurgeMax','curseChance','curseDuration','stopChance','stopDuration','slowChance','slowDuration','warpChance','warpDuration','sealChance','sealDuration','attackDownChance','attackDownDuration','barrier','barrierCooldown','metal','healAura','airAttack','curseImmune','stopImmune','slowImmune','waveImmune','surgeImmune','warpImmune','knockbackImmune','attackDownImmune','sealImmune','zombieKiller'])if(c[key]!=null)add(key,c[key]);
  if(lines.length)parts.push('<b>現在の能力数値</b><br>'+lines.join('<br>'));
  if(a.revive)parts.push('撃破時に復活効果を発動');
@@ -2927,7 +2927,7 @@ function formatAbilityInfo(obj,opts={}){
  if(c.boss&&!parts.some(x=>String(x).includes('BOSS')))parts.push('BOSS');
  if(!parts.length&&opts.trait&&opts.trait!=='無')parts.push(opts.trait+'属性');
  if(!parts.length&&opts.attackType)parts.push(opts.attackType==='area'?'範囲攻撃':'単体攻撃');
- if(a.kbrMounted){const d=String(a.desc||''),e=d.startsWith('騎乗中は')?d.split('。')[0]+'。':'騎乗型キャラクター';parts.push('騎乗特性：'+e);}
+ if(a.kbrMounted){const d=String(a.desc||''),e=String(a.kbrPassiveDesc||(d.startsWith('騎乗中は')?d.split('。')[0]+'。':''));parts.push(e?'騎乗特性：'+e:'騎乗型キャラクター');}
  return parts.length?parts.join(' / '):'特殊能力なし';
 }
 function mythologyV2AbilityName(key){return ({barrier:'結界',distanceArmor:'距離装甲',longReflect:'遠隔反射',rune:'神紋蓄積',summon:'召喚',split:'核分裂',timeSurge:'時間加速',causality:'因果転換',absorb:'吸収',domain:'神域',omen:'天罰予告',soulFeast:'魂喰い',reincarnate:'再臨',gravityWell:'重力圏',finalPhase:'終端化'})[key]||key}
@@ -3014,7 +3014,7 @@ function formatCharacterSkillDetails(c){
  (Array.isArray(c.skills)?c.skills:Array.isArray(a.skills)?a.skills:[]).forEach(add);
  if(a.haifuSkill&&typeof a.haifuSkill==='object'){const s=a.haifuSkill;blocks.push('<div class="abilityCard"><b>根性だけで勝ちます</b><div>攻撃時'+Math.round(Number(s.chance||0)*100)+'%で、対象の攻撃力と自身の攻撃力の合計に効果倍率'+Number(s.multiplier||1)+'倍を掛けたダメージ。再使用時間：'+Number(s.cooldown||0)+'秒。</div></div>');}
  const ka=a.kbrAttackSkill||c.kbrAttackSkill||(Number.isFinite(Number(a.extraAttackChance))?{type:'damage',chance:Number(a.extraAttackChance)}:null),ks=a.kbrSkill||c.kbrSkill;
- if(ka||ks){const n=String(a.name||'KBR固有スキル'),raw=String(a.desc||''),passive=raw.startsWith('騎乗中は')?raw.split('。')[0]+'。':'',d=passive?raw.slice(passive.length).trim():raw,parts=[],types={damage:'攻撃時の追加攻撃',speed:'速度強化',slow:'範囲鈍足',heal:'味方回復',stop:'範囲停止',awakening:'条件発動の覚醒',storm:'定期的な嵐',champion:'特殊突撃'};
+ if(ka||ks){const n=String(a.name||'KBR固有スキル'),raw=String(a.desc||''),passive=String(a.kbrPassiveDesc||(raw.startsWith('騎乗中は')?raw.split('。')[0]+'。':'')),d=passive?raw.replace(passive,'').trim():raw,parts=[],types={damage:'攻撃時の追加攻撃',speed:'速度強化',slow:'範囲鈍足',heal:'味方回復',stop:'範囲停止',awakening:'条件発動の覚醒',storm:'定期的な嵐',champion:'特殊突撃'};
   if(ka){const fs=Object.entries(ka).filter(([k,v])=>k!=='type'&&v!=null&&typeof v!=='object').map(([k,v])=>(labels[k]||k)+'：'+fmt(k,v));parts.push('<div><b>攻撃時スキル：</b>'+(types[ka.type]||String(ka.type||'攻撃効果'))+(fs.length?'（'+fs.join('／')+'）':'')+'</div>');}
   if(ks){const fs=Object.entries(ks).filter(([k,v])=>k!=='type'&&v!=null&&typeof v!=='object').map(([k,v])=>(labels[k]||k)+'：'+fmt(k,v));parts.push('<div><b>固有スキル：</b>'+(types[ks.type]||String(ks.type||'特殊効果'))+(fs.length?'（'+fs.join('／')+'）':'')+'</div>');}
   blocks.push('<div class="abilityCard"><b>'+n+'</b><div>'+d+parts.join('')+'</div></div>');
