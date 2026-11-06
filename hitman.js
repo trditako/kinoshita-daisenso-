@@ -187,17 +187,18 @@ function tryHitmanCounter(unit, attacker) {
 
 function spawnTrackingMarker(unit) {
   if (!unit || !Array.isArray(enemies) || !document) return;
-  const fieldElement = document.getElementById('field') || (typeof field !== 'undefined' ? field : null);
-  if (!fieldElement) return;
+  // world はカメラ移動で translateX されるマップ本体。
+  // マーカーも world の子に置き、unit.x / enemy.x と同じマップ座標系で動かす。
+  const worldElement = document.getElementById('world') || (typeof world !== 'undefined' ? world : null);
+  if (!worldElement) return;
   const marker = document.createElement('div');
   marker.textContent = '✦';
   marker.setAttribute('aria-hidden', 'true');
-  marker.style.cssText = 'position:absolute;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border:2px solid #67e8f9;border-radius:50%;background:radial-gradient(circle,#ecfeff 0%,#0891b2 72%,#164e63 100%);color:#fff;font-size:17px;font-weight:900;box-shadow:0 0 10px #22d3ee,0 0 20px #0891b2;z-index:60;pointer-events:none;';
+  marker.dataset.hitmanTrackingMarker = 'true';
+  marker.style.cssText = 'position:absolute;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border:2px solid #67e8f9;border-radius:50%;background:radial-gradient(circle,#ecfeff 0%,#0891b2 72%,#164e63 100%);color:#fff;font-size:17px;font-weight:900;box-shadow:0 0 10px #22d3ee,0 0 20px #0891b2;z-index:60;pointer-events:none;bottom:67px;';
   let x = Number(unit.x || (worldWidth || 1100) - 145);
-  const y = unit.el ? Number(unit.el.offsetTop || 0) + 24 : Math.max(20, fieldElement.clientHeight - 145);
   marker.style.left = x + 'px';
-  marker.style.top = y + 'px';
-  fieldElement.appendChild(marker);
+  worldElement.appendChild(marker);
   let previous = performance.now();
   const animate = now => {
     if (!marker.isConnected) return;
