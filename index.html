@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.59';
+const GAME_VERSION='v1.9.60';
 const UPDATE_LOG=[
+  {date:'2026-11-07',version:'v1.9.60',title:'🌀 戦闘スキルを固有能力から独立',items:['覇風の「五召喚の大嵐」「根性だけで勝ちます」を独立したスキルデータとして登録','スキルごとに発動条件・発動率・再使用時間・効果をキャラクター詳細の専用欄へ表示','スキル発動処理も固有能力データから分離し、既存の発動条件・威力・回復量を維持']},
   {date:'2026-11-07',version:'v1.9.59',title:'🧩 スキル表示・戦闘中効果表示・検索条件の重複を改善',items:['キャラクター詳細にスキル専用欄を追加し、固有能力と完全に分離。スキルを持たないキャラクターには欄自体を表示しない','戦闘中の常時編成効果・固有パッシブ表示を除外し、撃破成長・発動中スキル・一時的なバフ／デバフのみ表示','検索条件の追加時に同一条件が重複登録されないよう、条件キーで二重追加を防止']},
   {date:'2026-11-07',version:'v1.9.58',title:'🔧 編成検索の条件が重複追加される問題を修正',items:['編成画面の再描画ごとに検索条件追加イベントが重複登録される問題を修正','条件追加・項目変更・名前検索のイベントを常に1つだけ登録する方式に変更']},
   {date:'2026-11-07',version:'v1.9.57',title:'🧩 編成検索をボタン式の条件追加に改善',items:['編成画面で属性・レア度・能力・攻撃タイプ・シリーズ・各種ステータス・所持状況を選択式で絞り込み可能に変更','条件をチップ表示し、個別削除とAND／OR切り替えに対応','複雑な検索式の手入力を不要にし、名前検索だけ任意入力として残す']},
@@ -3529,25 +3530,29 @@ function updatePowerShieldDisplay(target){
 }
 function haifuOnSummoned(unit){
  if(!unit||unit.name!=='覇風')return;
+ const skill=(unit.skills||[]).find(s=>s.id==='haifu_five_summon_storm');
+ if(!skill)return;
  haifuSummonCount++;
- if(haifuSummonCount%5!==0)return;
+ const required=Math.max(1,Math.floor(Number(skill.everySummons||5)));
+ if(haifuSummonCount%required!==0)return;
  let totalDamage=0;
+ const multiplier=Math.max(0,Number(skill.damageMultiplier??2.5));
  for(const enemy of [...enemies]){
   if(!enemy||enemy.hp<=0)continue;
-  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*2.5))),unit);
+  const before=enemy.hp;hit(enemy,Math.max(1,Math.round(damageAgainst(unit,enemy,unit.atk*multiplier))),unit);
   totalDamage+=Math.max(0,before-enemy.hp);
   if(enemy.hp<=0)removeEnemy(enemy);
  }
- const heal=Math.max(0,Math.round(totalDamage*.5));
+ const heal=Math.max(0,Math.round(totalDamage*Math.max(0,Number(skill.healRatio??.5))));
  if(heal>0)for(const ally of units){if(ally&&!ally.isEnemy&&ally.hp>0)ally.hp=Math.min(ally.maxhp,ally.hp+heal);}
  popup('🌪️ 覇風・五召喚の大嵐！ 味方全体回復 '+heal.toLocaleString(),unit.x,90,'criticalPop');
 }
 function haifuOnAttack(unit,target){
- const skill=unit?.ability?.haifuSkill,now=performance.now()/1000;
+ const skill=(unit?.skills||[]).find(s=>s.id==='haifu_guts'),now=performance.now()/1000;
  if(!unit||unit.name!=='覇風'||!target||target.hp<=0||isAbilitySealed(unit)||!skill)return;
- if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance||.15))return;
+ if(now<Number(unit.haifuSkillReadyAt||0)||Math.random()>=Number(skill.chance??.15))return;
  unit.haifuSkillReadyAt=now+Number(skill.cooldown||13);
- const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.multiplier||3)));
+ const damage=Math.max(1,Math.round((Number(target.atk||0)+Number(unit.atk||0))*Number(skill.damageMultiplier||3)));
  const before=target.hp;hit(target,damage,unit,{haifuSkill:true});
  popup('🔥 根性だけで勝ちます！ -'+Math.max(0,Math.min(before,damage)).toLocaleString(),target.x,90,'criticalPop');
 }
@@ -5178,7 +5183,7 @@ cards.push({name:"天使神:木下",cost:2500,hp:208688,atk:28675,range:150,spd:
 if(!cards.some(c=>c?.name==='狂乱の強化木下')){cards.push(RAGE_KINOSHITA_CARD);RAGE_KINOSHITA_CARD.id=cards.length-1;}
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
-if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。5回召喚されるごとに敵全体へ自身の攻撃力250%のダメージを与え、与えたダメージの50%分を味方全員へ回復。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。攻撃時15%で「対象の攻撃力+自身の攻撃力」の3倍ダメージを与える「根性だけで勝ちます」（再発動13秒）。',haifuSkill:{chance:.15,multiplier:3,cooldown:13},waveImmune:true,reflectImmune:true}});
+if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:58500,atk:12500,range:225,spd:1.9,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,skills:[{id:'haifu_five_summon_storm',name:'五召喚の大嵐',description:'覇風が5回召喚されるごとに、敵全体へ自身の攻撃力250%分のダメージを与え、与えたダメージの50%分を味方全体へ回復する。',trigger:'5回目の召喚時',everySummons:5,damageMultiplier:2.5,healRatio:.5},{id:'haifu_guts',name:'根性だけで勝ちます',description:'攻撃時15%で、対象の攻撃力と自身の攻撃力の合計×3の追加ダメージを与える。',trigger:'攻撃時',chance:.15,cooldown:13,damageMultiplier:3}],ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。',waveImmune:true,reflectImmune:true}});
  // 新しい特別真髄限定キャラクター。富豪木下の旧IDとは別の末尾IDを割り当てる。
 const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:69000,atk:2550,range:150,spd:.8,interval:2.5,recharge:65,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。天使属性時の攻撃で75%発動「反転」：自身の現在HPの150%分のダメージを与え、攻撃力+7%（最大+15%）。黒属性時の攻撃で75%発動「再反転」：敵攻撃力+自身攻撃力分のダメージを与え、与えた実ダメージの5%を回復。各スキルのクールタイム15秒。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
 cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
