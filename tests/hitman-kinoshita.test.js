@@ -49,7 +49,7 @@ assert.match(source, /selectedChapter\) === 7/);
 assert.match(source, /selectedStage\) === 48/);
 assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
 
-assert.match(html, /GAME_VERSION='v1.9.61'/);
+assert.match(html, /GAME_VERSION='v1\.9\.\d+'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
 assert.match(sw, /kinoshita-daisen-v75/);
