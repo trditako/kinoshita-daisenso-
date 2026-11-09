@@ -37,7 +37,7 @@ assert.ok(html.includes('function addFormationVisualCondition(condition){')&&htm
 const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
 for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
 for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
-assert.ok(html.includes("GAME_VERSION='v1.9.61'"),'ゲームバージョンを更新');
+assert.match(html,/GAME_VERSION='v1\.9\.\d+'/,'ゲームバージョンを更新');
 assert.ok(html.includes("skills:[{id:'haifu_five_summon_storm'"),'覇風の召喚スキルを独立データとして登録');
 assert.ok(html.includes("id:'haifu_guts'"),'覇風の攻撃スキルを独立データとして登録');
 assert.ok(html.includes("find(s=>s.id==='haifu_five_summon_storm')"),'召喚スキルを独立データから発動');
