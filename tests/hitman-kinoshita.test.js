@@ -57,6 +57,8 @@ assert.match(html, /GAME_VERSION='v1\.9\.\d+'/);
 assert.match(html, /ヒットマン木下/);
 assert.match(html, /\.\/hitman\.js\?v=20261110-multihit-level/);
 assert.match(html, /多段攻撃の詳細（レベル補正後）/);
+assert.match(html, /detailStat\('atk'\)\.toLocaleString\('ja-JP'/, '1段目の補正後小数値も表示');
+assert.match(html, /5100\*\(detailStat\('atk'\)\/8900\)\)\.toLocaleString\('ja-JP'/, '2段目の補正後小数値も表示');
 assert.match(html, /Math\.round\(5100\*\(detailStat\('atk'\)\/8900\)\)/, '詳細画面で2段目にも同じレベル補正を適用');
 assert.match(sw, /kinoshita-daisen-v76/);
 assert.match(sw, /\.\/hitman\.js/);
