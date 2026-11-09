@@ -48,7 +48,7 @@ assert.match(source, /bottom:67px/, '追跡マーカーはユニットと同じ�
 assert.doesNotMatch(source, /fieldElement\.appendChild\(marker\)/, '画面側のfieldに配置しない');
 assert.match(source, /x -= 120 \* dt/);
 assert.ok(source.includes('Number(skill?.damageMultiplier || 5)'));
-assert.match(source, /setTimeout\(\(\) => originalFollowup\(source, target, baseAttack, hitIndex\), 100\)/);
+assert.match(source, /setTimeout\(\(\) => originalFollowup\(source, target, currentDamage, hitIndex\), 100\)/);
 assert.match(source, /selectedChapter\) === 7/);
 assert.match(source, /selectedStage\) === 48/);
 assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マーカー演出に武器機構を含めない');
