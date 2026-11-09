@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.61';
+const GAME_VERSION='v1.9.62';
 const UPDATE_LOG=[
+  {date:'2026-11-10',version:'v1.9.62',title:'✨ 真髄19〜27を追加',items:['紅蓮聖域・蒼海龍宮・砂塵王墓・月影祭典・機械楽園・禁書魔導書庫・天空航路・終末花園・虹彩神殿の9種類を追加','各真髄にUR衣装1種・UR携帯品1種・SSR衣装3種を登録し、全45種類の限定アイテムを追加','真髄のシーズン解放上限を18から27へ拡張し、既存の排出率・重複補償・所持データを維持']},
   {date:'2026-11-07',version:'v1.9.61',title:'🌀 MiraiK・ヒットマン木下の固有スキルを追加',items:['MiraiKの「反転」「再反転」を独立したスキルデータに登録し、発動率・再使用時間・ダメージ・攻撃力上昇・回復量を実際の戦闘処理から参照','ヒットマン木下の「追跡マーカー」「騎乗」「転移反撃」を独立したスキルデータとして登録し、既存の発動条件・回数・威力を維持','スキル詳細と戦闘処理の参照元を統一し、固有能力との混同を防止']},
   {date:'2026-11-07',version:'v1.9.60',title:'🌀 戦闘スキルを固有能力から独立',items:['覇風の「五召喚の大嵐」「根性だけで勝ちます」を独立したスキルデータとして登録','スキルごとに発動条件・発動率・再使用時間・効果をキャラクター詳細の専用欄へ表示','スキル発動処理も固有能力データから分離し、既存の発動条件・威力・回復量を維持']},
   {date:'2026-11-07',version:'v1.9.59',title:'🧩 スキル表示・戦闘中効果表示・検索条件の重複を改善',items:['キャラクター詳細にスキル専用欄を追加し、固有能力と完全に分離。スキルを持たないキャラクターには欄自体を表示しない','戦闘中の常時編成効果・固有パッシブ表示を除外し、撃破成長・発動中スキル・一時的なバフ／デバフのみ表示','検索条件の追加時に同一条件が重複登録されないよう、条件キーで二重追加を防止']},
@@ -6191,6 +6192,71 @@ const SHINJU_S18_SSR_A={id:'shinju_s18_ssr_costume_silver_ninja',type:'costume',
 const SHINJU_S18_SSR_B={id:'shinju_s18_ssr_costume_silver_robot',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星読み木下',name:'星読み木下・白夜観測衣',emoji:'🔭',color:'#e0f2fe',desc:'星読み木下専用の第18真髄限定SSR衣装。真髄のテーマに合わせた特別な限定デザイン。'};
 const SHINJU_S18_SSR_C={id:'shinju_s18_ssr_costume_silver_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'吉田',name:'吉田・永冬の守護服',emoji:'❄️',color:'#cbd5e1',desc:'吉田専用の第18真髄限定SSR衣装。真髄のテーマに合わせた特別な限定デザイン。'};
 
+
+const SHINJU_S19_ITEMS=[
+ {id:'shinju_s19_ur_costume_crimson_archon',type:'costume',rarity:'UR',characterIndex:-1,targetName:'覇風',name:'覇風・紅蓮聖域の覇王装',emoji:'🔥',color:'#ef4444',desc:'覇風専用の第19真髄限定UR衣装。燃え盛る聖域を統べる紅蓮の装束。'},
+ {id:'shinju_s19_ur_accessory_crimson_core',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・紅蓮創世核',emoji:'💎',desc:'木下（覚醒）専用の第19真髄限定UR携帯品。紅蓮の炎を覚醒の力へ変える心核。'},
+ {id:'shinju_s19_ssr_costume_flame_muscle',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'狂乱のマッチョ木下',name:'狂乱のマッチョ木下・焔獅子の闘衣',emoji:'🦁',color:'#f97316',desc:'狂乱のマッチョ木下専用の第19真髄限定SSR衣装。獅子の炎をまとった闘士の装束。'},
+ {id:'shinju_s19_ssr_costume_flame_hitman',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（忍者）',name:'木下（忍者）・紅蓮追跡装',emoji:'🎯',color:'#dc2626',desc:'木下（忍者）専用の第19真髄限定SSR衣装。紅蓮の標を刻んだ追跡者の装束。'},
+ {id:'shinju_s19_ssr_costume_flame_nova',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'ノヴァ木下',name:'ノヴァ木下・灼熱機動装',emoji:'🚀',color:'#fb923c',desc:'ノヴァ木下専用の第19真髄限定SSR衣装。高熱の装甲を備えた機動戦闘服。'}
+];
+const SHINJU_S20_ITEMS=[
+ {id:'shinju_s20_ur_costume_aqua_mirai',type:'costume',rarity:'UR',characterIndex:-1,targetName:'MiraiK',name:'MiraiK・蒼海龍宮の巫装',emoji:'🌊',color:'#38bdf8',desc:'MiraiK専用の第20真髄限定UR衣装。深海の龍宮に伝わる蒼き祭礼装束。'},
+ {id:'shinju_s20_ur_accessory_aqua_oracle',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'天使神:木下',name:'天使神:木下・潮汐神珠',emoji:'🔮',desc:'天使神:木下専用の第20真髄限定UR携帯品。潮の満ち引きを司る神秘の宝珠。'},
+ {id:'shinju_s20_ssr_costume_aqua_drone',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（ドローン）',name:'木下（ドローン）・海底探査機装',emoji:'🛸',color:'#0ea5e9',desc:'木下（ドローン）専用の第20真髄限定SSR衣装。深海遺跡を探査する潜航装備。'},
+ {id:'shinju_s20_ssr_costume_aqua_doctor',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（博士）',name:'木下（博士）・深海研究衣',emoji:'🧪',color:'#67e8f9',desc:'木下（博士）専用の第20真髄限定SSR衣装。蒼い珊瑚と海流紋様をあしらった研究衣。'},
+ {id:'shinju_s20_ssr_costume_aqua_phoenix',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・蒼炎海竜翼',emoji:'🐉',color:'#06b6d4',desc:'フェニックス専用の第20真髄限定SSR衣装。蒼い炎を宿した海竜の翼飾り。'}
+];
+const SHINJU_S21_ITEMS=[
+ {id:'shinju_s21_ur_costume_desert_star',type:'costume',rarity:'UR',characterIndex:-1,targetName:'星王木下',name:'星王木下・砂塵星墓の帝衣',emoji:'🏜️',color:'#d97706',desc:'星王木下専用の第21真髄限定UR衣装。砂漠に眠る星の王墓を守る帝王装束。'},
+ {id:'shinju_s21_ur_accessory_desert_scarab',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・黄金甲虫の聖印',emoji:'🪲',desc:'木下（覚醒）専用の第21真髄限定UR携帯品。古代王墓の守護甲虫を封じた聖印。'},
+ {id:'shinju_s21_ssr_costume_desert_ninja',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（忍者）',name:'木下（忍者）・砂影潜行装',emoji:'🥷',color:'#b45309',desc:'木下（忍者）専用の第21真髄限定SSR衣装。砂嵐に紛れる王墓の潜行装束。'},
+ {id:'shinju_s21_ssr_costume_desert_batter',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・砂塵の王者ユニフォーム',emoji:'⚾',color:'#f59e0b',desc:'木下（野球）専用の第21真髄限定SSR衣装。黄金の砂塵をまとった王者のユニフォーム。'},
+ {id:'shinju_s21_ssr_costume_desert_guardian',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森の守護木下',name:'森の守護木下・砂漠の番人衣',emoji:'🦂',color:'#ca8a04',desc:'森の守護木下専用の第21真髄限定SSR衣装。砂漠の聖域を守る番人の外套。'}
+];
+const SHINJU_S22_ITEMS=[
+ {id:'shinju_s22_ur_costume_moon_rider',type:'costume',rarity:'UR',characterIndex:-1,targetName:'流星木下',name:'流星木下・月影天翔衣',emoji:'🌙',color:'#6366f1',desc:'流星木下専用の第22真髄限定UR衣装。月影を駆ける天翔者の夜光装束。'},
+ {id:'shinju_s22_ur_accessory_moon_crown',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・月蝕の王冠',emoji:'👑',desc:'木下（王）専用の第22真髄限定UR携帯品。月蝕の光を閉じ込めた王冠。'},
+ {id:'shinju_s22_ssr_costume_moon_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・月読演算装',emoji:'🌘',color:'#818cf8',desc:'木下（AI）専用の第22真髄限定SSR衣装。月の満ち欠けを演算する観測装束。'},
+ {id:'shinju_s22_ssr_costume_moon_yoshida',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'吉田',name:'吉田・月夜の守人服',emoji:'🦉',color:'#a5b4fc',desc:'吉田専用の第22真髄限定SSR衣装。月明かりの神殿を守る静かな守護服。'},
+ {id:'shinju_s22_ssr_costume_moon_cyber',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（電脳）',name:'木下（電脳）・月光回路装',emoji:'💻',color:'#c4b5fd',desc:'木下（電脳）専用の第22真髄限定SSR衣装。月光色の回路を走らせる電脳装束。'}
+];
+const SHINJU_S23_ITEMS=[
+ {id:'shinju_s23_ur_costume_mecha_paradise',type:'costume',rarity:'UR',characterIndex:-1,targetName:'ノヴァ木下',name:'ノヴァ木下・機械楽園の創造主',emoji:'⚙️',color:'#64748b',desc:'ノヴァ木下専用の第23真髄限定UR衣装。自律機械都市を統べる創造主の装甲。'},
+ {id:'shinju_s23_ur_accessory_mecha_heart',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（ロボ）',name:'木下（ロボ）・永久機関コア',emoji:'🔩',desc:'木下（ロボ）専用の第23真髄限定UR携帯品。止まることのない永久機関の心臓部。'},
+ {id:'shinju_s23_ssr_costume_mecha_doctor',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（博士）',name:'木下（博士）・機巧技師コート',emoji:'🧰',color:'#94a3b8',desc:'木下（博士）専用の第23真髄限定SSR衣装。機械仕掛けの楽園を整備する技師服。'},
+ {id:'shinju_s23_ssr_costume_mecha_drone',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（ドローン）',name:'木下（ドローン）・自律飛行ユニット',emoji:'🛰️',color:'#cbd5e1',desc:'木下（ドローン）専用の第23真髄限定SSR衣装。歯車の翼を備えた自律飛行装備。'},
+ {id:'shinju_s23_ssr_costume_mecha_cyber',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（電脳）',name:'木下（電脳）・歯車演算衣',emoji:'💠',color:'#475569',desc:'木下（電脳）専用の第23真髄限定SSR衣装。歯車と電子回路が融合した演算衣。'}
+];
+const SHINJU_S24_ITEMS=[
+ {id:'shinju_s24_ur_costume_arcane_genesis',type:'costume',rarity:'UR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・禁書魔導王装',emoji:'📖',color:'#7e22ce',desc:'木下（王）専用の第24真髄限定UR衣装。世界の理を記した禁書を継ぐ魔導王の法衣。'},
+ {id:'shinju_s24_ur_accessory_arcane_eye',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'木下（覚醒）',name:'木下（覚醒）・万象解読の魔眼',emoji:'👁️',desc:'木下（覚醒）専用の第24真髄限定UR携帯品。あらゆる魔導文字を読み解く魔眼。'},
+ {id:'shinju_s24_ssr_costume_arcane_oracle',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星読み木下',name:'星読み木下・星辰魔導師の外套',emoji:'🔭',color:'#8b5cf6',desc:'星読み木下専用の第24真髄限定SSR衣装。星図の魔法陣を縫い込んだ外套。'},
+ {id:'shinju_s24_ssr_costume_arcane_forest',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森王木下',name:'森王木下・古樹魔導王衣',emoji:'🌲',color:'#16a34a',desc:'森王木下専用の第24真髄限定SSR衣装。古樹の魔力を宿す森の王衣。'},
+ {id:'shinju_s24_ssr_costume_arcane_phoenix',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'フェニックス',name:'フェニックス・紫焔魔導翼',emoji:'🪶',color:'#c084fc',desc:'フェニックス専用の第24真髄限定SSR衣装。紫焔の魔法陣が浮かぶ不死鳥の翼。'}
+];
+const SHINJU_S25_ITEMS=[
+ {id:'shinju_s25_ur_costume_sky_sovereign',type:'costume',rarity:'UR',characterIndex:-1,targetName:'覇風',name:'覇風・天空航路の覇者装',emoji:'🪽',color:'#0ea5e9',desc:'覇風専用の第25真髄限定UR衣装。雲海を越える天空航路を守護する覇者の装束。'},
+ {id:'shinju_s25_ur_accessory_sky_comet',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'流星木下',name:'流星木下・天穹彗星の羅針盤',emoji:'🧭',desc:'流星木下専用の第25真髄限定UR携帯品。雲海の先にある道を示す彗星の羅針盤。'},
+ {id:'shinju_s25_ssr_costume_sky_star',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'星王木下',name:'星王木下・雲上星宮の帝衣',emoji:'🌠',color:'#38bdf8',desc:'星王木下専用の第25真髄限定SSR衣装。天空の星宮を巡る帝王装束。'},
+ {id:'shinju_s25_ssr_costume_sky_batter',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（野球）',name:'木下（野球）・蒼天飛翔ユニフォーム',emoji:'⚾',color:'#7dd3fc',desc:'木下（野球）専用の第25真髄限定SSR衣装。蒼天を切り裂く飛翔者のユニフォーム。'},
+ {id:'shinju_s25_ssr_costume_sky_harland',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'突撃ハーランド木下',name:'突撃ハーランド木下・天空突貫装',emoji:'⚡',color:'#bae6fd',desc:'突撃ハーランド木下専用の第25真髄限定SSR衣装。雲を貫く突撃騎士の装束。'}
+];
+const SHINJU_S26_ITEMS=[
+ {id:'shinju_s26_ur_costume_endgarden_chaos',type:'costume',rarity:'UR',characterIndex:-1,targetName:'狂乱の強化木下',name:'狂乱の強化木下・終末花園の狂王装',emoji:'🥀',color:'#be123c',desc:'狂乱の強化木下専用の第26真髄限定UR衣装。崩壊した花園に君臨する狂王の装束。'},
+ {id:'shinju_s26_ur_accessory_endgarden_seed',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'森王木下',name:'森王木下・終焉の黒薔薇',emoji:'🌹',desc:'森王木下専用の第26真髄限定UR携帯品。終末の地で咲き続ける黒薔薇。'},
+ {id:'shinju_s26_ssr_costume_endgarden_guard',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'森の守護木下',name:'森の守護木下・枯花の守護衣',emoji:'🍂',color:'#a16207',desc:'森の守護木下専用の第26真髄限定SSR衣装。枯れた花園を守り抜く守護服。'},
+ {id:'shinju_s26_ssr_costume_endgarden_angel',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'天使神:木下',name:'天使神:木下・終末の白翼',emoji:'🪽',color:'#fda4af',desc:'天使神:木下専用の第26真髄限定SSR衣装。終末の空に最後の希望を灯す白翼。'},
+ {id:'shinju_s26_ssr_costume_endgarden_yoshida',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'吉田',name:'吉田・黄昏花園の案内人',emoji:'🌼',color:'#fbbf24',desc:'吉田専用の第26真髄限定SSR衣装。黄昏の花園を導く案内人の衣装。'}
+];
+const SHINJU_S27_ITEMS=[
+ {id:'shinju_s27_ur_costume_prism_hitman',type:'costume',rarity:'UR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・虹彩神殿の執行者装',emoji:'🌈',color:'#a855f7',desc:'木下（王）専用の第27真髄限定UR衣装。七色の光を操る神殿の執行者装束。'},
+ {id:'shinju_s27_ur_accessory_prism_mirai',type:'accessory',rarity:'UR',characterIndex:-1,targetName:'MiraiK',name:'MiraiK・七彩反転の鏡',emoji:'🪞',desc:'MiraiK専用の第27真髄限定UR携帯品。七色の世界を映し出す反転の鏡。'},
+ {id:'shinju_s27_ssr_costume_prism_super',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（超覚醒）',name:'木下（超覚醒）・虹光超越装',emoji:'✨',color:'#f0abfc',desc:'木下（超覚醒）専用の第27真髄限定SSR衣装。虹色の光をまとった超越者の装束。'},
+ {id:'shinju_s27_ssr_costume_prism_king',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（王）',name:'木下（王）・七彩神殿の王衣',emoji:'👑',color:'#c084fc',desc:'木下（王）専用の第27真髄限定SSR衣装。七彩の祭壇を統べる神殿王の衣装。'},
+ {id:'shinju_s27_ssr_costume_prism_ai',type:'costume',rarity:'SSR',characterIndex:-1,targetName:'木下（AI）',name:'木下（AI）・虹彩演算装',emoji:'💠',color:'#818cf8',desc:'木下（AI）専用の第27真髄限定SSR衣装。虹彩の輝きを演算する未来装束。'}
+];
+
 const SHINJU_ESSENCES=[
  {id:1,name:'真髄1：覚醒の火',desc:'普通の木下の第二形態実装記念真髄。',items:[SHINJU_UR_COSTUME,SHINJU_UR_ACCESSORY,SHINJU_SSR_COSTUME_A,SHINJU_SSR_COSTUME_B,SHINJU_SSR_COSTUME_C]},
  {id:2,name:'真髄2：閃光と鬼火',desc:'速度と鬼火をテーマにした限定真髄。',items:[SHINJU_S2_UR_COSTUME,SHINJU_S2_UR_ACCESSORY,SHINJU_S2_SSR_A,SHINJU_S2_SSR_B,SHINJU_S2_SSR_C]},
@@ -6209,7 +6275,16 @@ const SHINJU_ESSENCES=[
  {id:15,name:'真髄15：雷霆天帝',desc:'雷霆と嵐をテーマにした限定真髄。',items:[SHINJU_S15_UR_COSTUME,SHINJU_S15_UR_ACCESSORY,SHINJU_S15_SSR_A,SHINJU_S15_SSR_B,SHINJU_S15_SSR_C]},
  {id:16,name:'真髄16：桜華龍神',desc:'桜華と龍神の加護をテーマにした限定真髄。',items:[SHINJU_S16_UR_COSTUME,SHINJU_S16_UR_ACCESSORY,SHINJU_S16_SSR_A,SHINJU_S16_SSR_B,SHINJU_S16_SSR_C]},
  {id:17,name:'真髄17：翠嵐世界樹',desc:'翠嵐と世界樹の生命力をテーマにした限定真髄。',items:[SHINJU_S17_UR_COSTUME,SHINJU_S17_UR_ACCESSORY,SHINJU_S17_SSR_A,SHINJU_S17_SSR_B,SHINJU_S17_SSR_C]},
- {id:18,name:'真髄18：白銀永冬',desc:'白銀の王者と永遠の冬をテーマにした限定真髄。',items:[SHINJU_S18_UR_COSTUME,SHINJU_S18_UR_ACCESSORY,SHINJU_S18_SSR_A,SHINJU_S18_SSR_B,SHINJU_S18_SSR_C]}
+ {id:18,name:'真髄18：白銀永冬',desc:'白銀の王者と永遠の冬をテーマにした限定真髄。',items:[SHINJU_S18_UR_COSTUME,SHINJU_S18_UR_ACCESSORY,SHINJU_S18_SSR_A,SHINJU_S18_SSR_B,SHINJU_S18_SSR_C]},
+ {id:19,name:'真髄19：紅蓮聖域',desc:'燃え盛る聖域と紅蓮の覇王をテーマにした限定真髄。',items:SHINJU_S19_ITEMS},
+ {id:20,name:'真髄20：蒼海龍宮',desc:'深海の龍宮と蒼き守護者をテーマにした限定真髄。',items:SHINJU_S20_ITEMS},
+ {id:21,name:'真髄21：砂塵王墓',desc:'古代王墓と黄金の砂塵をテーマにした限定真髄。',items:SHINJU_S21_ITEMS},
+ {id:22,name:'真髄22：月影祭典',desc:'月蝕の夜と月影の祭典をテーマにした限定真髄。',items:SHINJU_S22_ITEMS},
+ {id:23,name:'真髄23：機械楽園',desc:'自律機械都市と永久機関をテーマにした限定真髄。',items:SHINJU_S23_ITEMS},
+ {id:24,name:'真髄24：禁書魔導書庫',desc:'禁書の魔導と万象を解読する力をテーマにした限定真髄。',items:SHINJU_S24_ITEMS},
+ {id:25,name:'真髄25：天空航路',desc:'雲海を渡る天空船と星々の航路をテーマにした限定真髄。',items:SHINJU_S25_ITEMS},
+ {id:26,name:'真髄26：終末花園',desc:'終末の世界に咲く花と最後の守護者をテーマにした限定真髄。',items:SHINJU_S26_ITEMS},
+ {id:27,name:'真髄27：虹彩神殿',desc:'七色の光と虹彩の神殿をテーマにした限定真髄。',items:SHINJU_S27_ITEMS}
 ];
 let SHINJU_ITEMS=SHINJU_ESSENCES.flatMap(x=>x.items);
 SHINJU_ITEMS.push({id:'daily_dimensional_ur_costume',type:'costume',rarity:'UR',characterIndex:0,name:'普通の木下・異次元の旅装',emoji:'🌀',color:'#6366f1',desc:'日替わり異次元戦線の累計ポイント交換限定UR衣装。'});
@@ -6263,7 +6338,7 @@ function getShinjuSeasonState(){
  const day=86400000;
  const seasonNumber=Math.max(10,currentRankSeason()+1);
  const elapsed=seasonNumber-10;
- // 真髄1〜18を3種類ずつのグループで順番に解放。将来の番号を先行解放しない。
+ // 真髄1〜27を3種類ずつのグループで順番に解放。将来の番号を先行解放しない。
  const essenceCount=Math.min(SHINJU_ESSENCES.length,Math.max(1,elapsed));
  const cycle=Math.floor((essenceCount-1)/3)+1;
  const phase=((essenceCount-1)%3)+1;
