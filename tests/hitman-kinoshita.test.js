@@ -17,8 +17,7 @@ assert.match(source, /id: 'hitman_ride'/, '騎乗を独立スキルとして登�
 assert.match(source, /id: 'hitman_counter'/, '転移反撃を独立スキルとして登録');
 assert.match(source, /function hitmanSkill\(id\)/, '戦闘処理は独立スキルデータを参照');
 assert.match(source, /function hitmanAttackDamage\(unit, hitIndex = 0\)/, '各段のダメージを現在攻撃力から計算');
-assert.match(source, /hitmanAttackDamage\(source, 0\)/, '1段目にレベル補正後の攻撃力を適用');
-assert.match(source, /hitmanAttackDamage\(source, 1\)/, '2段目にレベル補正後の攻撃力を適用');
+assert.match(source, /syncHitmanMultiAttack\(source\)\.map\(\(damage, index\)/, '戦闘配列にレベル補正後の1段目・2段目を渡す');
 assert.match(source, /function syncHitmanMultiAttack\(unit\)/, '出撃ユニットの多段攻撃配列を同期');
 assert.match(source, /unit\.multiAttack = \[firstHit, secondHit\]/, '固定値の多段攻撃配列を補正後の数値に更新');
 assert.match(source, /syncHitmanMultiAttack\(unit\);/, 'レベル・撃破強化更新時に配列を再同期');
