@@ -44,6 +44,15 @@ function hitmanAttackDamage(unit, hitIndex = 0) {
   const multiplier = Number(hitIndex) === 1 ? 5100 / 8900 : 1;
   return Math.max(1, Math.round(currentAttack * multiplier));
 }
+function syncHitmanMultiAttack(unit) {
+  if (!unit || unit.name !== NAME) return [];
+  const firstHit = hitmanAttackDamage(unit, 0);
+  const secondHit = hitmanAttackDamage(unit, 1);
+  // 戦闘本体は multiAttack を優先参照するため、出撃ユニット側もレベル補正値に同期する。
+  unit.multiAttack = [firstHit, secondHit];
+  unit.secondAtk = secondHit;
+  return unit.multiAttack;
+}
 if (typeof CURRENT_CHARACTER_COUNT !== 'undefined') CURRENT_CHARACTER_COUNT = cards.length;
 
 function extendArray(arr, length, value) {
@@ -98,6 +107,7 @@ function refreshHitmanStats(unit) {
   unit.maxhp = Math.max(1, Math.round(core.maxhp * factor));
   unit.hp = Math.max(1, Math.min(unit.maxhp, Math.round(unit.maxhp * ratio)));
   unit.atk = Math.max(1, Math.round(core.atk * factor));
+  syncHitmanMultiAttack(unit);
   unit.range = Math.max(1, Math.round(core.range * factor));
   unit.spd = Math.max(0.01, core.spd * factor + (unit.hitmanRiding ? Number(hitmanSkill('hitman_ride')?.speedBonus || 2) : 0));
   unit.interval = Math.max(0.05, core.interval / factor);
@@ -331,10 +341,7 @@ enemyAttackTarget = function(e, t, ea, now2, sourceSealed) {
 const originalGetAttackSequence = getAttackSequence;
 getAttackSequence = function(source, target) {
   if (source && source.name === NAME) {
-    return [
-      { damage: hitmanAttackDamage(source, 0), index: 0 },
-      { damage: hitmanAttackDamage(source, 1), index: 1 }
-    ];
+    return syncHitmanMultiAttack(source).map((damage, index) => ({ damage, index }));
   }
   return originalGetAttackSequence(source, target);
 };
@@ -376,7 +383,7 @@ try {
 } catch (e) { console.warn('ヒットマン木下の初期化UI更新を一部スキップしました', e); }
 
 window.HITMAN_KINOSHITA_TEST_API = {
-  index, card, refreshHitmanStats, hitmanAttackDamage, startRide, stopRide, tickHitmanUnits,
+  index, card, refreshHitmanStats, hitmanAttackDamage, syncHitmanMultiAttack, startRide, stopRide, tickHitmanUnits,
   addHitmanKillStack, spawnTrackingMarker, launchTrackingMarkers,
   blockEnemyHealing, tryHitmanCounter
 };
