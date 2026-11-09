@@ -16,6 +16,10 @@ assert.match(source, /id: 'hitman_tracking'/, '追跡マーカーを独立スキ
 assert.match(source, /id: 'hitman_ride'/, '騎乗を独立スキルとして登録');
 assert.match(source, /id: 'hitman_counter'/, '転移反撃を独立スキルとして登録');
 assert.match(source, /function hitmanSkill\(id\)/, '戦闘処理は独立スキルデータを参照');
+assert.match(source, /function hitmanAttackDamage\(unit, hitIndex = 0\)/, '各段のダメージを現在攻撃力から計算');
+assert.match(source, /hitmanAttackDamage\(source, 0\)/, '1段目にレベル補正後の攻撃力を適用');
+assert.match(source, /hitmanAttackDamage\(source, 1\)/, '2段目にレベル補正後の攻撃力を適用');
+assert.match(source, /const currentDamage = Number\(hitIndex\) === 1 \? hitmanAttackDamage\(source, 1\) : baseAttack/, '2段目の発動時に最新攻撃力を再取得');
 assert.match(source, /Number\(skill\?\.damageMultiplier \|\| 5\)/, '追跡マーカーの倍率をスキルデータから参照');
 assert.match(source, /Number\(skill\.damageMultiplier \|\| 15\)/, '転移反撃の倍率をスキルデータから参照');
 assert.match(source, /trait: '黒', rarity: '伝説レア'/);
@@ -51,8 +55,10 @@ assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マ�
 
 assert.match(html, /GAME_VERSION='v1\.9\.\d+'/);
 assert.match(html, /ヒットマン木下/);
-assert.match(html, /\.\/hitman\.js\?v=20261105-hitman/);
-assert.match(sw, /kinoshita-daisen-v75/);
+assert.match(html, /\.\/hitman\.js\?v=20261110-multihit-level/);
+assert.match(html, /多段攻撃の詳細（レベル補正後）/);
+assert.match(html, /Math\.round\(5100\*\(detailStat\('atk'\)\/8900\)\)/, '詳細画面で2段目にも同じレベル補正を適用');
+assert.match(sw, /kinoshita-daisen-v76/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);

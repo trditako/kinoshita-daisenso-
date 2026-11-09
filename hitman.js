@@ -39,6 +39,11 @@ card.id = index;
 function hitmanSkill(id) {
   return Array.isArray(card.skills) ? card.skills.find(skill => skill && skill.id === id) : null;
 }
+function hitmanAttackDamage(unit, hitIndex = 0) {
+  const currentAttack = Math.max(1, Number(unit && unit.atk) || 8900);
+  const multiplier = Number(hitIndex) === 1 ? 5100 / 8900 : 1;
+  return Math.max(1, Math.round(currentAttack * multiplier));
+}
 if (typeof CURRENT_CHARACTER_COUNT !== 'undefined') CURRENT_CHARACTER_COUNT = cards.length;
 
 function extendArray(arr, length, value) {
@@ -326,10 +331,9 @@ enemyAttackTarget = function(e, t, ea, now2, sourceSealed) {
 const originalGetAttackSequence = getAttackSequence;
 getAttackSequence = function(source, target) {
   if (source && source.name === NAME) {
-    const factor = Math.max(0.01, Number(source.atk || 8900) / 8900);
     return [
-      { damage: Math.max(1, Math.round(8900 * factor)), index: 0 },
-      { damage: Math.max(1, Math.round(5100 * factor)), index: 1 }
+      { damage: hitmanAttackDamage(source, 0), index: 0 },
+      { damage: hitmanAttackDamage(source, 1), index: 1 }
     ];
   }
   return originalGetAttackSequence(source, target);
@@ -338,7 +342,8 @@ getAttackSequence = function(source, target) {
 const originalFollowup = resolveFollowupAttack;
 resolveFollowupAttack = function(source, target, baseAttack, hitIndex) {
   if (source && source.name === NAME) {
-    setTimeout(() => originalFollowup(source, target, baseAttack, hitIndex), 100);
+    const currentDamage = Number(hitIndex) === 1 ? hitmanAttackDamage(source, 1) : baseAttack;
+    setTimeout(() => originalFollowup(source, target, currentDamage, hitIndex), 100);
     return;
   }
   return originalFollowup(source, target, baseAttack, hitIndex);
@@ -371,7 +376,7 @@ try {
 } catch (e) { console.warn('ヒットマン木下の初期化UI更新を一部スキップしました', e); }
 
 window.HITMAN_KINOSHITA_TEST_API = {
-  index, card, refreshHitmanStats, startRide, stopRide, tickHitmanUnits,
+  index, card, refreshHitmanStats, hitmanAttackDamage, startRide, stopRide, tickHitmanUnits,
   addHitmanKillStack, spawnTrackingMarker, launchTrackingMarkers,
   blockEnemyHealing, tryHitmanCounter
 };
