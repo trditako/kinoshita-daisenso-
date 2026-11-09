@@ -19,6 +19,9 @@ assert.match(source, /function hitmanSkill\(id\)/, '戦闘処理は独立スキ�
 assert.match(source, /function hitmanAttackDamage\(unit, hitIndex = 0\)/, '各段のダメージを現在攻撃力から計算');
 assert.match(source, /hitmanAttackDamage\(source, 0\)/, '1段目にレベル補正後の攻撃力を適用');
 assert.match(source, /hitmanAttackDamage\(source, 1\)/, '2段目にレベル補正後の攻撃力を適用');
+assert.match(source, /function syncHitmanMultiAttack\(unit\)/, '出撃ユニットの多段攻撃配列を同期');
+assert.match(source, /unit\.multiAttack = \[firstHit, secondHit\]/, '固定値の多段攻撃配列を補正後の数値に更新');
+assert.match(source, /syncHitmanMultiAttack\(unit\);/, 'レベル・撃破強化更新時に配列を再同期');
 assert.match(source, /const currentDamage = Number\(hitIndex\) === 1 \? hitmanAttackDamage\(source, 1\) : baseAttack/, '2段目の発動時に最新攻撃力を再取得');
 assert.match(source, /Number\(skill\?\.damageMultiplier \|\| 5\)/, '追跡マーカーの倍率をスキルデータから参照');
 assert.match(source, /Number\(skill\.damageMultiplier \|\| 15\)/, '転移反撃の倍率をスキルデータから参照');
