@@ -2769,8 +2769,9 @@ function processMuscleKinoshitaHands(holder,now){
 
 function iceWyvernFreeze(target,duration,source){if(!target||target.hp<=0||target.ability?.iceWyvern?.freezeImmune||target.freezeImmune)return;const now=performance.now()/1000;target.iceFrozenUntil=Math.max(Number(target.iceFrozenUntil||0),now+duration);target.iceFreezeSource=source||null;setStatusMark(target,'🧊','凍結',duration,'iceFreeze');}
 function iceWyvernZoneEffect(x){const fx=document.createElement('div');fx.className='iceWyvernZoneFx';fx.style.left=Number(x||0)+'px';effects.appendChild(fx);setTimeout(()=>fx.remove(),4000);return fx;}
-function iceWyvernBeamEffect(actor,target){if(!actor||!target)return;const sx=Number(actor.x||0)+32,tx=Number(target.x||0)+32,left=Math.min(sx,tx),width=Math.max(18,Math.abs(tx-sx)),bottom=(Number.parseFloat(actor.el?.style.bottom)||(actor.isFlying?154:40))+36;const beam=document.createElement('div');beam.className='iceWyvernBeamFx';beam.style.left=left+'px';beam.style.bottom=bottom+'px';beam.style.width=width+'px';effects.appendChild(beam);const impact=document.createElement('div');impact.className='iceWyvernBeamImpact';impact.style.left=tx+'px';impact.style.bottom=bottom+'px';effects.appendChild(impact);setTimeout(()=>beam.remove(),360);setTimeout(()=>impact.remove(),440);}
+function iceWyvernBeamEffect(actor,target){if(!actor||!target)return;const sx=Number(actor.x||0)+32,tx=Number(target.x||0)+32,actorBottom=(Number.parseFloat(actor.el?.style.bottom)||(actor.isFlying?154:40))+36,targetBottom=(Number.parseFloat(target.el?.style.bottom)||(target.isFlying?154:40))+36,dx=tx-sx,dy=targetBottom-actorBottom;const beam=document.createElement('div');beam.className='iceWyvernBeamFx';beam.style.left=sx+'px';beam.style.bottom=actorBottom+'px';beam.style.width=Math.max(18,Math.hypot(dx,dy))+'px';beam.style.transformOrigin='0 50%';beam.style.transform=`translateY(50%) rotate(${Math.atan2(dy,dx)}rad)`;effects.appendChild(beam);const impact=document.createElement('div');impact.className='iceWyvernBeamImpact';impact.style.left=tx+'px';impact.style.bottom=targetBottom+'px';effects.appendChild(impact);setTimeout(()=>beam.remove(),360);setTimeout(()=>impact.remove(),440);}
 const iceWyvernZones=[];
+function clearIceWyvernZones(){for(const z of iceWyvernZones)z.fx?.remove();iceWyvernZones.length=0;effects.querySelectorAll('.iceWyvernBeamFx,.iceWyvernBeamImpact').forEach(fx=>fx.remove());}
 function tickIceWyvern(now,dt){
  for(let i=iceWyvernZones.length-1;i>=0;i--){const z=iceWyvernZones[i];if(now>=z.until){z.fx?.remove();iceWyvernZones.splice(i,1);continue;}for(const target of z.enemySide?units:enemies){if(!target||target.hp<=0||Math.abs(Number(target.x||0)-z.x)>48)continue;iceWyvernFreeze(target,Math.max(.2,z.until-now),z.source);if(now>=Number(target.iceZoneTickAt||0)){target.iceZoneTickAt=now+1;const d=Math.max(1,Math.round(Number(target.maxhp||1)*.15));hit(target,d,z.source,{iceArea:true});}}}
  for(const actor of [...units,...enemies]){const a=actor?.ability?.iceWyvern;if(!actor||actor.hp<=0||!a)continue;actor.iceSkillNextFlight=Number(actor.iceSkillNextFlight??(now+Number(a.flightInterval||55)));actor.iceSkillNextBeam=Number(actor.iceSkillNextBeam??(now+Number(a.beamInterval||46)));
@@ -2782,7 +2783,7 @@ function tickIceWyvern(now,dt){
 }
 
 function hit(target,damage,source,abilitySource){
- if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack)||target.muscleGrabbedBy)return; 
+ if(!target||target.hp<=0||(target.isFlying&&!source?.airAttack&&!abilitySource?.iceBeam&&!abilitySource?.iceArea)||target.muscleGrabbedBy)return; 
  if(!target.isEnemy&&target.causalityInvulnUntil&&performance.now()/1000<target.causalityInvulnUntil)return;
  if(ivyIsEntity(target)&&target.ivyTransferUntil&&performance.now()/1000<target.ivyTransferUntil)return 0;
  if(target.isEnemy&&target.ability?.phaseChance&&Math.random()<Number(target.ability.phaseChance)){mythicPopup('🫥 位相転移',target);target.x=Math.max(120,target.x-55);return 0;}
@@ -3272,7 +3273,7 @@ function applyStageVisual(){
 function stageBgmKey(){return stageVisualInfo().bgm||'menu';}
 
 const PVP_SHARED_WORLD_WIDTH=3200;
-function setupWorld(){const s=currentStage();worldWidth=pvpMode?PVP_SHARED_WORLD_WIDTH:Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
+function setupWorld(){const s=currentStage();clearIceWyvernZones();worldWidth=pvpMode?PVP_SHARED_WORLD_WIDTH:Math.max(s.width||field.clientWidth,field.clientWidth);world.style.width=worldWidth+'px';cameraX=Math.max(0,worldWidth-field.clientWidth);document.querySelector('.playerbase').style.left=(worldWidth-110)+'px';document.querySelector('.playerbase').style.right='auto';document.querySelector('.enemybase').style.left='14px';document.querySelector('.enemybase').style.right='auto';document.querySelector('.lane').style.left='0px';applyStageVisual();applyCamera();}
 function updateCamera(){applyCamera();}
 let draggingCamera=false,dragStartX=0,dragStartCamera=0,dragMoved=false;
 field.addEventListener('pointerdown',e=>{if(!running)return;if(e.target?.closest?.('button,[role="button"],input,select,textarea,a,[data-game-speed]'))return;draggingCamera=true;dragStartX=e.clientX;dragStartCamera=cameraX;dragMoved=false;field.setPointerCapture?.(e.pointerId);});
