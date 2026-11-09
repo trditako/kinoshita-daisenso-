@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.63';
+const GAME_VERSION='v1.9.64';
 const UPDATE_LOG=[
-  {date:'2026-11-10',version:'v1.9.63',title:'🎯 ヒットマン木下の多段攻撃レベル補正を修正',items:['1段目・2段目のダメージを出撃中の現在攻撃力から個別に再計算','2段目の発動時にも最新の攻撃力を参照し、レベル補正と撃破成長を反映','キャラクター詳細にレベル補正後の1段目・2段目の攻撃力を個別表示']},
+  {date:'2026-11-10',version:'v1.9.64',title:'🎯 ヒットマン木下の戦闘ダメージ補正を修正',items:['出撃ユニットのmultiAttackと2段目攻撃力をレベル補正後の数値へ同期','撃破による攻撃力成長のたびに1段目・2段目の攻撃値も更新','戦闘本体が多段攻撃配列を直接参照する場合も補正後のダメージを適用']},
   {date:'2026-11-10',version:'v1.9.62',title:'✨ 真髄19〜27を追加',items:['紅蓮聖域・蒼海龍宮・砂塵王墓・月影祭典・機械楽園・禁書魔導書庫・天空航路・終末花園・虹彩神殿の9種類を追加','各真髄にUR衣装1種・UR携帯品1種・SSR衣装3種を登録し、全45種類の限定アイテムを追加','真髄のシーズン解放上限を18から27へ拡張し、既存の排出率・重複補償・所持データを維持']},
   {date:'2026-11-07',version:'v1.9.61',title:'🌀 MiraiK・ヒットマン木下の固有スキルを追加',items:['MiraiKの「反転」「再反転」を独立したスキルデータに登録し、発動率・再使用時間・ダメージ・攻撃力上昇・回復量を実際の戦闘処理から参照','ヒットマン木下の「追跡マーカー」「騎乗」「転移反撃」を独立したスキルデータとして登録し、既存の発動条件・回数・威力を維持','スキル詳細と戦闘処理の参照元を統一し、固有能力との混同を防止']},
   {date:'2026-11-07',version:'v1.9.60',title:'🌀 戦闘スキルを固有能力から独立',items:['覇風の「五召喚の大嵐」「根性だけで勝ちます」を独立したスキルデータとして登録','スキルごとに発動条件・発動率・再使用時間・効果をキャラクター詳細の専用欄へ表示','スキル発動処理も固有能力データから分離し、既存の発動条件・威力・回復量を維持']},
@@ -7354,5 +7354,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 <script src="./trade.js?v=20261028-ai-auctions-30s"></script>
 <script src="./genesis.js?v=20261107-detail-cleanup"></script>
-<script src="./hitman.js?v=20261110-multihit-level"></script>
+<script src="./hitman.js?v=20261110-live-multihit"></script>
 </body></html>
