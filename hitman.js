@@ -128,7 +128,7 @@ function moveIceWyvernToLatestId() {
           state.iceWyvernLatestIdV1 = 1;
         }
       }
-      try { storage.setItem('kinoshitaAIProfilesV2', JSON.stringify(aiProfiles)); } catch (e) { console.warn('Ice Wyvern AI ID migration save skipped', e); }
+      try { if (migrationStorage) migrationStorage.setItem('kinoshitaAIProfilesV2', JSON.stringify(aiProfiles)); } catch (e) { console.warn('Ice Wyvern AI ID migration save skipped', e); }
     }
     if (typeof rankMetaStats !== 'undefined' && rankMetaStats && typeof rankMetaStats === 'object') {
       const nextChars = {};
