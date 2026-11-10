@@ -95,7 +95,9 @@ function moveIceWyvernToLatestId() {
   // このマップは、まだ旧ID順で保存されているSupabase AIデータの読み込みにも使用する。
   window.__KINOSHITA_ICE_WYVERN_ID_REMAP__ = { from: iceIndex, to: latestIndex, oldLength, version: 1 };
   const migrationKey = 'kinoshitaIceWyvernLatestIdV1';
-  const alreadyMigrated = storage.getItem(migrationKey) === 'done';
+  const migrationStorage = typeof storage !== 'undefined' && storage ? storage : window.localStorage;
+  let alreadyMigrated = false;
+  try { alreadyMigrated = !!migrationStorage && migrationStorage.getItem(migrationKey) === 'done'; } catch (e) { console.warn('Ice Wyvern migration status read skipped', e); }
   if (!alreadyMigrated && iceIndex !== latestIndex) {
     ownedFlags = remapIceWyvernArrayById(ownedFlags, iceIndex, oldLength, false);
     charLevel = remapIceWyvernArrayById(charLevel, iceIndex, oldLength, 1);
@@ -104,9 +106,13 @@ function moveIceWyvernToLatestId() {
     normalEvolved = remapIceWyvernArrayById(normalEvolved, iceIndex, oldLength, false);
     rechargeLeft = remapIceWyvernArrayById(rechargeLeft, iceIndex, oldLength, 0);
     formation = Array.isArray(formation) ? formation.map(remapId) : [];
-    for (let i = 0; i < formationBeforeLateCards.length; i++) formationBeforeLateCards[i] = remapId(formationBeforeLateCards[i]);
-    formationPresets = Array.isArray(formationPresets) ? formationPresets.map(p => Array.isArray(p) ? p.map(remapId) : p) : [];
-    if (Array.isArray(aiProfiles)) {
+    if (typeof formationBeforeLateCards !== 'undefined' && Array.isArray(formationBeforeLateCards)) {
+      for (let i = 0; i < formationBeforeLateCards.length; i++) formationBeforeLateCards[i] = remapId(formationBeforeLateCards[i]);
+    }
+    if (typeof formationPresets !== 'undefined' && Array.isArray(formationPresets)) {
+      formationPresets = formationPresets.map(p => Array.isArray(p) ? p.map(remapId) : p);
+    }
+    if (typeof aiProfiles !== 'undefined' && Array.isArray(aiProfiles)) {
       for (const profile of aiProfiles) {
         if (!profile || typeof profile !== 'object') continue;
         if (Array.isArray(profile.ownedCharacters)) profile.ownedCharacters = profile.ownedCharacters.map(remapId);
@@ -124,7 +130,7 @@ function moveIceWyvernToLatestId() {
       }
       try { storage.setItem('kinoshitaAIProfilesV2', JSON.stringify(aiProfiles)); } catch (e) { console.warn('Ice Wyvern AI ID migration save skipped', e); }
     }
-    if (rankMetaStats && typeof rankMetaStats === 'object') {
+    if (typeof rankMetaStats !== 'undefined' && rankMetaStats && typeof rankMetaStats === 'object') {
       const nextChars = {};
       for (const [key, value] of Object.entries(rankMetaStats.chars || {})) {
         const oldId = Number(key);
@@ -140,24 +146,24 @@ function moveIceWyvernToLatestId() {
       rankMetaStats.formations = nextForms;
     }
     const storageKeys = [];
-    try { for (let i = 0; i < storage.length; i++) { const key = storage.key(i); if (key) storageKeys.push(key); } } catch (e) {}
-    if (storage.data && typeof storage.data === 'object') storageKeys.push(...Object.keys(storage.data));
+    try { for (let i = 0; migrationStorage && i < migrationStorage.length; i++) { const key = migrationStorage.key(i); if (key) storageKeys.push(key); } } catch (e) {}
+    try { if (migrationStorage && migrationStorage.data && typeof migrationStorage.data === 'object') storageKeys.push(...Object.keys(migrationStorage.data)); } catch (e) {}
     storageKeys.push('kinoshitaPreviousSeasonTop5', 'kinoshitaPreviousSeasonTop10');
     try { storageKeys.push('kinoshitaRankBannedCharacters_' + currentRankSeason()); } catch (e) {}
     for (const key of new Set(storageKeys)) {
       if (!key.startsWith('kinoshitaRankBannedCharacters_') && key !== 'kinoshitaPreviousSeasonTop5' && key !== 'kinoshitaPreviousSeasonTop10') continue;
       try {
-        const ids = JSON.parse(storage.getItem(key) || 'null');
-        if (Array.isArray(ids) && ids.every(Number.isInteger)) storage.setItem(key, JSON.stringify(ids.map(remapId)));
+        const ids = JSON.parse(migrationStorage.getItem(key) || 'null');
+        if (Array.isArray(ids) && ids.every(Number.isInteger)) migrationStorage.setItem(key, JSON.stringify(ids.map(remapId)));
       } catch (e) {}
     }
     try { if (typeof syncOwnedCount === 'function') syncOwnedCount(); } catch (e) {}
     try { if (typeof saveFormationStableNames === 'function') saveFormationStableNames(); } catch (e) {}
     try { if (typeof save === 'function') save(); } catch (e) { console.warn('Ice Wyvern ID migration save skipped', e); }
     try { if (typeof saveRankMeta === 'function') saveRankMeta(); } catch (e) { console.warn('Ice Wyvern rank ID migration save skipped', e); }
-    storage.setItem(migrationKey, 'done');
+    try { if (migrationStorage) migrationStorage.setItem(migrationKey, 'done'); } catch (e) { console.warn('Ice Wyvern migration marker save skipped', e); }
   } else if (!alreadyMigrated) {
-    storage.setItem(migrationKey, 'done');
+    try { if (migrationStorage) migrationStorage.setItem(migrationKey, 'done'); } catch (e) { console.warn('Ice Wyvern migration marker save skipped', e); }
   }
   try {
     if (typeof window.__KINOSHITA_REMAP_GENESIS_CARD_IDS__ === 'function') window.__KINOSHITA_REMAP_GENESIS_CARD_IDS__(remapId);
