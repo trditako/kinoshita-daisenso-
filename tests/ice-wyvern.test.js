@@ -12,9 +12,9 @@ assert.equal(remap(116,115,119),115,'Genesis character IDs shift left without da
 assert.equal(remap(117,115,119),116,'Genesis counter ID shifts left');
 assert.equal(remap(118,115,119),117,'Hitman ID shifts left');
 assert.equal(remap(114,115,119),114,'Earlier character IDs remain unchanged');
-const arrayMatch=hitman.match(/function remapIceWyvernArrayById\\(rawArray, iceIndex, oldLength, fillValue\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+const arrayMatch=hitman.match(/function remapIceWyvernArrayById\(rawArray, iceIndex, oldLength, fillValue\)\s*\{[\s\S]*?\n\}/);
 assert.ok(arrayMatch,'Saved character arrays use the same ID migration');
-const helpers=vm.runInNewContext('(()=>{'+remapMatch[0]+'\\n'+arrayMatch[0]+'\\nreturn {remapIceWyvernArrayById};})()');
+const helpers=vm.runInNewContext('(()=>{'+remapMatch[0]+'\n'+arrayMatch[0]+'\nreturn {remapIceWyvernArrayById};})()');
 const oldArray=Array.from({length:119},(_,i)=>i);
 const newArray=Array.from(helpers.remapIceWyvernArrayById(oldArray,115,119,-1));
 assert.deepEqual(newArray.slice(114),[114,116,117,118,115],'Ownership and level arrays move Ice Wyvern to 118 and shift the three following cards');
