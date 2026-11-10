@@ -22,3 +22,6 @@ console.log('Ice Wyvern and 119-character ID regression tests passed');
 assert.match(hitman,/eventClears\['アイスワイバーン襲来'\] === true/,'Cleared Ice Wyvern stage restores missing reward');
 assert.match(hitman,/bootFormationNames/,'Saved formation names are restored after all character scripts load');
 assert.match(hitman,/restoredFormation/,'Late character IDs are rebuilt from saved names');
+assert.match(hitman,/eventClears\['創世神話'\] === true/,'Cleared Genesis stage restores Genesis Kinoshita');
+assert.match(hitman,/eventClears\['創世討伐訓練'\] === true/,'Cleared Genesis counter stage restores its reward');
+assert.match(hitman,/savedActivePreset\.includes\(index\)/,'Saved active preset restores Hitman Kinoshita after name-key loss');
