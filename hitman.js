@@ -234,6 +234,7 @@ try {
     formation = restoredFormation;
     if (typeof normalizeFormation === 'function') normalizeFormation();
   }
+  if (typeof syncOwnedCount === 'function') syncOwnedCount();
   if (typeof save === 'function') save();
   if (typeof saveFormationStableNames === 'function') saveFormationStableNames();
   if (typeof renderCards === 'function') renderCards();
