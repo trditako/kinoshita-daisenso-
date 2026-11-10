@@ -228,7 +228,7 @@ try {
   if (Array.isArray(bootFormationNames)) {
     const restoredFormation = bootFormationNames
       .map(name => cards.findIndex(c => c && c.name === name))
-      .filter(id => id >= 0 && !!ownedFlags[id]);
+      .filter(id => id >= 0);
     // 編成に保存されていたキャラクターは、所持名キーが古い場合でも編成内容を優先して保護する。
     for (const id of restoredFormation) ownedFlags[id] = true;
     formation = restoredFormation;
