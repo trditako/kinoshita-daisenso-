@@ -66,6 +66,118 @@ extendArray(charForm, cards.length, 1);
 extendArray(normalEvolved, cards.length, false);
 if (Array.isArray(rechargeLeft)) extendArray(rechargeLeft, cards.length, 0);
 
+function remapIceWyvernCharacterId(rawId, iceIndex, oldLength) {
+  const id = Number(rawId);
+  if (!Number.isInteger(id) || id < 0) return rawId;
+  if (id === iceIndex) return oldLength - 1;
+  if (id > iceIndex && id < oldLength) return id - 1;
+  return id;
+}
+function remapIceWyvernArrayById(rawArray, iceIndex, oldLength, fillValue) {
+  if (!Array.isArray(rawArray)) return rawArray;
+  const old = rawArray.slice();
+  const next = Array(Math.max(old.length, oldLength)).fill(fillValue);
+  for (let oldId = 0; oldId < old.length; oldId++) {
+    next[remapIceWyvernCharacterId(oldId, iceIndex, oldLength)] = old[oldId];
+  }
+  return next;
+}
+function moveIceWyvernToLatestId() {
+  const iceIndex = cards.findIndex(c => c && c.name === 'アイスワイバーン');
+  if (iceIndex < 0) return;
+  const oldLength = cards.length;
+  if (iceIndex !== oldLength - 1) {
+    const [iceCard] = cards.splice(iceIndex, 1);
+    cards.push(iceCard);
+  }
+  const latestIndex = cards.length - 1;
+  const remapId = id => remapIceWyvernCharacterId(id, iceIndex, oldLength);
+  // このマップは、まだ旧ID順で保存されているSupabase AIデータの読み込みにも使用する。
+  window.__KINOSHITA_ICE_WYVERN_ID_REMAP__ = { from: iceIndex, to: latestIndex, oldLength, version: 1 };
+  const migrationKey = 'kinoshitaIceWyvernLatestIdV1';
+  const alreadyMigrated = storage.getItem(migrationKey) === 'done';
+  if (!alreadyMigrated && iceIndex !== latestIndex) {
+    ownedFlags = remapIceWyvernArrayById(ownedFlags, iceIndex, oldLength, false);
+    charLevel = remapIceWyvernArrayById(charLevel, iceIndex, oldLength, 1);
+    charMaxLevel = remapIceWyvernArrayById(charMaxLevel, iceIndex, oldLength, 20);
+    charForm = remapIceWyvernArrayById(charForm, iceIndex, oldLength, 1);
+    normalEvolved = remapIceWyvernArrayById(normalEvolved, iceIndex, oldLength, false);
+    rechargeLeft = remapIceWyvernArrayById(rechargeLeft, iceIndex, oldLength, 0);
+    formation = Array.isArray(formation) ? formation.map(remapId) : [];
+    for (let i = 0; i < formationBeforeLateCards.length; i++) formationBeforeLateCards[i] = remapId(formationBeforeLateCards[i]);
+    formationPresets = Array.isArray(formationPresets) ? formationPresets.map(p => Array.isArray(p) ? p.map(remapId) : p) : [];
+    if (Array.isArray(aiProfiles)) {
+      for (const profile of aiProfiles) {
+        if (!profile || typeof profile !== 'object') continue;
+        if (Array.isArray(profile.ownedCharacters)) profile.ownedCharacters = profile.ownedCharacters.map(remapId);
+        if (Array.isArray(profile.formation)) profile.formation = profile.formation.map(remapId);
+        if (Array.isArray(profile.charLevels)) profile.charLevels = remapIceWyvernArrayById(profile.charLevels, iceIndex, oldLength, 1);
+        if (Array.isArray(profile.charMaxLevels)) profile.charMaxLevels = remapIceWyvernArrayById(profile.charMaxLevels, iceIndex, oldLength, 20);
+        if (Array.isArray(profile.formationPresets)) profile.formationPresets = profile.formationPresets.map(p => Array.isArray(p) ? p.map(remapId) : p);
+        const state = profile.activityState;
+        if (state && typeof state === 'object') {
+          for (const key of ['aiCharMaxLevel', 'aiCharForm', 'aiNormalEvolved']) {
+            if (Array.isArray(state[key])) state[key] = remapIceWyvernArrayById(state[key], iceIndex, oldLength, key === 'aiNormalEvolved' ? false : 1);
+          }
+          state.iceWyvernLatestIdV1 = 1;
+        }
+      }
+      try { storage.setItem('kinoshitaAIProfilesV2', JSON.stringify(aiProfiles)); } catch (e) { console.warn('Ice Wyvern AI ID migration save skipped', e); }
+    }
+    if (rankMetaStats && typeof rankMetaStats === 'object') {
+      const nextChars = {};
+      for (const [key, value] of Object.entries(rankMetaStats.chars || {})) {
+        const oldId = Number(key);
+        nextChars[String(Number.isInteger(oldId) ? remapId(oldId) : key)] = value;
+      }
+      rankMetaStats.chars = nextChars;
+      const nextForms = {};
+      for (const [key, value] of Object.entries(rankMetaStats.formations || {})) {
+        if (key === 'empty') { nextForms[key] = value; continue; }
+        const ids = key.split('-').map(Number);
+        nextForms[ids.every(Number.isInteger) ? ids.map(remapId).join('-') : key] = value;
+      }
+      rankMetaStats.formations = nextForms;
+    }
+    const storageKeys = [];
+    try { for (let i = 0; i < storage.length; i++) { const key = storage.key(i); if (key) storageKeys.push(key); } } catch (e) {}
+    if (storage.data && typeof storage.data === 'object') storageKeys.push(...Object.keys(storage.data));
+    storageKeys.push('kinoshitaPreviousSeasonTop5', 'kinoshitaPreviousSeasonTop10');
+    try { storageKeys.push('kinoshitaRankBannedCharacters_' + currentRankSeason()); } catch (e) {}
+    for (const key of new Set(storageKeys)) {
+      if (!key.startsWith('kinoshitaRankBannedCharacters_') && key !== 'kinoshitaPreviousSeasonTop5' && key !== 'kinoshitaPreviousSeasonTop10') continue;
+      try {
+        const ids = JSON.parse(storage.getItem(key) || 'null');
+        if (Array.isArray(ids) && ids.every(Number.isInteger)) storage.setItem(key, JSON.stringify(ids.map(remapId)));
+      } catch (e) {}
+    }
+    try { if (typeof syncOwnedCount === 'function') syncOwnedCount(); } catch (e) {}
+    try { if (typeof saveFormationStableNames === 'function') saveFormationStableNames(); } catch (e) {}
+    try { if (typeof save === 'function') save(); } catch (e) { console.warn('Ice Wyvern ID migration save skipped', e); }
+    try { if (typeof saveRankMeta === 'function') saveRankMeta(); } catch (e) { console.warn('Ice Wyvern rank ID migration save skipped', e); }
+    storage.setItem(migrationKey, 'done');
+  } else if (!alreadyMigrated) {
+    storage.setItem(migrationKey, 'done');
+  }
+  try {
+    if (typeof window.__KINOSHITA_REMAP_GENESIS_CARD_IDS__ === 'function') window.__KINOSHITA_REMAP_GENESIS_CARD_IDS__(remapId);
+  } catch (e) { console.warn('Genesis character ID remap skipped', e); }
+  for (let i = 0; i < cards.length; i++) if (cards[i]) cards[i].id = i;
+  index = cards.indexOf(card);
+  card.id = index;
+  CURRENT_CHARACTER_COUNT = cards.length;
+  window.KINOSHITA_CHARACTER_ID_AUDIT = {
+    total: cards.length,
+    expectedTotal: 119,
+    iceWyvernId: cards.findIndex(c => c && c.name === 'アイスワイバーン'),
+    latestId: cards.length - 1,
+    iceWyvernIsLatest: cards[cards.length - 1]?.name === 'アイスワイバーン',
+    idsAligned: cards.every((entry, id) => !entry || entry.id === id)
+  };
+  if (cards.length !== 119) console.warn('[木下大戦争] キャラクター総数の想定は119体ですが、現在は' + cards.length + '体です。ID監査を確認してください。');
+}
+moveIceWyvernToLatestId();
+
 const savedOwned = typeof ownedCharacterNamesAtBoot !== 'undefined' &&
   Array.isArray(ownedCharacterNamesAtBoot) && ownedCharacterNamesAtBoot.includes(NAME);
 function unlockHitman(showNotice) {
