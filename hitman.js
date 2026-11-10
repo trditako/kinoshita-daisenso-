@@ -206,6 +206,52 @@ if (savedOwned || (Array.isArray(chapterClears) && Number(chapterClears[6] || 0)
   unlockHitman(false);
 }
 
+// 起動時に保存名キーから一時的に除外された後発キャラクターを、全スクリプト登録後に復元する。
+// 所持名はIDより優先し、既存キャラクターの所持状態を失わないよう「追加のみ」で補正する。
+try {
+  const bootOwnedNames = new Set(Array.isArray(ownedCharacterNamesAtBoot) ? ownedCharacterNamesAtBoot : []);
+  for (let i = 0; i < cards.length; i++) {
+    if (cards[i] && bootOwnedNames.has(cards[i].name)) ownedFlags[i] = true;
+  }
+  // クリア記録が残っているのに報酬だけ欠落した既存セーブへ、アイスワイバーンを再付与する。
+  const iceIndex = cards.findIndex(c => c && c.name === 'アイスワイバーン');
+  if (typeof eventClears !== 'undefined' && eventClears) {
+    if (iceIndex >= 0 && eventClears['アイスワイバーン襲来'] === true) ownedFlags[iceIndex] = true;
+    const genesisIndex = cards.findIndex(c => c && c.name === '創世木下');
+    if (genesisIndex >= 0 && eventClears['創世神話'] === true) ownedFlags[genesisIndex] = true;
+    const counterIndex = cards.findIndex(c => c && c.name === '創世討伐兵器・零式');
+    if (counterIndex >= 0 && eventClears['創世討伐訓練'] === true) ownedFlags[counterIndex] = true;
+  }
+  if (typeof syncOwnedCount === 'function') syncOwnedCount();
+
+  // main script の後発キャラクター読込前に削られた編成を、全119体の登録後に名前から復元する。
+  const bootFormationNames = Array.isArray(formationStableNamesAtBoot) && formationStableNamesAtBoot.length
+    ? formationStableNamesAtBoot
+    : (Array.isArray(formationCharacterNamesAtBoot) ? formationCharacterNamesAtBoot : null);
+  let restoredFormation = Array.isArray(bootFormationNames)
+    ? bootFormationNames.map(name => cards.findIndex(c => c && c.name === name)).filter(id => id >= 0)
+    : [];
+  // 保存済み編成プリセットは名前キーより前に部分上書きされないため、ヒットマン木下が残っていれば復旧元として使う。
+  const savedActivePreset = Array.isArray(formationPresets) ? formationPresets[activeFormationPreset] : null;
+  if (Array.isArray(savedActivePreset) && savedActivePreset.includes(index) && !restoredFormation.includes(index)) {
+    restoredFormation = savedActivePreset.filter(id => Number.isInteger(id) && id >= 0 && id < cards.length);
+  }
+  if (Array.isArray(bootFormationNames) || (Array.isArray(savedActivePreset) && savedActivePreset.includes(index))) {
+    // 編成に保存されていたキャラクターは、所持名キーが古い場合でも編成内容を優先して保護する。
+    for (const id of restoredFormation) ownedFlags[id] = true;
+    formation = restoredFormation;
+    if (typeof normalizeFormation === 'function') normalizeFormation();
+  }
+  if (typeof syncOwnedCount === 'function') syncOwnedCount();
+  if (typeof save === 'function') save();
+  if (typeof saveFormationStableNames === 'function') saveFormationStableNames();
+  if (typeof renderCards === 'function') renderCards();
+  if (typeof renderFormation === 'function') renderFormation();
+  if (typeof renderFormationBuffSummary === 'function') renderFormationBuffSummary();
+} catch (e) {
+  console.warn('後発キャラクターの所持・編成復元を一部スキップしました', e);
+}
+
 function refreshHp(unit) {
   if (!unit) return;
   if (unit.el) {
