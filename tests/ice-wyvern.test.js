@@ -19,3 +19,6 @@ const oldArray=Array.from({length:119},(_,i)=>i);
 const newArray=Array.from(helpers.remapIceWyvernArrayById(oldArray,115,119,-1));
 assert.deepEqual(newArray.slice(114),[114,116,117,118,115],'Ownership and level arrays move Ice Wyvern to 118 and shift the three following cards');
 console.log('Ice Wyvern and 119-character ID regression tests passed');
+assert.match(hitman,/eventClears\['アイスワイバーン襲来'\] === true/,'Cleared Ice Wyvern stage restores missing reward');
+assert.match(hitman,/bootFormationNames/,'Saved formation names are restored after all character scripts load');
+assert.match(hitman,/restoredFormation/,'Late character IDs are rebuilt from saved names');
