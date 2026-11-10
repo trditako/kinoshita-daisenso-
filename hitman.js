@@ -215,9 +215,12 @@ try {
   }
   // クリア記録が残っているのに報酬だけ欠落した既存セーブへ、アイスワイバーンを再付与する。
   const iceIndex = cards.findIndex(c => c && c.name === 'アイスワイバーン');
-  if (iceIndex >= 0 && typeof eventClears !== 'undefined' && eventClears &&
-      eventClears['アイスワイバーン襲来'] === true) {
-    ownedFlags[iceIndex] = true;
+  if (typeof eventClears !== 'undefined' && eventClears) {
+    if (iceIndex >= 0 && eventClears['アイスワイバーン襲来'] === true) ownedFlags[iceIndex] = true;
+    const genesisIndex = cards.findIndex(c => c && c.name === '創世木下');
+    if (genesisIndex >= 0 && eventClears['創世神話'] === true) ownedFlags[genesisIndex] = true;
+    const counterIndex = cards.findIndex(c => c && c.name === '創世討伐兵器・零式');
+    if (counterIndex >= 0 && eventClears['創世討伐訓練'] === true) ownedFlags[counterIndex] = true;
   }
   if (typeof syncOwnedCount === 'function') syncOwnedCount();
 
@@ -225,10 +228,15 @@ try {
   const bootFormationNames = Array.isArray(formationStableNamesAtBoot) && formationStableNamesAtBoot.length
     ? formationStableNamesAtBoot
     : (Array.isArray(formationCharacterNamesAtBoot) ? formationCharacterNamesAtBoot : null);
-  if (Array.isArray(bootFormationNames)) {
-    const restoredFormation = bootFormationNames
-      .map(name => cards.findIndex(c => c && c.name === name))
-      .filter(id => id >= 0);
+  let restoredFormation = Array.isArray(bootFormationNames)
+    ? bootFormationNames.map(name => cards.findIndex(c => c && c.name === name)).filter(id => id >= 0)
+    : [];
+  // 保存済み編成プリセットは名前キーより前に部分上書きされないため、ヒットマン木下が残っていれば復旧元として使う。
+  const savedActivePreset = Array.isArray(formationPresets) ? formationPresets[activeFormationPreset] : null;
+  if (Array.isArray(savedActivePreset) && savedActivePreset.includes(index) && !restoredFormation.includes(index)) {
+    restoredFormation = savedActivePreset.filter(id => Number.isInteger(id) && id >= 0 && id < cards.length);
+  }
+  if (Array.isArray(bootFormationNames) || (Array.isArray(savedActivePreset) && savedActivePreset.includes(index))) {
     // 編成に保存されていたキャラクターは、所持名キーが古い場合でも編成内容を優先して保護する。
     for (const id of restoredFormation) ownedFlags[id] = true;
     formation = restoredFormation;
