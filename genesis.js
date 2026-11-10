@@ -590,6 +590,14 @@ genesisCounterCard.ability={
  waveImmune:true,waveImmunity:true,surgeImmune:true,surgeImmunity:true,
  knockbackImmune:true,warpImmune:true
 };
+window.__KINOSHITA_REMAP_GENESIS_CARD_IDS__=function(remapId){
+ if(typeof remapId!=='function')return;
+ genesisIndex=remapId(genesisIndex);
+ genesisCounterIndex=remapId(genesisCounterIndex);
+ genesisCard.id=genesisIndex;
+ genesisCounterCard.id=genesisCounterIndex;
+ if(window.GENESIS_KINOSHITA_TEST_API)window.GENESIS_KINOSHITA_TEST_API.index=genesisIndex;
+};
 try{
  if(Array.isArray(charLevel)&&!Number.isFinite(Number(charLevel[genesisCounterIndex])))charLevel[genesisCounterIndex]=1;
  if(Array.isArray(charMaxLevel)&&!Number.isFinite(Number(charMaxLevel[genesisCounterIndex])))charMaxLevel[genesisCounterIndex]=30;
