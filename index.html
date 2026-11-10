@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.68';
+const GAME_VERSION='v1.9.69';
 const UPDATE_LOG=[
+  {date:'2026-11-11',version:'v1.9.69',title:'🆔 アイスワイバーンのIDを全119体の末尾へ統一',items:['後から読み込まれる創世木下・創世討伐兵器・零式・ヒットマン木下より後ろへアイスワイバーンを移動','既存の所持・育成・編成・AI・ランク統計のIDを一度だけ安全に変換','全119体のIDとキャラクター総数を読み込み完了後に同期']},
   {date:'2026-11-10',version:'v1.9.68',title:'❄️ アイスワイバーンの追加不具合を修正',items:['冷凍ビームとアイスエリアが飛行中の敵にもダメージを与えるよう修正','ステージ切り替え時に前の戦闘のアイスエリアが残らないよう修正','冷凍ビームの光線を発射元と着弾対象の高さに合わせて描画']},
   {date:'2026-11-10',version:'v1.9.67',title:'❄️ アイスワイバーンの飛行・氷エフェクトを修正',items:['飛行中は凍結判定より先に移動処理を行い、味方・敵の双方が確実に前進','飛行中のユニットを非対応の敵攻撃対象から除外し、攻撃アニメーションだけが発生する問題を防止','アイスエリアを地面に氷紋として4秒間表示し、冷凍ビームに光線と着弾エフェクトを追加']},
   {date:'2026-11-10',version:'v1.9.66',title:'❄️ アイスワイバーンのアイスエリア対象を修正',items:['味方のアイスエリアは敵、敵のアイスエリアは味方に作用するよう対象陣営を修正']},
@@ -1606,12 +1607,24 @@ async function loadAIServerProfiles(force=false){
    const orderMigrated=activityState.aiCharacterIdOrderV1===1;
    const remapId=raw=>{const id=Number(raw);if(!Number.isInteger(id))return raw;if(id===90)return 101;if(id===91)return 90;if(id>=92&&id<=101)return id-1;return id;};
    const remapArray=raw=>{if(!Array.isArray(raw))return raw;const old=raw.slice(),next=old.slice();next[90]=old[91];for(let id=92;id<=101;id++)next[id-1]=old[id];next[101]=old[90];return next;};
-   const ownedCharacters=Array.isArray(row.owned_characters)?(orderMigrated?row.owned_characters:row.owned_characters.map(remapId)):[0];
-   const formation=Array.isArray(row.formation)?(orderMigrated?row.formation:row.formation.map(remapId)):[0];
-   const formationPresets=Array.isArray(row.formation_presets)?row.formation_presets.map(p=>Array.isArray(p)?(orderMigrated?p:p.map(remapId)):p):[];
+   let ownedCharacters=Array.isArray(row.owned_characters)?(orderMigrated?row.owned_characters:row.owned_characters.map(remapId)):[0];
+   let formation=Array.isArray(row.formation)?(orderMigrated?row.formation:row.formation.map(remapId)):[0];
+   let formationPresets=Array.isArray(row.formation_presets)?row.formation_presets.map(p=>Array.isArray(p)?(orderMigrated?p:p.map(remapId)):p):[];
    const rawLevels=Array.isArray(row.char_levels)?row.char_levels:(row.char_levels&&typeof row.char_levels==='object'?Array.from({length:Math.max(cards.length,104)},(_,ci)=>Math.max(1,Number(row.char_levels[String(ci)]||1))):Array(Math.max(cards.length,104)).fill(1));
-   const charLevels=orderMigrated?rawLevels:remapArray(rawLevels);
+   let charLevels=orderMigrated?rawLevels:remapArray(rawLevels);
    if(!orderMigrated)for(const key of ['aiCharMaxLevel','aiCharForm','aiNormalEvolved'])if(Array.isArray(activityState[key]))activityState[key]=remapArray(activityState[key]);
+   // SupabaseのAI保存データは旧配列順（アイスワイバーンの後ろに創世系・ヒットマン）で保存されているため、読み込み時に新しい末尾IDへ変換する。
+   const iceOrderMap=typeof window!=='undefined'?window.__KINOSHITA_ICE_WYVERN_ID_REMAP__:null;
+   if(iceOrderMap&&activityState.iceWyvernLatestIdV1!==1){
+    const remapIceId=raw=>{const id=Number(raw);if(!Number.isInteger(id)||id<0)return raw;if(id===iceOrderMap.from)return iceOrderMap.to;if(id>iceOrderMap.from&&id<iceOrderMap.oldLength)return id-1;return id;};
+    const remapIceArray=raw=>{if(!Array.isArray(raw))return raw;const old=raw.slice(),next=Array(Math.max(old.length,iceOrderMap.oldLength)).fill(1);for(let oldId=0;oldId<old.length;oldId++)next[remapIceId(oldId)]=old[oldId];return next;};
+    ownedCharacters=ownedCharacters.map(remapIceId);
+    formation=formation.map(remapIceId);
+    formationPresets=formationPresets.map(p=>Array.isArray(p)?p.map(remapIceId):p);
+    charLevels=remapIceArray(charLevels);
+    for(const key of ['aiCharMaxLevel','aiCharForm','aiNormalEvolved'])if(Array.isArray(activityState[key]))activityState[key]=remapIceArray(activityState[key]);
+    activityState.iceWyvernLatestIdV1=1;
+   }
    const a={
     accountId:'AI-'+String(Number(row.account_id)||i+1).padStart(3,'0'),name:row.name||('AI-'+String(i+1).padStart(3,'0')),
     rp:Number(row.rp||0),skill:Number(row.skill??.25),wins:Number(row.wins||0),losses:Number(row.losses||0),
