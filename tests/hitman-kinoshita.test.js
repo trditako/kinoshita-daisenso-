@@ -57,7 +57,7 @@ assert.doesNotMatch(source, /gun|firearm|銃|拳銃|ライフル/i, '追跡マ�
 
 assert.match(html, /GAME_VERSION='v1\.9\.\d+'/);
 assert.match(html, /ヒットマン木下/);
-assert.match(html, /\.\/hitman\.js\?v=20261111-ice-id-119/);
+assert.match(html, /\.\/hitman\.js\?v=20261111-save-restore/);
 assert.match(html, /多段攻撃の詳細（レベル補正後）/);
 assert.match(html, /detailStat\('atk'\)\.toLocaleString\('ja-JP'/, '1段目の補正後小数値も表示');
 assert.match(html, /5100\*\(detailStat\('atk'\)\/8900\)\)\.toLocaleString\('ja-JP'/, '2段目の補正後小数値も表示');
