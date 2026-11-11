@@ -44,7 +44,7 @@ assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected aft
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
-assert.match(source, /impactDistance\) !== bandIndex/, 'ally strike is cancelled if the target leaves its assigned band before impact');
+assert.match(source, /source\?\.name === ZEUS_ALLY && !abilitySource\?\.zeusLightningResolved/, 'ordinary Zeus hits are suppressed so lightning is the only attack');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
