@@ -7,7 +7,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
-assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
+assert.match(html, /zeus\.js\?v=20261112-zeus-area-lightning-attack/);
 assert.match(sw, /kinoshita-daisen-v91/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
