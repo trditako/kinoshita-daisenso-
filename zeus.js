@@ -159,7 +159,7 @@ if (typeof originalHit === 'function') {
       const stacks = Number(target.zeusDefenseStacks || 0);
       incoming *= 1 - Math.min(0.75, stacks * 0.05);
     }
-    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);
+    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);\n    if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
     const beforeHp = Number(target.hp || 0);
     const beforeShield = Number(target.barrier || 0);
     const result = originalHit.call(this, target, incoming, source, abilitySource);
@@ -200,6 +200,28 @@ if (typeof originalHit === 'function') {
     if (isServant && actual > 0 && source && traitIs(source, ['天使', '神話'])) {
       target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * 0));
     }
+    if (source?.name === ZEUS_ALLY && target.isEnemy && actual > 0) {
+      const now = performance.now() / 1000;
+      if (Math.random() < 0.33) {
+        if (Math.random() < 0.5 && !target.stopImmune && !target.ability?.stopImmune) {
+          target.stopUntil = Math.max(Number(target.stopUntil || 0), now + 2);
+          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⏸️', '停止', 2, 'zeusStop');
+        } else if (!target.attackDownImmune && !target.ability?.attackDownImmune) {
+          target.attackDownUntil = Math.max(Number(target.attackDownUntil || 0), now + 2);
+          target.attackDownFactor = 0.2;
+          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⬇️', '攻撃力80%低下', 2, 'zeusAttackDown');
+        }
+      }
+    }
+    if (source?.name === SERVANT && target.isEnemy && actual > 0) {
+      const god = Array.isArray(enemies) ? enemies.find(e => e?.name === ZEUS_ENEMY && live(e)) : null;
+      if (god) {
+        const healed = Math.min(Math.max(0, 100000 - Number(source.zeusHealTotal || 0)), Math.round(actual * 0.25));
+        source.zeusHealTotal = Number(source.zeusHealTotal || 0) + healed;
+        god.hp = Math.min(god.maxhp, god.hp + healed);
+        updateHp(god);
+      }
+    }
     if ((isEnemyZeus || isAllyZeus) && target.hp > 0) zeusLightning(target);
     return result;
   };
@@ -208,7 +230,23 @@ if (typeof originalHit === 'function') {
 const originalEnemyAttackTarget = window.enemyAttackTarget;
 if (typeof originalEnemyAttackTarget === 'function') {
   window.enemyAttackTarget = function(enemy, target, ea, now, sealed) {
-    if (!enemy || enemy.name !== ZEUS_ENEMY) return originalEnemyAttackTarget.apply(this, arguments);
+    if (!enemy) return originalEnemyAttackTarget.apply(this, arguments);
+    if (enemy.name === SERVANT) {
+      const multiplier = traitIs(target, ['天使', '神話']) ? 8 : 1;
+      const before = Number(target?.hp || 0);
+      const scaledServant = multiplier === 1 ? enemy : { ...enemy, atk: Math.round(Number(enemy.atk || 1) * multiplier) };
+      const result = originalEnemyAttackTarget.call(this, scaledServant, target, ea, now, sealed);
+      const actual = Math.max(0, before - Number(target?.hp || 0));
+      const god = Array.isArray(enemies) ? enemies.find(e => e?.name === ZEUS_ENEMY && live(e)) : null;
+      if (god && actual > 0) {
+        const healed = Math.min(Math.max(0, 100000 - Number(enemy.zeusHealTotal || 0)), Math.round(actual * 0.25));
+        enemy.zeusHealTotal = Number(enemy.zeusHealTotal || 0) + healed;
+        god.hp = Math.min(god.maxhp, god.hp + healed);
+        updateHp(god);
+      }
+      return result;
+    }
+    if (enemy.name !== ZEUS_ENEMY) return originalEnemyAttackTarget.apply(this, arguments);
     const attackNow = Number(now || performance.now() / 1000);
     if (Number(enemy.zeusLastAttackAt || -999) > attackNow - 0.18) return;
     enemy.zeusLastAttackAt = attackNow;
@@ -221,7 +259,7 @@ if (typeof originalEnemyAttackTarget === 'function') {
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) >= band.min &&
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) <= band.max);
         for (const unit of targets) {
-          const scaled = { ...enemy, atk: Math.round(band.damage * (1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10)) };
+          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;\n          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;\n          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
           originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
           zeusLightning(unit);
           if (unit.hp <= 0 && Array.isArray(enemies)) {
