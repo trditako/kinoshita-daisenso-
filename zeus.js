@@ -93,6 +93,23 @@ if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof 
     if (typeof normalEvolved !== 'undefined') while (normalEvolved.length < cards.length) normalEvolved.push(false);
     if (typeof ownedFlags !== 'undefined') while (ownedFlags.length < cards.length) ownedFlags.push(false);
   }
+  // Zeus is registered after hitman.js performs the normal late-character restore.
+  // Rehydrate it here from the persisted name list or the event-clear record.
+  const zeusCardIndex = cards.findIndex(c => c && c.name === ZEUS_ALLY);
+  if (zeusCardIndex >= 0 && Array.isArray(ownedFlags)) {
+    const savedNames = typeof ownedCharacterNamesAtBoot !== 'undefined' && Array.isArray(ownedCharacterNamesAtBoot)
+      ? ownedCharacterNamesAtBoot : [];
+    const savedFormationNames = typeof formationStableNamesAtBoot !== 'undefined' && Array.isArray(formationStableNamesAtBoot)
+      ? formationStableNamesAtBoot
+      : (typeof formationCharacterNamesAtBoot !== 'undefined' && Array.isArray(formationCharacterNamesAtBoot) ? formationCharacterNamesAtBoot : []);
+    const wasOwned = savedNames.includes(ZEUS_ALLY) || savedFormationNames.includes(ZEUS_ALLY);
+    const wasCleared = typeof eventClears !== 'undefined' && eventClears && eventClears[STAGE_NAME] === true;
+    if (wasOwned || wasCleared) {
+      ownedFlags[zeusCardIndex] = true;
+      if (typeof syncOwnedCount === 'function') syncOwnedCount();
+      if (typeof save === 'function') save();
+    }
+  }
   enemyTypes[ZEUS_ENEMY] = enemyZeus;
   enemyTypes[SERVANT] = servantEnemy;
   if (!eventStages.some(s => s && s.name === STAGE_NAME)) {
@@ -126,17 +143,42 @@ function updateHp(entity) {
   if (label) label.textContent = Math.ceil(entity.hp).toLocaleString() + ' / ' + Math.ceil(entity.maxhp).toLocaleString();
 }
 function zeusLightning(target, color = '#facc15') {
-  if (!target || !document.getElementById('effects')) return;
+  const effects = document.getElementById('effects');
+  if (!target || !effects) return;
   const fx = document.createElement('div');
-  fx.textContent = '⚡';
-  fx.style.cssText = 'position:absolute;z-index:80;pointer-events:none;font-size:42px;font-weight:1000;filter:drop-shadow(0 0 8px ' + color + ');left:' + Math.max(0, Number(target.x || 0) - 16) + 'px;bottom:100px;animation:zeusBolt .45s ease-out forwards';
-  document.getElementById('effects').appendChild(fx);
-  setTimeout(() => fx.remove(), 500);
+  fx.className = 'zeusLightningFx';
+  const bolt = document.createElement('i');
+  bolt.className = 'zeusLightningBolt';
+  const branch = document.createElement('i');
+  branch.className = 'zeusLightningBolt secondary';
+  const flash = document.createElement('i');
+  flash.className = 'zeusLightningFlash';
+  fx.append(bolt, branch, flash);
+  fx.style.setProperty('--zeus-color', color);
+  const targetRect = target.el?.getBoundingClientRect?.();
+  const effectsRect = effects.getBoundingClientRect?.();
+  if (targetRect && effectsRect) {
+    fx.style.left = (targetRect.left + targetRect.width / 2 - effectsRect.left) + 'px';
+    fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - effectsRect.top - 148) + 'px';
+  } else {
+    fx.style.left = Math.max(0, Number(target.x || 0)) + 'px';
+    fx.style.bottom = '38px';
+  }
+  effects.appendChild(fx);
+  setTimeout(() => fx.remove(), 620);
 }
 if (!document.getElementById('zeusLightningStyle')) {
   const style = document.createElement('style');
   style.id = 'zeusLightningStyle';
-  style.textContent = '@keyframes zeusBolt{0%{opacity:0;transform:translateY(-100px) scale(.5)}35%{opacity:1;transform:translateY(0) scale(1.25)}100%{opacity:0;transform:translateY(18px) scale(.8)}}';
+  style.textContent = `
+    .zeusLightningFx{position:absolute;width:104px;height:178px;z-index:90;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
+    .zeusLightningBolt{position:absolute;left:24px;top:0;width:58px;height:148px;background:linear-gradient(180deg,#fff 0%,var(--zeus-color,#facc15) 35%,#fff7b2 70%,var(--zeus-color,#facc15) 100%);clip-path:polygon(57% 0,18% 48%,44% 48%,22% 100%,86% 38%,58% 38%);filter:drop-shadow(0 0 8px #fff);animation:zeusBoltFlash .58s ease-out forwards}
+    .zeusLightningBolt.secondary{left:49px;top:16px;width:34px;height:100px;opacity:.8;transform:rotate(12deg) scaleX(.7)}
+    .zeusLightningFlash{position:absolute;left:50%;bottom:0;width:76px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,#fff 0%,var(--zeus-color,#facc15) 25%,rgba(250,204,21,.45) 55%,transparent 76%);box-shadow:0 0 22px 8px rgba(250,204,21,.55);animation:zeusImpact .58s ease-out forwards}
+    @keyframes zeusStrike{0%{opacity:0;transform:translate(-50%,-30px) scale(.75)}18%{opacity:1;transform:translate(-50%,0) scale(1.08)}68%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,14px) scale(.96)}}
+    @keyframes zeusBoltFlash{0%,100%{opacity:.15}18%,62%{opacity:1}}
+    @keyframes zeusImpact{0%,20%{opacity:0;transform:translateX(-50%) scale(.35)}45%{opacity:1;transform:translateX(-50%) scale(1.25)}100%{opacity:0;transform:translateX(-50%) scale(1.8)}}
+  `;
   document.head.appendChild(style);
 }
 
