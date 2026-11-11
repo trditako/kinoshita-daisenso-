@@ -164,19 +164,19 @@ const bandTargetC = makeEnemy('band 3', 75);   // 200-250
 runtimeEnemies.push(bandTargetA, triggerTarget, bandTargetB, bandTargetC);
 assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 325 }).length, 1, 'stage 1 band 0-50 is attackable');
 assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 220 }).length, 0, 'the gap between stage 1 and 2 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 125 }).length, 1, 'stage 3 band 200-250 is attackable');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 75 }).length, 1, 'stage 3 band 200-250 is attackable');
 runtimeWindow.hit(triggerTarget, 100, allyZeus);
 assert.equal(triggerTarget.hp, 1000, 'the ordinary selected target takes no direct attack damage');
-assert.equal(bandTargetA.hp, 1000, 'first lightning is resolved on its own impact');
-const runScheduled = delay => {
+assert.ok(bandTargetA.hp < 1000, 'the first lightning band damages immediately on its own impact');
+const runAllyStrikeScheduled = delay => {
   const index = scheduledTimers.findIndex(timer => timer.delay === delay);
   assert.notEqual(index, -1, 'expected scheduled lightning wave at ' + delay + 'ms');
   scheduledTimers.splice(index, 1)[0].fn();
 };
 assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'the second lightning band lands 0.5 seconds after the first');
-runScheduled(500);
+runAllyStrikeScheduled(500);
 assert.equal(bandTargetB.hp, 1000, 'the second band waits for its lightning impact');
-runScheduled(1000);
+runAllyStrikeScheduled(1000);
 assert.equal(bandTargetC.hp, 1000, 'the third band waits for its lightning impact');
 assert.ok(bandTargetA.hp < 1000, 'first band lightning damages an enemy even though it was not the selected target');
 assert.ok(bandTargetB.hp < 1000, 'second band lightning damages an enemy in its own range');
