@@ -262,6 +262,7 @@ const originalHit = window.hit;
 if (typeof originalHit === 'function') {
   window.hit = function(target, damage, source, abilitySource) {
     if (!target || !live(target)) return originalHit.apply(this, arguments);
+    if (source?.name === ZEUS_ALLY && !abilitySource?.zeusLightningResolved) return 0;
     const isEnemyZeus = target.isEnemy && target.name === ZEUS_ENEMY;
     const isAllyZeus = !target.isEnemy && target.name === ZEUS_ALLY;
     const isServant = target.name === SERVANT;
