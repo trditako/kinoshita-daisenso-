@@ -6,9 +6,9 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\.9\.73'/);
+assert.match(html, /GAME_VERSION='v1\\.9\\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v90/);
+assert.match(sw, /kinoshita-daisen-v91/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -40,7 +40,9 @@ assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected aft
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
-assert.match(source, /impactDistance\) !== bandIndex/, 'ally strike is cancelled if the target leaves its assigned band before impact');
+assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
+assert.match(source, /maxBandRange/, 'the full lightning envelope including gaps can trigger the attack');
+assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
@@ -149,27 +151,43 @@ assert.equal(god.atk, 125);
 assert.equal(god.spd, 0.5);
 assert.equal(god.interval, 2.4);
 
-// Ally Zeus strikes each enemy in its full 250 range with a visible bolt,
-// and damage is applied at the same moment the lightning reaches the target.
-const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600 };
-const strikeTarget = {
-  name: 'strike target', hp: 1000, maxhp: 1000, x: 100, isEnemy: true,
-  el: { getBoundingClientRect() { return { left: 90, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+// Ally Zeus's attack is the three lightning strikes themselves. A target in
+// a gap can trigger the attack, but is not required to be hit by a normal attack.
+const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
+const makeAllyTarget = (name, x) => ({
+  name, hp: 1000, maxhp: 1000, x, isEnemy: true,
+  el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+});
+const allyBandA = makeAllyTarget('ally band 1', 25);
+const allyGapTrigger = makeAllyTarget('ordinary target in a gap', 80);
+const allyBandB = makeAllyTarget('ally band 2', 125);
+const allyBandC = makeAllyTarget('ally band 3', 225);
+runtimeEnemies.push(allyBandA, allyGapTrigger, allyBandB, allyBandC);
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, allyGapTrigger).length, 0, 'the normal hit sequence is bypassed because lightning is the attack');
+assert.equal(allyGapTrigger.hp, 1000, 'the selected target in the gap is not hit by a conventional attack');
+assert.equal(allyBandA.hp, 940, 'the first lightning band deals its own damage immediately');
+assert.equal(effectNodes.length, 1, 'the first lightning band has a visible bolt');
+assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'the second lightning band lands 0.5 seconds later');
+assert.ok(scheduledTimers.some(timer => timer.delay === 1000), 'the third lightning band lands 1 second later');
+const runAllyScheduled = delay => {
+  const index = scheduledTimers.findIndex(timer => timer.delay === delay);
+  assert.notEqual(index, -1, 'expected ally lightning at ' + delay + 'ms');
+  scheduledTimers.splice(index, 1)[0].fn();
 };
-runtimeEnemies.push(strikeTarget);
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 25 }).length, 1, 'stage 1 band 0-50 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 100 }).length, 1, 'stage 2 band 100-150 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 200 }).length, 1, 'stage 3 band 200-250 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 80 }).length, 0, 'the gap between stage 1 and 2 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 175 }).length, 0, 'the gap between stage 2 and 3 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 550 }).length, 0, 'sensing range does not extend the lightning attack bands');
-runtimeWindow.hit(strikeTarget, 100, allyZeus);
-assert.equal(strikeTarget.hp, 1000, 'damage waits for the lightning impact');
-assert.equal(scheduledTimers[0].delay, 500, 'the second attack band lands 0.5 seconds after stage 1');
-scheduledTimers.shift().fn();
-assert.equal(strikeTarget.hp, 900, 'the target takes damage when the bolt lands');
-assert.equal(effectNodes.length, 1, 'a visible lightning bolt is created for the actual hit');
+runAllyScheduled(500);
+assert.equal(allyBandB.hp, 978, 'the second lightning band deals its own damage');
+runAllyScheduled(1000);
+assert.equal(allyBandC.hp, 985, 'the third lightning band deals its own damage');
+assert.equal(effectNodes.length, 3, 'all three ally lightning bands create visible effects');
 
+// A gap with no target in one or more strike bands still displays the empty
+// band lightning, and repeated attack-sequence polling cannot duplicate it.
+const emptyBandZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
+runtimeWindow.getAttackSequence(emptyBandZeus, { x: 80 });
+const effectsAfterEmptyStrike = effectNodes.length;
+assert.ok(effectsAfterEmptyStrike >= 4, 'an empty first band still displays a lightning strike');
+runtimeWindow.getAttackSequence(emptyBandZeus, { x: 80 });
+assert.equal(effectNodes.length, effectsAfterEmptyStrike, 'the attack cooldown prevents duplicate lightning from repeated sequence checks');
 // Enemy Zeus also covers the gaps between its three damage bands.
 const enemyGapTargetA = {
   name: 'enemy band 2 target', hp: 500000, maxhp: 500000, x: 200, isEnemy: false,
@@ -190,7 +208,7 @@ runScheduled(500);
 assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second band');
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
-assert.equal(effectNodes.length, 3, 'each enemy Zeus target receives its own lightning visual');
+assert.equal(effectNodes.length, effectsAfterEmptyStrike + 3, 'enemy Zeus shows the empty first band plus both occupied bands');
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
