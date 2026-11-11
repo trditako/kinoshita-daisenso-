@@ -27,5 +27,7 @@ assert.match(source, /threshold: 0\.99/);
 assert.match(source, /barrier: 5000000/);
 assert.match(source, /shield: 100000/);
 assert.match(source, /shield: 5000000/);
-assert.match(source, /rewardCharacter: ZEUS_ALLY/);\nassert.match(source, /bandIndex \* 500/);\nassert.match(source, /zeusDelayed: true/);
+assert.match(source, /rewardCharacter: ZEUS_ALLY/);
+assert.match(source, /bandIndex \* 500/);
+assert.match(source, /zeusDelayed: true/);
 console.log('Zeus raid stage regression checks passed.');
