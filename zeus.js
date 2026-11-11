@@ -262,10 +262,10 @@ if (typeof originalEnemyAttackTarget === 'function') {
           const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;\n          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;\n          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
           originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
           zeusLightning(unit);
-          if (unit.hp <= 0 && Array.isArray(enemies)) {
-            for (const servant of enemies) if (servant?.name === SERVANT && live(servant)) {
-              servant.zeusDeathCounted = servant.zeusDeathCounted || false;
-            }
+          if (unit.hp <= 0) {
+            const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
+            enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
+            if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(enemy);
           }
         }
       };
@@ -314,6 +314,41 @@ if (typeof originalSpawnEnemy === 'function') {
       updateHp(enemy);
     }
     return enemy;
+  };
+}
+
+const originalRemoveEnemy = window.removeEnemy;
+if (typeof originalRemoveEnemy === 'function') {
+  window.removeEnemy = function(victim) {
+    const wasServant = victim?.name === SERVANT && live(victim);
+    const result = originalRemoveEnemy.apply(this, arguments);
+    if (wasServant && Array.isArray(enemies)) {
+      const god = enemies.find(e => e?.name === ZEUS_ENEMY && live(e));
+      if (god) {
+        god.zeusServantDeaths = Math.min(4, Number(god.zeusServantDeaths || 0) + 1);
+        const factor = 1.25;
+        god.maxhp = Math.round(Number(god.maxhp || 1) * factor);
+        god.hp = Math.min(god.maxhp, Math.round(Number(god.hp || 0) * factor));
+        god.atk = Math.round(Number(god.atk || 1) * factor);
+        god.spd = Number(god.spd || 0.4) * factor;
+        god.interval = Math.max(0.1, Number(god.interval || 3) / factor);
+        updateHp(god);
+        if (typeof window.setStatusMark === 'function') window.setStatusMark(god, '⚡', '使える者撃破強化 +' + god.zeusServantDeaths * 25 + '%', 999999, 'zeusServantDeath');
+      }
+    }
+    return result;
+  };
+}
+const originalRenderUnitElement = window.renderUnitElement;
+if (typeof originalRenderUnitElement === 'function') {
+  window.renderUnitElement = function(unit) {
+    const result = originalRenderUnitElement.apply(this, arguments);
+    if (unit?.name === ZEUS_ALLY) {
+      unit.powerShield = Math.max(Number(unit.powerShield || 0), 100000);
+      unit.powerShieldMax = Math.max(Number(unit.powerShieldMax || 0), 100000);
+      if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(unit);
+    }
+    return result;
   };
 }
 })();
