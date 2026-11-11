@@ -97,7 +97,7 @@ assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1 });
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
-const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000 };
+const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3 };
 runtimeEnemies.push(god);
 const servant = { name: '最高神に使える者', hp: 100, maxhp: 100, atk: 10, trait: '氷' };
 const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnemy: false };
