@@ -179,7 +179,7 @@ function zeusLightning(target, color = '#facc15', source = null) {
     fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - effectsRect.top - 148) + 'px';
   } else if (sourceRect && effectsRect && source) {
     const direction = Number(source.x || 0) >= 0 ? -1 : 1;
-    fx.style.left = (sourceRect.left + sourceRect.width / 2 + (Number(target.x || 0) - Number(source.x || 0)) * direction - effectsRect.left) + 'px';
+    fx.style.left = (sourceRect.left + sourceRect.width / 2 + (Number(target.x || 0) - Number(source.x || 0)) - effectsRect.left) + 'px';
     fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - effectsRect.top - 148) + 'px';
   } else {
     fx.style.left = Math.max(0, Number(target.x || 0)) + 'px';
