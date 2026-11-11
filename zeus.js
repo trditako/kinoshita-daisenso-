@@ -14,7 +14,7 @@ const servantAbility = {
   strong: { 天使: 8, 神話: 8 },
   resist: { 天使: 0.05, 神話: 0.05 },
   stopImmune: true, knockbackImmune: true, waveImmune: true,
-  curseImmune: true, slowImmune: true, attackDownImmune: true,
+  curseImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   zeusServant: { damageCap: 0.15, healRatio: 0.25, healLimit: 100000, godBuff: 0.75 }
 };
 
@@ -23,7 +23,7 @@ const enemyZeusAbility = {
   desc: '天使・神話・赤・宇宙から受けるダメージ85%軽減、同属性へ10倍ダメージ。実HPダメージの50%を回復・反射し、デバフを無効化。一度に受けるダメージは最大HPの7%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。最高神に使える者が倒れるたび射程以外の全ステータス+25%（最大+100%）。攻撃時33%で停止2秒または攻撃力80%低下2秒、50%でふっとばす、ヤバヤバLv5。敵数×10%攻撃力上昇（上限なし）。登場時パワーシールド5,000,000。撃破ごとにシールド2%回復。シールド被弾時、吸収ダメージ25%反射・停止1秒・射程80%低下5秒。被弾ごとに防御力+5%（最大+75%）、場の最高神に使える者の防御力+7%（最大+70%）。',
   strong: { 天使: 10, 神話: 10, 赤: 10, 宇宙: 10 },
   resist: { 天使: 0.15, 神話: 0.15, 赤: 0.15, 宇宙: 0.15 },
-  curseImmune: true, stopImmune: true, surgeImmune: true,
+  curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5,
   damageCap: 0.07,
   zeusEnemy: {
@@ -46,7 +46,7 @@ const allyZeusAbility = {
   desc: '天使・神話・赤・宇宙から受けるダメージ55%軽減、同属性へ5倍ダメージ。受けた実HPダメージの30%を回復し20%反射。全デバフ無効。一度に受けるダメージは最大HPの11%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。攻撃時33%で停止2秒または攻撃力80%低下2秒。敵数×2%攻撃力上昇（最大+20%）。登場時パワーシールド100,000。敵撃破ごとにシールド2%回復。シールド被弾時、吸収ダメージ10%反射・停止1秒・射程80%低下3秒。被弾ごとに防御力+5%（最大+75%）。',
   strong: { 天使: 5, 神話: 5, 赤: 5, 宇宙: 5 },
   resist: { 天使: 0.45, 神話: 0.45, 赤: 0.45, 宇宙: 0.45 },
-  curseImmune: true, stopImmune: true, surgeImmune: true,
+  curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5,
   damageCap: 0.11,
   zeusAlly: { bands: [{ min: 0, max: 50, damage: 60000 }, { min: 100, max: 150, damage: 22222 }, { min: 200, max: 250, damage: 15000 }], defensePerHit: 0.05, defenseMax: 0.75, enemyCountAttack: 0.02, enemyCountMax: 0.20, shield: 100000, shieldKillRestore: 0.02, shieldReflect: 0.10, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.33, stopDuration: 2, attackDownChance: 0.33, attackDownFactor: 0.2, attackDownDuration: 2 }
@@ -62,7 +62,7 @@ const enemyZeus = {
   stopChance: 0.33, stopDuration: 2,
   attackDownChance: 0.33, attackDownFactor: 0.2, attackDownDuration: 2,
   knockbackChance: 0.5, yabayaba: 5, yabayabaChance: 1,
-  curseImmune: true, stopImmune: true, surgeImmune: true,
+  curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5
 };
 const servantEnemy = {
@@ -140,6 +140,26 @@ if (!document.getElementById('zeusLightningStyle')) {
   document.head.appendChild(style);
 }
 
+let zeusWaveContext = null;
+const originalAllyWaveAttack = window.allyWaveAttack;
+if (typeof originalAllyWaveAttack === 'function') {
+  window.allyWaveAttack = function() {
+    const previous = zeusWaveContext;
+    zeusWaveContext = 'ally';
+    try { return originalAllyWaveAttack.apply(this, arguments); }
+    finally { zeusWaveContext = previous; }
+  };
+}
+const originalEnemyWaveAttack = window.enemyWaveAttack;
+if (typeof originalEnemyWaveAttack === 'function') {
+  window.enemyWaveAttack = function() {
+    const previous = zeusWaveContext;
+    zeusWaveContext = 'enemy';
+    try { return originalEnemyWaveAttack.apply(this, arguments); }
+    finally { zeusWaveContext = previous; }
+  };
+}
+
 const originalHit = window.hit;
 if (typeof originalHit === 'function') {
   window.hit = function(target, damage, source, abilitySource) {
@@ -163,6 +183,7 @@ if (typeof originalHit === 'function') {
     const incomingTraits = isEnemyZeus || isAllyZeus ? ['天使', '神話', '赤', '宇宙'] : isServant ? ['天使', '神話'] : [];
     const reduction = isEnemyZeus ? 0.15 : isAllyZeus ? 0.45 : isServant ? 0.05 : 1;
     let incoming = Math.max(0, Number(damage) || 0);
+    if ((isEnemyZeus && zeusWaveContext === 'ally') || (isAllyZeus && zeusWaveContext === 'enemy')) incoming *= 0.5;
     if (source && traitIs(source, incomingTraits)) incoming *= reduction;
     if (isEnemyZeus || isAllyZeus || isServant) {
       const capRatio = isEnemyZeus ? 0.07 : isAllyZeus ? 0.11 : 0.15;
