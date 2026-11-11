@@ -193,6 +193,7 @@ const enemyGapTargetB = {
 };
 runtime.units.push(enemyGapTargetA, enemyGapTargetB);
 runtimeWindow.enemyAttackTarget(god, enemyGapTargetA, {}, 1, false);
+assert.equal(effectNodes.length, 4, 'enemy Zeus visibly strikes the first band even when it is empty');
 const runScheduled = delay => {
   const index = scheduledTimers.findIndex(timer => timer.delay === delay);
   assert.notEqual(index, -1, 'expected scheduled lightning wave at ' + delay + 'ms');
