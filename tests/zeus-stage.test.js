@@ -102,6 +102,10 @@ const runtime = {
   renderFormation() { runtimeCalls.formation++; },
   renderFormationBuffSummary() { runtimeCalls.buffs++; },
   eventClears: { '最高神:ゼウス降臨': true },
+  formation: [],
+  formationStableNamesAtBoot: ['最高神:ゼウス'],
+  normalizeFormation() {},
+  saveFormationStableNames() {},
   syncOwnedCount() { runtime.ownedCount = runtime.ownedFlags.filter(Boolean).length; },
   save() { runtime.saved = true; },
   console
@@ -117,6 +121,7 @@ assert.equal(runtime.cards[0].id, 0);
 assert.equal(runtime.CURRENT_CHARACTER_COUNT, 1);
 assert.equal(runtime.ownedFlags[0], true, 'a saved Zeus raid clear restores the reward character');
 assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
+assert.deepEqual(runtime.formation, [0], 'a saved Zeus formation is restored after late character registration');
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
 assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1 });
 
@@ -124,6 +129,8 @@ assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, bu
 // per-servant healing cap.
 const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3 };
 runtimeEnemies.push(god);
+runtimeWindow.hit(god, 100, null);
+assert.equal(effectNodes.length, 0, 'taking damage does not trigger Zeus attack lightning');
 const servant = { name: '最高神に使える者', hp: 100, maxhp: 100, atk: 10, trait: '氷' };
 const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnemy: false };
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
