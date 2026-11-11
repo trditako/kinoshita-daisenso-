@@ -148,6 +148,46 @@ function allyZeusStrikeBandIndex(distance) {
   return allyZeusAbility.zeusAlly.bands.findIndex(band => distance >= band.min && distance <= band.max);
 }
 function live(entity) { return !!entity && Number(entity.hp) > 0; }
+
+// Zeus's attack is the lightning itself. All three bands are struck on every
+// attack cycle, even when a band contains no enemy (the lightning still shows).
+let allyZeusLightningLoopStarted = false;
+function startAllyZeusLightningLoop() {
+  if (allyZeusLightningLoopStarted || typeof setInterval !== 'function') return;
+  allyZeusLightningLoopStarted = true;
+  setInterval(() => {
+    if (!Array.isArray(units) || !Array.isArray(enemies)) return;
+    const now = performance.now() / 1000;
+    for (const source of units) {
+      if (!live(source) || source.name !== ZEUS_ALLY) continue;
+      const interval = Math.max(0.1, Number(source.interval || 3));
+      if (now < Number(source.zeusNextLightningAt || 0)) continue;
+      const sensed = enemies.filter(target => live(target) &&
+        Math.abs(Number(target.x || 0) - Number(source.x || 0)) <= Number(source.senseRange || source.range || 600));
+      if (!sensed.length) continue;
+      source.zeusNextLightningAt = now + interval;
+      const direction = Math.sign(Number(sensed[0].x || 0) - Number(source.x || 0)) || 1;
+      const enemyCount = enemies.filter(live).length;
+      const bonus = 1 + Math.min(allyZeusAbility.zeusAlly.enemyCountMax, enemyCount * allyZeusAbility.zeusAlly.enemyCountAttack);
+      allyZeusAbility.zeusAlly.bands.forEach((band, index) => {
+        setTimeout(() => {
+          if (!live(source)) return;
+          const strikeX = Number(source.x || 0) + direction * ((band.min + band.max) / 2);
+          zeusLightning({ x: strikeX }, '#facc15');
+          const targets = enemies.filter(target => live(target) &&
+            Math.abs(Number(target.x || 0) - Number(source.x || 0)) >= band.min &&
+            Math.abs(Number(target.x || 0) - Number(source.x || 0)) <= band.max &&
+            Math.abs(Number(target.x || 0) - Number(source.x || 0)) <= Number(source.senseRange || source.range || 600));
+          for (const target of targets) {
+            window.hit(target, Math.round(band.damage * bonus), source, { zeusLightningResolved: true });
+            if (target.hp <= 0 && typeof window.removeEnemy === 'function') window.removeEnemy(target);
+          }
+        }, index * 500);
+      });
+    }
+  }, 50);
+}
+startAllyZeusLightningLoop();
 function traitIs(entity, names) {
   const raw = String(entity?.trait || entity?.attribute || '');
   return names.some(name => raw.includes(name));
@@ -222,21 +262,7 @@ const originalHit = window.hit;
 if (typeof originalHit === 'function') {
   window.hit = function(target, damage, source, abilitySource) {
     if (!target || !live(target)) return originalHit.apply(this, arguments);
-    if (source?.name === ZEUS_ALLY && target.isEnemy && !abilitySource?.zeusLightningResolved) {
-      const distance = Math.abs(Number(target.x || 0) - Number(source.x || 0));
-      const bandIndex = allyZeusStrikeBandIndex(distance);
-      if (bandIndex < 0 || distance > Math.max(0, Number(source.senseRange || source.range || 600))) return 0;
-      const delay = bandIndex * 500;
-      setTimeout(() => {
-        const impactDistance = Math.abs(Number(target.x || 0) - Number(source.x || 0));
-        if (!live(source) || !live(target) || !Array.isArray(enemies) || !enemies.includes(target) ||
-            allyZeusStrikeBandIndex(impactDistance) !== bandIndex || impactDistance > Math.max(0, Number(source.senseRange || source.range || 600))) return;
-        zeusLightning(target, '#facc15');
-        window.hit(target, damage, source, { ...(abilitySource || {}), zeusLightningResolved: true });
-        if (target.hp <= 0 && typeof window.removeEnemy === 'function') window.removeEnemy(target);
-      }, delay);
-      return 0;
-    }
+    if (source?.name === ZEUS_ALLY && !abilitySource?.zeusLightningResolved) return 0;
     const isEnemyZeus = target.isEnemy && target.name === ZEUS_ENEMY;
     const isAllyZeus = !target.isEnemy && target.name === ZEUS_ALLY;
     const isServant = target.name === SERVANT;
@@ -345,6 +371,10 @@ if (typeof originalEnemyAttackTarget === 'function') {
       const band = bands[index];
       const fire = () => {
         if (!live(enemy)) return;
+        const direction = Math.sign(Number(target?.x || 0) - Number(enemy.x || 0)) || 1;
+        const strikeX = Number(enemy.x || 0) + direction * ((band.min + band.max) / 2);
+        // Enemy Zeus also strikes the whole band even when it is empty.
+        zeusLightning({ x: strikeX }, '#facc15');
         const targets = (Array.isArray(units) ? units : []).filter(unit => {
           if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
           const distance = Math.abs(Number(unit.x || 0) - Number(enemy.x || 0));
@@ -355,7 +385,6 @@ if (typeof originalEnemyAttackTarget === 'function') {
           const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
           const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
           originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
-          zeusLightning(unit, '#facc15');
           if (unit.hp <= 0) {
             const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
             enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
@@ -372,15 +401,8 @@ if (typeof originalEnemyAttackTarget === 'function') {
 const originalSequence = window.getAttackSequence;
 if (typeof originalSequence === 'function') {
   window.getAttackSequence = function(source, target) {
-    if (source?.name === ZEUS_ALLY && Array.isArray(allyZeusAbility.zeusAlly.bands)) {
-      const distance = Math.abs(Number(target?.x || 0) - Number(source.x || 0));
-      const bandIndex = allyZeusStrikeBandIndex(distance);
-      const band = bandIndex < 0 ? null : allyZeusAbility.zeusAlly.bands[bandIndex];
-      if (!band || distance > Math.max(0, Number(source.senseRange || source.range || 600))) return [];
-      const enemyCount = Array.isArray(enemies) ? enemies.filter(live).length : 0;
-      const bonus = 1 + Math.min(allyZeusAbility.zeusAlly.enemyCountMax, enemyCount * allyZeusAbility.zeusAlly.enemyCountAttack);
-      return [{ damage: Math.round(band.damage * bonus), index: 0 }];
-    }
+    // Zeus attacks are resolved by the fixed-area lightning loop, not normal target hits.
+    if (source?.name === ZEUS_ALLY) return [];
     return originalSequence.apply(this, arguments);
   };
 }

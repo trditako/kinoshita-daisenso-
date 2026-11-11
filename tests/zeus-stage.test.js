@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v90/);
+assert.match(sw, /kinoshita-daisen-v91/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -33,14 +33,18 @@ assert.match(source, /zeusWaveContext === 'ally'/);
 assert.match(source, /zeusWaveContext === 'enemy'/);
 assert.match(source, /waveDamageFactor: 0\.5/);
 assert.match(source, /warpImmune: true/);
-assert.match(source, /bandIndex \* 500/);
+assert.match(source, /index \* 500/);
 assert.match(source, /zeusLightningResolved: true/);
+assert.match(source, /All three bands are struck on every/);
+assert.match(source, /zeusNextLightningAt/);
+assert.match(source, /zeusLightning\(\{ x: strikeX \}/);
+assert.doesNotMatch(source, /impactDistance\) !== bandIndex/, 'ally Zeus lightning is no longer target-locked');
 
 assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected after its HP reaches zero');
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
-assert.match(source, /impactDistance\) !== bandIndex/, 'ally strike is cancelled if the target leaves its assigned band before impact');
+assert.match(source, /source\?\.name === ZEUS_ALLY && !abilitySource\?\.zeusLightningResolved/, 'ordinary Zeus hits are suppressed so lightning is the only attack');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
@@ -96,6 +100,7 @@ const runtime = {
   updateHp() {},
   performance: { now: () => 1000 },
   setTimeout(fn, delay) { scheduledTimers.push({ fn, delay }); return scheduledTimers.length; },
+  setInterval(fn, delay) { runtime.intervalCallback = fn; runtime.intervalDelay = delay; return 1; },
   renderStageSelect() { runtimeCalls.stages++; },
   renderCards() { runtimeCalls.cards++; },
   renderOwnedStart() { runtimeCalls.owned++; },
@@ -157,18 +162,24 @@ const strikeTarget = {
   el: { getBoundingClientRect() { return { left: 90, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
 };
 runtimeEnemies.push(strikeTarget);
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 25 }).length, 1, 'stage 1 band 0-50 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 100 }).length, 1, 'stage 2 band 100-150 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 200 }).length, 1, 'stage 3 band 200-250 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 80 }).length, 0, 'the gap between stage 1 and 2 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 175 }).length, 0, 'the gap between stage 2 and 3 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 550 }).length, 0, 'sensing range does not extend the lightning attack bands');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 25 }).length, 0, 'ordinary target hits are disabled for Zeus');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 100 }).length, 0, 'Zeus uses area lightning instead of target hit sequences');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 200 }).length, 0, 'third band is handled by the lightning loop');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 80 }).length, 0, 'ordinary hits are disabled');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 175 }).length, 0, 'ordinary hits are disabled');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 550 }).length, 0, 'ordinary hits are disabled');
 runtimeWindow.hit(strikeTarget, 100, allyZeus);
-assert.equal(strikeTarget.hp, 1000, 'damage waits for the lightning impact');
-assert.equal(scheduledTimers[0].delay, 500, 'the second attack band lands 0.5 seconds after stage 1');
-scheduledTimers.shift().fn();
-assert.equal(strikeTarget.hp, 900, 'the target takes damage when the bolt lands');
-assert.equal(effectNodes.length, 1, 'a visible lightning bolt is created for the actual hit');
+assert.equal(strikeTarget.hp, 1000, 'normal hit calls do not apply Zeus lightning damage');
+assert.equal(effectNodes.length, 0, 'Zeus lightning is not triggered by an ordinary target hit');
+runtime.units.push(allyZeus);
+runtime.intervalCallback();
+assert.equal(runtime.intervalDelay, 50, 'area lightning scheduler polls live combat state');
+assert.equal(scheduledTimers.length, 3, 'all three lightning bands are scheduled even when some are empty');
+assert.deepEqual(scheduledTimers.map(timer => timer.delay), [0, 500, 1000]);
+scheduledTimers.forEach(timer => timer.fn());
+scheduledTimers.length = 0; // discard completed ally-strike timers before enemy Zeus checks
+assert.equal(effectNodes.length, 3, 'all three area bands show lightning even without a target in every band');
+assert.ok(strikeTarget.hp < 1000, 'an enemy standing in a lightning band takes damage at impact');
 
 // Enemy Zeus also covers the gaps between its three damage bands.
 const enemyGapTargetA = {
@@ -190,7 +201,8 @@ runScheduled(500);
 assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second band');
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
-assert.equal(effectNodes.length, 3, 'each enemy Zeus target receives its own lightning visual');
+assert.equal(effectNodes.length, 6, 'both ally and enemy Zeus render all three lightning bands, including empty bands');
+assert.match(source, /Enemy Zeus also strikes the whole band even when it is empty/);
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
