@@ -8,7 +8,9 @@ on:
       - 'tests/genesis-kinoshita.test.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
-      - 'tests/ice-wyvern.test.js'\n      - 'zeus.js'\n      - 'tests/zeus-stage.test.js'
+      - 'tests/ice-wyvern.test.js'
+      - 'zeus.js'
+      - 'tests/zeus-stage.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -51,8 +53,10 @@ jobs:
       - name: Check Genesis Kinoshita script and regression tests
         run: |
           node --check genesis.js
-          node --check hitman.js\n          node --check zeus.js
+          node --check hitman.js
+          node --check zeus.js
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
-          node tests/ice-wyvern.test.js\n          node tests/zeus-stage.test.js
+          node tests/ice-wyvern.test.js
+          node tests/zeus-stage.test.js
