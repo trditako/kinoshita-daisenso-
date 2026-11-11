@@ -177,6 +177,7 @@ assert.equal(runtime.intervalDelay, 50, 'area lightning scheduler polls live com
 assert.equal(scheduledTimers.length, 3, 'all three lightning bands are scheduled even when some are empty');
 assert.deepEqual(scheduledTimers.map(timer => timer.delay), [0, 500, 1000]);
 scheduledTimers.forEach(timer => timer.fn());
+scheduledTimers.length = 0; // discard completed ally-strike timers before enemy Zeus checks
 assert.equal(effectNodes.length, 3, 'all three area bands show lightning even without a target in every band');
 assert.ok(strikeTarget.hp < 1000, 'an enemy standing in a lightning band takes damage at impact');
 
