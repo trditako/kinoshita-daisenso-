@@ -200,7 +200,8 @@ runScheduled(500);
 assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second band');
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
-assert.equal(effectNodes.length, 3, 'each enemy Zeus target receives its own lightning visual');
+assert.equal(effectNodes.length, 6, 'both ally and enemy Zeus render all three lightning bands, including empty bands');
+assert.match(source, /Enemy Zeus also strikes the whole band even when it is empty/);
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
