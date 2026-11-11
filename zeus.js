@@ -104,8 +104,20 @@ if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof 
       : (typeof formationCharacterNamesAtBoot !== 'undefined' && Array.isArray(formationCharacterNamesAtBoot) ? formationCharacterNamesAtBoot : []);
     const wasOwned = savedNames.includes(ZEUS_ALLY) || savedFormationNames.includes(ZEUS_ALLY);
     const wasCleared = typeof eventClears !== 'undefined' && eventClears && eventClears[STAGE_NAME] === true;
-    if (wasOwned || wasCleared) {
-      ownedFlags[zeusCardIndex] = true;
+    if (wasOwned || wasCleared) ownedFlags[zeusCardIndex] = true;
+
+    // Zeus is registered after the main save loader and hitman.js restoration.
+    // Rebuild the saved formation by stable character names so its late ID is not lost on refresh.
+    if (savedFormationNames.includes(ZEUS_ALLY) && typeof formation !== 'undefined' && Array.isArray(formation)) {
+      const restored = savedFormationNames
+        .map(name => cards.findIndex(card => card && card.name === name))
+        .filter(id => id >= 0);
+      for (const id of restored) ownedFlags[id] = true;
+      formation = restored.slice(0, 10);
+      if (typeof normalizeFormation === 'function') normalizeFormation();
+      if (typeof saveFormationStableNames === 'function') saveFormationStableNames();
+    }
+    if (wasOwned || wasCleared || savedFormationNames.includes(ZEUS_ALLY)) {
       if (typeof syncOwnedCount === 'function') syncOwnedCount();
       if (typeof save === 'function') save();
     }
@@ -299,7 +311,8 @@ if (typeof originalHit === 'function') {
         }
       }
     }
-    if ((isEnemyZeus || isAllyZeus) && target.hp > 0) zeusLightning(target);
+    // Zeus should emit lightning when it attacks, not when it is hit.
+    // Attack impact visuals are emitted by the dedicated ally/enemy strike handlers.
     return result;
   };
 }

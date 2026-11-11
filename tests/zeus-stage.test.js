@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v89/);
+assert.match(sw, /kinoshita-daisen-v90/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -102,6 +102,10 @@ const runtime = {
   renderFormation() { runtimeCalls.formation++; },
   renderFormationBuffSummary() { runtimeCalls.buffs++; },
   eventClears: { '最高神:ゼウス降臨': true },
+  formation: [],
+  formationStableNamesAtBoot: ['最高神:ゼウス'],
+  normalizeFormation() {},
+  saveFormationStableNames() {},
   syncOwnedCount() { runtime.ownedCount = runtime.ownedFlags.filter(Boolean).length; },
   save() { runtime.saved = true; },
   console
@@ -117,13 +121,18 @@ assert.equal(runtime.cards[0].id, 0);
 assert.equal(runtime.CURRENT_CHARACTER_COUNT, 1);
 assert.equal(runtime.ownedFlags[0], true, 'a saved Zeus raid clear restores the reward character');
 assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
+assert.equal(runtime.formation.length, 1, 'the saved Zeus formation is restored after late character registration');
+assert.equal(runtime.formation[0], 0);
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
 assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1 });
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
-const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3 };
+const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3, isEnemy: true };
 runtimeEnemies.push(god);
+runtimeWindow.hit(god, 100, null);
+assert.equal(effectNodes.length, 0, 'taking damage does not trigger Zeus attack lightning');
+god.hp = 800; // Keep the servant-healing assertion independent of this visual regression.
 const servant = { name: '最高神に使える者', hp: 100, maxhp: 100, atk: 10, trait: '氷' };
 const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnemy: false };
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
