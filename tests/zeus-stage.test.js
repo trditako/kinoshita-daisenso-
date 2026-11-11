@@ -6,7 +6,7 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\.9\.71'/);
+assert.match(html, /GAME_VERSION='v1\.9\.72'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-raid-fix2/);
 assert.match(sw, /kinoshita-daisen-v86/);
 assert.match(sw, /\.\/zeus\.js/);
