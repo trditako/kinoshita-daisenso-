@@ -237,13 +237,22 @@ if (typeof originalEnemyAttackTarget === 'function') {
   };
 }
 
+const originalAttackEffect = window.attackEffect;
+if (typeof originalAttackEffect === 'function') {
+  window.attackEffect = function(source, target) {
+    const result = originalAttackEffect.apply(this, arguments);
+    if (source?.name === ZEUS_ALLY && target?.isEnemy) zeusLightning(target);
+    return result;
+  };
+}
+
 const originalSequence = window.getAttackSequence;
 if (typeof originalSequence === 'function') {
   window.getAttackSequence = function(source, target) {
     if (source?.name === ZEUS_ALLY && Array.isArray(allyZeusAbility.zeusAlly.bands)) {
       const distance = Math.abs(Number(target?.x || 0) - Number(source.x || 0));
       const band = allyZeusAbility.zeusAlly.bands.find(b => distance >= b.min && distance <= b.max);
-      if (!band) return [];
+      if (!band) return [{ damage: 1, index: 0 }];
       const enemyCount = Array.isArray(enemies) ? enemies.filter(live).length : 0;
       const bonus = 1 + Math.min(allyZeusAbility.zeusAlly.enemyCountMax, enemyCount * allyZeusAbility.zeusAlly.enemyCountAttack);
       return [{ damage: Math.round(band.damage * bonus), index: 0 }];
