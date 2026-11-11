@@ -165,6 +165,7 @@ if (typeof originalHit === 'function') {
     const beforeShield = Number(target.barrier || 0);
     const result = originalHit.call(this, target, incoming, source, abilitySource);
     const actual = Math.max(0, beforeHp - Number(target.hp || 0));
+    if (actual > 0 && source) target.zeusLastDamageSource = source;
     const shieldDamage = Math.max(0, beforeShield - Number(target.barrier || 0));
     if ((isEnemyZeus || isAllyZeus) && actual > 0) {
       target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * (isEnemyZeus ? 0.5 : 0.3)));
@@ -263,7 +264,9 @@ if (typeof originalEnemyAttackTarget === 'function') {
           const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
           const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
           const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
-          originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
+          const statusRoll = Math.random();
+          const attackEffects = { ...(ea || {}), stopChance: statusRoll < 0.33 ? 0.33 : 0, attackDownChance: statusRoll >= 0.33 && statusRoll < 0.66 ? 0.33 : 0 };
+          originalEnemyAttackTarget.call(this, scaled, unit, attackEffects, performance.now() / 1000, sealed);
           zeusLightning(unit);
           if (unit.hp <= 0) {
             const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
@@ -306,6 +309,10 @@ const originalSpawnEnemy = window.spawnEnemy;
 if (typeof originalSpawnEnemy === 'function') {
   window.spawnEnemy = function(key) {
     const enemy = originalSpawnEnemy.apply(this, arguments);
+    if (enemy?.name === ZEUS_ENEMY) {
+      const label = enemy.el?.querySelector?.('.barrierLabel');
+      if (label) label.textContent = '⚡ パワーシールド ' + Math.ceil(enemy.barrier || 0).toLocaleString() + ' / ' + Math.ceil(enemy.barrierMax || 5000000).toLocaleString();
+    }
     if (enemy?.name === SERVANT && Array.isArray(enemies) && enemies.some(e => e?.name === ZEUS_ENEMY && live(e))) {
       const factor = 1.75;
       enemy.hp = enemy.maxhp = Math.round(enemy.maxhp * factor);
