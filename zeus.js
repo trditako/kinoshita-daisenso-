@@ -144,6 +144,19 @@ const originalHit = window.hit;
 if (typeof originalHit === 'function') {
   window.hit = function(target, damage, source, abilitySource) {
     if (!target || !live(target)) return originalHit.apply(this, arguments);
+    if (source?.name === ZEUS_ALLY && target.isEnemy && !abilitySource?.zeusDelayed) {
+      const distance = Math.abs(Number(target.x || 0) - Number(source.x || 0));
+      const bandIndex = distance <= 50 ? 0 : distance >= 100 && distance <= 150 ? 1 : distance >= 200 && distance <= 250 ? 2 : -1;
+      if (bandIndex > 0) {
+        const delay = bandIndex * 500;
+        setTimeout(() => {
+          if (!live(source) || !live(target) || !Array.isArray(enemies) || !enemies.includes(target)) return;
+          window.hit(target, damage, source, { ...(abilitySource || {}), zeusDelayed: true });
+          if (target.hp <= 0 && typeof window.removeEnemy === 'function') window.removeEnemy(target);
+        }, delay);
+        return 0;
+      }
+    }
     const isEnemyZeus = target.isEnemy && target.name === ZEUS_ENEMY;
     const isAllyZeus = !target.isEnemy && target.name === ZEUS_ALLY;
     const isServant = target.name === SERVANT;
@@ -285,7 +298,11 @@ const originalAttackEffect = window.attackEffect;
 if (typeof originalAttackEffect === 'function') {
   window.attackEffect = function(source, target) {
     const result = originalAttackEffect.apply(this, arguments);
-    if (source?.name === ZEUS_ALLY && target?.isEnemy) zeusLightning(target);
+    if (source?.name === ZEUS_ALLY && target?.isEnemy) {
+      const distance = Math.abs(Number(target.x || 0) - Number(source.x || 0));
+      const bandIndex = distance <= 50 ? 0 : distance >= 100 && distance <= 150 ? 1 : distance >= 200 && distance <= 250 ? 2 : -1;
+      if (bandIndex >= 0) setTimeout(() => { if (live(target)) zeusLightning(target); }, bandIndex * 500);
+    }
     return result;
   };
 }
