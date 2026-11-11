@@ -48,7 +48,7 @@ assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing 
 // Execute the feature script with a minimal game-like global scope to verify
 // that the stage and reward character are actually registered at runtime.
 const runtimeEnemies = [];
-const runtimeCalls = { stages: 0, cards: 0, owned: 0 };
+const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0 };
 const runtimeWindow = {
   enemyAttackTarget(enemy, target) {
     target.hp = Math.max(0, target.hp - Number(enemy.atk || 0));
@@ -84,6 +84,8 @@ const runtime = {
   renderStageSelect() { runtimeCalls.stages++; },
   renderCards() { runtimeCalls.cards++; },
   renderOwnedStart() { runtimeCalls.owned++; },
+  renderFormation() { runtimeCalls.formation++; },
+  renderFormationBuffSummary() { runtimeCalls.buffs++; },
   eventClears: { '最高神:ゼウス降臨': true },
   syncOwnedCount() { runtime.ownedCount = runtime.ownedFlags.filter(Boolean).length; },
   save() { runtime.saved = true; },
@@ -101,7 +103,7 @@ assert.equal(runtime.CURRENT_CHARACTER_COUNT, 1);
 assert.equal(runtime.ownedFlags[0], true, 'a saved Zeus raid clear restores the reward character');
 assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
-assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1 });
+assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1 });
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
