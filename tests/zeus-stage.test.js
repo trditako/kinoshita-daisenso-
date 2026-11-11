@@ -128,10 +128,11 @@ assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, bu
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
-const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3 };
+const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3, isEnemy: true };
 runtimeEnemies.push(god);
 runtimeWindow.hit(god, 100, null);
 assert.equal(effectNodes.length, 0, 'taking damage does not trigger Zeus attack lightning');
+god.hp = 800; // Keep the servant-healing assertion independent of this visual regression.
 const servant = { name: '最高神に使える者', hp: 100, maxhp: 100, atk: 10, trait: '氷' };
 const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnemy: false };
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
