@@ -446,4 +446,6 @@ if (typeof originalRenderUnitElement === 'function') {
 if (typeof renderStageSelect === 'function') renderStageSelect();
 if (typeof renderCards === 'function') renderCards();
 if (typeof renderOwnedStart === 'function') renderOwnedStart();
+if (typeof renderFormation === 'function') renderFormation();
+if (typeof renderFormationBuffSummary === 'function') renderFormationBuffSummary();
 })();
