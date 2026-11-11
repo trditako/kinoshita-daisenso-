@@ -159,11 +159,13 @@ if (typeof originalHit === 'function') {
       const stacks = Number(target.zeusDefenseStacks || 0);
       incoming *= 1 - Math.min(0.75, stacks * 0.05);
     }
-    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);\n    if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
+    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);
+    if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
     const beforeHp = Number(target.hp || 0);
     const beforeShield = Number(target.barrier || 0);
     const result = originalHit.call(this, target, incoming, source, abilitySource);
     const actual = Math.max(0, beforeHp - Number(target.hp || 0));
+    if (actual > 0 && source) target.zeusLastDamageSource = source;
     const shieldDamage = Math.max(0, beforeShield - Number(target.barrier || 0));
     if ((isEnemyZeus || isAllyZeus) && actual > 0) {
       target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * (isEnemyZeus ? 0.5 : 0.3)));
@@ -259,13 +261,17 @@ if (typeof originalEnemyAttackTarget === 'function') {
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) >= band.min &&
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) <= band.max);
         for (const unit of targets) {
-          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;\n          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;\n          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
-          originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
+          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
+          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
+          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
+          const statusRoll = Math.random();
+          const attackEffects = { ...(ea || {}), stopChance: statusRoll < 0.33 ? 0.33 : 0, attackDownChance: statusRoll >= 0.33 && statusRoll < 0.66 ? 0.33 : 0 };
+          originalEnemyAttackTarget.call(this, scaled, unit, attackEffects, performance.now() / 1000, sealed);
           zeusLightning(unit);
-          if (unit.hp <= 0 && Array.isArray(enemies)) {
-            for (const servant of enemies) if (servant?.name === SERVANT && live(servant)) {
-              servant.zeusDeathCounted = servant.zeusDeathCounted || false;
-            }
+          if (unit.hp <= 0) {
+            const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
+            enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
+            if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(enemy);
           }
         }
       };
@@ -303,6 +309,10 @@ const originalSpawnEnemy = window.spawnEnemy;
 if (typeof originalSpawnEnemy === 'function') {
   window.spawnEnemy = function(key) {
     const enemy = originalSpawnEnemy.apply(this, arguments);
+    if (enemy?.name === ZEUS_ENEMY) {
+      const label = enemy.el?.querySelector?.('.barrierLabel');
+      if (label) label.textContent = '⚡ パワーシールド ' + Math.ceil(enemy.barrier || 0).toLocaleString() + ' / ' + Math.ceil(enemy.barrierMax || 5000000).toLocaleString();
+    }
     if (enemy?.name === SERVANT && Array.isArray(enemies) && enemies.some(e => e?.name === ZEUS_ENEMY && live(e))) {
       const factor = 1.75;
       enemy.hp = enemy.maxhp = Math.round(enemy.maxhp * factor);
@@ -314,6 +324,49 @@ if (typeof originalSpawnEnemy === 'function') {
       updateHp(enemy);
     }
     return enemy;
+  };
+}
+
+const originalRemoveEnemy = window.removeEnemy;
+if (typeof originalRemoveEnemy === 'function') {
+  window.removeEnemy = function(victim) {
+    const wasServant = victim?.name === SERVANT && live(victim);
+    const result = originalRemoveEnemy.apply(this, arguments);
+    if (victim?.zeusLastDamageSource?.name === ZEUS_ALLY && Array.isArray(units)) {
+      const ally = units.find(u => u?.name === ZEUS_ALLY && live(u));
+      if (ally) {
+        const maximum = Number(ally.powerShieldMax || 100000);
+        ally.powerShield = Math.min(maximum, Number(ally.powerShield || 0) + maximum * 0.02);
+        if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(ally);
+      }
+    }
+    if (wasServant && Array.isArray(enemies)) {
+      const god = enemies.find(e => e?.name === ZEUS_ENEMY && live(e));
+      if (god) {
+        god.zeusServantDeaths = Math.min(4, Number(god.zeusServantDeaths || 0) + 1);
+        const factor = 1.25;
+        god.maxhp = Math.round(Number(god.maxhp || 1) * factor);
+        god.hp = Math.min(god.maxhp, Math.round(Number(god.hp || 0) * factor));
+        god.atk = Math.round(Number(god.atk || 1) * factor);
+        god.spd = Number(god.spd || 0.4) * factor;
+        god.interval = Math.max(0.1, Number(god.interval || 3) / factor);
+        updateHp(god);
+        if (typeof window.setStatusMark === 'function') window.setStatusMark(god, '⚡', '使える者撃破強化 +' + god.zeusServantDeaths * 25 + '%', 999999, 'zeusServantDeath');
+      }
+    }
+    return result;
+  };
+}
+const originalRenderUnitElement = window.renderUnitElement;
+if (typeof originalRenderUnitElement === 'function') {
+  window.renderUnitElement = function(unit) {
+    const result = originalRenderUnitElement.apply(this, arguments);
+    if (unit?.name === ZEUS_ALLY) {
+      unit.powerShield = Math.max(Number(unit.powerShield || 0), 100000);
+      unit.powerShieldMax = Math.max(Number(unit.powerShieldMax || 0), 100000);
+      if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(unit);
+    }
+    return result;
   };
 }
 })();
