@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v87/);
+assert.match(sw, /kinoshita-daisen-v88/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -34,11 +34,13 @@ assert.match(source, /zeusWaveContext === 'enemy'/);
 assert.match(source, /waveDamageFactor: 0\.5/);
 assert.match(source, /warpImmune: true/);
 assert.match(source, /bandIndex \* 500/);
-assert.match(source, /zeusDelayed: true/);
+assert.match(source, /zeusLightningResolved: true/);
 
 assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected after its HP reaches zero');
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
-assert.match(source, /if \(!band\) return \[\]/, 'do not deal fallback damage outside ally Zeus range bands');
+assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus has continuous distance bands throughout its 250 range');
+assert.match(source, /impactDistance > Math\.max\(0, Number\(source\.range \|\| 250\)\)/, 'strike is cancelled if the target leaves the attack range before impact');
+assert.match(source, /distance <= 400 && distanceBand === index/, 'enemy Zeus strikes targets throughout its full attack range');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
 assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
 assert.match(source, /savedNames\.includes\(ZEUS_ALLY\).*savedFormationNames\.includes\(ZEUS_ALLY\)/s, 'saved ownership and formation names can restore Zeus');
@@ -48,8 +50,19 @@ assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing 
 // Execute the feature script with a minimal game-like global scope to verify
 // that the stage and reward character are actually registered at runtime.
 const runtimeEnemies = [];
+const scheduledTimers = [];
+const effectNodes = [];
+const effectsLayer = {
+  appendChild(node) { effectNodes.push(node); },
+  getBoundingClientRect() { return { left: 0, top: 0, width: 1200, height: 500 }; }
+};
 const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0 };
 const runtimeWindow = {
+  hit(target, damage) {
+    target.hp = Math.max(0, target.hp - Number(damage || 0));
+    return target.hp;
+  },
+  getAttackSequence() { return []; },
   enemyAttackTarget(enemy, target) {
     target.hp = Math.max(0, target.hp - Number(enemy.atk || 0));
   },
@@ -63,8 +76,8 @@ const runtimeWindow = {
 const runtime = {
   window: runtimeWindow,
   document: {
-    getElementById() { return null; },
-    createElement() { return { style: {}, textContent: '' }; },
+    getElementById(id) { return id === 'effects' ? effectsLayer : null; },
+    createElement() { return { style: { setProperty() {} }, textContent: '', append() {}, remove() {} }; },
     head: { appendChild() {} }
   },
   cards: [],
@@ -80,7 +93,7 @@ const runtime = {
   units: [],
   updateHp() {},
   performance: { now: () => 1000 },
-  setTimeout() { return 1; },
+  setTimeout(fn, delay) { scheduledTimers.push({ fn, delay }); return scheduledTimers.length; },
   renderStageSelect() { runtimeCalls.stages++; },
   renderCards() { runtimeCalls.cards++; },
   renderOwnedStart() { runtimeCalls.owned++; },
@@ -124,6 +137,46 @@ assert.equal(god.maxhp, 1250);
 assert.equal(god.atk, 125);
 assert.equal(god.spd, 0.5);
 assert.equal(god.interval, 2.4);
+
+// Ally Zeus strikes each enemy in its full 250 range with a visible bolt,
+// and damage is applied at the same moment the lightning reaches the target.
+const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 250 };
+const strikeTarget = {
+  name: 'strike target', hp: 1000, maxhp: 1000, x: 100, isEnemy: true,
+  el: { getBoundingClientRect() { return { left: 90, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+};
+runtimeEnemies.push(strikeTarget);
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 80 }).length, 1, 'targets in a former distance gap still receive an attack');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 249 }).length, 1, 'the far edge of Zeus range remains attackable');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 251 }).length, 0, 'targets outside Zeus range are not attacked');
+runtimeWindow.hit(strikeTarget, 100, allyZeus);
+assert.equal(strikeTarget.hp, 1000, 'damage waits for the lightning impact');
+assert.equal(scheduledTimers[0].delay, 500, 'the middle strike zone has its staged lightning timing');
+scheduledTimers.shift().fn();
+assert.equal(strikeTarget.hp, 900, 'the target takes damage when the bolt lands');
+assert.equal(effectNodes.length, 1, 'a visible lightning bolt is created for the actual hit');
+
+// Enemy Zeus also covers the gaps between its three damage bands.
+const enemyGapTargetA = {
+  name: 'enemy gap target A', hp: 500000, maxhp: 500000, x: 130, isEnemy: false,
+  el: { getBoundingClientRect() { return { left: 120, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+};
+const enemyGapTargetB = {
+  name: 'enemy gap target B', hp: 500000, maxhp: 500000, x: 280, isEnemy: false,
+  el: { getBoundingClientRect() { return { left: 270, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+};
+runtime.units.push(enemyGapTargetA, enemyGapTargetB);
+runtimeWindow.enemyAttackTarget(god, enemyGapTargetA, {}, 1, false);
+const runScheduled = delay => {
+  const index = scheduledTimers.findIndex(timer => timer.delay === delay);
+  assert.notEqual(index, -1, 'expected scheduled lightning wave at ' + delay + 'ms');
+  scheduledTimers.splice(index, 1)[0].fn();
+};
+runScheduled(500);
+assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits targets in the 100-150 distance gap');
+runScheduled(1000);
+assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits targets in the 250-300 distance gap');
+assert.equal(effectNodes.length, 3, 'each enemy Zeus target receives its own lightning visual');
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
