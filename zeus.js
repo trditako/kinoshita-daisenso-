@@ -14,7 +14,7 @@ const servantAbility = {
   strong: { 天使: 8, 神話: 8 },
   resist: { 天使: 0.05, 神話: 0.05 },
   stopImmune: true, knockbackImmune: true, waveImmune: true,
-  curseImmune: true, slowImmune: true, attackDownImmune: true,
+  curseImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   zeusServant: { damageCap: 0.15, healRatio: 0.25, healLimit: 100000, godBuff: 0.75 }
 };
 
@@ -140,6 +140,26 @@ if (!document.getElementById('zeusLightningStyle')) {
   document.head.appendChild(style);
 }
 
+let zeusWaveContext = null;
+const originalAllyWaveAttack = window.allyWaveAttack;
+if (typeof originalAllyWaveAttack === 'function') {
+  window.allyWaveAttack = function() {
+    const previous = zeusWaveContext;
+    zeusWaveContext = 'ally';
+    try { return originalAllyWaveAttack.apply(this, arguments); }
+    finally { zeusWaveContext = previous; }
+  };
+}
+const originalEnemyWaveAttack = window.enemyWaveAttack;
+if (typeof originalEnemyWaveAttack === 'function') {
+  window.enemyWaveAttack = function() {
+    const previous = zeusWaveContext;
+    zeusWaveContext = 'enemy';
+    try { return originalEnemyWaveAttack.apply(this, arguments); }
+    finally { zeusWaveContext = previous; }
+  };
+}
+
 const originalHit = window.hit;
 if (typeof originalHit === 'function') {
   window.hit = function(target, damage, source, abilitySource) {
@@ -163,6 +183,7 @@ if (typeof originalHit === 'function') {
     const incomingTraits = isEnemyZeus || isAllyZeus ? ['天使', '神話', '赤', '宇宙'] : isServant ? ['天使', '神話'] : [];
     const reduction = isEnemyZeus ? 0.15 : isAllyZeus ? 0.45 : isServant ? 0.05 : 1;
     let incoming = Math.max(0, Number(damage) || 0);
+    if ((isEnemyZeus && zeusWaveContext === 'ally') || (isAllyZeus && zeusWaveContext === 'enemy')) incoming *= 0.5;
     if (source && traitIs(source, incomingTraits)) incoming *= reduction;
     if (isEnemyZeus || isAllyZeus || isServant) {
       const capRatio = isEnemyZeus ? 0.07 : isAllyZeus ? 0.11 : 0.15;
