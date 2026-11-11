@@ -186,10 +186,13 @@ const emptyBandZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 5
 const gapOnlyTarget = makeAllyTarget('gap-only trigger', 5080);
 runtimeEnemies.push(gapOnlyTarget);
 runtimeWindow.getAttackSequence(emptyBandZeus, gapOnlyTarget);
-const effectsAfterEmptyStrike = effectNodes.length;
-assert.ok(effectsAfterEmptyStrike >= 4, 'an empty first band still displays a lightning strike');
+const effectsAfterEmptyStrikeStart = effectNodes.length;
+assert.ok(effectsAfterEmptyStrikeStart >= 4, 'an empty first band still displays a lightning strike');
 runtimeWindow.getAttackSequence(emptyBandZeus, gapOnlyTarget);
-assert.equal(effectNodes.length, effectsAfterEmptyStrike, 'the attack cooldown prevents duplicate lightning from repeated sequence checks');
+assert.equal(effectNodes.length, effectsAfterEmptyStrikeStart, 'the attack cooldown prevents duplicate lightning from repeated sequence checks');
+runAllyScheduled(500);
+runAllyScheduled(1000);
+const effectsAfterEmptyStrike = effectNodes.length;
 // Enemy Zeus also covers the gaps between its three damage bands.
 const enemyGapTargetA = {
   name: 'enemy band 2 target', hp: 500000, maxhp: 500000, x: 200, isEnemy: false,
