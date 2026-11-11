@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.72';
+const GAME_VERSION='v1.9.73';
 const UPDATE_LOG=[
+  {date:'2026-11-12',version:'v1.9.73',title:'⚡ 最高神ゼウスの雷撃演出・クリア報酬復元を修正',items:['雷撃を対象位置に落ちる光線・分岐雷・着弾フラッシュ付きの演出へ変更','後発登録されるゼウスを保存済み所持名・編成名・降臨クリア記録から復元','ゼウスのクリア記録が残っている既存セーブにも報酬キャラクターを再付与']},
   {date:'2026-11-12',version:'v1.9.72',title:'🛠️ 最高神ゼウス降臨の登録・戦闘処理を修正',items:['ゼウス用スクリプト読み込み後にイベント一覧・キャラクター一覧を再描画し、ステージと報酬キャラクターを表示','使える者撃破時のゼウス強化、回復上限、シールド被弾時の防御成長を修正','停止・攻撃力低下の発動率、射程外攻撃、シールド再初期化を修正']},
   {date:'2026-11-12',version:'v1.9.71',title:'⚡ 最高神:ゼウス降臨を追加',items:['イベントステージ「最高神:ゼウス降臨」とクリア報酬UR「最高神:ゼウス」を追加','最高神に使える者・敵味方ゼウスのステータス、3段階の射程・攻撃データ、耐性・被ダメージ上限を登録','雷撃演出、シールド反射・停止・射程低下、ゼウス周辺の支援効果を追加']},
   {date:'2026-11-11',version:'v1.9.70',title:'💾 後発キャラクターの所持・編成復元を修正',items:['アイスワイバーン襲来のクリア記録がある場合、未付与のアイスワイバーンを再付与','創世木下・ヒットマン木下など後から読み込むキャラクターの所持状態を名前から復元','全キャラクター登録後に保存済み編成を名前から復元し、読み込み途中の欠落を防止']},
@@ -7405,5 +7406,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./trade.js?v=20261028-ai-auctions-30s"></script>
 <script src="./genesis.js?v=20261111-ice-id-remap"></script>
 <script src="./hitman.js?v=20261111-save-restore"></script>
-<script src="./zeus.js?v=20261112-zeus-raid-fix2"></script>
+<script src="./zeus.js?v=20261112-zeus-lightning-reward-fix"></script>
 </body></html>
