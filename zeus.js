@@ -159,7 +159,8 @@ if (typeof originalHit === 'function') {
       const stacks = Number(target.zeusDefenseStacks || 0);
       incoming *= 1 - Math.min(0.75, stacks * 0.05);
     }
-    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);\n    if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
+    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);
+    if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
     const beforeHp = Number(target.hp || 0);
     const beforeShield = Number(target.barrier || 0);
     const result = originalHit.call(this, target, incoming, source, abilitySource);
@@ -259,7 +260,9 @@ if (typeof originalEnemyAttackTarget === 'function') {
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) >= band.min &&
           Math.abs(Number(unit.x || 0) - Number(enemy.x || 0)) <= band.max);
         for (const unit of targets) {
-          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;\n          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;\n          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
+          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
+          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
+          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
           originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
           zeusLightning(unit);
           if (unit.hp <= 0) {
