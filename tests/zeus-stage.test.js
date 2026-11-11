@@ -6,9 +6,9 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\.9\.72'/);
-assert.match(html, /zeus\.js\?v=20261112-zeus-raid-fix2/);
-assert.match(sw, /kinoshita-daisen-v86/);
+assert.match(html, /GAME_VERSION='v1\.9\.73'/);
+assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
+assert.match(sw, /kinoshita-daisen-v87/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -39,6 +39,9 @@ assert.match(source, /zeusDelayed: true/);
 assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected after its HP reaches zero');
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /if \(!band\) return \[\]/, 'do not deal fallback damage outside ally Zeus range bands');
+assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
+assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
+assert.match(source, /savedNames\.includes\(ZEUS_ALLY\).*savedFormationNames\.includes\(ZEUS_ALLY\)/s, 'saved ownership and formation names can restore Zeus');
 assert.doesNotMatch(source, /const statusRoll = Math\.random\(\)/, 'do not double-roll Zeus status probabilities');
 assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing has one capped implementation');
 
@@ -81,6 +84,9 @@ const runtime = {
   renderStageSelect() { runtimeCalls.stages++; },
   renderCards() { runtimeCalls.cards++; },
   renderOwnedStart() { runtimeCalls.owned++; },
+  eventClears: { '最高神:ゼウス降臨': true },
+  syncOwnedCount() { runtime.ownedCount = runtime.ownedFlags.filter(Boolean).length; },
+  save() { runtime.saved = true; },
   console
 };
 vm.runInNewContext(source, runtime);
@@ -92,6 +98,8 @@ assert.equal(registeredStage.knockbackAll, true);
 assert.equal(runtime.cards[0].name, '最高神:ゼウス');
 assert.equal(runtime.cards[0].id, 0);
 assert.equal(runtime.CURRENT_CHARACTER_COUNT, 1);
+assert.equal(runtime.ownedFlags[0], true, 'a saved Zeus raid clear restores the reward character');
+assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
 assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1 });
 
