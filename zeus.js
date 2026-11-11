@@ -325,6 +325,14 @@ if (typeof originalRemoveEnemy === 'function') {
   window.removeEnemy = function(victim) {
     const wasServant = victim?.name === SERVANT && live(victim);
     const result = originalRemoveEnemy.apply(this, arguments);
+    if (victim?.zeusLastDamageSource?.name === ZEUS_ALLY && Array.isArray(units)) {
+      const ally = units.find(u => u?.name === ZEUS_ALLY && live(u));
+      if (ally) {
+        const maximum = Number(ally.powerShieldMax || 100000);
+        ally.powerShield = Math.min(maximum, Number(ally.powerShield || 0) + maximum * 0.02);
+        if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(ally);
+      }
+    }
     if (wasServant && Array.isArray(enemies)) {
       const god = enemies.find(e => e?.name === ZEUS_ENEMY && live(e));
       if (god) {
