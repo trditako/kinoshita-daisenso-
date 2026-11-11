@@ -140,6 +140,7 @@ const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnem
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
 assert.equal(angelTarget.hp, 420, 'servant deals eight times damage to angel targets');
 assert.equal(god.hp, 820, 'servant heals Zeus by 25% of actual damage exactly once');
+god.x = 1000; // Keep the enemy Zeus outside the ally's 0-250 lightning bands.
 
 // Killing a servant strengthens the enemy Zeus.
 const deadServant = { name: '最高神に使える者', hp: 0, maxhp: 100 };
@@ -203,6 +204,7 @@ const enemyGapTargetB = {
   el: { getBoundingClientRect() { return { left: 270, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
 };
 runtime.units.push(enemyGapTargetA, enemyGapTargetB);
+god.x = 0; // Enemy Zeus now uses its own forward-facing 0-400 strike bands.
 runtimeWindow.enemyAttackTarget(god, enemyGapTargetA, {}, 1, false);
 const runScheduled = delay => {
   const index = scheduledTimers.findIndex(timer => timer.delay === delay);
