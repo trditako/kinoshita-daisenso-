@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v89/);
+assert.match(sw, /kinoshita-daisen-v90/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -121,7 +121,8 @@ assert.equal(runtime.cards[0].id, 0);
 assert.equal(runtime.CURRENT_CHARACTER_COUNT, 1);
 assert.equal(runtime.ownedFlags[0], true, 'a saved Zeus raid clear restores the reward character');
 assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
-assert.deepEqual(runtime.formation, [0], 'a saved Zeus formation is restored after late character registration');
+assert.equal(runtime.formation.length, 1, 'the saved Zeus formation is restored after late character registration');
+assert.equal(runtime.formation[0], 0);
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
 assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1 });
 
