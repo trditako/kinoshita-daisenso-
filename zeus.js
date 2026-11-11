@@ -371,6 +371,10 @@ if (typeof originalEnemyAttackTarget === 'function') {
       const band = bands[index];
       const fire = () => {
         if (!live(enemy)) return;
+        const direction = Math.sign(Number(target?.x || 0) - Number(enemy.x || 0)) || 1;
+        const strikeX = Number(enemy.x || 0) + direction * ((band.min + band.max) / 2);
+        // Enemy Zeus also strikes the whole band even when it is empty.
+        zeusLightning({ x: strikeX }, '#facc15');
         const targets = (Array.isArray(units) ? units : []).filter(unit => {
           if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
           const distance = Math.abs(Number(unit.x || 0) - Number(enemy.x || 0));
@@ -381,7 +385,6 @@ if (typeof originalEnemyAttackTarget === 'function') {
           const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
           const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
           originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
-          zeusLightning(unit, '#facc15');
           if (unit.hp <= 0) {
             const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
             enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
