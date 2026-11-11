@@ -40,7 +40,8 @@ assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected aft
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
-assert.match(source, /impactDistance\) !== bandIndex/, 'ally strike is cancelled if the target leaves its assigned band before impact');
+assert.match(source, /source\.zeusLightningNextAt/, 'ally lightning attack is launched once per attack cycle');
+assert.match(source, /return distance <= senseRange && distance >= band\.min && distance <= band\.max/, 'ally lightning resolves every target currently inside each band');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
@@ -149,27 +150,33 @@ assert.equal(god.atk, 125);
 assert.equal(god.spd, 0.5);
 assert.equal(god.interval, 2.4);
 
-// Ally Zeus strikes each enemy in its full 250 range with a visible bolt,
-// and damage is applied at the same moment the lightning reaches the target.
-const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600 };
-const strikeTarget = {
-  name: 'strike target', hp: 1000, maxhp: 1000, x: 100, isEnemy: true,
-  el: { getBoundingClientRect() { return { left: 90, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
-};
-runtimeEnemies.push(strikeTarget);
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 25 }).length, 1, 'stage 1 band 0-50 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 100 }).length, 1, 'stage 2 band 100-150 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 200 }).length, 1, 'stage 3 band 200-250 is attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 80 }).length, 0, 'the gap between stage 1 and 2 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 175 }).length, 0, 'the gap between stage 2 and 3 is not attackable');
-assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 550 }).length, 0, 'sensing range does not extend the lightning attack bands');
-runtimeWindow.hit(strikeTarget, 100, allyZeus);
-assert.equal(strikeTarget.hp, 1000, 'damage waits for the lightning impact');
-assert.equal(scheduledTimers[0].delay, 500, 'the second attack band lands 0.5 seconds after stage 1');
+// Ally Zeus launches all three lightning bands from one attack trigger,
+// even when the ordinary attack target is between the bands.
+const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 300, range: 600, senseRange: 600, interval: 3 };
+const makeEnemy = (name, x) => ({
+  name, hp: 1000, maxhp: 1000, x, isEnemy: true,
+  el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+});
+const bandTargetA = makeEnemy('band 1', 275);  // 0-50
+const triggerTarget = makeEnemy('ordinary target in a gap', 220); // 80 from Zeus
+const bandTargetB = makeEnemy('band 2', 175);  // 100-150
+const bandTargetC = makeEnemy('band 3', 75);   // 200-250
+runtimeEnemies.push(bandTargetA, triggerTarget, bandTargetB, bandTargetC);
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 325 }).length, 1, 'stage 1 band 0-50 is attackable');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 200 }).length, 0, 'the gap between stage 1 and 2 is not attackable');
+assert.equal(runtimeWindow.getAttackSequence(allyZeus, { x: 125 }).length, 1, 'stage 3 band 200-250 is attackable');
+runtimeWindow.hit(triggerTarget, 100, allyZeus);
+assert.equal(triggerTarget.hp, 1000, 'the ordinary selected target takes no direct attack damage');
+assert.equal(bandTargetA.hp, 1000, 'first lightning is resolved on its own impact');
+assert.equal(scheduledTimers[0].delay, 500, 'the second lightning band lands 0.5 seconds after the first');
 scheduledTimers.shift().fn();
-assert.equal(strikeTarget.hp, 900, 'the target takes damage when the bolt lands');
-assert.equal(effectNodes.length, 1, 'a visible lightning bolt is created for the actual hit');
-
+assert.equal(bandTargetB.hp, 1000, 'the second band waits for its lightning impact');
+scheduledTimers.shift().fn();
+assert.equal(bandTargetC.hp, 1000, 'the third band waits for its lightning impact');
+assert.ok(bandTargetA.hp < 1000, 'first band lightning damages an enemy even though it was not the selected target');
+assert.ok(bandTargetB.hp < 1000, 'second band lightning damages an enemy in its own range');
+assert.ok(bandTargetC.hp < 1000, 'third band lightning damages an enemy in its own range');
+assert.ok(effectNodes.length >= 3, 'each lightning band produces a visible bolt');
 // Enemy Zeus also covers the gaps between its three damage bands.
 const enemyGapTargetA = {
   name: 'enemy band 2 target', hp: 500000, maxhp: 500000, x: 200, isEnemy: false,
