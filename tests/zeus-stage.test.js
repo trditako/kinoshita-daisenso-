@@ -119,6 +119,7 @@ const runtime = {
   enemies: runtimeEnemies,
   units: [],
   updateHp() {},
+  Math: Object.create(Math),
   performance: { now: () => 1000 },
   setTimeout(fn, delay) { scheduledTimers.push({ fn, delay }); return scheduledTimers.length; },
   setInterval(fn, delay) { runtime.enemySenseLoop = fn; runtime.enemySenseLoopDelay = delay; return 1; },
