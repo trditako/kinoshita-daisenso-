@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.75'/);
 assert.match(html, /zeus\.js\?v=20261112-enemy-zeus-render-fix/);
-assert.match(sw, /kinoshita-daisen-v95/);
+assert.match(sw, /kinoshita-daisen-v96/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -286,6 +286,19 @@ assert.ok(scheduledTimers.some(timer => timer.delay === 500));
 assert.ok(scheduledTimers.some(timer => timer.delay === 1000));
 const beyondSenseZeus = makeZeusSource(20000);
 const beyond600 = makeAllyTarget('outside sensing range', 20601);
+
+// Trait damage is applied to ally Zeus's lightning, not just its card metadata.
+const traitDamageZeus = makeZeusSource(40000);
+const traitNormal = makeAllyTarget('non-trait comparison', 40020);
+const traitAngel = makeAllyTarget('angel comparison', 40040, '天使');
+traitNormal.hp = traitNormal.maxhp = 5000000;
+traitAngel.hp = traitAngel.maxhp = 5000000;
+runtimeEnemies.push(traitNormal, traitAngel);
+runtimeWindow.getAttackSequence(traitDamageZeus, traitNormal);
+const normalLoss = 5000000 - traitNormal.hp;
+const angelLoss = 5000000 - traitAngel.hp;
+assert.equal(angelLoss, normalLoss * 5, 'ally Zeus deals fivefold lightning damage to its four specified traits');
+
 runtimeEnemies.push(beyond600);
 const beforeBeyondEffects = effectNodes.length;
 runtimeWindow.getAttackSequence(beyondSenseZeus, beyond600);
@@ -295,6 +308,14 @@ assert.equal(effectNodes.length, beforeBeyondEffects, 'targets beyond 600 do not
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
 runtimeWindow.renderUnitElement(ally);
 assert.equal(ally.powerShield, 5000);
+
+// Enemy Zeus lightning applies its own stop/attack-down proc to opposing units.
+const enemyStatusTarget = { name: 'status test ally', hp: 100000, maxhp: 100000, isEnemy: false };
+const oldRandom = runtime.Math.random;
+runtime.Math.random = () => 0;
+runtimeWindow.hit(enemyStatusTarget, 1000, god, { zeusLightningResolved: true });
+runtime.Math.random = oldRandom;
+assert.ok(enemyStatusTarget.stopUntil > 1, 'enemy Zeus applies its configured stop proc on successful lightning damage');
 
 // Enemy-side sensing must begin at 600 even though its ordinary attack
 // radius is capped at 400; the strike remains lightning-only and visible.
