@@ -40,6 +40,9 @@ assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected aft
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /range: 400, senseRange: 600, detectRange: 600/, 'enemy Zeus keeps a 400 strike radius separate from its 600 sensing range');
+assert.match(source, /range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility\.zeusAlly\.bands/, 'ally Zeus uses 600 only to acquire a target while its own bands determine lightning impacts');
+assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 150, max: 250, damage: 55555 \}, \{ min: 300, max: 400, damage: 35000 \}\]/, 'enemy Zeus keeps its own three ranges and damage values');
+assert.match(source, /bands: \[\{ min: 0, max: 50, damage: 60000 \}, \{ min: 100, max: 150, damage: 22222 \}, \{ min: 200, max: 250, damage: 15000 \}\]/, 'ally Zeus keeps its different three ranges and damage values');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
