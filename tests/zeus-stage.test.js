@@ -158,7 +158,8 @@ assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, bu
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
-const god = { ...makeZeusSource(0, true), hp: 800, maxhp: 1000, atk: 100, spd: 0.4 };
+const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, x: 0, range: 400, senseRange: 600, interval: 3, isEnemy: true,
+  el: { getBoundingClientRect() { return { left: -10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } } };
 runtimeEnemies.push(god);
 runtimeWindow.hit(god, 100, null);
 assert.equal(effectNodes.length, 0, 'taking damage does not trigger Zeus attack lightning');
