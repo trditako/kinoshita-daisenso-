@@ -16,9 +16,9 @@ assert.match(source, /最高神:ゼウス降臨/);
 assert.match(source, /最高神に使える者/);
 assert.match(source, /hp: 26000000/);
 assert.match(source, /hp: 2500000, atk: 37000/);
-assert.match(source, /damage: 60000/);
-assert.match(source, /damage: 22222/);
-assert.match(source, /damage: 15000/);
+assert.match(source, /damage: 250000/);
+assert.match(source, /damage: 125000/);
+assert.match(source, /damage: 78000/);
 assert.match(source, /damage: 150000/);
 assert.match(source, /damage: 55555/);
 assert.match(source, /damage: 35000/);
@@ -42,7 +42,10 @@ assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus 
 assert.match(source, /range: 400, senseRange: 600, detectRange: 600/, 'enemy Zeus keeps a 400 strike radius separate from its 600 sensing range');
 assert.match(source, /range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility\.zeusAlly\.bands/, 'ally Zeus uses 600 only to acquire a target while its own bands determine lightning impacts');
 assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 150, max: 250, damage: 55555 \}, \{ min: 300, max: 400, damage: 35000 \}\]/, 'enemy Zeus keeps its own three ranges and damage values');
-assert.match(source, /bands: \[\{ min: 0, max: 50, damage: 60000 \}, \{ min: 100, max: 150, damage: 22222 \}, \{ min: 200, max: 250, damage: 15000 \}\]/, 'ally Zeus keeps its different three ranges and damage values');
+assert.match(source, /bands: \[\{ min: -100, max: 75, damage: 250000 \}, \{ min: 125, max: 200, damage: 125000 \}, \{ min: 200, max: 400, damage: 78000 \}\]/, 'ally Zeus uses the requested signed three ranges and stronger damage values');
+assert.match(source, /hp: 210000, atk: 250000/, 'ally Zeus receives the requested HP and first-band attack stat');
+assert.match(source, /secondAtk: 125000, thirdAtk: 78000, multiAttack: \[250000, 125000, 78000\]/, 'ally Zeus card stats match all three lightning damage values');
+assert.match(source, /const distance = Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)/, 'ally lightning bands use signed left/right distances');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
@@ -181,7 +184,7 @@ const makeAllyTarget = (name, x) => ({
   name, hp: 200000, maxhp: 200000, x, isEnemy: true,
   el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
 });
-const allyBandA = makeAllyTarget('ally band 1', 25);
+const allyBandA = makeAllyTarget('ally band 1', -50);
 const allyGapTrigger = makeAllyTarget('ordinary target in a gap', 80);
 const allyBandB = makeAllyTarget('ally band 2', 125);
 const allyBandC = makeAllyTarget('ally band 3', 225);
