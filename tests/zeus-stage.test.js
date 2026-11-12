@@ -165,7 +165,7 @@ const allyBandB = makeAllyTarget('ally band 2', 125);
 const allyBandC = makeAllyTarget('ally band 3', 225);
 runtimeEnemies.push(allyBandA, allyGapTrigger, allyBandB, allyBandC);
 assert.equal(runtimeWindow.getAttackSequence(allyZeus, allyGapTrigger).length, 0, 'the normal hit sequence is bypassed because lightning is the attack');
-assert.equal(allyGapTrigger.hp, 1000, 'the selected target in the gap is not hit by a conventional attack');
+assert.equal(allyGapTrigger.hp, 200000, 'the selected target in the gap is not hit by a conventional attack');
 assert.ok(allyBandA.hp < 200000, 'the first lightning band deals its own damage immediately');
 assert.equal(effectNodes.length, 1, 'the first lightning band has a visible bolt');
 assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'the second lightning band lands 0.5 seconds later');
