@@ -449,7 +449,7 @@ function launchAllyZeusLightning(source) {
           return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
         }, null);
         const direction = nearest && nearest.delta < 0 ? -1 : 1;
-        zeusLightning({ x: Number(source.x || 0) + direction * ((band.min + band.max) / 2) }, '#facc15', source);
+        zeusLightning({ x: Number(source.x || 0) + ((band.min + band.max) / 2) }, '#facc15', source);
         return;
       }
       const enemyCount = enemies.filter(live).length;
