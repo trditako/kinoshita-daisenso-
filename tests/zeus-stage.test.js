@@ -47,13 +47,13 @@ assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 6
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
-assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
+assert.ok(source.includes("zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);"), 'enemy lightning is rendered at every band position, including empty bands');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
-assert.match(source, /direction \\* center \\}, '#60a5fa', enemy\\)/, 'enemy Zeus always renders a blue lightning bolt at each attack-band position');
+assert.ok(source.includes("direction * center }, '#60a5fa', enemy)"), 'enemy Zeus always renders a blue lightning bolt at each attack-band position');
 assert.match(html, /雷撃の段別性能/, 'ally Zeus detail shows each lightning band attack and range');
-assert.match(html, /攻撃力：<b>'\\+Math\\.round\\(raw\\*scale\\)/, 'ally Zeus detail displays level-adjusted per-band damage');
+assert.ok(html.includes("攻撃力：<b>'+Math.round(raw*scale)"), 'ally Zeus detail displays level-adjusted per-band damage');
 assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
 assert.match(source, /function zeusWorldXToViewportX\(worldX, source\)/, 'empty-band lightning converts stage coordinates to viewport coordinates');
 assert.match(source, /!abilitySource\?\.zeusLightningResolved && !abilitySource\?\.zeusReflection/, 'Zeus cannot deal damage through conventional non-lightning hits');
