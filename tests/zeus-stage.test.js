@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.73'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v91/);
+assert.match(sw, /kinoshita-daisen-v92/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -41,7 +41,7 @@ assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStage
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
-assert.match(source, /maxBandRange/, 'the full lightning envelope including gaps can trigger the attack');
+assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
 assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
@@ -165,7 +165,7 @@ const allyBandB = makeAllyTarget('ally band 2', 125);
 const allyBandC = makeAllyTarget('ally band 3', 225);
 runtimeEnemies.push(allyBandA, allyGapTrigger, allyBandB, allyBandC);
 assert.equal(runtimeWindow.getAttackSequence(allyZeus, allyGapTrigger).length, 0, 'the normal hit sequence is bypassed because lightning is the attack');
-assert.equal(allyGapTrigger.hp, 1000, 'the selected target in the gap is not hit by a conventional attack');
+assert.equal(allyGapTrigger.hp, 200000, 'the selected target in the gap is not hit by a conventional attack');
 assert.ok(allyBandA.hp < 200000, 'the first lightning band deals its own damage immediately');
 assert.equal(effectNodes.length, 1, 'the first lightning band has a visible bolt');
 assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'the second lightning band lands 0.5 seconds later');
@@ -215,7 +215,26 @@ runScheduled(500);
 assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second band');
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
+
 assert.equal(effectNodes.length, effectsAfterEmptyStrike + 3, 'enemy Zeus shows the empty first band plus both occupied bands');
+
+// Detection at 600 starts the lightning attack; it does not move the impact
+// to the detected target or deal conventional target-locked damage there.
+const senseRangeZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 10000, range: 600, senseRange: 600, interval: 3 };
+const detectedAt600 = makeAllyTarget('detected at 600', 10600);
+runtimeEnemies.push(detectedAt600);
+const before600Effects = effectNodes.length;
+assert.equal(runtimeWindow.getAttackSequence(senseRangeZeus, detectedAt600).length, 0);
+assert.equal(detectedAt600.hp, 200000, 'the sensed target at 600 is not hit by a normal attack');
+assert.equal(effectNodes.length, before600Effects + 1, 'the first lightning band begins as soon as the 600-range target is sensed');
+assert.ok(scheduledTimers.some(timer => timer.delay === 500));
+assert.ok(scheduledTimers.some(timer => timer.delay === 1000));
+const beyondSenseZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 20000, range: 600, senseRange: 600, interval: 3 };
+const beyond600 = makeAllyTarget('outside sensing range', 20601);
+runtimeEnemies.push(beyond600);
+const beforeBeyondEffects = effectNodes.length;
+runtimeWindow.getAttackSequence(beyondSenseZeus, beyond600);
+assert.equal(effectNodes.length, beforeBeyondEffects, 'targets beyond 600 do not trigger the lightning attack');
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
