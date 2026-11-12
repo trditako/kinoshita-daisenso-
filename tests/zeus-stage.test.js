@@ -274,7 +274,9 @@ runtime.units.push(enemySensedAt550);
 const effectsBeforeEnemySense = effectNodes.length;
 runtime.enemySenseLoop();
 assert.equal(enemySensedAt550.hp, 500000, 'a target at 550 is sensed but not hit by a conventional 600-range attack');
-assert.equal(effectNodes.length, effectsBeforeEnemySense + 3, 'enemy Zeus emits a visible lightning effect when sensing a target at 550');
+assert.equal(effectNodes.length, effectsBeforeEnemySense + 1, 'enemy Zeus emits a visible lightning effect when sensing a target at 550');
+assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'enemy Zeus schedules its second lightning band after 500ms');
+assert.ok(scheduledTimers.some(timer => timer.delay === 1000), 'enemy Zeus schedules its third lightning band after 1000ms');
 assert.equal(runtimeCalls.enemyNormalAttacks, normalAttackCallsBeforeZeus, 'enemy sensing does not invoke the generic attack handler');
 
 console.log('Zeus raid runtime and regression checks passed.');
