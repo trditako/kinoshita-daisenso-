@@ -45,7 +45,9 @@ assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 1
 assert.match(source, /bands: \[\{ min: -100, max: 75, damage: 250000 \}, \{ min: 125, max: 200, damage: 125000 \}, \{ min: 200, max: 400, damage: 78000 \}\]/, 'ally Zeus uses the requested signed three ranges and stronger damage values');
 assert.match(source, /hp: 210000, atk: 250000/, 'ally Zeus receives the requested HP and first-band attack stat');
 assert.match(source, /secondAtk: 125000, thirdAtk: 78000, multiAttack: \[250000, 125000, 78000\]/, 'ally Zeus card stats match all three lightning damage values');
-assert.match(source, /const distance = Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)/, 'ally lightning bands use signed left/right distances');
+assert.match(source, /const distance = \(Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)\) \* direction/, 'ally lightning bands mirror their signed ranges toward the triggering enemy');
+assert.match(source, /zeusLightning\(\{ x: Number\(source\.x \|\| 0\) \+ direction \* \(\(band\.min \+ band\.max\) \/ 2\) \}/, 'empty ally lightning bands render in the same forward direction as damage');
+assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'the selected target determines ally Zeus facing direction');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
@@ -205,6 +207,22 @@ assert.ok(allyBandB.hp < 200000, 'the second lightning band deals its own damage
 runAllyScheduled(1000);
 assert.ok(allyBandC.hp < 200000, 'the third lightning band deals its own damage');
 assert.equal(effectNodes.length, 3, 'all three ally lightning bands create visible effects');
+
+
+// When the triggering enemy is on Zeus's left, all three signed bands mirror
+// to the left instead of continuing to strike behind him.
+const reverseAllyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 7000, range: 600, senseRange: 600, interval: 3 };
+const reverseBandA = makeAllyTarget('reverse band 1', 7050);
+const reverseGapTrigger = makeAllyTarget('reverse gap trigger', 6920);
+const reverseBandB = makeAllyTarget('reverse band 2', 6875);
+const reverseBandC = makeAllyTarget('reverse band 3', 6775);
+runtimeEnemies.push(reverseBandA, reverseGapTrigger, reverseBandB, reverseBandC);
+runtimeWindow.getAttackSequence(reverseAllyZeus, reverseGapTrigger);
+assert.ok(reverseBandA.hp < 200000, 'left-facing first lightning band mirrors and hits behind the world origin direction');
+runAllyScheduled(500);
+assert.ok(reverseBandB.hp < 200000, 'left-facing second lightning band mirrors toward the left');
+runAllyScheduled(1000);
+assert.ok(reverseBandC.hp < 200000, 'left-facing third lightning band mirrors toward the left');
 
 // A gap with no target in one or more strike bands still displays the empty
 // band lightning, and repeated attack-sequence polling cannot duplicate it.
