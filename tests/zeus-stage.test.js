@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.75'/);
 assert.match(html, /zeus\.js\?v=20261112-enemy-zeus-render-fix/);
-assert.match(sw, /kinoshita-daisen-v96/);
+assert.match(sw, /kinoshita-daisen-v97/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -81,8 +81,13 @@ const effectsOverlay = { appendChild(node) { effectNodes.push(node); } };
 const documentBody = { appendChild(node) { if (node.id === 'zeusLightningOverlay') runtime.effectsOverlay = node; } };
 const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0, enemyNormalAttacks: 0 };
 const runtimeWindow = {
-  hit(target, damage) {
+  hit(target, damage, source) {
     target.hp = Math.max(0, target.hp - Number(damage || 0));
+    // Model the core engine's default ally-side Yabayaba kill hook so the
+    // Zeus regression test proves enemy lightning suppresses that branch.
+    if (target.hp <= 0 && source?.ability?.yabayaba) {
+      runtimeWindow.spawnYabayabaClone(target, source.ability.yabayaba, true);
+    }
     return target.hp;
   },
   getAttackSequence() { return []; },
@@ -95,6 +100,18 @@ const runtimeWindow = {
     if (index >= 0) runtimeEnemies.splice(index, 1);
     return true;
   },
+  removeUnit(victim) {
+    const index = runtime.units.indexOf(victim);
+    if (index >= 0) runtime.units.splice(index, 1);
+    runtime.removedUnits = runtime.removedUnits || [];
+    runtime.removedUnits.push(victim);
+    return true;
+  },
+  spawnYabayabaClone(victim, level, asAlly = false) {
+    runtime.yabayabaClones = runtime.yabayabaClones || [];
+    runtime.yabayabaClones.push({ victim, level, asAlly });
+  },
+  setStatusMark() {},
   renderUnitElement(unit) { return unit; },
   setInterval(fn, delay) { runtime.enemySenseLoop = fn; runtime.enemySenseLoopDelay = delay; return 1; }
 };
@@ -118,6 +135,7 @@ const runtime = {
   ownedFlags: [],
   enemies: runtimeEnemies,
   units: [],
+  worldWidth: 100000,
   updateHp() {},
   Math: Object.create(Math),
   performance: { now: () => 1000 },
@@ -320,6 +338,42 @@ runtime.Math.random = () => 0;
 runtimeWindow.hit(enemyStatusTarget, 1000, god, { zeusLightningResolved: true });
 runtime.Math.random = oldRandom;
 assert.ok(enemyStatusTarget.stopUntil > 1, 'enemy Zeus applies its configured stop proc on successful lightning damage');
+
+// The custom enemy-Zeus lightning path must apply the configured 50%
+// knockback, remove defeated player units, and create level-5 clones on the
+// enemy side (not the ally side used by the core hit() helper).
+const knockbackZeus = makeZeusSource(60000, true);
+knockbackZeus.ability = runtime.enemyTypes['最高神:ゼウス'].ability;
+knockbackZeus.yabayaba = 5;
+knockbackZeus.yabayabaChance = 1;
+const knockbackTarget = { name: 'knockback test ally', hp: 500000, maxhp: 500000, x: 60050, isEnemy: false,
+  el: { classList: { remove() {}, add() {} }, getBoundingClientRect() { return { left: 40, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } } };
+runtimeEnemies.push(knockbackZeus);
+runtime.units.push(knockbackTarget);
+runtime.Math.random = () => 0;
+runtime.enemySenseLoop();
+runtime.Math.random = oldRandom;
+assert.equal(knockbackTarget.x, 60092, 'enemy Zeus has a 50% chance to knock a surviving target back by 42 world units');
+assert.ok(knockbackTarget.hitbackUntil > 1, 'knockback applies the normal hitback state');
+
+const yabayabaZeus = makeZeusSource(70000, true);
+yabayabaZeus.ability = runtime.enemyTypes['最高神:ゼウス'].ability;
+yabayabaZeus.yabayaba = 5;
+yabayabaZeus.yabayabaChance = 1;
+const defeatedForClone = { name: 'Yabayaba victim', hp: 100, maxhp: 100, atk: 50, range: 70, spd: 1, interval: 1,
+  attackType: 'single', kb: 2, x: 70050, isEnemy: false };
+runtimeEnemies.push(yabayabaZeus);
+runtime.units.push(defeatedForClone);
+runtime.Math.random = () => 0;
+runtime.enemySenseLoop();
+runtime.Math.random = oldRandom;
+assert.ok(runtime.removedUnits?.includes(defeatedForClone), 'enemy Zeus removes a unit defeated by its lightning');
+const spawnedZeusClone = runtime.yabayabaClones?.find(clone => clone.victim === defeatedForClone);
+assert.ok(spawnedZeusClone, 'enemy Zeus activates Yabayaba when its lightning defeats a unit');
+assert.equal(spawnedZeusClone.level, 5, 'enemy Zeus uses Yabayaba level 5');
+assert.equal(spawnedZeusClone.asAlly, false, 'enemy Zeus creates its Yabayaba copy on the enemy side');
+assert.equal(runtime.yabayabaClones.filter(clone => clone.victim === defeatedForClone && clone.asAlly).length, 0,
+  'enemy Zeus does not accidentally create an ally-side Yabayaba clone');
 
 // Enemy-side sensing must begin at 600 even though its ordinary attack
 // radius is capped at 400; the strike remains lightning-only and visible.
