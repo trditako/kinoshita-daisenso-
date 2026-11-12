@@ -215,7 +215,26 @@ runScheduled(500);
 assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second band');
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
+
 assert.equal(effectNodes.length, effectsAfterEmptyStrike + 3, 'enemy Zeus shows the empty first band plus both occupied bands');
+
+// Detection at 600 starts the lightning attack; it does not move the impact
+// to the detected target or deal conventional target-locked damage there.
+const senseRangeZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 10000, range: 600, senseRange: 600, interval: 3 };
+const detectedAt600 = makeAllyTarget('detected at 600', 10600);
+runtimeEnemies.push(detectedAt600);
+const before600Effects = effectNodes.length;
+assert.equal(runtimeWindow.getAttackSequence(senseRangeZeus, detectedAt600).length, 0);
+assert.equal(detectedAt600.hp, 200000, 'the sensed target at 600 is not hit by a normal attack');
+assert.equal(effectNodes.length, before600Effects + 1, 'the first lightning band begins as soon as the 600-range target is sensed');
+assert.ok(scheduledTimers.some(timer => timer.delay === 500));
+assert.ok(scheduledTimers.some(timer => timer.delay === 1000));
+const beyondSenseZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 20000, range: 600, senseRange: 600, interval: 3 };
+const beyond600 = makeAllyTarget('outside sensing range', 20601);
+runtimeEnemies.push(beyond600);
+const beforeBeyondEffects = effectNodes.length;
+runtimeWindow.getAttackSequence(beyondSenseZeus, beyond600);
+assert.equal(effectNodes.length, beforeBeyondEffects, 'targets beyond 600 do not trigger the lightning attack');
 
 // Re-rendering an ally Zeus must not refill an already-damaged shield.
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
