@@ -41,7 +41,7 @@ assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStage
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
 assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
-assert.match(source, /maxBandRange/, 'the full lightning envelope including gaps can trigger the attack');
+assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
 assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
