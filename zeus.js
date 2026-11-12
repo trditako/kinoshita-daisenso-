@@ -167,7 +167,7 @@ function zeusWorldXToViewportX(worldX, source) {
     ...(Array.isArray(units) ? units : []),
     ...(Array.isArray(enemies) ? enemies : [])
   ].filter(unit => unit && unit !== source && Number.isFinite(Number(unit.x)) && unit.el?.getBoundingClientRect);
-  let best = null;
+  const scales = [];
   for (const unit of candidates) {
     const deltaWorld = Number(unit.x) - sourceWorldX;
     if (Math.abs(deltaWorld) < 1) continue;
@@ -176,12 +176,15 @@ function zeusWorldXToViewportX(worldX, source) {
     if (Math.abs(deltaScreen) < 0.5) continue;
     const scale = deltaScreen / deltaWorld;
     if (!Number.isFinite(scale) || Math.abs(scale) > 4 || Math.abs(scale) < 0.02) continue;
-    const score = Math.abs(deltaWorld);
-    if (!best || score < best.score) best = { scale, score };
+    scales.push(scale);
   }
-  // Use the live rendered battlefield scale, not raw world pixels. This keeps
-  // empty-band lightning attached to the stage when the camera scrolls/zooms.
-  const scale = best ? best.scale : 1;
+  // Camera translation cancels in the relative delta. Use the median live
+  // battlefield scale so a single stale/off-screen entity cannot pull the
+  // empty-band strike toward the camera or an unrelated object.
+  if (!scales.length) return null;
+  scales.sort((a, b) => a - b);
+  const middle = Math.floor(scales.length / 2);
+  const scale = scales.length % 2 ? scales[middle] : (scales[middle - 1] + scales[middle]) / 2;
   return sourceScreenX + (Number(worldX || 0) - sourceWorldX) * scale;
 }
 function zeusLightning(target, color = '#facc15', source = null) {
@@ -326,18 +329,33 @@ if (typeof originalHit === 'function') {
     if (isServant && actual > 0 && source && traitIs(source, ['天使', '神話'])) {
       target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * 0));
     }
-    if (source?.name === ZEUS_ALLY && target.isEnemy && actual > 0) {
+    const zeusAttacker = source?.name === ZEUS_ALLY && ((source.isEnemy && !target.isEnemy) || (!source.isEnemy && target.isEnemy));
+    if (zeusAttacker && actual > 0) {
       const now = performance.now() / 1000;
-      if (Math.random() < 0.33) {
-        if (Math.random() < 0.5 && !target.stopImmune && !target.ability?.stopImmune) {
-          target.stopUntil = Math.max(Number(target.stopUntil || 0), now + 2);
-          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⏸️', '停止', 2, 'zeusStop');
-        } else if (!target.attackDownImmune && !target.ability?.attackDownImmune) {
-          target.attackDownUntil = Math.max(Number(target.attackDownUntil || 0), now + 2);
-          target.attackDownFactor = 0.2;
-          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⬇️', '攻撃力80%低下', 2, 'zeusAttackDown');
+      const ability = source.isEnemy ? enemyZeusAbility : allyZeusAbility;
+      const stopChance = Number(source.isEnemy ? ability.stopChance : ability.zeusAlly.stopChance);
+      const attackDownChance = Number(source.isEnemy ? ability.attackDownChance : ability.zeusAlly.attackDownChance);
+      const statusChance = Math.max(0, Math.min(1, stopChance));
+      if (Math.random() < statusChance) {
+        const canStop = !target.stopImmune && !target.ability?.stopImmune;
+        const canLowerAttack = !target.attackDownImmune && !target.ability?.attackDownImmune;
+        if (Math.random() < 0.5 && canStop) {
+          const duration = Number(source.isEnemy ? ability.stopDuration : ability.zeusAlly.stopDuration);
+          target.stopUntil = Math.max(Number(target.stopUntil || 0), now + duration);
+          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⏸️', '停止', duration, 'zeusStop');
+        } else if (canLowerAttack) {
+          const duration = Number(source.isEnemy ? ability.attackDownDuration : ability.zeusAlly.attackDownDuration);
+          target.attackDownUntil = Math.max(Number(target.attackDownUntil || 0), now + duration);
+          target.attackDownFactor = Number(source.isEnemy ? ability.attackDownFactor : ability.zeusAlly.attackDownFactor);
+          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⬇️', '攻撃力80%低下', duration, 'zeusAttackDown');
+        } else if (canStop) {
+          const duration = Number(source.isEnemy ? ability.stopDuration : ability.zeusAlly.stopDuration);
+          target.stopUntil = Math.max(Number(target.stopUntil || 0), now + duration);
+          if (typeof window.setStatusMark === 'function') window.setStatusMark(target, '⏸️', '停止', duration, 'zeusStop');
         }
       }
+      // Ally and enemy Zeus both apply their own trait multiplier; do not
+      // modify the damage here because the multiplier is applied before hit().
     }
     // Zeus should emit lightning when it attacks, not when it is hit.
     // Attack impact visuals are emitted by the dedicated ally/enemy strike handlers.
@@ -367,7 +385,7 @@ function launchEnemyZeusLightning(enemy, attackNow = performance.now() / 1000) {
       const direction = nearest && nearest.delta < 0 ? -1 : 1;
       zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);
       for (const unit of targets) {
-        const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
+        const godBonus = 1 + (Array.isArray(enemies) ? enemies.filter(live).length : 1) * enemyZeusAbility.zeusEnemy.enemyCountAttack;
         const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
         const rawDamage = Math.round(band.damage * godBonus * traitBonus);
         const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
@@ -464,7 +482,8 @@ function launchAllyZeusLightning(source, triggerTarget = null) {
       const bonus = 1 + Math.min(allyZeusAbility.zeusAlly.enemyCountMax, enemyCount * allyZeusAbility.zeusAlly.enemyCountAttack);
       for (const victim of targets) {
         zeusLightning(victim, '#facc15', source);
-        const rawDamage = Math.max(1, Math.round(Number(band.damage || 1) * bonus));
+        const traitBonus = traitIs(victim, ['天使', '神話', '赤', '宇宙']) ? 5 : 1;
+        const rawDamage = Math.max(1, Math.round(Number(band.damage || 1) * bonus * traitBonus));
         const dealt = typeof damageAgainst === 'function' ? damageAgainst(source, victim, rawDamage) : rawDamage;
         window.hit(victim, dealt, source, { zeusLightningResolved: true, zeusBandIndex: bandIndex });
         if (victim.hp <= 0 && typeof window.removeEnemy === 'function') window.removeEnemy(victim);
