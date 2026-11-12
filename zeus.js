@@ -411,8 +411,11 @@ if (typeof originalSequence === 'function') {
   window.getAttackSequence = function(source, target) {
     if (source?.name === ZEUS_ALLY && Array.isArray(allyZeusAbility.zeusAlly.bands)) {
       const distance = Math.abs(Number(target?.x || 0) - Number(source.x || 0));
-      const maxBandRange = Math.max(...allyZeusAbility.zeusAlly.bands.map(band => band.max));
-      if (distance > maxBandRange || distance > Math.max(0, Number(source.senseRange || source.range || 600))) return [];
+      const senseRange = Math.max(0, Number(source.senseRange || source.range || 600));
+      // 600 is the detection threshold, not the lightning impact distance.
+      // Once a target is sensed, start the first lightning band immediately;
+      // each band independently decides whether it has enemies to damage.
+      if (distance > senseRange) return [];
       // The attack sequence itself is the lightning. The selected target is only
       // an attack-start trigger; it is never required to receive the damage.
       launchAllyZeusLightning(source);
