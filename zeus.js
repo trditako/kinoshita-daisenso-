@@ -296,7 +296,7 @@ if (typeof originalHit === 'function') {
     // uses the same damage pipeline, but its defeated targets must become
     // enemy-side clones, so suppress that one automatic branch and handle it
     // after the strike below.
-    const enemyZeusLightning = source?.name === ZEUS_ENEMY && !!abilitySource?.zeusLightningResolved;
+    const enemyZeusLightning = !!source?.isEnemy && source?.name === ZEUS_ENEMY && !!abilitySource?.zeusLightningResolved;
     const savedYabayaba = enemyZeusLightning ? source?.ability?.yabayaba : undefined;
     if (enemyZeusLightning && source?.ability) source.ability.yabayaba = undefined;
     let result;
