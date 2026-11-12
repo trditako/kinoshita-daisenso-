@@ -158,10 +158,36 @@ function updateHp(entity) {
   const label = entity?.el?.querySelector?.('.hpLabel');
   if (label) label.textContent = Math.ceil(entity.hp).toLocaleString() + ' / ' + Math.ceil(entity.maxhp).toLocaleString();
 }
+function zeusWorldXToViewportX(worldX, source) {
+  const sourceRect = source?.el?.getBoundingClientRect?.();
+  if (!sourceRect) return null;
+  const sourceWorldX = Number(source.x || 0);
+  const sourceScreenX = sourceRect.left + sourceRect.width / 2;
+  const candidates = [
+    ...(Array.isArray(units) ? units : []),
+    ...(Array.isArray(enemies) ? enemies : [])
+  ].filter(unit => unit && unit !== source && Number.isFinite(Number(unit.x)) && unit.el?.getBoundingClientRect);
+  let best = null;
+  for (const unit of candidates) {
+    const deltaWorld = Number(unit.x) - sourceWorldX;
+    if (Math.abs(deltaWorld) < 1) continue;
+    const rect = unit.el.getBoundingClientRect();
+    const deltaScreen = rect.left + rect.width / 2 - sourceScreenX;
+    if (Math.abs(deltaScreen) < 0.5) continue;
+    const scale = deltaScreen / deltaWorld;
+    if (!Number.isFinite(scale) || Math.abs(scale) > 4 || Math.abs(scale) < 0.02) continue;
+    const score = Math.abs(deltaWorld);
+    if (!best || score < best.score) best = { scale, score };
+  }
+  // Use the live rendered battlefield scale, not raw world pixels. This keeps
+  // empty-band lightning attached to the stage when the camera scrolls/zooms.
+  const scale = best ? best.scale : 1;
+  return sourceScreenX + (Number(worldX || 0) - sourceWorldX) * scale;
+}
 function zeusLightning(target, color = '#facc15', source = null) {
   if (!target) return;
-  // Render on a viewport-level overlay rather than the battle effects layer:
-  // enemy-side effects must remain visible above units and stage overlays.
+  // Viewport overlay keeps both teams' lightning above battle effects. Its
+  // position is calculated from live battlefield entity coordinates.
   let overlay = document.getElementById('zeusLightningOverlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -185,7 +211,8 @@ function zeusLightning(target, color = '#facc15', source = null) {
     fx.style.left = (targetRect.left + targetRect.width / 2) + 'px';
     fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - 148) + 'px';
   } else if (sourceRect && source) {
-    fx.style.left = (sourceRect.left + sourceRect.width / 2 + (Number(target.x || 0) - Number(source.x || 0))) + 'px';
+    const viewportX = zeusWorldXToViewportX(Number(target.x || 0), source);
+    fx.style.left = (viewportX == null ? sourceRect.left + sourceRect.width / 2 : viewportX) + 'px';
     fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - 148) + 'px';
   } else {
     fx.style.left = Math.max(0, Number(target.x || 0)) + 'px';
@@ -236,6 +263,11 @@ if (typeof originalHit === 'function') {
     const isEnemyZeus = target.isEnemy && target.name === ZEUS_ENEMY;
     const isAllyZeus = !target.isEnemy && target.name === ZEUS_ALLY;
     const isServant = target.name === SERVANT;
+    // Zeus has no conventional attack hitbox. Every outgoing damage event must
+    // originate from one of its explicit lightning bands; reflection is the
+    // only non-lightning exception because it is defensive damage.
+    if ((source?.name === ZEUS_ENEMY || source?.name === ZEUS_ALLY) &&
+        !abilitySource?.zeusLightningResolved && !abilitySource?.zeusReflection) return 0;
     const incomingTraits = isEnemyZeus || isAllyZeus ? ['天使', '神話', '赤', '宇宙'] : isServant ? ['天使', '神話'] : [];
     const reduction = isEnemyZeus ? 0.15 : isAllyZeus ? 0.45 : isServant ? 0.05 : 1;
     let incoming = Math.max(0, Number(damage) || 0);
