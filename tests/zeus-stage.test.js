@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.74'/);
 assert.match(html, /zeus\.js\?v=20261112-zeus-enemy-fx-detail/);
-assert.match(sw, /kinoshita-daisen-v93/);
+assert.match(sw, /kinoshita-daisen-v94/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -44,6 +44,7 @@ assert.match(source, /range: 600, senseRange: 600, detectRange: 600, attackRange
 assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 150, max: 250, damage: 55555 \}, \{ min: 300, max: 400, damage: 35000 \}\]/, 'enemy Zeus keeps its own three ranges and damage values');
 assert.match(source, /bands: \[\{ min: 0, max: 50, damage: 60000 \}, \{ min: 100, max: 150, damage: 22222 \}, \{ min: 200, max: 250, damage: 15000 \}\]/, 'ally Zeus keeps its different three ranges and damage values');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
+assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
