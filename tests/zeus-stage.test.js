@@ -156,6 +156,7 @@ const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnem
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
 assert.equal(angelTarget.hp, 420, 'servant deals eight times damage to angel targets');
 assert.equal(god.hp, 820, 'servant heals Zeus by 25% of actual damage exactly once');
+const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
 const conventionalHitTarget = { name: 'ordinary target', hp: 1000, maxhp: 1000, isEnemy: true };
 runtimeWindow.hit(conventionalHitTarget, 500, allyZeus, {});
 assert.equal(conventionalHitTarget.hp, 1000, 'ally Zeus cannot damage with a conventional hit');
@@ -175,7 +176,6 @@ assert.equal(god.interval, 2.4);
 
 // Ally Zeus's attack is the three lightning strikes themselves. A target in
 // a gap can trigger the attack, but is not required to be hit by a normal attack.
-const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
 const makeAllyTarget = (name, x) => ({
   name, hp: 200000, maxhp: 200000, x, isEnemy: true,
   el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
