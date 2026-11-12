@@ -420,9 +420,9 @@ function launchEnemyZeusLightning(enemy, attackNow = performance.now() / 1000) {
             : Math.min(maxX, Number(unit.x || 0) + distance);
           unit.cd = Math.max(Number(unit.cd || 0), 0.22);
           unit.hitbackUntil = performance.now() / 1000 + 0.22;
-          unit.el?.classList.remove('hitback');
-          unit.el?.classList.add('hitback');
-          setTimeout(() => unit.el?.classList.remove('hitback'), 220);
+          unit.el?.classList?.remove('hitback');
+          unit.el?.classList?.add('hitback');
+          setTimeout(() => unit.el?.classList?.remove('hitback'), 220);
           if (typeof window.setStatusMark === 'function') {
             window.setStatusMark(unit, '💨', 'ふっとばし', 0.22, 'zeusKnockback');
           }
