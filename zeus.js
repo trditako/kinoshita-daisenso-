@@ -54,7 +54,7 @@ const allyZeusAbility = {
 
 const enemyZeus = {
   name: ZEUS_ENEMY, icon: '⚡👑', trait: '最高神',
-  hp: 26000000, atk: 150000, range: 600, senseRange: 600, detectRange: 600, attackRangeBands: enemyZeusAbility.zeusEnemy.bands, spd: 0.4, interval: 3,
+  hp: 26000000, atk: 150000, range: 400, senseRange: 600, detectRange: 600, attackRangeBands: enemyZeusAbility.zeusEnemy.bands, spd: 0.4, interval: 3,
   attackType: 'area', kb: 3, boss: true, money: 30000,
   barrier: 5000000, ability: enemyZeusAbility,
   multiAttack: [150000, 55555, 35000],
@@ -159,8 +159,16 @@ function updateHp(entity) {
   if (label) label.textContent = Math.ceil(entity.hp).toLocaleString() + ' / ' + Math.ceil(entity.maxhp).toLocaleString();
 }
 function zeusLightning(target, color = '#facc15', source = null) {
-  const effects = document.getElementById('effects');
-  if (!target || !effects) return;
+  if (!target) return;
+  // Render on a viewport-level overlay rather than the battle effects layer:
+  // enemy-side effects must remain visible above units and stage overlays.
+  let overlay = document.getElementById('zeusLightningOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'zeusLightningOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;z-index:2147483000;';
+    (document.body || document.documentElement).appendChild(overlay);
+  }
   const fx = document.createElement('div');
   fx.className = 'zeusLightningFx';
   const bolt = document.createElement('i');
@@ -173,25 +181,24 @@ function zeusLightning(target, color = '#facc15', source = null) {
   fx.style.setProperty('--zeus-color', color);
   const targetRect = target.el?.getBoundingClientRect?.();
   const sourceRect = source?.el?.getBoundingClientRect?.();
-  const effectsRect = effects.getBoundingClientRect?.();
-  if (targetRect && effectsRect) {
-    fx.style.left = (targetRect.left + targetRect.width / 2 - effectsRect.left) + 'px';
-    fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - effectsRect.top - 148) + 'px';
-  } else if (sourceRect && effectsRect && source) {
-    fx.style.left = (sourceRect.left + sourceRect.width / 2 + (Number(target.x || 0) - Number(source.x || 0)) - effectsRect.left) + 'px';
-    fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - effectsRect.top - 148) + 'px';
+  if (targetRect) {
+    fx.style.left = (targetRect.left + targetRect.width / 2) + 'px';
+    fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - 148) + 'px';
+  } else if (sourceRect && source) {
+    fx.style.left = (sourceRect.left + sourceRect.width / 2 + (Number(target.x || 0) - Number(source.x || 0))) + 'px';
+    fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - 148) + 'px';
   } else {
     fx.style.left = Math.max(0, Number(target.x || 0)) + 'px';
     fx.style.bottom = '38px';
   }
-  effects.appendChild(fx);
+  overlay.appendChild(fx);
   setTimeout(() => fx.remove(), 620);
 }
 if (!document.getElementById('zeusLightningStyle')) {
   const style = document.createElement('style');
   style.id = 'zeusLightningStyle';
   style.textContent = `
-    .zeusLightningFx{position:absolute;width:104px;height:178px;z-index:90;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
+    .zeusLightningFx{position:absolute;width:104px;height:178px;z-index:1;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
     .zeusLightningBolt{position:absolute;left:24px;top:0;width:58px;height:148px;background:linear-gradient(180deg,#fff 0%,var(--zeus-color,#facc15) 35%,#fff7b2 70%,var(--zeus-color,#facc15) 100%);clip-path:polygon(57% 0,18% 48%,44% 48%,22% 100%,86% 38%,58% 38%);filter:drop-shadow(0 0 8px #fff);animation:zeusBoltFlash .58s ease-out forwards}
     .zeusLightningBolt.secondary{left:49px;top:16px;width:34px;height:100px;opacity:.8;transform:rotate(12deg) scaleX(.7)}
     .zeusLightningFlash{position:absolute;left:50%;bottom:0;width:76px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,#fff 0%,var(--zeus-color,#facc15) 25%,rgba(250,204,21,.45) 55%,transparent 76%);box-shadow:0 0 22px 8px rgba(250,204,21,.55);animation:zeusImpact .58s ease-out forwards}
@@ -370,6 +377,28 @@ if (typeof originalEnemyAttackTarget === 'function') {
     }
   };
 }
+
+
+ // The engine's ordinary attack radius is 400. Sense enemies out to 600
+ // separately, and start the same lightning-only strike without extending
+ // the generic attack判定 to 600.
+ if (typeof window.setInterval === 'function' && !window.__zeusEnemySenseLoop) {
+   window.__zeusEnemySenseLoop = window.setInterval(() => {
+     if (!Array.isArray(enemies) || !Array.isArray(units)) return;
+     const now = performance.now() / 1000;
+     for (const god of enemies) {
+       if (!live(god) || god.name !== ZEUS_ENEMY) continue;
+       const senseRange = Math.max(0, Number(god.senseRange || god.detectRange || 600));
+       const sensed = units.find(unit => {
+         if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
+         return Math.abs(Number(unit.x || 0) - Number(god.x || 0)) <= senseRange;
+       });
+       if (sensed && typeof window.enemyAttackTarget === 'function') {
+         window.enemyAttackTarget(god, sensed, {}, now, false);
+       }
+     }
+   }, 120);
+ }
 
 function launchAllyZeusLightning(source) {
   if (!live(source) || !Array.isArray(enemies)) return;
