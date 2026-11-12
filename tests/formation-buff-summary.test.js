@@ -61,7 +61,7 @@ assert.ok(!formation.includes("addFilterBtn?.addEventListener('click'"),'条件�
 assert.ok(formation.includes('if(fieldEl)fieldEl.onchange='),'条件項目の変更イベントを1つに保つ');
 assert.ok(formation.includes('if(search)search.oninput='),'名前検索イベントを1つに保つ');
 
-assert.ok(sw.includes('kinoshita-daisen-v93'),'Service Workerキャッシュを更新');
+assert.ok(sw.includes('kinoshita-daisen-v94'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
 const urGoldEnd=html.indexOf("\n",urGoldStart);
