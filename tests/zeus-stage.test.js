@@ -39,7 +39,12 @@ assert.match(source, /zeusLightningResolved: true/);
 assert.match(source, /Number\(victim\.hp\) <= 0/, 'servant death is detected after its HP reaches zero');
 assert.match(source, /if \(typeof renderStageSelect === 'function'\) renderStageSelect\(\)/, 'refresh stage list after late-loaded stage registration');
 assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus uses explicit attack bands');
-assert.match(source, /senseRange: 600, detectRange: 600/, 'both Zeus versions have a 600 sensing range');
+assert.match(source, /range: 400, senseRange: 600, detectRange: 600/, 'enemy Zeus keeps a 400 strike radius separate from its 600 sensing range');
+assert.match(source, /range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility\.zeusAlly\.bands/, 'ally Zeus uses 600 only to acquire a target while its own bands determine lightning impacts');
+assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 150, max: 250, damage: 55555 \}, \{ min: 300, max: 400, damage: 35000 \}\]/, 'enemy Zeus keeps its own three ranges and damage values');
+assert.match(source, /bands: \[\{ min: 0, max: 50, damage: 60000 \}, \{ min: 100, max: 150, damage: 22222 \}, \{ min: 200, max: 250, damage: 15000 \}\]/, 'ally Zeus keeps its different three ranges and damage values');
+assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
+assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
 assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
@@ -56,10 +61,8 @@ assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing 
 const runtimeEnemies = [];
 const scheduledTimers = [];
 const effectNodes = [];
-const effectsLayer = {
-  appendChild(node) { effectNodes.push(node); },
-  getBoundingClientRect() { return { left: 0, top: 0, width: 1200, height: 500 }; }
-};
+const effectsOverlay = { appendChild(node) { effectNodes.push(node); } };
+const documentBody = { appendChild(node) { if (node.id === 'zeusLightningOverlay') runtime.effectsOverlay = node; } };
 const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0, enemyNormalAttacks: 0 };
 const runtimeWindow = {
   hit(target, damage) {
@@ -76,12 +79,15 @@ const runtimeWindow = {
     if (index >= 0) runtimeEnemies.splice(index, 1);
     return true;
   },
-  renderUnitElement(unit) { return unit; }
+  renderUnitElement(unit) { return unit; },
+  setInterval(fn, delay) { runtime.enemySenseLoop = fn; runtime.enemySenseLoopDelay = delay; return 1; }
 };
 const runtime = {
   window: runtimeWindow,
   document: {
-    getElementById(id) { return id === 'effects' ? effectsLayer : null; },
+    body: documentBody,
+    documentElement: documentBody,
+    getElementById(id) { return id === 'zeusLightningOverlay' ? effectsOverlay : null; },
     createElement() { return { style: { setProperty() {} }, textContent: '', append() {}, remove() {} }; },
     head: { appendChild() {} }
   },
@@ -99,6 +105,7 @@ const runtime = {
   updateHp() {},
   performance: { now: () => 1000 },
   setTimeout(fn, delay) { scheduledTimers.push({ fn, delay }); return scheduledTimers.length; },
+  setInterval(fn, delay) { runtime.enemySenseLoop = fn; runtime.enemySenseLoopDelay = delay; return 1; },
   renderStageSelect() { runtimeCalls.stages++; },
   renderCards() { runtimeCalls.cards++; },
   renderOwnedStart() { runtimeCalls.owned++; },
@@ -127,6 +134,9 @@ assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
 assert.equal(runtime.formation.length, 1, 'the saved Zeus formation is restored after late character registration');
 assert.equal(runtime.formation[0], 0);
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
+assert.equal(runtime.enemyTypes['最高神:ゼウス'].range, 400);
+assert.equal(runtime.enemyTypes['最高神:ゼウス'].senseRange, 600);
+assert.equal(runtime.enemySenseLoopDelay, 120);
 assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1, enemyNormalAttacks: 0 });
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
@@ -232,7 +242,7 @@ assert.equal(detectedAt600.hp, 200000, 'the sensed target at 600 is not hit by a
 assert.equal(effectNodes.length, before600Effects + 1, 'the first lightning band begins as soon as the 600-range target is sensed');
 assert.ok(scheduledTimers.some(timer => timer.delay === 500));
 assert.ok(scheduledTimers.some(timer => timer.delay === 1000));
-const beyondSenseZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 20000, range: 600, senseRange: 600, interval: 3 };
+const beyondSenseZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 20000, range: 400, senseRange: 600, interval: 3 };
 const beyond600 = makeAllyTarget('outside sensing range', 20601);
 runtimeEnemies.push(beyond600);
 const beforeBeyondEffects = effectNodes.length;
@@ -243,5 +253,19 @@ assert.equal(effectNodes.length, beforeBeyondEffects, 'targets beyond 600 do not
 const ally = { name: '最高神:ゼウス', hp: 100, maxhp: 100, powerShield: 5000, powerShieldMax: 100000 };
 runtimeWindow.renderUnitElement(ally);
 assert.equal(ally.powerShield, 5000);
+
+// Enemy-side sensing must begin at 600 even though its ordinary attack
+// radius is capped at 400; the strike remains lightning-only and visible.
+const sensedEnemyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 30000, range: 400, senseRange: 600, interval: 3, isEnemy: true };
+const enemySensedAt550 = { name: 'sensed ally at 550', hp: 500000, maxhp: 500000, x: 30550, isEnemy: false,
+  el: { getBoundingClientRect() { return { left: 540, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } } };
+runtimeEnemies.push(sensedEnemyZeus);
+runtime.units.push(enemySensedAt550);
+const effectsBeforeEnemySense = effectNodes.length;
+runtime.enemySenseLoop();
+assert.equal(enemySensedAt550.hp, 500000, 'a target at 550 is sensed but not hit by a conventional 600-range attack');
+assert.equal(effectNodes.length, effectsBeforeEnemySense + 1, 'enemy Zeus emits a visible lightning effect when sensing a target at 550');
+assert.equal(runtimeCalls.enemyNormalAttacks, normalAttackCallsBeforeZeus, 'enemy sensing does not invoke the generic attack handler');
+
 console.log('Zeus raid runtime and regression checks passed.');
 
