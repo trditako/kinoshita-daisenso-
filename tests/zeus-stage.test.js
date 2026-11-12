@@ -189,11 +189,13 @@ assert.equal(god.interval, 2.4);
 
 // Ally Zeus's attack is the three lightning strikes themselves. A target in
 // a gap can trigger the attack, but is not required to be hit by a normal attack.
-const makeZeusSource = (x, isEnemy = false) => ({
-  name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x,
-  range: isEnemy ? 400 : 600, senseRange: 600, interval: 3, isEnemy,
-  el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
-});
+function makeZeusSource(x, isEnemy = false) {
+  return {
+    name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x,
+    range: isEnemy ? 400 : 600, senseRange: 600, interval: 3, isEnemy,
+    el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+  };
+}
 const makeAllyTarget = (name, x, trait = '') => ({
   name, hp: 200000, maxhp: 200000, x, isEnemy: true, trait,
   el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
