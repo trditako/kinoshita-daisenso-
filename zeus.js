@@ -192,8 +192,8 @@ function zeusLightning(target, color = '#facc15', source = null) {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'zeusLightningOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;z-index:2147483000;';
-    (document.body || document.documentElement).appendChild(overlay);
+    overlay.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;z-index:2147483647;display:block;visibility:visible;opacity:1;isolation:isolate;';
+    (document.documentElement || document.body).appendChild(overlay);
   }
   const fx = document.createElement('div');
   fx.className = 'zeusLightningFx';
@@ -225,7 +225,7 @@ if (!document.getElementById('zeusLightningStyle')) {
   const style = document.createElement('style');
   style.id = 'zeusLightningStyle';
   style.textContent = `
-    .zeusLightningFx{position:absolute;width:104px;height:178px;z-index:1;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
+    .zeusLightningFx{display:block;position:absolute;width:128px;height:196px;z-index:2147483647;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
     .zeusLightningBolt{position:absolute;left:24px;top:0;width:58px;height:148px;background:linear-gradient(180deg,#fff 0%,var(--zeus-color,#facc15) 35%,#fff7b2 70%,var(--zeus-color,#facc15) 100%);clip-path:polygon(57% 0,18% 48%,44% 48%,22% 100%,86% 38%,58% 38%);filter:drop-shadow(0 0 8px #fff);animation:zeusBoltFlash .58s ease-out forwards}
     .zeusLightningBolt.secondary{left:49px;top:16px;width:34px;height:100px;opacity:.8;transform:rotate(12deg) scaleX(.7)}
     .zeusLightningFlash{position:absolute;left:50%;bottom:0;width:76px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,#fff 0%,var(--zeus-color,#facc15) 25%,rgba(250,204,21,.45) 55%,transparent 76%);box-shadow:0 0 22px 8px rgba(250,204,21,.55);animation:zeusImpact .58s ease-out forwards}
@@ -345,6 +345,46 @@ if (typeof originalHit === 'function') {
   };
 }
 
+function launchEnemyZeusLightning(enemy, attackNow = performance.now() / 1000) {
+  if (!live(enemy) || enemy.name !== ZEUS_ENEMY) return;
+  if (Number(enemy.zeusLastAttackAt ?? -999) > attackNow - Math.max(0.1, Number(enemy.interval || 3))) return;
+  enemy.zeusLastAttackAt = attackNow;
+  const bands = enemyZeusAbility.zeusEnemy.bands;
+  for (let index = 0; index < bands.length; index++) {
+    const band = bands[index];
+    const fire = () => {
+      if (!live(enemy)) return;
+      const targets = (Array.isArray(units) ? units : []).filter(unit => {
+        if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
+        const distance = Math.abs(Number(unit.x || 0) - Number(enemy.x || 0));
+        return distance >= band.min && distance <= band.max && distance <= Number(enemy.senseRange || enemy.range || 600);
+      });
+      const center = (band.min + band.max) / 2;
+      const nearest = (Array.isArray(units) ? units : []).filter(live).reduce((best, unit) => {
+        const delta = Number(unit.x || 0) - Number(enemy.x || 0);
+        return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
+      }, null);
+      const direction = nearest && nearest.delta < 0 ? -1 : 1;
+      zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);
+      for (const unit of targets) {
+        const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
+        const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
+        const rawDamage = Math.round(band.damage * godBonus * traitBonus);
+        const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
+        zeusLightning(unit, '#60a5fa', enemy);
+        window.hit(unit, dealt, enemy, { zeusLightningResolved: true, zeusBandIndex: index });
+        if (unit.hp <= 0) {
+          const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
+          enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
+          if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(enemy);
+        }
+      }
+    };
+    if (index === 0) fire();
+    else setTimeout(fire, index * 500);
+  }
+}
+
 const originalEnemyAttackTarget = window.enemyAttackTarget;
 if (typeof originalEnemyAttackTarget === 'function') {
   window.enemyAttackTarget = function(enemy, target, ea, now, sealed) {
@@ -365,51 +405,9 @@ if (typeof originalEnemyAttackTarget === 'function') {
       return result;
     }
     if (enemy.name !== ZEUS_ENEMY) return originalEnemyAttackTarget.apply(this, arguments);
-    const attackNow = Number(now || performance.now() / 1000);
-    if (Number(enemy.zeusLastAttackAt ?? -999) > attackNow - Math.max(0.1, Number(enemy.interval || 3))) return;
-    enemy.zeusLastAttackAt = attackNow;
-    const bands = enemyZeusAbility.zeusEnemy.bands;
-    for (let index = 0; index < bands.length; index++) {
-      const band = bands[index];
-      const fire = () => {
-        if (!live(enemy)) return;
-        const targets = (Array.isArray(units) ? units : []).filter(unit => {
-          if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
-          const distance = Math.abs(Number(unit.x || 0) - Number(enemy.x || 0));
-          return distance >= band.min && distance <= band.max && distance <= Number(enemy.senseRange || enemy.range || 600);
-        });
-        const center = (band.min + band.max) / 2;
-        const nearest = (Array.isArray(units) ? units : []).filter(live).reduce((best, unit) => {
-          const delta = Number(unit.x || 0) - Number(enemy.x || 0);
-          return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
-        }, null);
-        const direction = nearest && nearest.delta < 0 ? -1 : 1;
-        // Always render a clearly visible enemy-side bolt at this band's stage position,
-        // even when the band has targets (or its impact area is empty).
-        zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);
-        for (const unit of targets) {
-          const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
-          const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
-          // Zeus damage is delivered only by the lightning strike. Do not call
-          // the generic enemy attack handler: it applies the unit's ordinary
-          // attack geometry and can create a second, non-lightning hit.
-          const rawDamage = Math.round(band.damage * godBonus * traitBonus);
-          const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
-          zeusLightning(unit, '#60a5fa', enemy);
-          window.hit(unit, dealt, enemy, { zeusLightningResolved: true, zeusBandIndex: index });
-          if (unit.hp <= 0) {
-            const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
-            enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
-            if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(enemy);
-          }
-        }
-      };
-      if (index === 0) fire();
-      else setTimeout(fire, index * 500);
-    }
+    launchEnemyZeusLightning(enemy, Number(now || performance.now() / 1000));
   };
 }
-
 
  // The engine's ordinary attack radius is 400. Sense enemies out to 600
  // separately, and start the same lightning-only strike without extending
@@ -425,9 +423,7 @@ if (typeof originalEnemyAttackTarget === 'function') {
          if (!live(unit) || unit.isEnemy || unit.muscleGrabbedBy) return false;
          return Math.abs(Number(unit.x || 0) - Number(god.x || 0)) <= senseRange;
        });
-       if (sensed && typeof window.enemyAttackTarget === 'function') {
-         window.enemyAttackTarget(god, sensed, {}, now, false);
-       }
+       if (sensed) launchEnemyZeusLightning(god, now);
      }
    }, 120);
  }
