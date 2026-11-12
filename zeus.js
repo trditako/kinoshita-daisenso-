@@ -54,7 +54,7 @@ const allyZeusAbility = {
 
 const enemyZeus = {
   name: ZEUS_ENEMY, icon: '⚡👑', trait: '最高神',
-  hp: 26000000, atk: 150000, range: 600, senseRange: 600, detectRange: 600, spd: 0.4, interval: 3,
+  hp: 26000000, atk: 150000, range: 600, senseRange: 600, detectRange: 600, attackRangeBands: enemyZeusAbility.zeusEnemy.bands, spd: 0.4, interval: 3,
   attackType: 'area', kb: 3, boss: true, money: 30000,
   barrier: 5000000, ability: enemyZeusAbility,
   multiAttack: [150000, 55555, 35000],
@@ -351,9 +351,13 @@ if (typeof originalEnemyAttackTarget === 'function') {
         for (const unit of targets) {
           const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
           const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
-          const scaled = { ...enemy, atk: Math.round(band.damage * godBonus * traitBonus) };
-          originalEnemyAttackTarget.call(this, scaled, unit, ea, performance.now() / 1000, sealed);
-          zeusLightning(unit, '#facc15');
+          // Zeus damage is delivered only by the lightning strike. Do not call
+          // the generic enemy attack handler: it applies the unit's ordinary
+          // attack geometry and can create a second, non-lightning hit.
+          const rawDamage = Math.round(band.damage * godBonus * traitBonus);
+          const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
+          zeusLightning(unit, '#facc15', enemy);
+          window.hit(unit, dealt, enemy, { zeusLightningResolved: true, zeusBandIndex: index });
           if (unit.hp <= 0) {
             const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
             enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
