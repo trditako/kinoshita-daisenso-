@@ -428,28 +428,36 @@ if (typeof originalEnemyAttackTarget === 'function') {
    }, 120);
  }
 
-function launchAllyZeusLightning(source) {
+function launchAllyZeusLightning(source, triggerTarget = null) {
   if (!live(source) || !Array.isArray(enemies)) return;
   const now = performance.now() / 1000;
   if (Number(source.zeusLightningNextAt || 0) > now) return;
   source.zeusLightningNextAt = now + Math.max(0.1, Number(source.interval || 3));
   const bands = allyZeusAbility.zeusAlly.bands;
   const senseRange = Math.max(0, Number(source.senseRange || source.range || 600));
+  // Face the enemy that triggered this attack. Mirroring the signed bands by
+  // this direction keeps both damage checks and empty-band effects in front.
+  const directionTarget = live(triggerTarget) && triggerTarget.isEnemy
+    ? triggerTarget
+    : enemies.filter(candidate => live(candidate) && candidate.isEnemy && !candidate.muscleGrabbedBy)
+      .reduce((best, candidate) => {
+        const delta = Number(candidate.x || 0) - Number(source.x || 0);
+        return !best || Math.abs(delta) < Math.abs(best.delta) ? { candidate, delta } : best;
+      }, null)?.candidate;
+  const directionDelta = directionTarget
+    ? Number(directionTarget.x || 0) - Number(source.x || 0)
+    : 1;
+  const direction = directionDelta < 0 ? -1 : 1;
   bands.forEach((band, bandIndex) => {
     const strike = () => {
       if (!live(source)) return;
       const targets = enemies.filter(candidate => {
         if (!live(candidate) || !candidate.isEnemy || candidate.muscleGrabbedBy) return false;
-        const distance = Number(candidate.x || 0) - Number(source.x || 0);
+        const distance = (Number(candidate.x || 0) - Number(source.x || 0)) * direction;
         return Math.abs(distance) <= senseRange && distance >= band.min && distance <= band.max;
       });
       if (!targets.length) {
-        const nearest = enemies.filter(live).reduce((best, candidate) => {
-          const delta = Number(candidate.x || 0) - Number(source.x || 0);
-          return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
-        }, null);
-        const direction = nearest && nearest.delta < 0 ? -1 : 1;
-        zeusLightning({ x: Number(source.x || 0) + ((band.min + band.max) / 2) }, '#facc15', source);
+        zeusLightning({ x: Number(source.x || 0) + direction * ((band.min + band.max) / 2) }, '#facc15', source);
         return;
       }
       const enemyCount = enemies.filter(live).length;
@@ -479,7 +487,7 @@ if (typeof originalSequence === 'function') {
       if (distance > senseRange) return [];
       // The attack sequence itself is the lightning. The selected target is only
       // an attack-start trigger; it is never required to receive the damage.
-      launchAllyZeusLightning(source);
+      launchAllyZeusLightning(source, target);
       return [];
     }
     return originalSequence.apply(this, arguments);
