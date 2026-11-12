@@ -48,6 +48,11 @@ assert.match(source, /secondAtk: 125000, thirdAtk: 78000, multiAttack: \[250000,
 assert.match(source, /const distance = \(Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)\) \* direction/, 'ally lightning bands mirror their signed ranges toward the triggering enemy');
 assert.match(source, /zeusLightning\(\{ x: Number\(source\.x \|\| 0\) \+ direction \* \(\(band\.min \+ band\.max\) \/ 2\) \}/, 'empty ally lightning bands render in the same forward direction as damage');
 assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'the selected target determines ally Zeus facing direction');
+assert.match(source, /if \(!scales.length\) return null/, 'empty-band lightning is skipped rather than using camera/world coordinates when no stage transform can be measured');
+assert.match(source, /scales.sort\(\(a, b\) => a - b\)/, 'world-to-viewport conversion uses a robust median of live battlefield scales');
+assert.match(source, /const traitBonus = traitIs\(victim, \['天使', '神話', '赤', '宇宙'\]\) \? 5 : 1/, 'ally Zeus applies its fivefold trait damage multiplier');
+assert.match(source, /const traitBonus = traitIs\(unit, \['天使', '神話', '赤', '宇宙'\]\) \? 10 : 1/, 'enemy Zeus applies its tenfold trait damage multiplier');
+assert.match(source, /const zeusAttacker = source\?\.name === ZEUS_ALLY/, 'both ally and enemy Zeus lightning can apply their attack debuffs');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
@@ -152,7 +157,7 @@ assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, bu
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
-const god = { name: '最高神:ゼウス', hp: 800, maxhp: 1000, atk: 100, spd: 0.4, interval: 3, isEnemy: true };
+const god = { ...makeZeusSource(0, true), hp: 800, maxhp: 1000, atk: 100, spd: 0.4 };
 runtimeEnemies.push(god);
 runtimeWindow.hit(god, 100, null);
 assert.equal(effectNodes.length, 0, 'taking damage does not trigger Zeus attack lightning');
@@ -162,7 +167,7 @@ const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnem
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
 assert.equal(angelTarget.hp, 420, 'servant deals eight times damage to angel targets');
 assert.equal(god.hp, 820, 'servant heals Zeus by 25% of actual damage exactly once');
-const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
+const allyZeus = makeZeusSource(0);
 const conventionalHitTarget = { name: 'ordinary target', hp: 1000, maxhp: 1000, isEnemy: true };
 runtimeWindow.hit(conventionalHitTarget, 500, allyZeus, {});
 assert.equal(conventionalHitTarget.hp, 1000, 'ally Zeus cannot damage with a conventional hit');
@@ -182,8 +187,13 @@ assert.equal(god.interval, 2.4);
 
 // Ally Zeus's attack is the three lightning strikes themselves. A target in
 // a gap can trigger the attack, but is not required to be hit by a normal attack.
-const makeAllyTarget = (name, x) => ({
-  name, hp: 200000, maxhp: 200000, x, isEnemy: true,
+const makeZeusSource = (x, isEnemy = false) => ({
+  name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x,
+  range: isEnemy ? 400 : 600, senseRange: 600, interval: 3, isEnemy,
+  el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
+});
+const makeAllyTarget = (name, x, trait = '') => ({
+  name, hp: 200000, maxhp: 200000, x, isEnemy: true, trait,
   el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
 });
 const allyBandA = makeAllyTarget('ally band 1', -50);
@@ -211,7 +221,7 @@ assert.equal(effectNodes.length, 3, 'all three ally lightning bands create visib
 
 // When the triggering enemy is on Zeus's left, all three signed bands mirror
 // to the left instead of continuing to strike behind him.
-const reverseAllyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 7000, range: 600, senseRange: 600, interval: 3 };
+const reverseAllyZeus = makeZeusSource(7000);
 const reverseBandA = makeAllyTarget('reverse band 1', 7050);
 const reverseGapTrigger = makeAllyTarget('reverse gap trigger', 6920);
 const reverseBandB = makeAllyTarget('reverse band 2', 6875);
@@ -226,7 +236,7 @@ assert.ok(reverseBandC.hp < 200000, 'left-facing third lightning band mirrors to
 
 // A gap with no target in one or more strike bands still displays the empty
 // band lightning, and repeated attack-sequence polling cannot duplicate it.
-const emptyBandZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 5000, range: 600, senseRange: 600, interval: 3 };
+const emptyBandZeus = makeZeusSource(5000);
 const gapOnlyTarget = makeAllyTarget('gap-only trigger', 5080);
 runtimeEnemies.push(gapOnlyTarget);
 runtimeWindow.getAttackSequence(emptyBandZeus, gapOnlyTarget);
@@ -265,7 +275,7 @@ assert.equal(effectNodes.length, effectsAfterEmptyStrike + 5, 'enemy Zeus shows 
 
 // Detection at 600 starts the lightning attack; it does not move the impact
 // to the detected target or deal conventional target-locked damage there.
-const senseRangeZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 10000, range: 600, senseRange: 600, interval: 3 };
+const senseRangeZeus = makeZeusSource(10000);
 const detectedAt600 = makeAllyTarget('detected at 600', 10600);
 runtimeEnemies.push(detectedAt600);
 const before600Effects = effectNodes.length;
@@ -274,7 +284,7 @@ assert.equal(detectedAt600.hp, 200000, 'the sensed target at 600 is not hit by a
 assert.equal(effectNodes.length, before600Effects + 1, 'the first lightning band begins as soon as the 600-range target is sensed');
 assert.ok(scheduledTimers.some(timer => timer.delay === 500));
 assert.ok(scheduledTimers.some(timer => timer.delay === 1000));
-const beyondSenseZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 20000, range: 400, senseRange: 600, interval: 3 };
+const beyondSenseZeus = makeZeusSource(20000);
 const beyond600 = makeAllyTarget('outside sensing range', 20601);
 runtimeEnemies.push(beyond600);
 const beforeBeyondEffects = effectNodes.length;
@@ -288,7 +298,7 @@ assert.equal(ally.powerShield, 5000);
 
 // Enemy-side sensing must begin at 600 even though its ordinary attack
 // radius is capped at 400; the strike remains lightning-only and visible.
-const sensedEnemyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 30000, range: 400, senseRange: 600, interval: 3, isEnemy: true };
+const sensedEnemyZeus = makeZeusSource(30000, true);
 const enemySensedAt550 = { name: 'sensed ally at 550', hp: 500000, maxhp: 500000, x: 30550, isEnemy: false,
   el: { getBoundingClientRect() { return { left: 540, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } } };
 runtimeEnemies.push(sensedEnemyZeus);
