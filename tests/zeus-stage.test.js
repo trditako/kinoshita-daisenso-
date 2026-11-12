@@ -6,9 +6,9 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\.9\.73'/);
-assert.match(html, /zeus\.js\?v=20261112-zeus-lightning-reward-fix/);
-assert.match(sw, /kinoshita-daisen-v92/);
+assert.match(html, /GAME_VERSION='v1\.9\.74'/);
+assert.match(html, /zeus\.js\?v=20261112-zeus-enemy-fx-detail/);
+assert.match(sw, /kinoshita-daisen-v93/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -47,10 +47,13 @@ assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 6
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
 assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
-assert.match(source, /if \(!targets\.length\)/, 'empty lightning bands still produce a strike visual');
+assert.ok(source.includes("zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);"), 'enemy lightning is rendered at every band position, including empty bands');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
+assert.ok(source.includes("direction * center }, '#60a5fa', enemy)"), 'enemy Zeus always renders a blue lightning bolt at each attack-band position');
+assert.match(html, /雷撃の段別性能/, 'ally Zeus detail shows each lightning band attack and range');
+assert.ok(html.includes("攻撃力：<b>'+Math.round(raw*scale)"), 'ally Zeus detail displays level-adjusted per-band damage');
 assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
 assert.match(source, /function zeusWorldXToViewportX\(worldX, source\)/, 'empty-band lightning converts stage coordinates to viewport coordinates');
 assert.match(source, /!abilitySource\?\.zeusLightningResolved && !abilitySource\?\.zeusReflection/, 'Zeus cannot deal damage through conventional non-lightning hits');
@@ -153,6 +156,7 @@ const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnem
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
 assert.equal(angelTarget.hp, 420, 'servant deals eight times damage to angel targets');
 assert.equal(god.hp, 820, 'servant heals Zeus by 25% of actual damage exactly once');
+const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
 const conventionalHitTarget = { name: 'ordinary target', hp: 1000, maxhp: 1000, isEnemy: true };
 runtimeWindow.hit(conventionalHitTarget, 500, allyZeus, {});
 assert.equal(conventionalHitTarget.hp, 1000, 'ally Zeus cannot damage with a conventional hit');
@@ -172,7 +176,6 @@ assert.equal(god.interval, 2.4);
 
 // Ally Zeus's attack is the three lightning strikes themselves. A target in
 // a gap can trigger the attack, but is not required to be hit by a normal attack.
-const allyZeus = { name: '最高神:ゼウス', hp: 1000, maxhp: 1000, x: 0, range: 600, senseRange: 600, interval: 3 };
 const makeAllyTarget = (name, x) => ({
   name, hp: 200000, maxhp: 200000, x, isEnemy: true,
   el: { getBoundingClientRect() { return { left: x - 10, top: 120, width: 20, height: 20 }; }, querySelector() { return null; } }
@@ -236,7 +239,7 @@ assert.ok(enemyGapTargetA.hp < 500000, 'enemy Zeus hits its exact 150-250 second
 runScheduled(1000);
 assert.ok(enemyGapTargetB.hp < 500000, 'enemy Zeus hits its exact 300-400 third band');
 
-assert.equal(effectNodes.length, effectsAfterEmptyStrike + 3, 'enemy Zeus shows the empty first band plus both occupied bands');
+assert.equal(effectNodes.length, effectsAfterEmptyStrike + 5, 'enemy Zeus shows the empty first band plus both occupied bands');
 
 // Detection at 600 starts the lightning attack; it does not move the impact
 // to the detected target or deal conventional target-locked damage there.
@@ -272,6 +275,8 @@ const effectsBeforeEnemySense = effectNodes.length;
 runtime.enemySenseLoop();
 assert.equal(enemySensedAt550.hp, 500000, 'a target at 550 is sensed but not hit by a conventional 600-range attack');
 assert.equal(effectNodes.length, effectsBeforeEnemySense + 1, 'enemy Zeus emits a visible lightning effect when sensing a target at 550');
+assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'enemy Zeus schedules its second lightning band after 500ms');
+assert.ok(scheduledTimers.some(timer => timer.delay === 1000), 'enemy Zeus schedules its third lightning band after 1000ms');
 assert.equal(runtimeCalls.enemyNormalAttacks, normalAttackCallsBeforeZeus, 'enemy sensing does not invoke the generic attack handler');
 
 console.log('Zeus raid runtime and regression checks passed.');

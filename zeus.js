@@ -378,15 +378,15 @@ if (typeof originalEnemyAttackTarget === 'function') {
           const distance = Math.abs(Number(unit.x || 0) - Number(enemy.x || 0));
           return distance >= band.min && distance <= band.max && distance <= Number(enemy.senseRange || enemy.range || 600);
         });
-        if (!targets.length) {
-          const center = (band.min + band.max) / 2;
-          const nearest = (Array.isArray(units) ? units : []).filter(live).reduce((best, unit) => {
-            const delta = Number(unit.x || 0) - Number(enemy.x || 0);
-            return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
-          }, null);
-          const direction = nearest && nearest.delta < 0 ? -1 : 1;
-          zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#facc15', enemy);
-        }
+        const center = (band.min + band.max) / 2;
+        const nearest = (Array.isArray(units) ? units : []).filter(live).reduce((best, unit) => {
+          const delta = Number(unit.x || 0) - Number(enemy.x || 0);
+          return !best || Math.abs(delta) < Math.abs(best.delta) ? { delta } : best;
+        }, null);
+        const direction = nearest && nearest.delta < 0 ? -1 : 1;
+        // Always render a clearly visible enemy-side bolt at this band's stage position,
+        // even when the band has targets (or its impact area is empty).
+        zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);
         for (const unit of targets) {
           const godBonus = 1 + (Array.isArray(enemies) ? enemies.length : 1) * 0.10;
           const traitBonus = traitIs(unit, ['天使', '神話', '赤', '宇宙']) ? 10 : 1;
@@ -395,7 +395,7 @@ if (typeof originalEnemyAttackTarget === 'function') {
           // attack geometry and can create a second, non-lightning hit.
           const rawDamage = Math.round(band.damage * godBonus * traitBonus);
           const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
-          zeusLightning(unit, '#facc15', enemy);
+          zeusLightning(unit, '#60a5fa', enemy);
           window.hit(unit, dealt, enemy, { zeusLightningResolved: true, zeusBandIndex: index });
           if (unit.hp <= 0) {
             const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
