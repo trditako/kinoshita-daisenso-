@@ -51,7 +51,7 @@ assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'the selected 
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
 assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
-assert.match(source, /launchAllyZeusLightning\(source\)/, 'ally lightning launches from the attack sequence, not from a successful hit');
+assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'ally lightning launches from the attack sequence using the selected target direction');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
 assert.ok(source.includes("zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);"), 'enemy lightning is rendered at every band position, including empty bands');
 assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Zeus uses the exact three attack bands');
