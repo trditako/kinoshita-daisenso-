@@ -60,7 +60,7 @@ const effectsLayer = {
   appendChild(node) { effectNodes.push(node); },
   getBoundingClientRect() { return { left: 0, top: 0, width: 1200, height: 500 }; }
 };
-const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0 };
+const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0, enemyNormalAttacks: 0 };
 const runtimeWindow = {
   hit(target, damage) {
     target.hp = Math.max(0, target.hp - Number(damage || 0));
@@ -68,6 +68,7 @@ const runtimeWindow = {
   },
   getAttackSequence() { return []; },
   enemyAttackTarget(enemy, target) {
+    runtimeCalls.enemyNormalAttacks++;
     target.hp = Math.max(0, target.hp - Number(enemy.atk || 0));
   },
   removeEnemy(victim) {
@@ -126,7 +127,7 @@ assert.equal(runtime.saved, true, 'restored reward ownership is persisted');
 assert.equal(runtime.formation.length, 1, 'the saved Zeus formation is restored after late character registration');
 assert.equal(runtime.formation[0], 0);
 assert.equal(runtime.enemyTypes['最高神:ゼウス'].hp, 26000000);
-assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1 });
+assert.deepEqual(runtimeCalls, { stages: 1, cards: 1, owned: 1, formation: 1, buffs: 1, enemyNormalAttacks: 0 });
 
 // A servant's ordinary attack heals the enemy Zeus once and respects its
 // per-servant healing cap.
@@ -205,7 +206,9 @@ const enemyGapTargetB = {
 };
 runtime.units.push(enemyGapTargetA, enemyGapTargetB);
 god.x = 0; // Enemy Zeus now uses its own forward-facing 0-400 strike bands.
+const normalAttackCallsBeforeZeus = runtimeCalls.enemyNormalAttacks;
 runtimeWindow.enemyAttackTarget(god, enemyGapTargetA, {}, 1, false);
+assert.equal(runtimeCalls.enemyNormalAttacks, normalAttackCallsBeforeZeus, 'enemy Zeus lightning never invokes the generic non-lightning attack handler');
 const runScheduled = delay => {
   const index = scheduledTimers.findIndex(timer => timer.delay === delay);
   assert.notEqual(index, -1, 'expected scheduled lightning wave at ' + delay + 'ms');
