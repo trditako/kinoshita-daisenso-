@@ -49,7 +49,7 @@ const allyZeusAbility = {
   curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5,
   damageCap: 0.11,
-  zeusAlly: { bands: [{ min: 0, max: 50, damage: 60000 }, { min: 100, max: 150, damage: 22222 }, { min: 200, max: 250, damage: 15000 }], defensePerHit: 0.05, defenseMax: 0.75, enemyCountAttack: 0.02, enemyCountMax: 0.20, shield: 100000, shieldKillRestore: 0.02, shieldReflect: 0.10, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.33, stopDuration: 2, attackDownChance: 0.33, attackDownFactor: 0.2, attackDownDuration: 2 }
+  zeusAlly: { bands: [{ min: -100, max: 75, damage: 250000 }, { min: 125, max: 200, damage: 125000 }, { min: 200, max: 400, damage: 78000 }], defensePerHit: 0.05, defenseMax: 0.75, enemyCountAttack: 0.02, enemyCountMax: 0.20, shield: 100000, shieldKillRestore: 0.02, shieldReflect: 0.10, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.33, stopDuration: 2, attackDownChance: 0.33, attackDownFactor: 0.2, attackDownDuration: 2 }
 };
 
 const enemyZeus = {
@@ -76,8 +76,8 @@ const servantEnemy = {
 if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof eventStages !== 'undefined') {
   if (!cards.some(c => c && c.name === ZEUS_ALLY)) {
     cards.push({
-      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 180000, atk: 60000,
-      secondAtk: 22222, thirdAtk: 15000, multiAttack: [60000, 22222, 15000],
+      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 210000, atk: 250000,
+      secondAtk: 125000, thirdAtk: 78000, multiAttack: [250000, 125000, 78000],
       range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility.zeusAlly.bands, spd: 0.4, interval: 3, recharge: 180,
       icon: '⚡👑', motion: 'super', attackType: 'area', kb: 3,
       trait: '最高神', rarity: 'UR', series: '最高神',
@@ -440,8 +440,8 @@ function launchAllyZeusLightning(source) {
       if (!live(source)) return;
       const targets = enemies.filter(candidate => {
         if (!live(candidate) || !candidate.isEnemy || candidate.muscleGrabbedBy) return false;
-        const distance = Math.abs(Number(candidate.x || 0) - Number(source.x || 0));
-        return distance <= senseRange && distance >= band.min && distance <= band.max;
+        const distance = Number(candidate.x || 0) - Number(source.x || 0);
+        return Math.abs(distance) <= senseRange && distance >= band.min && distance <= band.max;
       });
       if (!targets.length) {
         const nearest = enemies.filter(live).reduce((best, candidate) => {
