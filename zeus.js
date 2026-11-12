@@ -292,7 +292,19 @@ if (typeof originalHit === 'function') {
     if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
     const beforeHp = Number(target.hp || 0);
     const beforeShield = Number(target.barrier || 0);
-    const result = originalHit.call(this, target, incoming, source, abilitySource);
+    // The core hit() treats yabayaba as an ally-side kill effect. Enemy Zeus
+    // uses the same damage pipeline, but its defeated targets must become
+    // enemy-side clones, so suppress that one automatic branch and handle it
+    // after the strike below.
+    const enemyZeusLightning = !!source?.isEnemy && source?.name === ZEUS_ENEMY && !!abilitySource?.zeusLightningResolved;
+    const savedYabayaba = enemyZeusLightning ? source?.ability?.yabayaba : undefined;
+    if (enemyZeusLightning && source?.ability) source.ability.yabayaba = undefined;
+    let result;
+    try {
+      result = originalHit.call(this, target, incoming, source, abilitySource);
+    } finally {
+      if (enemyZeusLightning && source?.ability) source.ability.yabayaba = savedYabayaba;
+    }
     const actual = Math.max(0, beforeHp - Number(target.hp || 0));
     if (actual > 0 && source) target.zeusLastDamageSource = source;
     const shieldDamage = Math.max(0, beforeShield - Number(target.barrier || 0));
@@ -395,7 +407,39 @@ function launchEnemyZeusLightning(enemy, attackNow = performance.now() / 1000) {
         const dealt = typeof damageAgainst === 'function' ? damageAgainst(enemy, unit, rawDamage) : rawDamage;
         zeusLightning(unit, '#60a5fa', enemy);
         window.hit(unit, dealt, enemy, { zeusLightningResolved: true, zeusBandIndex: index });
+
+        // Enemy Zeus's custom lightning bypasses enemyAttackTarget(), so apply
+        // its 50% knockback here using the same movement semantics as the
+        // engine's ordinary enemy ability pipeline.
+        if (unit.hp > 0 && !unit.knockbackImmune && !unit.ability?.knockbackImmune &&
+            Math.random() < Number(enemyZeusAbility.knockbackChance || 0)) {
+          const distance = 42;
+          const maxX = Number(worldWidth || 0) - 178;
+          unit.x = unit.isEnemy
+            ? Math.max(120, Number(unit.x || 0) - distance)
+            : Math.min(maxX, Number(unit.x || 0) + distance);
+          unit.cd = Math.max(Number(unit.cd || 0), 0.22);
+          unit.hitbackUntil = performance.now() / 1000 + 0.22;
+          unit.el?.classList?.remove('hitback');
+          unit.el?.classList?.add('hitback');
+          setTimeout(() => unit.el?.classList?.remove('hitback'), 220);
+          if (typeof window.setStatusMark === 'function') {
+            window.setStatusMark(unit, '💨', 'ふっとばし', 0.22, 'zeusKnockback');
+          }
+        }
+
         if (unit.hp <= 0) {
+          // Level 5 creates a full-strength enemy-side copy of the defeated
+          // unit. The regular hit() kill hook is intentionally suppressed
+          // above because it always creates an ally-side copy.
+          const level = Number(enemy.yabayaba ?? enemy.ability?.yabayaba ?? 0);
+          const chance = Number(enemy.yabayabaChance ?? enemy.ability?.yabayabaChance ?? 1);
+          if (level > 0 && !unit.yabayabaImmune && !unit.ability?.yabayabaImmune &&
+              Math.random() < Math.max(0, Math.min(1, chance)) &&
+              typeof window.spawnYabayabaClone === 'function') {
+            window.spawnYabayabaClone(unit, level, false);
+          }
+          if (typeof window.removeUnit === 'function') window.removeUnit(unit);
           const shieldMax = Number(enemy.barrierMax || enemy.barrier || enemyZeusAbility.zeusEnemy.shield);
           enemy.barrier = Math.min(shieldMax, Number(enemy.barrier || 0) + shieldMax * 0.02);
           if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(enemy);
