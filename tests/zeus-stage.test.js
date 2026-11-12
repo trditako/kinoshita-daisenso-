@@ -76,7 +76,8 @@ const runtimeWindow = {
     if (index >= 0) runtimeEnemies.splice(index, 1);
     return true;
   },
-  renderUnitElement(unit) { return unit; }
+  renderUnitElement(unit) { return unit; },
+  setInterval(fn, delay) { runtime.enemySenseLoop = fn; runtime.enemySenseLoopDelay = delay; return 1; }
 };
 const runtime = {
   window: runtimeWindow,
