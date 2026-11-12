@@ -52,6 +52,8 @@ assert.match(source, /distance >= band\.min && distance <= band\.max/, 'enemy Ze
 assert.match(source, /attackNow - Math\.max\(0\.1, Number\(enemy\.interval \|\| 3\)\)/, 'enemy Zeus waits its full 3-second attack interval');
 assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual elements');
 assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
+assert.match(source, /function zeusWorldXToViewportX\(worldX, source\)/, 'empty-band lightning converts stage coordinates to viewport coordinates');
+assert.match(source, /!abilitySource\?\.zeusLightningResolved && !abilitySource\?\.zeusReflection/, 'Zeus cannot deal damage through conventional non-lightning hits');
 assert.match(source, /savedNames\.includes\(ZEUS_ALLY\).*savedFormationNames\.includes\(ZEUS_ALLY\)/s, 'saved ownership and formation names can restore Zeus');
 assert.doesNotMatch(source, /const statusRoll = Math\.random\(\)/, 'do not double-roll Zeus status probabilities');
 assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing has one capped implementation');
@@ -151,6 +153,11 @@ const angelTarget = { name: 'ally', hp: 500, maxhp: 500, trait: '天使', isEnem
 runtimeWindow.enemyAttackTarget(servant, angelTarget, {}, 1, false);
 assert.equal(angelTarget.hp, 420, 'servant deals eight times damage to angel targets');
 assert.equal(god.hp, 820, 'servant heals Zeus by 25% of actual damage exactly once');
+const conventionalHitTarget = { name: 'ordinary target', hp: 1000, maxhp: 1000, isEnemy: true };
+runtimeWindow.hit(conventionalHitTarget, 500, allyZeus, {});
+assert.equal(conventionalHitTarget.hp, 1000, 'ally Zeus cannot damage with a conventional hit');
+runtimeWindow.hit(conventionalHitTarget, 500, allyZeus, { zeusLightningResolved: true });
+assert.equal(conventionalHitTarget.hp, 500, 'ally Zeus damages targets only through a resolved lightning strike');
 god.x = 1000; // Keep the enemy Zeus outside the ally's 0-250 lightning bands.
 
 // Killing a servant strengthens the enemy Zeus.
