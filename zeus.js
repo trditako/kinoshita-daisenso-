@@ -215,11 +215,15 @@ function zeusLightning(target, color = '#facc15', source = null) {
     fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - 148) + 'px';
   } else if (sourceRect && source) {
     const viewportX = zeusWorldXToViewportX(Number(target.x || 0), source);
-    fx.style.left = (viewportX == null ? sourceRect.left + sourceRect.width / 2 : viewportX) + 'px';
+    // Never interpret a stage/world coordinate as a viewport coordinate.
+    // If the battlefield transform cannot be measured, skip this cosmetic
+    // empty-band bolt rather than pinning it to the camera/source position.
+    if (viewportX == null) return;
+    fx.style.left = viewportX + 'px';
     fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - 148) + 'px';
   } else {
-    fx.style.left = Math.max(0, Number(target.x || 0)) + 'px';
-    fx.style.bottom = '38px';
+    // No rendered anchor means there is no reliable world-to-screen mapping.
+    return;
   }
   overlay.appendChild(fx);
   setTimeout(() => fx.remove(), 620);
