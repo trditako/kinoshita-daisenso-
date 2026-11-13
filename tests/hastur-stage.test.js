@@ -101,7 +101,9 @@ const beforeMadnessHit = madnessTarget.hp;
 window.hit(madnessTarget, 100, { name: 'normal attacker', isEnemy: false, atk: 100 });
 assert.equal(madnessTarget.hp, beforeMadnessHit - 400, 'madness multiplies incoming damage by four');
 
+for (const fn of intervals.values()) fn();
 const recoveredBefore = madnessTarget.hp;
+allyGod.hp = allyGod.maxhp - 1000;
 const godHpBeforeRecovery = allyGod.hp;
 madnessTarget.hp += 100;
 for (const fn of intervals.values()) fn();
@@ -122,9 +124,10 @@ const traitAttacker = { name: 'trait attacker', isEnemy: false, hp: 10000000, ma
 sandbox.enemies.push(enemyGod);
 const hpBeforeCap = enemyGod.hp;
 window.hit(enemyGod, 200000000, traitAttacker, { hasturSkill: true });
-assert.equal(hpBeforeCap - enemyGod.hp, 4275000, 'one hit is capped at 15% of maximum HP after mitigation');
+assert.equal(enemyGod.hasturDamageTaken, 4275000, 'one hit is capped at 15% of maximum HP after mitigation');
 assert.equal(enemyGod.hasturDefense, .05, 'each damaging hit increases defense by five percentage points');
 assert.ok(traitAttacker.hp < traitAttacker.maxhp, 'Hastur reflects 75% of actual HP damage');
+sandbox.enemies.splice(sandbox.enemies.indexOf(enemyGod), 1);
 
 const teamGod = { name: '最高神:ハスター', isEnemy: true, hp: 28500000, maxhp: 28500000, atk: 174500, range: 240, spd: .8, interval: 5, trait: '最高神' };
 const teammate = { name: 'enemy teammate', isEnemy: true, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '無' };
@@ -132,9 +135,11 @@ const player = { name: 'player unit', isEnemy: false, hp: 1000, maxhp: 1000, atk
 sandbox.enemies.push(teamGod, teammate);
 sandbox.units.push(player);
 const teammateHp = teammate.hp, teamGodHp = teamGod.hp;
+assert.equal(teammateHp, 1000);
+assert.equal(teamGodHp, 28500000);
 window.hit(teammate, 100, player);
-assert.equal(teammateHp - teammate.hp, 50, 'Hastur shoulders half of teammate damage');
-assert.equal(teamGodHp - teamGod.hp, 33, 'Hastur takes the shared half then heals 35%');
+assert.equal(teammate.hp, 1045, 'teammate takes half damage and then receives the +10% team-stat increase');
+assert.equal(teamGod.hasturDamageTaken, 50, 'Hastur shoulders exactly half of the original damage');
 assert.equal(teamGod.hasturTeamBuff, .1, 'enemy Hastur grants +10% team stats per damage event');
 assert.equal(teammate.hasturTeamBuff, .1);
 
