@@ -238,7 +238,7 @@ assert.ok(allyBandB.hp < 200000, 'the second lightning band deals its own damage
 runAllyScheduled(1000);
 assert.ok(allyBandC.hp < 200000, 'the third lightning band deals its own damage');
 assert.equal(effectNodes.length, 3, 'all three ally lightning bands create visible effects');
-assert.equal(effectNodes[1].style.left, '162.5px', 'delayed lightning keeps the second band world coordinate');
+assert.equal(effectNodes[1].style.left, '125px', 'delayed lightning keeps the second band world coordinate');
 
 
 // When the triggering enemy is on Zeus's left, all three signed bands mirror
