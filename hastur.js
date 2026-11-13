@@ -34,13 +34,14 @@ if(typeof hit==='function')window.hit=function(target,damage,source,meta){
  if(!target||!live(target))return hit.apply(this,arguments);
  const th=target.name===NAME,sh=source?.name===NAME,cfg=th?(target.isEnemy?enemyCfg:allyCfg):sh?(source.isEnemy?enemyCfg:allyCfg):null;
  let d=Math.max(0,Number(damage)||0);
- if(th&&cfg){if(source&&has(source,TRAITS))d*=target.isEnemy?.15:.45;if(meta?.hasturSkill||meta?.skillDamage)d*=cfg.skillReduction;if(meta?.powerShield||meta?.barrierDamage)d*=cfg.shield;d=Math.min(d,Math.max(1,target.maxhp*cfg.damageCap));d*=1-Math.min(cfg.defenseMax,target.hasturDefense||0);}
+ if(th&&cfg){if(source&&has(source,TRAITS))d*=target.isEnemy ? .15 : .45;if(meta?.hasturSkill||meta?.skillDamage)d*=cfg.skillReduction;if(meta?.powerShield||meta?.barrierDamage)d*=cfg.shield;d=Math.min(d,Math.max(1,target.maxhp*cfg.damageCap));d*=1-Math.min(cfg.defenseMax,target.hasturDefense||0);}
  if(sh&&has(target,TRAITS))d*=source.isEnemy?5:3;
  if(target.hasturCurseUntil>now()&&!meta?.hasturReflection)d*=3;
  if(target.hasturMadnessUntil>now()&&!meta?.hasturReflection)d*=4;
  const before=Number(target.hp||0),result=hit.call(this,target,d,source,meta),actual=Math.max(0,before-Number(target.hp||0));
  if(th&&cfg&&actual>0){target.hasturDefense=Math.min(cfg.defenseMax,(target.hasturDefense||0)+.05);target.hasturDamageTaken=(target.hasturDamageTaken||0)+actual;const step=target.maxhp*cfg.threshold;while(target.hasturDamageTaken>=step){target.hasturDamageTaken-=step;target.atk=Math.round(target.atk*(1+cfg.attackStep));target.interval=Math.max(.05,target.interval*(1-cfg.intervalStep));}if(!(target.hasturHealingDisabledUntil>now()))target.hp=Math.min(target.maxhp,target.hp+Math.round(actual*cfg.heal));if(source&&live(source)&&!meta?.hasturReflection)hit.call(this,source,Math.round(actual*cfg.reflect),target,{hasturReflection:true});update(target);}
- if(sh&&cfg&&actual>0&&!meta?.hasturReflection){if(Math.random()<cfg.curseChance)mark(target,'curse',3,source);attack(source,target,cfg);}
+ if(sh&&cfg&&actual>0&&!meta?.hasturReflection){if(Math.random()<cfg.curseChance)mark(target,'curse',3,source);}
+ if(th&&cfg&&actual>0&&(meta?.wave||meta?.waveDamage||meta?.isWave)){target.hasturWaveCount=(target.hasturWaveCount||0)+1;if(target.hasturWaveCount>=cfg.tentacleWaves){target.hasturWaveCount=0;tentacle(target,cfg);}}
  return result;
 };
 const seq=window.getAttackSequence;if(typeof seq==='function')window.getAttackSequence=function(source,target){const out=seq.apply(this,arguments);if(source?.name===NAME&&live(target))attack(source,target,source.isEnemy?enemyCfg:allyCfg);return out;};
