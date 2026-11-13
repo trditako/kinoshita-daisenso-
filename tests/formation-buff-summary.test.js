@@ -26,6 +26,9 @@ assert.ok(summary.includes('最大+30%'),'天使神自身の強化上限を表�
 assert.ok(summary.includes('ノヴァ木下の編成効果'),'ノヴァの編成効果カードを表示');
 assert.ok(summary.includes('初期所持金 +750'),'ノヴァの初期所持金ボーナスを表示');
 assert.ok(summary.includes('覇風の編成バフ'),'覇風の既存編成効果表示を維持');
+assert.ok(summary.includes('最高神:ハスターの編成バフ'),'ハスターの編成効果を覇風と同じ共通サマリーへ表示');
+assert.ok(summary.includes('hasturFormationContext()'),'ハスターの編成人数と倍率を共通計算');
+assert.ok(summary.includes('最高神 '),'最高神の編成人数を表示');
 assert.ok(summary.includes('MiraiKの編成バフ'),'MiraiKの既存編成効果表示を維持');
 assert.ok(summary.includes('狂乱の強化木下の編成・戦闘能力'),'狂乱の強化木下の既存表示を維持');
 assert.ok(genesis.includes('genesisFormationSummary'),'創世木下の編成効果表示を維持');
@@ -35,6 +38,7 @@ assert.ok(html.includes("if(!rows.length)return '';"),'スキル未所持時は�
 assert.ok(html.includes('formatCharacterSkillSection(c)+'),'スキル欄を独立表示');
 assert.ok(html.includes('function addFormationVisualCondition(condition){')&&html.includes('existing.query===condition.query'),'同一検索条件の二重追加防止');
 const statusStart=html.indexOf('function updateStatusMark(target){'),statusEnd=html.indexOf('function applyFrogAbility',statusStart),status=html.slice(statusStart,statusEnd);
+assert.ok(status.includes("'hasturGrowthAttack'")&&status.includes("'hasturGrowthTeam'"),'ハスターの成長バフを共通バフ表示として分類');
 for(const key of ["push('novaMode'","push('novaAllyBuffLock'","push('novaImmunity'","push('novaSeries'","push('novaMyth'","push('novaLifesteal'","push('novaHaifu'","push('rageHpThreshold'","push('novaMiniGunCooldown'"])assert.ok(!status.includes(key),'常時効果を非表示：'+key);
 for(const key of ['novaDestructionStacks','novaRapidAttack','novaRapidInterval','novaMiniGun','rageKills'])assert.ok(status.includes(key),'戦闘中に発動した効果を維持：'+key);
 assert.match(html,/GAME_VERSION='v1\.9\.\d+'/,'ゲームバージョンを更新');
@@ -61,7 +65,7 @@ assert.ok(!formation.includes("addFilterBtn?.addEventListener('click'"),'条件�
 assert.ok(formation.includes('if(fieldEl)fieldEl.onchange='),'条件項目の変更イベントを1つに保つ');
 assert.ok(formation.includes('if(search)search.oninput='),'名前検索イベントを1つに保つ');
 
-assert.ok(sw.includes('kinoshita-daisen-v100'),'Service Workerキャッシュを更新');
+assert.ok(sw.includes('kinoshita-daisen-v101'),'Service Workerキャッシュを更新');
 assert.ok(workflow.includes('node tests/formation-buff-summary.test.js'),'新しい回帰テストをCIに登録');
 const urGoldStart=html.indexOf("const ultraRareGoldStage=eventStages.find(st=>st.name==='ウルトラレアの金集め');");
 const urGoldEnd=html.indexOf("\n",urGoldStart);
@@ -77,9 +81,13 @@ const legendGold=html.slice(legendGoldStart,urGoldStart);
 assert.ok(legendGold.includes("legendGoldStage.width=1900")&&legendGold.includes("legendGoldStage.baseHp=900000"),'伝説レア金集めの既存難易度を変更しない');
 assert.match(html,/\.unitEffectTag\.shield/,'パワーシールドを通常バフと異なる表示色にする');
 assert.match(html,/push\('powerShield','⚡',[^;]*'shield'\)/,'パワーシールドを専用ステータス種別で表示');
-assert.match(html,/max-height:78px/,'戦闘中の状態表示を複数行まで見やすくする');
+assert.match(html,/top:-150px;left:50%;/,'バフ表示をHPバーから離して配置する');
+assert.match(html,/max-height:100px;overflow-y:auto/,'バフが多い場合は独立スクロールさせる');
+assert.ok(html.includes('.unit .hp{position:absolute;top:0;left:3px;width:58px;height:7px;background:#333;border:1px solid #111;border-radius:8px;overflow:hidden;z-index:26}'),'HPバーをバフ表示より前面にする');
 assert.match(html,/現在の性能（レベル・形態反映後）/,'キャラ詳細に現在性能の見出しを表示');
 assert.match(html,/固有能力（キャラクター固有の特性）/,'固有能力を明示してスキルと混同しない');
 assert.match(html,/background:#f1f5f9;border:2px solid #cbd5e1/,'詳細ステータスを高コントラスト表示にする');
 assert.match(html,/max-height:36vh;overflow-y:auto/,'編成バフ一覧を独立スクロール可能にする');
+assert.ok(html.includes('const hasturFactor='),'ハスターの編成倍率を各キャラの補正後ステータスへ反映する');
+assert.ok(html.includes('hasturFactor;'),'HP・攻撃・射程・移動速度・攻撃間隔・再生産へ倍率を反映する');
 process.stdout.write('編成効果・詳細表示テスト成功：独立スキル、詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
