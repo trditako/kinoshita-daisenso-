@@ -1,4 +1,4 @@
-name: Validate game JavaScript # Hastur damage-defense regression
+name: Validate game JavaScript # Hastur reflection and sharing regression
 on:
   pull_request:
     paths:
