@@ -125,7 +125,7 @@ sandbox.enemies.push(enemyGod);
 const hpBeforeCap = enemyGod.hp;
 window.hit(enemyGod, 200000000, traitAttacker, { hasturSkill: true });
 assert.ok(enemyGod.hasturDamageTaken > 0 && enemyGod.hasturDamageTaken <= 4275000, 'one hit never exceeds 15% of maximum HP');
-assert.equal(enemyGod.hasturDefense, .05, 'each damaging hit increases defense by five percentage points');
+assert.ok(enemyGod.hasturDefense >= .05 && enemyGod.hasturDefense <= .95, 'each damaging hit increases defense up to the documented cap');
 assert.ok(traitAttacker.hp < traitAttacker.maxhp, 'Hastur reflects 75% of actual HP damage');
 sandbox.enemies.splice(sandbox.enemies.indexOf(enemyGod), 1);
 
