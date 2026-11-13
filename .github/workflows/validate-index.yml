@@ -64,4 +64,3 @@ jobs:
           node tests/ice-wyvern.test.js
           node tests/zeus-stage.test.js
           node tests/hastur-stage.test.js
-          node tests/hastur-stage.test.js
