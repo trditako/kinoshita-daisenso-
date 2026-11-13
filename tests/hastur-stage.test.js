@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 assert.match(sw, /kinoshita-daisen-v100/);
-assert.match(sw, /hastur\.js\?v=20261114-hastur-raid/);
+assert.match(sw, /hastur\.js\?v=20261114-hastur-formation-display/);
 assert.ok(sw.includes('./hastur.js'));
 assert.match(source, /document\.getElementById\('effects'\)/, 'tentacle animation uses the world-space effects layer');
 assert.match(source, /position:absolute;z-index:24/);
@@ -13,12 +13,14 @@ assert.match(source, /function growthStatusEntries\(g,cfg\)/, 'Hastur exposes ac
 assert.doesNotMatch(source, /hasturGrowthBadge|renderGrowthBadge/, 'Hastur does not use a custom floating buff badge');
 assert.match(source, /rotate\('\+\(dir\*90\)\+'deg\)/, 'the tentacle falls toward the current facing direction');
 assert.match(source, /function renderHasturFormationSummary\(\)/, 'Hastur formation effect is shown in the standard formation summary');
-assert.match(source, /const originalDeploy=window\.deploy/, 'formation synergy is applied after deployment to all existing allies');
+assert.match(source, /const originalDeploy=typeof deploy==='function'\?deploy:null/, 'formation synergy is applied after deployment to all existing allies');
 
 const calls = { stage: 0, cards: 0 };
 const effectNodes = [];
 const statusMarks = [];
 const effectsLayer = { appendChild(node) { effectNodes.push(node); node.parentElement = effectsLayer; } };
+const summaryCards = [];
+const summaryRoot = { querySelector() { return null; }, appendChild(node) { summaryCards.push(node); } };
 let nextTimer = 0;
 const intervals = new Map();
 const scheduled = [];
@@ -46,10 +48,10 @@ window.damageTakenBy = (target, attacker) => Number(attacker.atk || 1);
 const sandbox = {
   window,
   document: {
-    createElement() { return { style: {}, className: '', remove() {}, append() {} }; },
+    createElement() { return { style: {}, className: '', children: [], remove() {}, append(...nodes) { this.children.push(...nodes); }, appendChild(node) { this.children.push(node); } }; },
     body: { appendChild() {} },
     documentElement: { appendChild() {} },
-    getElementById(id) { return id === 'effects' ? effectsLayer : null; }
+    getElementById(id) { return id === 'effects' ? effectsLayer : id === 'formationBuffSummary' ? summaryRoot : null; }
   },
   performance: { now: () => 1000 },
   setInterval(fn) { const id = ++nextTimer; intervals.set(id, fn); return id; },
@@ -164,6 +166,7 @@ assert.equal(teammate.hp, 1050, 'teammate receives +10% team stats and then take
 assert.ok(teamGod.hasturDamageTaken >= 50, 'Hastur shoulders half of the original damage; cross-Hastur reflections may add return damage');
 assert.equal(teamGod.hasturTeamBuff, .1, 'enemy Hastur grants +10% team stats per damage event');
 assert.equal(teammate.hasturTeamBuff, .1);
+assert.ok(statusMarks.some(mark => mark[4] === 'hasturTeamBuff' && mark[2] === 'ハスターの加護 +10%'), 'allies show Hastur team buffs through the shared status mark display');
 
 sandbox.cards.push({ name: 'non-highest one', trait: '無' }, { name: 'non-highest two', trait: '黒' });
 sandbox.formation = [0, 1, 2];
@@ -174,6 +177,10 @@ assert.equal(formationGod.hasturFormationHighestFactor, 2.1, 'two non-highest me
 assert.equal(formationGod.maxhp, 1837500);
 assert.equal(api.formationSummaryData().allPct, 75);
 assert.equal(api.formationSummaryData().highestPct, 110);
+api.renderHasturFormationSummary();
+assert.equal(summaryCards.length, 1, 'Hastur formation effects are added to the shared formation summary area');
+assert.equal(summaryCards[0].children[1].textContent, '全味方：最高神1体により +75%（最大+200%）');
+assert.equal(summaryCards[0].children[2].textContent, '最高神：最高神以外2体により +110%（最大+350%）');
 const formationAlly = { name: 'formation ally', isEnemy: false, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '無' };
 sandbox.units.push(formationAlly);
 api.applyFormationSynergyToAll();
