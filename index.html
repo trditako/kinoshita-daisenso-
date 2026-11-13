@@ -3126,7 +3126,7 @@ function formationBuffSummaryHTML(i){
  const haifuAllyFactor=haifuCtx?haifuCtx.allyFactor:1;
  const haifuSelfFactor=haifuCtx&&c.name==='覇風'?haifuCtx.selfFactor:1;
  const hasturCtx=hasturFormationContext();
- const hasturFactor=hasturCtx?(String(c.trait||'').includes('最高神')?hasturCtx.highestFactor:hasturCtx.allyFactor):1;
+ const hasturFactor=hasturCtx?(String(c.trait||'').includes('最高神')?hasturCtx.allyFactor*hasturCtx.highestFactor:hasturCtx.allyFactor):1;
  const miraiKAllyFactor=miraiKCtx&&entityHasTrait(c,'天使')?1.1:1;
  const isNova=c.name==='ノヴァ木下'&&!!c.ability?.modeSwitch;
  const novaSeriesCount=isNova?novaFormationSeriesCount():0,novaMythCount=isNova?novaFormationMythCount():0;
@@ -3159,7 +3159,7 @@ function formationBuffSummaryHTML(i){
  if(rankMode&&Math.abs(rankFactor-1)>.0001)tags.push('ランク補正 '+(rankFactor>=1?'+':'')+Math.round((rankFactor-1)*100)+'%');
  if(auraLabel)tags.push(auraLabel);
  if(miraiKCtx&&entityHasTrait(c,'天使'))tags.push('MiraiK：天使属性の全ステータス +10%');
- if(hasturCtx)tags.push('ハスター：'+(String(c.trait||'').includes('最高神')?'最高神以外 '+hasturCtx.otherCount+'体 → 全ステータス +'+Math.round((hasturFactor-1)*100)+'%':'最高神 '+hasturCtx.highestCount+'体 → 全ステータス +'+Math.round((hasturFactor-1)*100)+'%'));
+ if(hasturCtx){if(String(c.trait||'').includes('最高神'))tags.push('ハスター：全味方分 +'+Math.round((hasturCtx.allyFactor-1)*100)+'% × 最高神以外 '+hasturCtx.otherCount+'体分 +'+Math.round((hasturCtx.highestFactor-1)*100)+'%');else tags.push('ハスター：最高神 '+hasturCtx.highestCount+'体 → 全ステータス +'+Math.round((hasturCtx.allyFactor-1)*100)+'%');}
  if(miraiKCtx&&c.name==='MiraiK')tags.push('自身以外の天使属性 '+miraiKCtx.angelCount+'体：与ダメージ +'+Math.round((miraiKCtx.damageFactor-1)*100)+'%（最大+55%）');
  if(rageCtx&&c.name==='狂乱の強化木下'){
   tags.push('宇宙属性 '+rageCtx.cosmicCount+'体：攻撃力 +'+Math.round((rageCtx.attackFactor-1)*100)+'%（最大+100%）');
