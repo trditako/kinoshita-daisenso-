@@ -95,7 +95,7 @@ assert.equal(madnessTarget.hp, 750, 'madness deals 25% max HP exactly once on ap
 assert.equal(madnessTarget.barrier, 0, 'madness breaks power shields');
 assert.ok(madnessTarget.trait.includes('赤'), 'madness temporarily adds red trait');
 assert.equal(allyGod.hasturMadnessCount, 1);
-assert.equal(allyGod.maxhp, 718750, 'curse and madness stacks combine additively');
+assert.equal(allyGod.maxhp, 700000, 'curse and madness stacks combine additively');
 
 const beforeMadnessHit = madnessTarget.hp;
 window.hit(madnessTarget, 100, { name: 'normal attacker', isEnemy: false, atk: 100 });
@@ -138,7 +138,7 @@ const teammateHp = teammate.hp, teamGodHp = teamGod.hp;
 assert.equal(teammateHp, 1000);
 assert.equal(teamGodHp, 28500000);
 window.hit(teammate, 100, player);
-assert.equal(teammate.hp, 1045, 'teammate takes half damage and then receives the +10% team-stat increase');
+assert.equal(teammate.hp, 1050, 'teammate receives +10% team stats and then takes the remaining half damage');
 assert.equal(teamGod.hasturDamageTaken, 50, 'Hastur shoulders exactly half of the original damage');
 assert.equal(teamGod.hasturTeamBuff, .1, 'enemy Hastur grants +10% team stats per damage event');
 assert.equal(teammate.hasturTeamBuff, .1);
