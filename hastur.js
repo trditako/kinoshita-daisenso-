@@ -1,0 +1,51 @@
+(() => {
+'use strict';
+if (window.__HASTUR_RAID_V1__) return;
+window.__HASTUR_RAID_V1__ = true;
+const STAGE='最高神:ハスター降臨', NAME='最高神:ハスター', SERVANT='最高神に使える者';
+const TRAITS=['神話','天使','黒','赤'];
+const live=e=>!!e&&Number(e.hp)>0, now=()=>performance.now()/1000;
+const has=(e,ts)=>ts.some(t=>String(e?.trait||e?.attribute||'').includes(t));
+const enemyCfg={damageCap:.15,heal:.35,reflect:.75,defenseMax:.95,attackStep:.25,intervalStep:.07,threshold:.10,skillReduction:.25,shield:15,curseChance:.75,teamStep:.10,teamMax:1.25,tentacleAttacks:3,tentacleWaves:5,tentacleBuff:.07,tentacleMax:.75,madnessInterval:22,madnessAttacks:3};
+const allyCfg={damageCap:.15,heal:.25,reflect:.15,defenseMax:.45,attackStep:.07,intervalStep:.05,threshold:.15,skillReduction:.5,shield:3,curseChance:.25,tentacleAttacks:9,tentacleWaves:25,tentacleBuff:.07,tentacleMax:.25,madnessInterval:26,madnessAttacks:2};
+const enemyAbility={name:'黄衣の王',desc:'神話・天使・黒・赤からのダメージ85%軽減、同属性へ5倍。被ダメージ35%回復・75%反射。スキル被ダメージ75%軽減。最大HP15%を超える一撃を受けない。パワーシールドへ15倍。攻撃時75%で3秒間ハスターの呪い。呪い・停止・攻撃力低下・ふっとばす無効。最大HP10%分の被ダメージごと攻撃力+25%・攻撃間隔7%短縮（上限なし）。被弾ごと防御力+5%（最大95%）。味方の被ダメージ50%肩代わり、味方全体+10%（最大125%）。防御無視。パワーシールド持ちから攻撃されると相手攻撃力80%低下3秒。',strong:{神話:5,天使:5,黒:5,赤:5},resist:{神話:.15,天使:.15,黒:.15,赤:.15},curseImmune:true,stopImmune:true,attackDownImmune:true,knockbackImmune:true,hastur:enemyCfg};
+const allyAbility={name:'黄衣の王',desc:'神話・天使・黒・赤からのダメージ55%軽減、同属性へ3倍。被ダメージ25%回復・15%反射。スキル被ダメージ50%軽減。最大HP15%を超える一撃を受けない。パワーシールドへ3倍。攻撃時25%で3秒間ハスターの呪い。編成中の最高神1体につき味方全体+75%（最大200%）、最高神以外1体につき最高神+55%（最大350%）。妨害無効。最大HP15%分の被ダメージごと攻撃力+7%・攻撃間隔5%短縮（上限なし）。被弾ごと防御力+5%（最大45%）。味方の被ダメージ50%肩代わり、味方全体+5%（最大50%）。防御無視。パワーシールド持ちから攻撃されると相手攻撃力50%低下3秒。',strong:{神話:3,天使:3,黒:3,赤:3},resist:{神話:.45,天使:.45,黒:.45,赤:.45},curseImmune:true,stopImmune:true,attackDownImmune:true,knockbackImmune:true,hastur:allyCfg};
+const boss={name:NAME,icon:'🟡👑',trait:'最高神',hp:28500000,atk:174500,range:240,spd:.8,interval:5,attackType:'single',kb:3,boss:true,ability:enemyAbility};
+const servant={name:SERVANT,icon:'🟡🦑',trait:'無',hp:1200000,atk:18000,range:120,spd:1,interval:2,attackType:'single',kb:2};
+if(typeof cards!=='undefined'&&typeof enemyTypes!=='undefined'&&typeof eventStages!=='undefined'){
+ if(!cards.some(c=>c?.name===NAME)){cards.push({id:cards.length,name:NAME,cost:1800,hp:500000,atk:122000,range:180,spd:.8,interval:5.5,recharge:180,icon:'🟡👑',motion:'super',attackType:'single',kb:3,trait:'最高神',rarity:'UR',series:'最高神',ability:allyAbility,strong:allyAbility.strong,resist:allyAbility.resist,curseImmune:true,stopImmune:true,attackDownImmune:true,knockbackImmune:true});
+ if(typeof CURRENT_CHARACTER_COUNT!=='undefined')CURRENT_CHARACTER_COUNT=cards.length;
+ for(const [a,v] of [[charLevel,1],[charMaxLevel,20],[charForm,1],[normalEvolved,false],[ownedFlags,false]])if(Array.isArray(a))while(a.length<cards.length)a.push(v);}
+ const id=cards.findIndex(c=>c?.name===NAME), cleared=typeof eventClears!=='undefined'&&eventClears?.[STAGE]===true;
+ const saved=typeof ownedCharacterNamesAtBoot!=='undefined'&&ownedCharacterNamesAtBoot?.includes(NAME);
+ const formed=typeof formationStableNamesAtBoot!=='undefined'&&formationStableNamesAtBoot?.includes(NAME);
+ if(id>=0&&Array.isArray(ownedFlags)&&(cleared||saved||formed)){ownedFlags[id]=true;if(typeof syncOwnedCount==='function')syncOwnedCount();if(typeof save==='function')save();}
+ enemyTypes[NAME]=boss;enemyTypes[SERVANT]=servant;
+ if(!eventStages.some(s=>s?.name===STAGE))eventStages.push({name:STAGE,width:2600,baseHp:500000,xp:30000,eventReward:NAME,rewardCharacter:NAME,enemies:[NAME,SERVANT],schedule:[{t:0,enemy:NAME,mult:1,fixedMultiplier:true,role:'boss'}],repeatSpawns:[{start:2,interval:35,enemy:SERVANT,mult:1.2,fixedMultiplier:true}]});
+}
+function mark(t,type,duration,source){if(!live(t))return;const end=now()+duration;if(type==='curse'){if(t.curseImmune||t.ability?.curseImmune)return;t.hasturCurseUntil=Math.max(t.hasturCurseUntil||0,end);t.hasturCurseFactor=3;t.hasturCurseAttackFactor=.5;t.hasturHealingDisabledUntil=t.hasturCurseUntil;}else{if(t.hasturMadnessUntil>now())return;t.hasturMadnessUntil=end;t.hasturMadnessAttackFactor=.25;const burst=Math.round(Number(t.maxhp||t.hp)*.25);window.hit?.(t,burst,source,{hasturMadnessBurst:true});t.hasturMadnessDamageFactor=4;t.hasturHealingDamageFactor=1;t.barrier=0;t.powerShield=0;}window.setStatusMark?.(t,type==='curse'?'🟡':'👁️',type==='curse'?'ハスターの呪い':'狂気',duration,'hastur'+type);}
+function update(t){const b=t?.el?.querySelector?.('.hp i');if(b)b.style.width=Math.max(0,100*t.hp/Math.max(1,t.maxhp))+'%';}
+function grow(b,amount,cap,key){const next=Math.min(cap,(b[key]||0)+amount),delta=next-(b[key]||0);if(delta<=0)return;b[key]=next;const f=1+delta;b.maxhp=Math.round(b.maxhp*f);b.hp=Math.min(b.maxhp,Math.round(b.hp*f));b.atk=Math.round(b.atk*f);b.spd*=f;update(b);}
+function tentacle(b,cfg){if(!live(b)||b.hasturTentacleBusy)return;b.hasturTentacleBusy=true;const r=b.el?.getBoundingClientRect?.();if(r){const fx=document.createElement('div');fx.textContent='🦑';fx.style.cssText='position:fixed;z-index:2147483646;font-size:76px;left:'+(r.left+r.width/2)+'px;top:'+(r.top-55)+'px;transform:translateX(-50%);pointer-events:none;';document.body.appendChild(fx);setTimeout(()=>fx.remove(),2500);}setTimeout(()=>{if(!live(b))return;const list=b.isEnemy?(units||[]):(enemies||[]),dir=b.isEnemy?-1:1,damage=Math.max(1,b.hp);let kills=0;for(const t of list.slice()){if(!live(t)||t.isEnemy===b.isEnemy)continue;const d=(Number(t.x||0)-Number(b.x||0))*dir;if(d< -20||d>350)continue;const hp=t.hp;window.hit?.(t,damage,b,{hasturTentacle:true,ignoreDefense:true});if(hp>0&&t.hp<=0){kills++;(b.isEnemy?window.removeUnit:window.removeEnemy)?.(t);}}if(kills)grow(b,kills*cfg.tentacleBuff,cfg.tentacleMax,'hasturTentacleBuff');b.hasturTentacleBusy=false;},2000);}
+function attack(b,t,cfg){b.hasturAttackCount=(b.hasturAttackCount||0)+1;if(b.hasturAttackCount>=cfg.tentacleAttacks){b.hasturAttackCount=0;tentacle(b,cfg);}if(b.hasturMadnessCharges>0&&live(t)){b.hasturMadnessCharges--;mark(t,'madness',5,b);}}
+function startCycle(b,cfg){if(b.hasturCycle)return;b.hasturCycle=setInterval(()=>{if(live(b))b.hasturMadnessCharges=cfg.madnessAttacks;},cfg.madnessInterval*1000);}
+const hit=window.hit;
+if(typeof hit==='function')window.hit=function(target,damage,source,meta){
+ if(!target||!live(target))return hit.apply(this,arguments);
+ const th=target.name===NAME,sh=source?.name===NAME,cfg=th?(target.isEnemy?enemyCfg:allyCfg):sh?(source.isEnemy?enemyCfg:allyCfg):null;
+ let d=Math.max(0,Number(damage)||0);
+ if(th&&cfg){if(source&&has(source,TRAITS))d*=target.isEnemy?.15:.45;if(meta?.hasturSkill||meta?.skillDamage)d*=cfg.skillReduction;if(meta?.powerShield||meta?.barrierDamage)d*=cfg.shield;d=Math.min(d,Math.max(1,target.maxhp*cfg.damageCap));d*=1-Math.min(cfg.defenseMax,target.hasturDefense||0);}
+ if(sh&&has(target,TRAITS))d*=source.isEnemy?5:3;
+ if(target.hasturCurseUntil>now()&&!meta?.hasturReflection)d*=3;
+ if(target.hasturMadnessUntil>now()&&!meta?.hasturReflection)d*=4;
+ const before=Number(target.hp||0),result=hit.call(this,target,d,source,meta),actual=Math.max(0,before-Number(target.hp||0));
+ if(th&&cfg&&actual>0){target.hasturDefense=Math.min(cfg.defenseMax,(target.hasturDefense||0)+.05);target.hasturDamageTaken=(target.hasturDamageTaken||0)+actual;const step=target.maxhp*cfg.threshold;while(target.hasturDamageTaken>=step){target.hasturDamageTaken-=step;target.atk=Math.round(target.atk*(1+cfg.attackStep));target.interval=Math.max(.05,target.interval*(1-cfg.intervalStep));}if(!(target.hasturHealingDisabledUntil>now()))target.hp=Math.min(target.maxhp,target.hp+Math.round(actual*cfg.heal));if(source&&live(source)&&!meta?.hasturReflection)hit.call(this,source,Math.round(actual*cfg.reflect),target,{hasturReflection:true});update(target);}
+ if(sh&&cfg&&actual>0&&!meta?.hasturReflection){if(Math.random()<cfg.curseChance)mark(target,'curse',3,source);attack(source,target,cfg);}
+ return result;
+};
+const seq=window.getAttackSequence;if(typeof seq==='function')window.getAttackSequence=function(source,target){const out=seq.apply(this,arguments);if(source?.name===NAME&&live(target))attack(source,target,source.isEnemy?enemyCfg:allyCfg);return out;};
+const enemyAttack=window.enemyAttackTarget;if(typeof enemyAttack==='function')window.enemyAttackTarget=function(source,target){if(source?.name===NAME){const cfg=source.isEnemy?enemyCfg:allyCfg;startCycle(source,cfg);attack(source,target,cfg);}if(target?.hasturCurseUntil>now()||target?.hasturMadnessUntil>now()){const factor=target.hasturCurseUntil>now()?.5:.25;const copy={...source,atk:Math.round(Number(source?.atk||1)*factor)};return enemyAttack.apply(this,[copy,target,...Array.prototype.slice.call(arguments,2)]);}return enemyAttack.apply(this,arguments);};
+const spawn=window.spawnEnemy;if(typeof spawn==='function')window.spawnEnemy=function(){const e=spawn.apply(this,arguments);if(e?.name===NAME)startCycle(e,enemyCfg);return e;};
+const render=window.renderUnitElement;if(typeof render==='function')window.renderUnitElement=function(u){const r=render.apply(this,arguments);if(u?.name===NAME)startCycle(u,allyCfg);return r;};
+if(typeof renderStageSelect==='function')renderStageSelect();if(typeof renderCards==='function')renderCards();if(typeof renderOwnedStart==='function')renderOwnedStart();if(typeof renderFormation==='function')renderFormation();if(typeof renderFormationBuffSummary==='function')renderFormationBuffSummary();
+})();
