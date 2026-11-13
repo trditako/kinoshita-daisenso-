@@ -89,5 +89,6 @@ assert.match(html,/固有能力（キャラクター固有の特性）/,'固有�
 assert.match(html,/background:#f1f5f9;border:2px solid #cbd5e1/,'詳細ステータスを高コントラスト表示にする');
 assert.match(html,/max-height:36vh;overflow-y:auto/,'編成バフ一覧を独立スクロール可能にする');
 assert.ok(html.includes('const hasturFactor='),'ハスターの編成倍率を各キャラの補正後ステータスへ反映する');
+assert.ok(html.includes('hasturCtx.allyFactor*hasturCtx.highestFactor'),'最高神キャラには全味方分と最高神専用分の両方を乗算する');
 assert.ok(html.includes('hasturFactor;'),'HP・攻撃・射程・移動速度・攻撃間隔・再生産へ倍率を反映する');
 process.stdout.write('編成効果・詳細表示テスト成功：独立スキル、詳細欄の残留防止、天使神・ノヴァ・既存バフ表示を確認しました。\n');
