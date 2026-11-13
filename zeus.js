@@ -158,81 +158,28 @@ function updateHp(entity) {
   const label = entity?.el?.querySelector?.('.hpLabel');
   if (label) label.textContent = Math.ceil(entity.hp).toLocaleString() + ' / ' + Math.ceil(entity.maxhp).toLocaleString();
 }
-function zeusWorldXToViewportX(worldX, source) {
-  const sourceRect = source?.el?.getBoundingClientRect?.();
-  if (!sourceRect) return null;
-  const sourceWorldX = Number(source.x || 0);
-  const sourceScreenX = sourceRect.left + sourceRect.width / 2;
-  const candidates = [
-    ...(Array.isArray(units) ? units : []),
-    ...(Array.isArray(enemies) ? enemies : [])
-  ].filter(unit => unit && unit !== source && Number.isFinite(Number(unit.x)) && unit.el?.getBoundingClientRect);
-  const scales = [];
-  for (const unit of candidates) {
-    const deltaWorld = Number(unit.x) - sourceWorldX;
-    if (Math.abs(deltaWorld) < 1) continue;
-    const rect = unit.el.getBoundingClientRect();
-    const deltaScreen = rect.left + rect.width / 2 - sourceScreenX;
-    if (Math.abs(deltaScreen) < 0.5) continue;
-    const scale = deltaScreen / deltaWorld;
-    if (!Number.isFinite(scale) || Math.abs(scale) > 4 || Math.abs(scale) < 0.02) continue;
-    scales.push(scale);
-  }
-  // Camera translation cancels in the relative delta. Use the median live
-  // battlefield scale so a single stale/off-screen entity cannot pull the
-  // empty-band strike toward the camera or an unrelated object.
-  if (!scales.length) return null;
-  scales.sort((a, b) => a - b);
-  const middle = Math.floor(scales.length / 2);
-  const scale = scales.length % 2 ? scales[middle] : (scales[middle - 1] + scales[middle]) / 2;
-  return sourceScreenX + (Number(worldX || 0) - sourceWorldX) * scale;
-}
 function zeusLightning(target, color = '#facc15', source = null) {
-  if (!target) return;
-  // Viewport overlay keeps both teams' lightning above battle effects. Its
-  // position is calculated from live battlefield entity coordinates.
-  let overlay = document.getElementById('zeusLightningOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'zeusLightningOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;z-index:2147483647;display:block;visibility:visible;opacity:1;isolation:isolate;';
-    (document.documentElement || document.body).appendChild(overlay);
-  }
+  if (!target || !Number.isFinite(Number(target.x))) return;
+  // #effects is inside #world. Its coordinate system follows camera movement.
+  const layer = document.getElementById('effects');
+  if (!layer) return;
   const fx = document.createElement('div');
   fx.className = 'zeusLightningFx';
-  const bolt = document.createElement('i');
-  bolt.className = 'zeusLightningBolt';
-  const branch = document.createElement('i');
-  branch.className = 'zeusLightningBolt secondary';
-  const flash = document.createElement('i');
-  flash.className = 'zeusLightningFlash';
+  const bolt = document.createElement('i'); bolt.className = 'zeusLightningBolt';
+  const branch = document.createElement('i'); branch.className = 'zeusLightningBolt secondary';
+  const flash = document.createElement('i'); flash.className = 'zeusLightningFlash';
   fx.append(bolt, branch, flash);
   fx.style.setProperty('--zeus-color', color);
-  const targetRect = target.el?.getBoundingClientRect?.();
-  const sourceRect = source?.el?.getBoundingClientRect?.();
-  if (targetRect) {
-    fx.style.left = (targetRect.left + targetRect.width / 2) + 'px';
-    fx.style.top = Math.max(0, targetRect.top + targetRect.height / 2 - 148) + 'px';
-  } else if (sourceRect && source) {
-    const viewportX = zeusWorldXToViewportX(Number(target.x || 0), source);
-    // Never interpret a stage/world coordinate as a viewport coordinate.
-    // If the battlefield transform cannot be measured, skip this cosmetic
-    // empty-band bolt rather than pinning it to the camera/source position.
-    if (viewportX == null) return;
-    fx.style.left = viewportX + 'px';
-    fx.style.top = Math.max(0, sourceRect.top + sourceRect.height / 2 - 148) + 'px';
-  } else {
-    // No rendered anchor means there is no reliable world-to-screen mapping.
-    return;
-  }
-  overlay.appendChild(fx);
+  fx.style.left = Number(target.x) + 'px';
+  fx.style.bottom = '40px';
+  layer.appendChild(fx);
   setTimeout(() => fx.remove(), 620);
 }
 if (!document.getElementById('zeusLightningStyle')) {
   const style = document.createElement('style');
   style.id = 'zeusLightningStyle';
   style.textContent = `
-    .zeusLightningFx{display:block;position:absolute;width:128px;height:196px;z-index:2147483647;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
+    .zeusLightningFx{display:block;position:absolute;bottom:40px;width:128px;height:196px;z-index:24;pointer-events:none;transform:translateX(-50%);filter:drop-shadow(0 0 8px var(--zeus-color,#facc15));animation:zeusStrike .58s ease-out forwards}
     .zeusLightningBolt{position:absolute;left:24px;top:0;width:58px;height:148px;background:linear-gradient(180deg,#fff 0%,var(--zeus-color,#facc15) 35%,#fff7b2 70%,var(--zeus-color,#facc15) 100%);clip-path:polygon(57% 0,18% 48%,44% 48%,22% 100%,86% 38%,58% 38%);filter:drop-shadow(0 0 8px #fff);animation:zeusBoltFlash .58s ease-out forwards}
     .zeusLightningBolt.secondary{left:49px;top:16px;width:34px;height:100px;opacity:.8;transform:rotate(12deg) scaleX(.7)}
     .zeusLightningFlash{position:absolute;left:50%;bottom:0;width:76px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,#fff 0%,var(--zeus-color,#facc15) 25%,rgba(250,204,21,.45) 55%,transparent 76%);box-shadow:0 0 22px 8px rgba(250,204,21,.55);animation:zeusImpact .58s ease-out forwards}
