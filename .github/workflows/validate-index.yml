@@ -59,4 +59,4 @@ jobs:
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
           node tests/ice-wyvern.test.js
-          node tests/zeus-stage.test.js
+          node tests/zeus-stage.test.js\n          node tests/hastur-stage.test.js
