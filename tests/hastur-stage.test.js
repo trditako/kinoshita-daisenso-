@@ -3,9 +3,13 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
-assert.match(sw, /kinoshita-daisen-v98/);
+assert.match(sw, /kinoshita-daisen-v99/);
 assert.match(sw, /hastur\.js\?v=20261114-hastur-raid/);
 assert.ok(sw.includes('./hastur.js'));
+assert.match(source, /document\.getElementById\('effects'\)/, 'tentacle animation uses the world-space effects layer');
+assert.match(source, /position:absolute;z-index:24/);
+assert.match(source, /left:'\+x\+'px;bottom:40px/);
+assert.match(source, /function growthLines\(g,cfg\)/, 'Hastur exposes only active growth entries');
 
 const calls = { stage: 0, cards: 0 };
 let nextTimer = 0;
@@ -81,6 +85,9 @@ assert.equal(calls.stage, 1);
 assert.equal(calls.cards, 1);
 
 const api = sandbox.window.HASTUR_RAID_TEST_API;
+assert.deepEqual(JSON.parse(JSON.stringify(api.growthLines({}, api.allyCfg))), [], 'inactive and passive abilities do not create battle labels');
+const growthDisplay = api.growthLines({ hasturAttackSteps: 1, hasturDefense: .05, hasturCurseCount: 1, hasturMadnessCount: 1, hasturTentacleBuff: .07, hasturTeamBuff: .05, hasturFormationAllFactor: 1.75, hasturFormationHighestFactor: 2.1 }, api.allyCfg);
+assert.deepEqual(JSON.parse(JSON.stringify(growthDisplay)), ['攻撃力 +7%', '攻撃間隔 -5%', '防御 +5%', '呪い対象 +15%', '狂気対象 +25%', '名触手成長 +7%', '味方全体 +5%', '編成全体 +75%', '最高神編成 +110%']);
 const allyGod = { name: '最高神:ハスター', isEnemy: false, hp: 500000, maxhp: 500000, atk: 122000, range: 180, spd: .8, interval: 5.5, trait: '最高神' };
 const cursedTarget = { name: 'test', isEnemy: true, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '赤', barrier: 100 };
 sandbox.units.push(allyGod);

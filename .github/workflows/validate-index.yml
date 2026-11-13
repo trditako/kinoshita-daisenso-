@@ -19,11 +19,17 @@ on:
       - main
       - feat/chokinoshita-festival-and-growth-ability
       - feat/hastur-raid-20261114
+      - fix/god-effects-world-coordinates-20261114
     paths:
       - 'index.html'
       - 'hitman.js'
+      - 'zeus.js'
+      - 'hastur.js'
+      - 'service-worker.js'
       - 'tests/hitman-kinoshita.test.js'
       - 'tests/formation-buff-summary.test.js'
+      - 'tests/zeus-stage.test.js'
+      - 'tests/hastur-stage.test.js'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:

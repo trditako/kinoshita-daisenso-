@@ -6,9 +6,9 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\.9\.75'/);
+assert.match(html, /GAME_VERSION='v1.9.76'/);
 assert.match(html, /zeus\.js\?v=20261112-enemy-zeus-render-fix/);
-assert.match(sw, /kinoshita-daisen-v98/);
+assert.match(sw, /kinoshita-daisen-v99/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
@@ -48,14 +48,14 @@ assert.match(source, /secondAtk: 125000, thirdAtk: 78000, multiAttack: \[250000,
 assert.match(source, /const distance = \(Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)\) \* direction/, 'ally lightning bands mirror their signed ranges toward the triggering enemy');
 assert.match(source, /zeusLightning\(\{ x: Number\(source\.x \|\| 0\) \+ direction \* \(\(band\.min \+ band\.max\) \/ 2\) \}/, 'empty ally lightning bands render in the same forward direction as damage');
 assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'the selected target determines ally Zeus facing direction');
-assert.match(source, /if \(!scales.length\) return null/, 'empty-band lightning is skipped rather than using camera/world coordinates when no stage transform can be measured');
-assert.match(source, /scales.sort\(\(a, b\) => a - b\)/, 'world-to-viewport conversion uses a robust median of live battlefield scales');
 assert.match(source, /const traitBonus = traitIs\(victim, \['天使', '神話', '赤', '宇宙'\]\) \? 5 : 1/, 'ally Zeus applies its fivefold trait damage multiplier');
 assert.match(source, /const traitBonus = traitIs\(unit, \['天使', '神話', '赤', '宇宙'\]\) \? 10 : 1/, 'enemy Zeus applies its tenfold trait damage multiplier');
 assert.match(source, /const zeusAttacker = source\?\.name === ZEUS_ALLY/, 'both ally and enemy Zeus lightning can apply their attack debuffs');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
 assert.match(source, /if \(sensed\) launchEnemyZeusLightning\(god, now\)/, 'enemy sensing launches lightning directly without depending on the generic attack wrapper');
-assert.match(source, /zeusLightningOverlay/, 'lightning is rendered in a viewport-level overlay');
+assert.match(source, /document\.getElementById\('effects'\)/, 'lightning is rendered in the battlefield world effects layer');
+assert.match(source, /fx\.style\.left = Number\(target\.x\) \+ 'px'/, 'lightning X uses the game world coordinate directly');
+assert.match(source, /fx\.style\.bottom = '40px'/, 'lightning impact is anchored to the battlefield lane');
 assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'ally lightning launches from the attack sequence using the selected target direction');
 assert.match(source, /if \(distance > senseRange\) return \[\]/, '600 is only the sensing threshold and does not cap lightning impact bands');
 assert.ok(source.includes("zeusLightning({ x: Number(enemy.x || 0) + direction * center }, '#60a5fa', enemy);"), 'enemy lightning is rendered at every band position, including empty bands');
@@ -65,8 +65,6 @@ assert.match(source, /zeusLightningFx/, 'lightning effect uses dedicated visual 
 assert.ok(source.includes("direction * center }, '#60a5fa', enemy)"), 'enemy Zeus always renders a blue lightning bolt at each attack-band position');
 assert.match(html, /雷撃の段別性能/, 'ally Zeus detail shows each lightning band attack and range');
 assert.ok(html.includes("攻撃力：<b>'+Math.round(raw*scale)"), 'ally Zeus detail displays level-adjusted per-band damage');
-assert.match(source, /getBoundingClientRect/, 'lightning is positioned from the actual target element');
-assert.match(source, /function zeusWorldXToViewportX\(worldX, source\)/, 'empty-band lightning converts stage coordinates to viewport coordinates');
 assert.match(source, /!abilitySource\?\.zeusLightningResolved && !abilitySource\?\.zeusReflection/, 'Zeus cannot deal damage through conventional non-lightning hits');
 assert.match(source, /savedNames\.includes\(ZEUS_ALLY\).*savedFormationNames\.includes\(ZEUS_ALLY\)/s, 'saved ownership and formation names can restore Zeus');
 assert.doesNotMatch(source, /const statusRoll = Math\.random\(\)/, 'do not double-roll Zeus status probabilities');
@@ -77,8 +75,8 @@ assert.equal((source.match(/zeusHealTotal/g) || []).length, 3, 'servant healing 
 const runtimeEnemies = [];
 const scheduledTimers = [];
 const effectNodes = [];
-const effectsOverlay = { appendChild(node) { effectNodes.push(node); } };
-const documentBody = { appendChild(node) { if (node.id === 'zeusLightningOverlay') runtime.effectsOverlay = node; } };
+const effectsOverlay = { appendChild(node) { effectNodes.push(node); node.parentElement = effectsOverlay; } };
+const documentBody = { appendChild(node) { if (node.id === 'effects') runtime.effectsOverlay = node; } };
 const runtimeCalls = { stages: 0, cards: 0, owned: 0, formation: 0, buffs: 0, enemyNormalAttacks: 0 };
 const runtimeWindow = {
   hit(target, damage, source) {
@@ -120,7 +118,7 @@ const runtime = {
   document: {
     body: documentBody,
     documentElement: documentBody,
-    getElementById(id) { return id === 'zeusLightningOverlay' ? effectsOverlay : null; },
+    getElementById(id) { return id === 'effects' ? effectsOverlay : null; },
     createElement() { return { style: { setProperty() {} }, textContent: '', append() {}, remove() {} }; },
     head: { appendChild() {} }
   },
@@ -227,6 +225,7 @@ assert.equal(runtimeWindow.getAttackSequence(allyZeus, allyGapTrigger).length, 0
 assert.equal(allyGapTrigger.hp, 200000, 'the selected target in the gap is not hit by a conventional attack');
 assert.ok(allyBandA.hp < 200000, 'the first lightning band deals its own damage immediately');
 assert.equal(effectNodes.length, 1, 'the first lightning band has a visible bolt');
+assert.equal(effectNodes[0].style.left, '-50px', 'first lightning impact uses its actual world X coordinate');
 assert.ok(scheduledTimers.some(timer => timer.delay === 500), 'the second lightning band lands 0.5 seconds later');
 assert.ok(scheduledTimers.some(timer => timer.delay === 1000), 'the third lightning band lands 1 second later');
 const runAllyScheduled = delay => {
@@ -239,6 +238,7 @@ assert.ok(allyBandB.hp < 200000, 'the second lightning band deals its own damage
 runAllyScheduled(1000);
 assert.ok(allyBandC.hp < 200000, 'the third lightning band deals its own damage');
 assert.equal(effectNodes.length, 3, 'all three ally lightning bands create visible effects');
+assert.equal(effectNodes[1].style.left, '125px', 'delayed lightning keeps the second band world coordinate');
 
 
 // When the triggering enemy is on Zeus's left, all three signed bands mirror
