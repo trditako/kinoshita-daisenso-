@@ -4,8 +4,8 @@ const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 assert.match(sw, /kinoshita-daisen-v98/);
-assert.match(sw, /hastur\\.js\\?v=20261114-hastur-raid/);
-assert.match(sw, /\\.\\/hastur\\.js/);
+assert.match(sw, /hastur\.js\?v=20261114-hastur-raid/);
+assert.match(sw, /\.\\/hastur\.js/);
 
 const calls = { stage: 0, cards: 0 };
 let nextTimer = 0;
