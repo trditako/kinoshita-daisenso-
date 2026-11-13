@@ -6,7 +6,7 @@ const source = fs.readFileSync('zeus.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1.9.76'/);
+assert.match(html, /GAME_VERSION='v1.9.77'/);
 assert.match(html, /zeus\.js\?v=20261112-enemy-zeus-render-fix/);
 assert.match(sw, /kinoshita-daisen-v101/);
 assert.match(sw, /\.\/zeus\.js/);
