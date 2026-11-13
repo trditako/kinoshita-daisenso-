@@ -18,6 +18,7 @@ on:
     branches:
       - main
       - feat/chokinoshita-festival-and-growth-ability
+      - feat/hastur-raid-20261114
     paths:
       - 'index.html'
       - 'hitman.js'
