@@ -10,7 +10,9 @@ on:
       - 'tests/formation-buff-summary.test.js'
       - 'tests/ice-wyvern.test.js'
       - 'zeus.js'
+      - 'hastur.js'
       - 'tests/zeus-stage.test.js'
+      - 'tests/hastur-stage.test.js'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -55,8 +57,11 @@ jobs:
           node --check genesis.js
           node --check hitman.js
           node --check zeus.js
+          node --check hastur.js
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
           node tests/ice-wyvern.test.js
-          node tests/zeus-stage.test.js\n          node tests/hastur-stage.test.js
+          node tests/zeus-stage.test.js
+          node tests/hastur-stage.test.js
+          node tests/hastur-stage.test.js
