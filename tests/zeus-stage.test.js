@@ -8,7 +8,7 @@ const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1.9.76'/);
 assert.match(html, /zeus\.js\?v=20261112-enemy-zeus-render-fix/);
-assert.match(sw, /kinoshita-daisen-v100/);
+assert.match(sw, /kinoshita-daisen-v101/);
 assert.match(sw, /\.\/zeus\.js/);
 assert.match(sw, /trade\|hitman\|genesis\|zeus/);
 
