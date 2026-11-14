@@ -5757,6 +5757,42 @@ function claimDailyLoginBonus(forceOpen=false){
 }
 function closeLoginBonus(){document.getElementById('loginBonus').style.display='none';document.getElementById('start').style.display='flex';renderStageSelect();}
 
+
+/* ===== KWL開催記念ログインボーナス =====
+   既存のゲーム内保存領域・所持品付与処理を利用し、日本時間の日付単位で重複受取を防止する。 */
+const KWL_LOGIN_BONUS_START='2026-11-14';
+const KWL_LOGIN_BONUS_TOURNAMENT_START='2026-11-21';
+const KWL_LOGIN_BONUS_CLAIM_KEY='kinoshitaKwlLoginBonusLastDateV1';
+function kwlLoginBonusPhase(dateKey=loginBonusDate()){
+ if(dateKey<KWL_LOGIN_BONUS_START)return null;
+ return dateKey<KWL_LOGIN_BONUS_TOURNAMENT_START?'pre':'live';
+}
+function kwlLoginBonusReward(phase){
+ return phase==='live'
+  ?{coins:12000,xp:8000,items:{golden_chest:1,power_chest:2},label:'木下コイン 12,000枚 + 8,000 XP + 金の宝箱×1 + パワー宝箱×2'}
+  :{coins:5000,xp:2500,items:{silver_chest:1},label:'木下コイン 5,000枚 + 2,500 XP + 銀の宝箱×1'};
+}
+function renderKwlLoginBonus(){
+ const el=document.getElementById('loginBonusBody');if(!el)return;
+ const today=loginBonusDate(),phase=kwlLoginBonusPhase(today);if(!phase)return;
+ const last=storage.getItem(KWL_LOGIN_BONUS_CLAIM_KEY)||'',claimed=last===today;
+ const reward=kwlLoginBonusReward(phase);
+ const title=phase==='live'?'🏆 KWL大会開催記念・豪華ログインボーナス':'🎊 KWL開催決定記念ログインボーナス';
+ const period=phase==='live'?'大会開催中の特別報酬':'11月20日までの開催前特別報酬';
+ el.insertAdjacentHTML('beforeend','<section style="margin:12px 0;padding:14px;border:3px solid '+(phase==='live'?'#facc15':'#38bdf8')+';border-radius:14px;background:'+(phase==='live'?'linear-gradient(145deg,#422006,#713f12,#1e1b4b)':'linear-gradient(145deg,#082f49,#164e63,#1e3a8a)')+';color:#fff;box-shadow:0 4px 18px #0005"><div style="font-size:11px;letter-spacing:1px;color:'+(phase==='live'?'#fde68a':'#bae6fd')+'">KINOSHITA WORLD LEAGUE</div><h2 style="margin:5px 0;color:'+(phase==='live'?'#fde68a':'#e0f2fe')+'">'+title+'</h2><div style="font-size:12px;margin-bottom:8px">'+period+'（日本時間）</div><div style="padding:10px;border-radius:9px;background:#ffffff18;font-weight:1000;line-height:1.7">🎁 '+reward.label+'</div><div style="margin-top:9px;font-weight:900;color:'+(claimed?'#bbf7d0':'#fef08a')+'">'+(claimed?'✅ 本日のKWLボーナス受取済み':'🌟 本日のKWLボーナスを受取可能')+'</div></section>');
+}
+function claimKwlDailyLoginBonus(){
+ const today=loginBonusDate(),phase=kwlLoginBonusPhase(today);if(!phase)return false;
+ if(storage.getItem(KWL_LOGIN_BONUS_CLAIM_KEY)===today)return false;
+ const reward=kwlLoginBonusReward(phase);
+ gachaCoins+=reward.coins;playerXP+=reward.xp;
+ Object.entries(reward.items).forEach(([id,count])=>inventoryAddItem(id,count));
+ storage.setItem(KWL_LOGIN_BONUS_CLAIM_KEY,today);
+ save();renderOwnedStart();renderLoginBonus();
+ const modal=document.getElementById('loginBonus');if(modal){document.getElementById('start').style.display='none';modal.style.display='flex';}
+ return true;
+}
+
 const RANK_REWARD_BASE=Date.parse('2026-09-19T04:30:00Z');
 function rankRewardCycle(){return Math.floor((Date.now()-RANK_REWARD_BASE)/172800000)}
 function rankRewardAmountsForPosition(pos,fallbackCoins=0,fallbackXP=0){
@@ -5810,6 +5846,8 @@ function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoi
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
 // 起動時に本日のログインボーナスを1日1回だけ自動付与する。
 setTimeout(()=>{claimDailyLoginBonus(false);},150);
+// KWL開催記念ボーナスも通常ログインボーナスとは独立して毎日1回付与する。
+setTimeout(()=>{claimKwlDailyLoginBonus();},260);
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 
