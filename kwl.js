@@ -42,7 +42,7 @@ function render(){
  html+='<h2 style="font-size:18px;margin:18px 0 8px">エントリー</h2>';
  if(mine)html+='<div style="padding:12px;border-radius:10px;background:#14532d">✅ '+esc(mine.alliance_name)+' はエントリー済みです。登録選手：'+(mine.roster||[]).length+'人</div>';
  else if(!alliance)html+='<div style="padding:12px;border-radius:10px;background:#334155">大会に参加するには同盟への所属が必要です。同盟リーダーのみエントリーできます。</div>';
- else if(String(alliance.owner_id)!==String(window.playerRankingId))html+='<div style="padding:12px;border-radius:10px;background:#334155">エントリー操作は同盟リーダーのみ行えます。</div>';
+ else if(String(alliance.owner_id)!==String(playerRankingId))html+='<div style="padding:12px;border-radius:10px;background:#334155">エントリー操作は同盟リーダーのみ行えます。</div>';
  else if(now<opens)html+='<div style="padding:12px;border-radius:10px;background:#334155">エントリー開始までお待ちください。</div>';
  else if(now>closes)html+='<div style="padding:12px;border-radius:10px;background:#7f1d1d">エントリー期間は終了しました。</div>';
  else if(teams.length>=10)html+='<div style="padding:12px;border-radius:10px;background:#7f1d1d">参加上限10チームに達しました。</div>';
