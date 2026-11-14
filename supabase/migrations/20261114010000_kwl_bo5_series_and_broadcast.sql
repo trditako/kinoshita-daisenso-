@@ -68,11 +68,13 @@ grant select on public.kwl_games,public.kwl_game_players,public.kwl_character_lo
 create or replace function public.kwl_claim_game_player(
   p_match_id bigint,p_team_id bigint,p_player_id text,p_player_type text default 'player',p_player_name text default ''
 ) returns jsonb language plpgsql security definer set search_path=public as $$
-declare m public.kwl_matches%rowtype; t public.kwl_teams%rowtype; g integer; member_ok boolean;
+declare m public.kwl_matches%rowtype; t public.kwl_teams%rowtype; tour public.kwl_tournaments%rowtype; g integer; member_ok boolean;
 begin
   if p_player_type not in ('player','ai') or coalesce(trim(p_player_id),'')='' then raise exception '選手情報が不正です'; end if;
   select * into m from public.kwl_matches where id=p_match_id for update;
   if not found or m.status not in ('ready','live') then raise exception 'この試合は出場受付中ではありません'; end if;
+  select * into tour from public.kwl_tournaments where tournament_key=m.tournament_key for update;
+  if not found or now()<tour.starts_at or tour.status not in ('drawn','live') then raise exception '大会開始前、または受付停止中です'; end if;
   if p_team_id not in (m.team1_id,m.team2_id) then raise exception 'このチームは試合に参加していません'; end if;
   select * into t from public.kwl_teams where id=p_team_id;
   select exists(select 1 from jsonb_array_elements(t.roster) x
@@ -95,7 +97,10 @@ begin
   values(p_match_id,g,p_team_id,p_player_id,p_player_type,coalesce(nullif(p_player_name,''),p_player_id));
   update public.kwl_games set status=case when exists(
     select 1 from public.kwl_game_players gp where gp.match_id=p_match_id and gp.game_number=g and gp.team_id<>p_team_id
-  ) then 'ready' else 'waiting' end where match_id=p_match_id and game_number=g;
+  ) then 'ready' else 'waiting' end,
+  started_at=case when exists(select 1 from public.kwl_game_players gp where gp.match_id=p_match_id and gp.game_number=g and gp.team_id<>p_team_id) then coalesce(started_at,now()) else started_at end
+  where match_id=p_match_id and game_number=g;
+  update public.kwl_tournaments set status='live',updated_at=now() where tournament_key=m.tournament_key and status='drawn';
   update public.kwl_matches set status='live',updated_at=now() where id=p_match_id;
   insert into public.kwl_live_events(tournament_key,match_id,game_number,event_type,team_id,player_name,message)
   values(m.tournament_key,p_match_id,g,'system',p_team_id,coalesce(nullif(p_player_name,''),p_player_id),coalesce(nullif(p_player_name,''),p_player_id)||' が第'||g||'試合に出場登録しました');
@@ -105,11 +110,13 @@ end $$;
 create or replace function public.kwl_lock_character(
   p_match_id bigint,p_game_number integer,p_team_id bigint,p_player_id text,p_player_type text,p_character_key text
 ) returns jsonb language plpgsql security definer set search_path=public as $$
-declare gp public.kwl_game_players%rowtype; m public.kwl_matches%rowtype;
+declare gp public.kwl_game_players%rowtype; m public.kwl_matches%rowtype; g public.kwl_games%rowtype;
 begin
   if coalesce(trim(p_character_key),'')='' then raise exception 'キャラクター情報が不正です'; end if;
   select * into m from public.kwl_matches where id=p_match_id;
   if not found then raise exception '試合が見つかりません'; end if;
+  select * into g from public.kwl_games where match_id=p_match_id and game_number=p_game_number for update;
+  if not found or g.status not in ('ready','live') then raise exception '両チームの出場登録が完了していません'; end if;
   select * into gp from public.kwl_game_players where match_id=p_match_id and game_number=p_game_number
     and team_id=p_team_id and player_id=p_player_id and player_type=p_player_type;
   if not found then raise exception '先にこの試合への出場登録をしてください'; end if;
@@ -118,6 +125,7 @@ begin
   end if;
   insert into public.kwl_character_locks(match_id,team_id,character_key,first_game_number,player_id,player_type)
   values(p_match_id,p_team_id,p_character_key,p_game_number,p_player_id,p_player_type);
+  update public.kwl_games set status='live' where match_id=p_match_id and game_number=p_game_number;
   insert into public.kwl_live_events(tournament_key,match_id,game_number,event_type,team_id,player_name,message,payload)
   values(m.tournament_key,p_match_id,p_game_number,'deployment',p_team_id,gp.player_name,
     gp.player_name||' が '||p_character_key||' を出撃させました',jsonb_build_object('character',p_character_key));
