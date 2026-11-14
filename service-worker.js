@@ -36,8 +36,6 @@ async function cachedApiResponse(request, ttl) {
       } catch (_) {}
       return response;
     }
-    // If Supabase is temporarily restricted, preserve the last successful
-    // public snapshot instead of replacing it with an error response.
     if (cached && (response.status === 402 || response.status >= 500)) return cached;
     return response;
   } catch (error) {
@@ -59,12 +57,12 @@ self.addEventListener('fetch',e=>{
     e.respondWith(fetch(e.request));
     return;
   }
-  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|kwl)\\.js/.test(e.request.url)?{cache:"reload"}:undefined).then(async r=>{
+  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|kwl)\.js/.test(e.request.url)?{cache:"reload"}:undefined).then(async r=>{
     const type=r.headers.get('content-type')||'';
     if(type.includes('text/html')){
       const text=await r.clone().text();
       const p=text.lastIndexOf('</body>');
-      const inject='\\n<script src="./hastur.js?v=20261114-hastur-formation-hp-display"></script>\\n<script src="./kwl.js?v=20261114-kwl-first-league"></script>\\n';
+      const inject='\n<script src="./hastur.js?v=20261114-hastur-formation-hp-display"></script>\n<script src="./kwl.js?v=20261114-kwl-first-league"></script>\n';
       const out=new Response(p<0?text:text.slice(0,p)+inject+text.slice(p),{status:r.status,statusText:r.statusText,headers:r.headers});
       caches.open(CACHE_NAME).then(c=>c.put(e.request,out.clone()));
       return out;
