@@ -133,7 +133,16 @@ begin
   if not found or m.status not in ('live','ready') then raise exception '試合結果を確定できません'; end if;
   if p_winner_team_id not in (m.team1_id,m.team2_id) then raise exception '勝者チームが不正です'; end if;
   select * into g from public.kwl_games where match_id=p_match_id and game_number=p_game_number for update;
-  if not found or g.status='completed' then raise exception 'このゲームは未登録、または確定済みです'; end if;
+  if not found then raise exception 'このゲームは未登録です'; end if;
+  if g.status='completed' then
+    if g.winner_team_id=p_winner_team_id then
+      select count(*) filter(where winner_team_id=m.team1_id),count(*) filter(where winner_team_id=m.team2_id)
+        into w1,w2 from public.kwl_games where match_id=p_match_id and status='completed';
+      return jsonb_build_object('success',true,'already_recorded',true,'team1_wins',w1,'team2_wins',w2,
+        'series_completed',(w1>=3 or w2>=3),'winner_team_id',case when w1>=3 then m.team1_id when w2>=3 then m.team2_id else null end);
+    end if;
+    raise exception 'このゲームの勝敗はすでに確定しています';
+  end if;
   if (select count(*) from public.kwl_game_players where match_id=p_match_id and game_number=p_game_number)<>2 then
     raise exception '両チームの出場選手登録が必要です';
   end if;
