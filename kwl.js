@@ -50,11 +50,13 @@ function render(){
  html+='<h2 style="font-size:18px;margin:18px 0 8px">参加チーム</h2>';
  html+=teams.length?teams.map((t,i)=>'<div style="padding:9px 11px;margin:5px 0;background:#1e293b;border-radius:8px;display:flex;justify-content:space-between;gap:8px"><b>'+(i+1)+'. '+esc(t.alliance_name)+'</b><span style="color:#cbd5e1;font-size:12px">'+(t.roster||[]).length+'選手</span></div>').join(''):'<div style="color:#cbd5e1">まだエントリーはありません。</div>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">トーナメント</h2>';
+ if(typeof playerRankingId!=='undefined'&&String(playerRankingId)==='cd19b245-1a70-45de-9bb7-967f6c568425'&&Date.now()>=new Date(tournament.bracket_draw_at).getTime()&&!matches.length)html+='<button id="kwlDraw" class="formationBtn" style="background:#b45309;color:white">組み合わせ抽選を実行</button>';
  html+=matches.length?matches.map(m=>'<div style="padding:10px;margin:5px 0;background:#1e293b;border-radius:8px"><b>ラウンド '+m.round_number+' / 試合 '+m.match_number+'</b><div style="font-size:13px;margin-top:5px">'+esc(teamName(m.team1_id))+'　VS　'+esc(teamName(m.team2_id))+'</div><small style="color:#cbd5e1">'+esc(m.status)+'</small></div>').join(''):'<div style="color:#cbd5e1">抽選結果は11月20日に公開します。</div>';
  html+='<p style="font-size:12px;color:#cbd5e1;margin-top:18px">※大会の対戦はBO5。1カード内で同じ選手は再出場できません。各チーム5人以上の登録が必要です。</p>';
  c.innerHTML=html;
- const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;
+ const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;
 }
+async function drawBracket(){if(!confirm('最大10チームの組み合わせ抽選を確定します。AI同盟も空き枠に参加します。続行しますか？'))return;const b=root.querySelector('#kwlDraw');if(b){b.disabled=true;b.textContent='抽選中…';}try{await request('/rpc/kwl_draw_bracket',{method:'POST',headers:headers(),body:JSON.stringify({p_actor_id:String(playerRankingId)})});await refresh();alert('KWLのトーナメント表を確定しました。');}catch(e){alert('抽選できませんでした：'+e.message);if(b){b.disabled=false;b.textContent='組み合わせ抽選を実行';}}}
 function teamName(id){if(!id)return 'BYE（シード）';return teams.find(t=>Number(t.id)===Number(id))?.alliance_name||'対戦相手未定';}
 async function register(){
  const b=root.querySelector('#kwlRegister');if(!b)return;
