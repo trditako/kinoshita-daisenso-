@@ -6,7 +6,7 @@ const TOURNAMENT='kwl-2026-01';
 const headers=extra=>Object.assign({apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},extra||{});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=s=>new Date(s).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-let root=null,teams=[],matches=[],tournament=null,refreshTimer=null,selectedMatch=null,matchDetail={games:[],players:[],locks:[],events:[]};
+let root=null,teams=[],matches=[],tournament=null,refreshTimer=null,broadcastTimer=null,selectedMatch=null,matchDetail={games:[],players:[],locks:[],events:[]},broadcastEvents=[];
 const ACTIVE_KEY='kwl-active-series-v1';
 function activeSeries(){try{return JSON.parse(sessionStorage.getItem(ACTIVE_KEY)||'null')}catch(_){return null}}
 function setActiveSeries(v){try{if(v)sessionStorage.setItem(ACTIVE_KEY,JSON.stringify(v));else sessionStorage.removeItem(ACTIVE_KEY)}catch(_){}}
@@ -21,11 +21,11 @@ function shell(){
  if(root)return root;
  root=document.createElement('section');root.id='kwlScreen';root.style.cssText='position:fixed;inset:0;z-index:10050;display:none;overflow:auto;background:linear-gradient(145deg,#0b1225,#172554 55%,#3b260d);color:#fff;padding:12px;font-family:system-ui,"Noto Sans JP",sans-serif';
  root.innerHTML='<div style="max-width:900px;margin:0 auto"><header style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><div style="font-size:12px;color:#facc15;font-weight:900;letter-spacing:2px">KINOSHITA WORLD LEAGUE</div><h1 style="margin:4px 0;font-size:26px">🏆 木下ワールドリーグ</h1><div style="font-size:12px;color:#cbd5e1">第1回大会 / 2026</div></div><button id="kwlClose" class="formationBtn">ゲームへ戻る</button></header><div id="kwlContent" style="margin-top:14px"></div></div>';
- document.body.appendChild(root);root.querySelector('#kwlClose').onclick=()=>{root.style.display='none';if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}const start=document.getElementById('start');if(start)start.style.display='flex';};
+ document.body.appendChild(root);root.querySelector('#kwlClose').onclick=()=>{root.style.display='none';if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}if(broadcastTimer){clearInterval(broadcastTimer);broadcastTimer=null;}const start=document.getElementById('start');if(start)start.style.display='flex';};
  return root;
 }
 async function request(path,opts){const r=await fetch(API+path,Object.assign({headers:headers(),cache:'no-store'},opts||{}));const body=await r.json().catch(()=>null);if(!r.ok)throw new Error(body?.message||body?.details||'通信エラー HTTP '+r.status);return body;}
-async function open(){const start=document.getElementById('start');if(start)start.style.display='none';const s=shell();s.style.display='block';if(typeof loadMyAlliance==='function')await loadMyAlliance();await refresh();if(!refreshTimer)refreshTimer=setInterval(()=>{if(root?.style.display==='block')refresh();},60000);}
+async function open(){const start=document.getElementById('start');if(start)start.style.display='none';const s=shell();s.style.display='block';if(typeof loadMyAlliance==='function')await loadMyAlliance();await refresh();if(!refreshTimer)refreshTimer=setInterval(()=>{if(root?.style.display==='block')refresh();},60000);if(!broadcastTimer)broadcastTimer=setInterval(()=>{if(root?.style.display==='block')refreshBroadcast();},15000);}
 async function refresh(){
  const c=root.querySelector('#kwlContent');c.innerHTML='<p style="text-align:center;padding:30px">大会情報を読み込んでいます…</p>';
  try{
@@ -34,7 +34,7 @@ async function refresh(){
    request('/kwl_teams?select=*&tournament_key=eq.'+TOURNAMENT+'&order=created_at.asc'),
    request('/kwl_matches?select=*&tournament_key=eq.'+TOURNAMENT+'&order=round_number.asc,match_number.asc')
   ]);
-  render();
+  render();await refreshBroadcast();
  }catch(e){c.innerHTML='<div style="background:#7f1d1d;padding:14px;border-radius:10px">大会情報を取得できませんでした。<br>'+esc(e.message)+'<br><button id="kwlRetry" class="formationBtn">再読み込み</button></div>';c.querySelector('#kwlRetry').onclick=refresh;}
 }
 function render(){
@@ -53,6 +53,7 @@ function render(){
  else html+='<div style="padding:12px;border-radius:10px;background:#1e293b"><b>'+esc(alliance.name)+'</b><p style="font-size:13px;color:#cbd5e1">同盟メンバーの先頭から最大10人を登録します。5人以上必要です。</p><button id="kwlRegister" class="formationBtn" style="background:#b45309;color:white">この同盟でエントリーする</button></div>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">参加チーム</h2>';
  html+=teams.length?teams.map((t,i)=>'<div style="padding:9px 11px;margin:5px 0;background:#1e293b;border-radius:8px;display:flex;justify-content:space-between;gap:8px"><b>'+(i+1)+'. '+esc(t.alliance_name)+'</b><span style="color:#cbd5e1;font-size:12px">'+(t.roster||[]).length+'選手</span></div>').join(''):'<div style="color:#cbd5e1">まだエントリーはありません。</div>';
+ html+='<section style="margin-top:16px;padding:14px;border:1px solid #facc15;border-radius:14px;background:linear-gradient(120deg,#111827,#1e3a8a)"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div style="font-size:11px;color:#facc15;font-weight:900;letter-spacing:2px">KWL LIVE BROADCAST</div><h2 style="font-size:20px;margin:3px 0">📡 大会配信・観戦</h2></div><span style="font-size:11px;color:#bfdbfe">15秒ごとに更新</span></div><p style="font-size:12px;color:#cbd5e1;margin:4px 0 10px">全対戦カードのスコア、出場選手、キャラクター使用履歴、実況イベントを確認できます。</p><div id="kwlBroadcast"><div style="color:#cbd5e1">配信データを読み込み中…</div></div></section>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">トーナメント</h2>';
  if(typeof playerRankingId!=='undefined'&&String(playerRankingId)==='cd19b245-1a70-45de-9bb7-967f6c568425'&&Date.now()>=new Date(tournament.bracket_draw_at).getTime()&&!matches.length)html+='<button id="kwlDraw" class="formationBtn" style="background:#b45309;color:white">組み合わせ抽選を実行</button>';
  html+=matches.length?matches.map(m=>'<button data-kwl-match="'+m.id+'" style="display:block;width:100%;text-align:left;padding:10px;margin:5px 0;background:#1e293b;color:#fff;border:1px solid #64748b;border-radius:8px"><b>ラウンド '+m.round_number+' / 試合 '+m.match_number+'</b><div style="font-size:13px;margin-top:5px">'+esc(teamName(m.team1_id))+'　VS　'+esc(teamName(m.team2_id))+'</div><small style="color:#cbd5e1">'+esc(m.status)+'　'+Number(m.team1_wins||0)+' - '+Number(m.team2_wins||0)+'</small></button>').join(''):'<div style="color:#cbd5e1">抽選結果は11月20日に公開します。</div>';
@@ -61,6 +62,18 @@ function render(){
  c.innerHTML=html;
  const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;
  c.querySelectorAll('[data-kwl-match]').forEach(x=>x.onclick=()=>loadMatchDetail(Number(x.dataset.kwlMatch)));
+}
+async function refreshBroadcast(){
+ const box=root?.querySelector('#kwlBroadcast');if(!box||!tournament)return;
+ try{
+  broadcastEvents=await request('/kwl_live_events?select=*&tournament_key=eq.'+TOURNAMENT+'&order=id.desc&limit=80');
+  const active=matches.filter(m=>['live','ready'].includes(String(m.status)));
+  const cards=active.length?active.map(m=>'<button data-kwl-live-match="'+m.id+'" style="width:100%;text-align:left;padding:10px;margin:4px 0;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff"><b>'+esc(teamName(m.team1_id))+'　'+Number(m.team1_wins||0)+' - '+Number(m.team2_wins||0)+'　'+esc(teamName(m.team2_id))+'</b><div style="font-size:11px;color:#93c5fd">R'+m.round_number+' / Match '+m.match_number+' · '+esc(m.status)+'</div></button>').join(''):'<div style="padding:9px;background:#0f172a;border-radius:8px;color:#cbd5e1;font-size:12px">現在進行中の対戦はありません。大会開始後、ここにライブ対戦が表示されます。</div>';
+  const feed=broadcastEvents.slice(0,24).map(e=>{const m=matches.find(x=>Number(x.id)===Number(e.match_id));return '<div style="padding:7px 3px;border-bottom:1px solid #334155;font-size:12px"><div style="display:flex;justify-content:space-between;gap:6px"><b style="color:'+(e.event_type==='score'?'#facc15':e.event_type==='commentary'?'#93c5fd':'#e2e8f0')+'">'+esc(e.player_name||({score:'試合結果',deployment:'出撃',system:'システム',commentary:'実況',battle_start:'試合開始',battle_end:'試合終了'}[e.event_type]||'KWL'))+'</b><span style="color:#94a3b8">'+date(e.created_at)+'</span></div><div>'+esc(e.message)+'</div><div style="color:#94a3b8;font-size:10px">'+(m?'R'+m.round_number+' / Match '+m.match_number:'大会イベント')+'</div></div>';}).join('');
+  box.innerHTML='<h3 style="font-size:13px;margin:10px 0 5px">🔴 ライブ対戦</h3>'+cards+'<h3 style="font-size:13px;margin:12px 0 5px">🎙️ 実況・プレイバイプレイ</h3><div style="max-height:260px;overflow:auto;padding:7px;background:#020617;border-radius:8px">'+(feed||'<div style="font-size:12px;color:#94a3b8">実況イベントはまだありません。</div>')+'</div><button id="kwlBroadcastRefresh" class="formationBtn" style="width:100%;margin-top:8px">配信情報を更新</button>';
+  box.querySelectorAll('[data-kwl-live-match]').forEach(b=>b.onclick=()=>{loadMatchDetail(Number(b.dataset.kwlLiveMatch));root.querySelector('#kwlMatchDetail')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  box.querySelector('#kwlBroadcastRefresh').onclick=refreshBroadcast;
+ }catch(e){box.innerHTML='<div style="font-size:12px;color:#fecaca">配信情報を取得できません：'+esc(e.message)+'</div>';}
 }
 async function drawBracket(){if(!confirm('最大10チームの組み合わせ抽選を確定します。AI同盟も空き枠に参加します。続行しますか？'))return;const b=root.querySelector('#kwlDraw');if(b){b.disabled=true;b.textContent='抽選中…';}try{await request('/rpc/kwl_draw_bracket',{method:'POST',headers:headers(),body:JSON.stringify({p_actor_id:String(playerRankingId)})});await refresh();alert('KWLのトーナメント表を確定しました。');}catch(e){alert('抽選できませんでした：'+e.message);if(b){b.disabled=false;b.textContent='組み合わせ抽選を実行';}}}
 function teamName(id){if(!id)return 'BYE（シード）';return teams.find(t=>Number(t.id)===Number(id))?.alliance_name||'対戦相手未定';}
