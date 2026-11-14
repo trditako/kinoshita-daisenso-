@@ -1,4 +1,5 @@
 const CACHE_NAME="kinoshita-daisen-v103";
+const API_CACHE_NAME="kw-public-api-v1";
 const API_CACHE_TTL = [
   ["/rest/v1/world_announcements", 5 * 60 * 1000],
   ["/rest/v1/world_operator_state", 2 * 60 * 1000],
@@ -17,7 +18,7 @@ function apiCacheTtl(url) {
   }
 }
 async function cachedApiResponse(request, ttl) {
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(API_CACHE_NAME);
   const cached = await cache.match(request);
   const cachedAt = cached ? Number(cached.headers.get("x-kw-cache-time") || 0) : 0;
   if (cached && cachedAt && Date.now() - cachedAt < ttl) return cached;
@@ -44,7 +45,7 @@ async function cachedApiResponse(request, ttl) {
   }
 }
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./genesis.js","./hitman.js","./zeus.js","./hastur.js","./kwl.js"])))});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE_NAME).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE_NAME&&x!==API_CACHE_NAME).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
   if(e.request.method!=="GET")return;
   const u=e.request.url;
