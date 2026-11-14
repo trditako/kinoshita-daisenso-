@@ -93,9 +93,19 @@ end $$;
 revoke all on function public.kwl_register_team(text,bigint) from public;
 grant execute on function public.kwl_register_team(text,bigint) to anon,authenticated;
 
+alter table public.kwl_matches add column if not exists next_round_number integer;
+alter table public.kwl_matches add column if not exists next_match_number integer;
+alter table public.kwl_matches add column if not exists next_slot integer;
+
 create or replace function public.kwl_draw_bracket(p_actor_id text)
 returns jsonb language plpgsql security definer set search_path=public as $$
-declare t public.kwl_tournaments%rowtype; team_ids bigint[]; slots bigint[]; i integer; m integer; r integer; a bigint; b bigint; advanced bigint; created_count integer:=0;
+declare
+ t public.kwl_tournaments%rowtype;
+ team_ids bigint[];
+ slots bigint[];
+ pos_a integer[]:=array[1,8,4,5,2,7,3,6];
+ pos_b integer[]:=array[16,9,13,12,15,10,14,11];
+ i integer; n integer; a bigint; b bigint; next_r integer; next_m integer; next_s integer;
 begin
  if p_actor_id<>'cd19b245-1a70-45de-9bb7-967f6c568425' then raise exception '大会運営者のみ実行できます'; end if;
  select * into t from public.kwl_tournaments where tournament_key='kwl-2026-01' for update;
@@ -104,35 +114,62 @@ begin
  if exists(select 1 from public.kwl_matches where tournament_key=t.tournament_key) then
    return jsonb_build_object('success',true,'already_drawn',true);
  end if;
- select array_agg(id order by random()) into team_ids from public.kwl_teams where tournament_key=t.tournament_key;
+ -- AI同盟も通常チームと同じ大会枠へ自動登録し、空き枠だけを補充する。
+ select count(*) into n from public.kwl_teams where tournament_key=t.tournament_key;
+ insert into public.kwl_teams(tournament_key,alliance_id,alliance_name,leader_id,leader_type,roster)
+ select t.tournament_key,a.id,a.name,a.owner_id,a.owner_type,
+   (select coalesce(jsonb_agg(v.value order by v.ordinality),'[]'::jsonb)
+    from jsonb_array_elements(a.members) with ordinality v(value,ordinality) where v.ordinality<=10)
+ from public.alliances a
+ where a.owner_type='ai'
+   and jsonb_typeof(a.members)='array'
+   and jsonb_array_length(a.members)>=5
+   and not exists(select 1 from public.kwl_teams z where z.tournament_key=t.tournament_key and z.alliance_id=a.id)
+ order by coalesce(a.total_rp,0) desc,a.id
+ limit greatest(0,t.max_teams-n);
+ select array_agg(id order by random()) into team_ids
+ from (select id from public.kwl_teams where tournament_key=t.tournament_key order by
+       case when leader_type='player' then 0 else 1 end,random() limit 10) q;
  if coalesce(array_length(team_ids,1),0)<2 then raise exception '抽選には2チーム以上必要です'; end if;
  update public.kwl_teams set seed=x.rn from (
    select id,row_number() over(order by array_position(team_ids,id))::integer rn
-   from public.kwl_teams where tournament_key=t.tournament_key
+   from public.kwl_teams where tournament_key=t.tournament_key and id=any(team_ids)
  ) x where kwl_teams.id=x.id;
  slots:=array_fill(null::bigint,array[16]);
- -- Standard 16-slot seed positions. Empty slots become byes and are advanced automatically.
- for i in 1..coalesce(array_length(team_ids,1),0) loop
-   slots[i]:=team_ids[i];
- end loop;
- -- Pair the 16 first-round slots; compact seeded teams are randomized, then bye advancement
- -- is performed in the same bracket structure.
+ for i in 1..array_length(team_ids,1) loop slots[i]:=team_ids[i]; end loop;
+ -- 16枠の標準シード配置。10チームなら6チームが初戦シードとなる。
  for i in 1..8 loop
-   a:=slots[i]; b:=slots[17-i];
-   m:=i;
-   if a is null or b is null then
-     advanced:=coalesce(a,b);
-     insert into public.kwl_matches(tournament_key,round_number,match_number,team1_id,team2_id,winner_team_id,status)
-     values(t.tournament_key,1,m,a,b,advanced,'bye');
-   else
-     insert into public.kwl_matches(tournament_key,round_number,match_number,team1_id,team2_id,status)
-     values(t.tournament_key,1,m,a,b,'ready');
-   end if;
-   created_count:=created_count+1;
+   insert into public.kwl_matches(tournament_key,round_number,match_number,next_round_number,next_match_number,next_slot)
+   values(t.tournament_key,1,i,2,((i+1)/2),case when i%2=1 then 1 else 2 end);
  end loop;
+ for i in 1..4 loop
+   insert into public.kwl_matches(tournament_key,round_number,match_number,next_round_number,next_match_number,next_slot)
+   values(t.tournament_key,2,i,3,((i+1)/2),case when i%2=1 then 1 else 2 end);
+ end loop;
+ for i in 1..2 loop
+   insert into public.kwl_matches(tournament_key,round_number,match_number,next_round_number,next_match_number,next_slot)
+   values(t.tournament_key,3,i,4,1,i);
+ end loop;
+ insert into public.kwl_matches(tournament_key,round_number,match_number)
+ values(t.tournament_key,4,1);
+ for i in 1..8 loop
+   a:=slots[pos_a[i]];b:=slots[pos_b[i]];
+   update public.kwl_matches set team1_id=a,team2_id=b,
+     winner_team_id=case when a is null or b is null then coalesce(a,b) else null end,
+     status=case when a is null or b is null then 'bye' else 'ready' end
+   where tournament_key=t.tournament_key and round_number=1 and match_number=i;
+   if a is null or b is null then
+     next_m:=(i+1)/2;next_s:=case when i%2=1 then 1 else 2 end;
+     update public.kwl_matches set
+       team1_id=case when next_s=1 then coalesce(team1_id,coalesce(a,b)) else team1_id end,
+       team2_id=case when next_s=2 then coalesce(team2_id,coalesce(a,b)) else team2_id end
+     where tournament_key=t.tournament_key and round_number=2 and match_number=next_m;
+   end if;
+ end loop;
+ update public.kwl_matches set status='ready'
+ where tournament_key=t.tournament_key and round_number=2 and team1_id is not null and team2_id is not null;
  update public.kwl_tournaments set status='drawn',updated_at=now() where tournament_key=t.tournament_key;
- return jsonb_build_object('success',true,'teams',coalesce(array_length(team_ids,1),0),'first_round_matches',created_count,
-   'note','第1ラウンドの組み合わせを作成しました。勝者の次ラウンド反映は運営画面で確定します。');
+ return jsonb_build_object('success',true,'teams',array_length(team_ids,1),'rounds',4,'matches',15,'ai_teams_included',true);
 end $$;
 revoke all on function public.kwl_draw_bracket(text) from public;
 grant execute on function public.kwl_draw_bracket(text) to anon,authenticated;
