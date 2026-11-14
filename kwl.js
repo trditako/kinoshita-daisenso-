@@ -36,7 +36,7 @@ async function refresh(){
 function render(){
  const c=root.querySelector('#kwlContent');if(!tournament){c.innerHTML='<p>大会データがまだ準備されていません。</p>';return;}
  const now=Date.now(),opens=new Date(tournament.entry_opens_at).getTime(),closes=new Date(tournament.entry_closes_at).getTime();
- const alliance=window.myAlliance;
+ const alliance=(typeof myAlliance!=='undefined'?myAlliance:null);
  const mine=teams.find(t=>Number(t.alliance_id)===Number(alliance?.id));
  let html='<div style="padding:14px;border:1px solid #64748b;border-radius:14px;background:#0f172acc"><div style="font-size:12px;color:#facc15">第1回大会 日程</div><div style="font-size:20px;font-weight:1000;margin:5px 0">11/21（土）13:30 開幕</div><div style="font-size:13px;color:#cbd5e1">エントリー：11/17 00:00 ～ 11/19 23:59（日本時間）</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><span>参加 '+teams.length+'/10チーム</span><span>BO5</span><span>トーナメント方式</span></div></div>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">エントリー</h2>';
@@ -58,10 +58,10 @@ function render(){
 function teamName(id){if(!id)return 'BYE（シード）';return teams.find(t=>Number(t.id)===Number(id))?.alliance_name||'対戦相手未定';}
 async function register(){
  const b=root.querySelector('#kwlRegister');if(!b)return;
- if(!window.playerRankingId||!window.myAlliance)return alert('プレイヤー・同盟情報を確認できません。');
+ if(typeof playerRankingId==='undefined'||!playerRankingId||typeof myAlliance==='undefined'||!myAlliance)return alert('プレイヤー・同盟情報を確認できません。');
  if(!confirm('同盟の先頭から最大10人をKWL登録選手としてエントリーします。よろしいですか？'))return;
  b.disabled=true;b.textContent='エントリー中…';
- try{await request('/rpc/kwl_register_team',{method:'POST',headers:headers(),body:JSON.stringify({p_player_id:String(window.playerRankingId),p_alliance_id:Number(window.myAlliance.id)})});await refresh();alert('KWLへのエントリーが完了しました。');}
+ try{await request('/rpc/kwl_register_team',{method:'POST',headers:headers(),body:JSON.stringify({p_player_id:String(playerRankingId),p_alliance_id:Number(myAlliance.id)})});await refresh();alert('KWLへのエントリーが完了しました。');}
  catch(e){alert('エントリーできませんでした：'+e.message);b.disabled=false;b.textContent='この同盟でエントリーする';}
 }
 function boot(){ensureButton();const start=document.getElementById('start');if(start&&!start.__kwlObserver){start.__kwlObserver=new MutationObserver(ensureButton);start.__kwlObserver.observe(start,{childList:true,subtree:true});}}
