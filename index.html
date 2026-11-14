@@ -5846,6 +5846,8 @@ function claimAllGifts(){let got=false;for(const g of pendingRankGifts){gachaCoi
 function renderOwnedStart(){document.getElementById('ownedStart').textContent=`👤 ${playerName}　｜所持キャラ：${owned}/${cards.length}体　🪙 木下コイン：${gachaCoins}枚`;};renderOwnedStart();renderStageSelect();renderCards();setupWorld();
 // 起動時に本日のログインボーナスを1日1回だけ自動付与する。
 setTimeout(()=>{claimDailyLoginBonus(false);},150);
+// KWL開催記念ボーナスも通常ログインボーナスとは独立して毎日1回付与する。
+setTimeout(()=>{claimKwlDailyLoginBonus();},260);
 // ゲームを一度起動した時点で公開ランキングへ登録し、その後はデータを削除せず常時掲載する。
 setTimeout(()=>{syncPlayerRanking();},300);
 
