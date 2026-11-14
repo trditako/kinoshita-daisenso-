@@ -138,7 +138,7 @@ create or replace function public.kwl_record_game_result(
 declare m public.kwl_matches%rowtype; g public.kwl_games%rowtype; w1 integer; w2 integer; complete_series boolean;
 begin
   select * into m from public.kwl_matches where id=p_match_id for update;
-  if not found or m.status not in ('live','ready') then raise exception '試合結果を確定できません'; end if;
+  if not found then raise exception '試合結果を確定できません'; end if;
   if p_winner_team_id not in (m.team1_id,m.team2_id) then raise exception '勝者チームが不正です'; end if;
   select * into g from public.kwl_games where match_id=p_match_id and game_number=p_game_number for update;
   if not found then raise exception 'このゲームは未登録です'; end if;
@@ -151,6 +151,7 @@ begin
     end if;
     raise exception 'このゲームの勝敗はすでに確定しています';
   end if;
+  if m.status not in ('live','ready') then raise exception '試合結果を確定できません'; end if;
   if (select count(*) from public.kwl_game_players where match_id=p_match_id and game_number=p_game_number)<>2 then
     raise exception '両チームの出場選手登録が必要です';
   end if;
