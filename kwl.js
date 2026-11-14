@@ -6,7 +6,7 @@ const TOURNAMENT='kwl-2026-01';
 const headers=extra=>Object.assign({apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},extra||{});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=s=>new Date(s).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-let root=null,teams=[],matches=[],tournament=null;
+let root=null,teams=[],matches=[],tournament=null,refreshTimer=null;
 function ensureButton(){
  const start=document.getElementById('start');if(!start||document.getElementById('kwlOpenBtn'))return;
  const b=document.createElement('button');b.id='kwlOpenBtn';b.className='formationBtn';b.textContent='🏆 木下ワールドリーグ（KWL）';b.style.cssText='background:linear-gradient(100deg,#172554,#854d0e)!important;color:#fff!important;border:2px solid #facc15!important';
@@ -17,11 +17,11 @@ function shell(){
  if(root)return root;
  root=document.createElement('section');root.id='kwlScreen';root.style.cssText='position:fixed;inset:0;z-index:10050;display:none;overflow:auto;background:linear-gradient(145deg,#0b1225,#172554 55%,#3b260d);color:#fff;padding:12px;font-family:system-ui,"Noto Sans JP",sans-serif';
  root.innerHTML='<div style="max-width:900px;margin:0 auto"><header style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><div style="font-size:12px;color:#facc15;font-weight:900;letter-spacing:2px">KINOSHITA WORLD LEAGUE</div><h1 style="margin:4px 0;font-size:26px">🏆 木下ワールドリーグ</h1><div style="font-size:12px;color:#cbd5e1">第1回大会 / 2026</div></div><button id="kwlClose" class="formationBtn">ゲームへ戻る</button></header><div id="kwlContent" style="margin-top:14px"></div></div>';
- document.body.appendChild(root);root.querySelector('#kwlClose').onclick=()=>{root.style.display='none';const start=document.getElementById('start');if(start)start.style.display='flex';};
+ document.body.appendChild(root);root.querySelector('#kwlClose').onclick=()=>{root.style.display='none';if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}const start=document.getElementById('start');if(start)start.style.display='flex';};
  return root;
 }
 async function request(path,opts){const r=await fetch(API+path,Object.assign({headers:headers(),cache:'no-store'},opts||{}));const body=await r.json().catch(()=>null);if(!r.ok)throw new Error(body?.message||body?.details||'通信エラー HTTP '+r.status);return body;}
-async function open(){const start=document.getElementById('start');if(start)start.style.display='none';const s=shell();s.style.display='block';await refresh();}
+async function open(){const start=document.getElementById('start');if(start)start.style.display='none';const s=shell();s.style.display='block';if(typeof loadMyAlliance==='function')await loadMyAlliance();await refresh();if(!refreshTimer)refreshTimer=setInterval(()=>{if(root?.style.display==='block')refresh();},15000);}
 async function refresh(){
  const c=root.querySelector('#kwlContent');c.innerHTML='<p style="text-align:center;padding:30px">大会情報を読み込んでいます…</p>';
  try{
