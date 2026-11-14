@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.77';
+const GAME_VERSION='v1.9.78';
 const UPDATE_LOG=[
+  {date:'2026-11-14',version:'v1.9.78',title:'🛡️ 6枠キャラクター装備システムを追加',items:['キャラクターごとに最大6枠の装備を着脱できる装備画面を追加','HP・攻撃力・防御力・回復率・波動／烈波ダメージと軽減の装備効果、6シリーズとセット効果を追加','装備ガチャ・コイン交換ショップ・ステージクリア報酬の装備ドロップを追加']},
   {date:'2026-11-14',version:'v1.9.77',title:'🟡 編成バフ表示を統一しHP表示を改善',items:['ハスターの編成効果を覇風と同じ共通サマリー・補正後ステータス表示へ統合','最高神キャラには全味方向け・最高神向けの両方の編成倍率を反映','戦闘中のバフ表示をHPバーから離し、HPバーを常に前面へ表示']},
   {date:'2026-11-14',version:'v1.9.76',title:'🟡 最高神:ハスター追加と戦闘エフェクト・能力表示を改善',items:['イベントステージ「最高神:ハスター降臨」とクリア報酬UR「最高神:ハスター」を追加','触手とゼウスの雷撃を画面固定表示から戦場ワールド座標のエフェクトレイヤーへ変更し、カメラ移動に追従','ハスターの攻撃力・攻撃間隔・防御・触手成長・陣営強化・編成強化を、実際に上昇した項目だけ戦闘中に表示']},
   {date:'2026-11-12',version:'v1.9.75',title:'⚡ 敵ゼウスの雷撃表示を安定化',items:['敵ゼウスの感知処理から雷撃を直接起動し、通常攻撃関数の呼び出し状態に依存しないよう修正','雷エフェクトを画面最前面のルートオーバーレイへ表示し、表示サイズと視認性を強化']},
@@ -7465,4 +7466,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="./genesis.js?v=20261111-ice-id-remap"></script>
 <script src="./hitman.js?v=20261111-save-restore"></script>
 <script src="./zeus.js?v=20261112-enemy-zeus-render-fix"></script>
+<script src="./equipment.js?v=20261114-character-equipment-fix1"></script>
 </body></html>
