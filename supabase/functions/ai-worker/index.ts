@@ -439,67 +439,107 @@ async function processKWLAIAutoMatches(tick:number){
    const team1=teamById.get(Number(match.team1_id)),team2=teamById.get(Number(match.team2_id));
    const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\d{1,4}$/.test(String(p.id||'')));
    if(!isFullAI(team1)||!isFullAI(team2))continue;
-   const {data:games,error:gameError}=await db.from('kwl_games').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
-   const {data:players,error:playerError}=await db.from('kwl_game_players').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
-   if(gameError||playerError){const e=gameError||playerError;if(!schemaNotReady(e))console.warn('KWL AI series lookup failed:',e?.message);continue;}
-   const gameRows=arr<any>(games),playerRows=arr<any>(players);
-   const lastCompleted=gameRows.filter(g=>String(g.status)==='completed').reduce((latest,g)=>Math.max(latest,Date.parse(String(g.completed_at||''))||0),0);
-   if(lastCompleted&&Date.now()-lastCompleted<120000)continue;
-   const game=gameRows.find(g=>!['completed','cancelled'].includes(String(g.status)));
-   const maxGame=Math.max(0,...gameRows.map(g=>Number(g.game_number)||0));
-   const gameNo=Number(game?.game_number||maxGame+1);
-   if(gameNo>5)continue;
-   for(const team of [team1,team2]){
-    const already=playerRows.some(p=>Number(p.game_number)===gameNo&&Number(p.team_id)===Number(team.id));
-    if(already)continue;
-    const used=new Set(playerRows.filter(p=>Number(p.team_id)===Number(team.id)).map(p=>String(p.player_id)));
-    const candidate=arr<any>(team.roster).find(p=>!used.has(String(p.id)));
-    if(!candidate)continue;
-    const {error:claimError}=await db.rpc('kwl_claim_game_player',{
-     p_match_id:Number(match.id),p_team_id:Number(team.id),p_player_id:String(candidate.id),
-     p_player_type:'ai',p_player_name:String(candidate.name||candidate.id)
+   const workerId='kwl-ai:'+String(tick)+':'+crypto.randomUUID();
+   const {data:lockData,error:lockError}=await db.rpc('kwl_try_claim_ai_match',{p_match_id:Number(match.id),p_worker_id:workerId,p_lease_seconds:180});
+   if(lockError){if(!schemaNotReady(lockError))console.warn('KWL AI match lock unavailable:',lockError.message);continue;}
+   if(!(lockData===true||lockData?.claimed===true))continue;
+   try{
+    const {data:games,error:gameError}=await db.from('kwl_games').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
+    const {data:players,error:playerError}=await db.from('kwl_game_players').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
+    if(gameError||playerError){const e=gameError||playerError;if(!schemaNotReady(e))console.warn('KWL AI series lookup failed:',e?.message);continue;}
+    const gameRows=arr<any>(games),playerRows=arr<any>(players);
+    const lastCompleted=gameRows.filter(g=>String(g.status)==='completed').reduce((latest,g)=>Math.max(latest,Date.parse(String(g.completed_at||''))||0),0);
+    if(lastCompleted&&Date.now()-lastCompleted<120000)continue;
+    const game=gameRows.find(g=>!['completed','cancelled'].includes(String(g.status)));
+    const maxGame=Math.max(0,...gameRows.map(g=>Number(g.game_number)||0));
+    const gameNo=Number(game?.game_number||maxGame+1);
+    if(gameNo>5)continue;
+    for(const team of [team1,team2]){
+     const already=playerRows.some(p=>Number(p.game_number)===gameNo&&Number(p.team_id)===Number(team.id));
+     if(already)continue;
+     const used=new Set(playerRows.filter(p=>Number(p.team_id)===Number(team.id)).map(p=>String(p.player_id)));
+     const candidate=arr<any>(team.roster).find(p=>!used.has(String(p.id)));
+     if(!candidate)continue;
+     const {error:claimError}=await db.rpc('kwl_claim_game_player',{
+      p_match_id:Number(match.id),p_team_id:Number(team.id),p_player_id:String(candidate.id),
+      p_player_type:'ai',p_player_name:String(candidate.name||candidate.id),p_equipment_snapshot:{}
+     });
+     if(claimError&&!schemaNotReady(claimError)&&!String(claimError.message||'').includes('すでに出場'))console.warn('KWL AI player registration deferred:',claimError.message);
+    }
+    const {data:currentPlayers,error:currentPlayerError}=await db.from('kwl_game_players')
+     .select('*').eq('match_id',match.id).eq('game_number',gameNo);
+    if(currentPlayerError||arr<any>(currentPlayers).length!==2)continue;
+    const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
+    const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
+    if(!sideA||!sideB)continue;
+    const accountId=(id:any)=>{const m=String(id||'').match(/^AI-(\d{1,4})$/);return m?Number(m[1]):0;};
+    const idA=accountId(sideA.player_id),idB=accountId(sideB.player_id);
+    if(!idA||!idB)continue;
+    const {data:accounts,error:accountError}=await db.from('ai_accounts').select('*').in('account_id',[idA,idB]);
+    if(accountError){console.warn('KWL AI strength lookup failed:',accountError.message);continue;}
+    const accountById=new Map<number,any>();for(const a of arr<any>(accounts))accountById.set(Number(a.account_id),a);
+    const aiA=accountById.get(idA),aiB=accountById.get(idB);
+    if(!aiA||!aiB)continue;
+    const {data:locks,error:locksError}=await db.from('kwl_character_locks').select('team_id,character_key,first_game_number').eq('match_id',match.id);
+    if(locksError){if(!schemaNotReady(locksError))console.warn('KWL AI character lock lookup failed:',locksError.message);continue;}
+    const lockedByTeam=new Map<number,Set<number>>();
+    const selectedByTeam=new Map<number,number>();
+    for(const row of arr<any>(locks)){
+     const teamId=Number(row.team_id),id=Number(row.character_key);
+     const set=lockedByTeam.get(teamId)||new Set<number>();
+     if(Number.isInteger(id))set.add(id);
+     lockedByTeam.set(teamId,set);
+     if(Number(row.first_game_number)===gameNo&&Number.isInteger(id))selectedByTeam.set(teamId,id);
+    }
+    const chooseCharacter=(ai:any,teamId:number)=>{
+     const owned=new Set(arr<any>(ai.owned_characters).map(x=>Math.floor(num(x))).filter(x=>x>=0&&x<MAX_CHARS));
+     const formation=[...new Set(arr<any>(ai.formation).map(x=>Math.floor(num(x))).filter(x=>owned.has(x)))];
+     const pool=(formation.length?formation:[...owned]).filter(id=>!(lockedByTeam.get(teamId)||new Set<number>()).has(id));
+     return pool.sort((a,b)=>aiCharacterQuality(b)-aiCharacterQuality(a)||a-b)[0];
+    };
+    // Reuse a character already locked for this game after a partial retry.
+    const charA=selectedByTeam.has(Number(team1.id))?selectedByTeam.get(Number(team1.id)):chooseCharacter(aiA,Number(team1.id));
+    const charB=selectedByTeam.has(Number(team2.id))?selectedByTeam.get(Number(team2.id)):chooseCharacter(aiB,Number(team2.id));
+    if(!Number.isInteger(charA)||!Number.isInteger(charB))continue;
+    if(!selectedByTeam.has(Number(team1.id))){
+     const {error}=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team1.id),p_player_id:String(sideA.player_id),p_player_type:'ai',p_character_key:String(charA)});
+     if(error){if(!String(error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',error.message);continue;}
+    }
+    if(!selectedByTeam.has(Number(team2.id))){
+     const {error}=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team2.id),p_player_id:String(sideB.player_id),p_player_type:'ai',p_character_key:String(charB)});
+     if(error){if(!String(error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',error.message);continue;}
+    }
+    const profileA=prof(aiA),profileB=prof(aiB);
+    let qualityA=.25+profileA.skill*.42+(profileA.strength-.5)*.25;
+    let qualityB=.25+profileB.skill*.42+(profileB.strength-.5)*.25;
+    if(profileA.s==='counter')qualityA+=.15;
+    if(profileB.s==='counter')qualityB+=.15;
+    qualityA=clamp(qualityA,.08,.93);qualityB=clamp(qualityB,.08,.93);
+    const scoreA=qualityA*.72+profileA.strength*.18+num(aiA.rp)*.00002+aiFormationPower(aiA)*.45+aiCharacterQuality(charA)*.08;
+    const scoreB=qualityB*.72+profileB.strength*.18+num(aiB.rp)*.00002+aiFormationPower(aiB)*.45+aiCharacterQuality(charB)*.08;
+    const chanceA=clamp(.5+(scoreA-scoreB)*.62,.08,.92);
+    const winner=rnd('kwl-ai:'+String(match.id)+':'+String(gameNo)+':'+String(Math.min(idA,idB))+':'+String(Math.max(idA,idB)))<chanceA?Number(team1.id):Number(team2.id);
+    const {data:resultData,error:resultError}=await db.rpc('kwl_record_game_result',{
+     p_match_id:Number(match.id),p_game_number:gameNo,p_winner_team_id:winner,
+     p_reporter_id:'KWL-AI-WORKER'
     });
-    if(claimError&&!schemaNotReady(claimError))console.warn('KWL AI player registration deferred:',claimError.message);
+    if(resultError){if(!schemaNotReady(resultError))console.warn('KWL AI result recording deferred:',resultError.message);continue;}
+    const winnerPlayer=winner===Number(team1.id)?sideA:sideB;
+    const loserPlayer=winner===Number(team1.id)?sideB:sideA;
+    const winnerCharacter=winner===Number(team1.id)?charA:charB;
+    const loserCharacter=winner===Number(team1.id)?charB:charA;
+    const {error:eventError}=await db.from('kwl_live_events').insert({
+     tournament_key:tour.tournament_key,match_id:Number(match.id),game_number:gameNo,
+     event_type:'system',team_id:winner,player_name:'AI自動進行',
+     message:'AI同士の自動対戦：第'+gameNo+'試合 '+String(winnerPlayer.player_name||winnerPlayer.player_id)+' が勝利（使用キャラ #'+(winnerCharacter+1)+'）',
+     payload:{mode:'ai_simulation',winner_player_id:winnerPlayer.player_id,loser_player_id:loserPlayer.player_id,winner_character_id:winnerCharacter,loser_character_id:loserCharacter,win_probability:Number((winner===Number(team1.id)?chanceA:1-chanceA).toFixed(4)),series_completed:!!resultData?.series_completed}
+    });
+    if(eventError)console.warn('KWL AI event logging failed:',eventError.message);
+    resolved++;
+   }finally{
+    const {error:releaseError}=await db.rpc('kwl_release_ai_match',{p_match_id:Number(match.id),p_worker_id:workerId});
+    if(releaseError&&!schemaNotReady(releaseError))console.warn('KWL AI match lock release failed:',releaseError.message);
    }
-   const {data:currentPlayers,error:currentPlayerError}=await db.from('kwl_game_players')
-    .select('*').eq('match_id',match.id).eq('game_number',gameNo);
-   if(currentPlayerError||arr<any>(currentPlayers).length!==2)continue;
-   const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
-   const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
-   if(!sideA||!sideB)continue;
-   const accountId=(id:any)=>{const m=String(id||'').match(/^AI-(\d{1,4})$/);return m?Number(m[1]):0;};
-   const idA=accountId(sideA.player_id),idB=accountId(sideB.player_id);
-   if(!idA||!idB)continue;
-   const {data:accounts,error:accountError}=await db.from('ai_accounts').select('*').in('account_id',[idA,idB]);
-   if(accountError){console.warn('KWL AI strength lookup failed:',accountError.message);continue;}
-   const accountById=new Map<number,any>();for(const a of arr<any>(accounts))accountById.set(Number(a.account_id),a);
-   const aiA=accountById.get(idA),aiB=accountById.get(idB);
-   if(!aiA||!aiB)continue;
-   const profileA=prof(aiA),profileB=prof(aiB);
-   let qualityA=.25+profileA.skill*.42+(profileA.strength-.5)*.25;
-   let qualityB=.25+profileB.skill*.42+(profileB.strength-.5)*.25;
-   if(profileA.s==='counter')qualityA+=.15;
-   if(profileB.s==='counter')qualityB+=.15;
-   qualityA=clamp(qualityA,.08,.93);qualityB=clamp(qualityB,.08,.93);
-   const scoreA=qualityA*.72+profileA.strength*.18+num(aiA.rp)*.00002+aiFormationPower(aiA)*.45;
-   const scoreB=qualityB*.72+profileB.strength*.18+num(aiB.rp)*.00002+aiFormationPower(aiB)*.45;
-   const chanceA=clamp(.5+(scoreA-scoreB)*.62,.08,.92);
-   const winner=rnd('kwl-ai:'+String(match.id)+':'+String(gameNo)+':'+String(Math.min(idA,idB))+':'+String(Math.max(idA,idB)))<chanceA?Number(team1.id):Number(team2.id);
-   const {data:resultData,error:resultError}=await db.rpc('kwl_record_game_result',{
-    p_match_id:Number(match.id),p_game_number:gameNo,p_winner_team_id:winner,
-    p_reporter_id:'KWL-AI-WORKER'
-   });
-   if(resultError){if(!schemaNotReady(resultError))console.warn('KWL AI result recording deferred:',resultError.message);continue;}
-   const winnerPlayer=winner===Number(team1.id)?sideA:sideB;
-   const loserPlayer=winner===Number(team1.id)?sideB:sideA;
-   const {error:eventError}=await db.from('kwl_live_events').insert({
-    tournament_key:tour.tournament_key,match_id:Number(match.id),game_number:gameNo,
-    event_type:'system',team_id:winner,player_name:'AI自動進行',
-    message:'AI同士の自動対戦：第'+gameNo+'試合 '+String(winnerPlayer.player_name||winnerPlayer.player_id)+' が勝利',
-    payload:{mode:'ai_simulation',winner_player_id:winnerPlayer.player_id,loser_player_id:loserPlayer.player_id,win_probability:Number((winner===Number(team1.id)?chanceA:1-chanceA).toFixed(4)),series_completed:!!resultData?.series_completed}
-   });
-   if(eventError)console.warn('KWL AI event logging failed:',eventError.message);
-   resolved++;
   }
  }
  return resolved;
