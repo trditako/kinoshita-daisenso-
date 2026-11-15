@@ -35,14 +35,14 @@ function totals(i){
  const ids=equipped(i),t={hp:0,atk:0,defense:0,healing:0,waveDamage:0,waveReduce:0,surgeDamage:0,surgeReduce:0},sets={};
  ids.forEach(id=>{const item=ITEMS.find(x=>x.id===id);if(!item)return;sets[item.set]=(sets[item.set]||0)+1;Object.entries(item.stats).forEach(([k,v])=>t[k]=(t[k]||0)+v);});
  const active={};Object.entries(sets).forEach(([k,n])=>{if(n>=2)active[k]=n;});
- return {ids,t,sets:active};
+ return {ids,t,sets:active,setCounts:sets};
 }
 function bonuses(i){const x=totals(i),b={...x.t};Object.entries(x.sets).forEach(([key,n])=>{const s=SETS[key];if(n>=4)Object.entries(s.bonus).forEach(([k,v])=>b[k]=(b[k]||0)+v*100);});return b;}
 function pct(i,key){return Math.max(0,Number(bonuses(i)[key]||0))/100;}
 function ensureUI(){
  if(document.getElementById('equipmentLauncher'))return;
  const style=document.createElement('style');style.textContent=`
- #equipmentLauncher{position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:9990;background:#253b66;color:#fff;border:2px solid #d7b66d;border-radius:14px;padding:10px 13px;font-weight:900;box-shadow:0 3px 12px #0005}
+ #equipmentLauncher{margin:6px;padding:10px 13px;font-weight:900;background:linear-gradient(100deg,#253b66,#36558a);color:#fff;border:2px solid #d7b66d;border-radius:12px}
  #equipmentModal{display:none;position:fixed;inset:0;z-index:10020;background:#101827eF;overflow:auto;padding:18px 10px;color:#f8fafc}
  #equipmentPanel{max-width:760px;margin:20px auto;background:#17243a;border:1px solid #71839e;border-radius:16px;padding:14px}
  #equipmentPanel button,#equipmentPanel select{padding:8px;border-radius:9px;border:1px solid #64748b;margin:3px}
@@ -51,9 +51,9 @@ function ensureUI(){
  .eqslots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
  .eqslot{min-height:65px;background:#0f172a;border:1px dashed #64748b;border-radius:9px;padding:6px;font-size:12px}
  .eqmuted{color:#b9c5d6;font-size:12px}
- @media(max-width:480px){.eqgrid{grid-template-columns:1fr}#equipmentLauncher{bottom:calc(env(safe-area-inset-bottom,0px) + 76px)}}
+ @media(max-width:480px){.eqgrid{grid-template-columns:1fr}}
  `;document.head.appendChild(style);
- const btn=document.createElement('button');btn.id='equipmentLauncher';btn.textContent='🛡️ 装備';btn.onclick=open;document.body.appendChild(btn);
+ const start=document.getElementById('start');if(!start)return;const btn=document.createElement('button');btn.id='equipmentLauncher';btn.className='formationBtn';btn.textContent='🛡️ キャラクター装備';btn.style.cssText='margin:6px;background:linear-gradient(100deg,#253b66,#36558a)!important;color:#fff!important;border:2px solid #d7b66d!important';btn.onclick=open;const alliance=document.getElementById('allianceBtn');if(alliance?.parentNode)alliance.parentNode.insertBefore(btn,alliance.nextSibling);else (start.querySelector('.panel')||start).appendChild(btn);
  const modal=document.createElement('div');modal.id='equipmentModal';modal.innerHTML=`
  <div id="equipmentPanel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:4px 0">🛡️ キャラクター装備</h2><button id="eqClose">閉じる</button></div>
  <p class="eqmuted">キャラごとに最大6枠。装備の基礎効果・シリーズ効果・セット効果は戦闘に反映されます。</p>
@@ -78,8 +78,8 @@ function render(){
  sel.innerHTML=list.map(i=>'<option value="'+charKey(i).replace(/"/g,'&quot;')+'">'+cards[i].name+'</option>').join('');sel.value=current;
  const i=list.find(x=>charKey(x)===current),x=totals(i),b=bonuses(i);
  const summary=document.getElementById('eqSummary');
- summary.innerHTML='<div class="eqitem">HP +'+(b.hp||0)+'% / 攻撃 +'+(b.atk||0)+'% / 防御 +'+(b.defense||0)+'% / 回復 +'+(b.healing||0)+'%<br>波動ダメージ +'+(b.waveDamage||0)+'%・軽減 '+(b.waveReduce||0)+'%<br>烈波ダメージ +'+(b.surgeDamage||0)+'%・軽減 '+(b.surgeReduce||0)+'%<br><b>シリーズ：</b>'+Object.entries(x.sets).map(([k,n])=>SETS[k].name+' '+n+'個').join(' / ')+'</div>';
- const slots=document.getElementById('eqSlots');slots.innerHTML=Array.from({length:6},(_,n)=>{const id=x.ids[n],it=ITEMS.find(z=>z.id===id);return '<div class="eqslot">'+(it?'<b>'+it.name+'</b><br>'+SETS[it.set].name+'<br><button data-remove="'+n+'">外す</button>':'空き枠')+'</div>';}).join('');
+ summary.innerHTML='<div class="eqitem"><b>現在の装備効果</b><br>HP +'+(b.hp||0)+'% / 攻撃 +'+(b.atk||0)+'% / 防御 +'+(b.defense||0)+'% / 回復 +'+(b.healing||0)+'%<br>波動ダメージ +'+(b.waveDamage||0)+'%・軽減 '+(b.waveReduce||0)+'%<br>烈波ダメージ +'+(b.surgeDamage||0)+'%・軽減 '+(b.surgeReduce||0)+'%</div><h3>シリーズセット効果</h3><div class="eqgrid">'+Object.entries(SETS).map(([k,s])=>{const n=x.setCounts[k]||0;return '<div class="eqitem"><b>'+s.name+'シリーズ（'+n+' / 6個）</b><br><span class="eqmuted">2個セット：</span>'+s.special[2]+'<br><span class="eqmuted">4個セット：</span>'+s.special[4]+'<br><b style="color:'+(n>=4?'#86efac':n>=2?'#fde68a':'#cbd5e1')+'">'+(n>=4?'4個効果 発動中':n>=2?'2個効果 発動中':'未発動')+'</b></div>';}).join('')+'</div>';
+ const slots=document.getElementById('eqSlots');slots.innerHTML=Array.from({length:6},(_,n)=>{const id=x.ids[n],it=ITEMS.find(z=>z.id===id);return '<div class="eqslot">'+(it?'<b>'+it.name+'</b><br>'+SETS[it.set].name+'<br><span class="eqmuted">'+Object.entries(it.stats).map(([k,v])=>({hp:'HP',atk:'攻撃',defense:'防御',healing:'回復',waveDamage:'波動ダメージ',waveReduce:'波動軽減',surgeDamage:'烈波ダメージ',surgeReduce:'烈波軽減'}[k]||k)+' +'+v+'%').join('・')+'</span><br><button data-remove="'+n+'">外す</button>':'空き枠')+'</div>';}).join('');
  slots.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>{const a=equipped(i);const n=Number(btn.dataset.remove);const id=a[n];if(!id)return;a.splice(n,1);data.equipped[charKey(i)]=a;add(id);save();render();});
  const inv=document.getElementById('eqInventory');const ownedItems=ITEMS.filter(it=>count(it.id)>0);
  inv.innerHTML=ownedItems.length?ownedItems.map(it=>'<div class="eqitem"><b>'+it.name+'</b> <span class="eqmuted">'+RARITY[it.rarity]+' / '+SETS[it.set].name+'</span><br><span class="eqmuted">'+Object.entries(it.stats).map(([k,v])=>k+' +'+v+'%').join('・')+'</span><br>所持 '+count(it.id)+'個 <button data-equip="'+it.id+'">装備する</button></div>').join(''):'<p class="eqmuted">装備をまだ所持していません。</p>';
