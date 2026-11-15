@@ -459,7 +459,7 @@ async function processKWLAIAutoMatches(tick:number){
      p_match_id:Number(match.id),p_team_id:Number(team.id),p_player_id:String(candidate.id),
      p_player_type:'ai',p_player_name:String(candidate.name||candidate.id)
     });
-    if(claimError)console.warn('KWL AI player registration deferred:',claimError.message);
+    if(claimError&&!schemaNotReady(claimError))console.warn('KWL AI player registration deferred:',claimError.message);
    }
    const {data:currentPlayers,error:currentPlayerError}=await db.from('kwl_game_players')
     .select('*').eq('match_id',match.id).eq('game_number',gameNo);
@@ -489,7 +489,7 @@ async function processKWLAIAutoMatches(tick:number){
     p_match_id:Number(match.id),p_game_number:gameNo,p_winner_team_id:winner,
     p_reporter_id:'KWL-AI-WORKER'
    });
-   if(resultError){console.warn('KWL AI result recording deferred:',resultError.message);continue;}
+   if(resultError){if(!schemaNotReady(resultError))console.warn('KWL AI result recording deferred:',resultError.message);continue;}
    const winnerPlayer=winner===Number(team1.id)?sideA:sideB;
    const loserPlayer=winner===Number(team1.id)?sideB:sideA;
    const {error:eventError}=await db.from('kwl_live_events').insert({
