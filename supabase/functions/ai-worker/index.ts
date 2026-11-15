@@ -430,21 +430,23 @@ async function processKWLAIAutoMatches(tick:number){
  }
  for(const tour of arr<any>(tournaments)){
   const {data:teams,error:teamError}=await db.from('kwl_teams')
-   .select('id,leader_type,roster').eq('tournament_key',tour.tournament_key);
+   .select('id,leader_type,roster,alliance_name').eq('tournament_key',tour.tournament_key);
   if(teamError){console.warn('KWL AI team lookup failed:',teamError.message);continue;}
-  const teamById=new Map<number,any>(arr<any>(teams).map(t=>[Number(t.id),t]));
+  const teamById=new Map<number,any>();for(const t of arr<any>(teams))teamById.set(Number(t.id),t);
   const {data:matches,error:matchError}=await db.from('kwl_matches')
    .select('id,team1_id,team2_id,status').eq('tournament_key',tour.tournament_key)
    .in('status',['ready','live']).order('round_number',{ascending:true}).order('match_number',{ascending:true});
   if(matchError){console.warn('KWL AI match lookup failed:',matchError.message);continue;}
   for(const match of arr<any>(matches)){
    const team1=teamById.get(Number(match.team1_id)),team2=teamById.get(Number(match.team2_id));
-   const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\\d{1,4}$/.test(String(p.id||'')));
+   const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\d{1,4}$/.test(String(p.id||'')));
    if(!isFullAI(team1)||!isFullAI(team2))continue;
    const {data:games,error:gameError}=await db.from('kwl_games').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
    const {data:players,error:playerError}=await db.from('kwl_game_players').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
    if(gameError||playerError){console.warn('KWL AI series lookup failed:',gameError?.message||playerError?.message);continue;}
    const gameRows=arr<any>(games),playerRows=arr<any>(players);
+   const lastCompleted=gameRows.filter(g=>String(g.status)==='completed').reduce((latest,g)=>Math.max(latest,Date.parse(String(g.completed_at||''))||0),0);
+   if(lastCompleted&&Date.now()-lastCompleted<120000)continue;
    const game=gameRows.find(g=>!['completed','cancelled'].includes(String(g.status)));
    const maxGame=Math.max(0,...gameRows.map(g=>Number(g.game_number)||0));
    const gameNo=Number(game?.game_number||maxGame+1);
@@ -472,7 +474,7 @@ async function processKWLAIAutoMatches(tick:number){
    if(!idA||!idB)continue;
    const {data:accounts,error:accountError}=await db.from('ai_accounts').select('*').in('account_id',[idA,idB]);
    if(accountError){console.warn('KWL AI strength lookup failed:',accountError.message);continue;}
-   const accountById=new Map<number,any>(arr<any>(accounts).map(a=>[Number(a.account_id),a]));
+   const accountById=new Map<number,any>();for(const a of arr<any>(accounts))accountById.set(Number(a.account_id),a);
    const aiA=accountById.get(idA),aiB=accountById.get(idB);
    if(!aiA||!aiB)continue;
    const profileA=prof(aiA),profileB=prof(aiB);
@@ -485,11 +487,20 @@ async function processKWLAIAutoMatches(tick:number){
    const scoreB=qualityB*.72+profileB.strength*.18+num(aiB.rp)*.00002+aiFormationPower(aiB)*.45;
    const chanceA=clamp(.5+(scoreA-scoreB)*.62,.08,.92);
    const winner=rnd('kwl-ai:'+String(match.id)+':'+String(gameNo)+':'+String(Math.min(idA,idB))+':'+String(Math.max(idA,idB)))<chanceA?Number(team1.id):Number(team2.id);
-   const {error:resultError}=await db.rpc('kwl_record_game_result',{
+   const {data:resultData,error:resultError}=await db.rpc('kwl_record_game_result',{
     p_match_id:Number(match.id),p_game_number:gameNo,p_winner_team_id:winner,
     p_reporter_id:'KWL-AI-WORKER'
    });
    if(resultError){console.warn('KWL AI result recording deferred:',resultError.message);continue;}
+   const winnerPlayer=winner===Number(team1.id)?sideA:sideB;
+   const loserPlayer=winner===Number(team1.id)?sideB:sideA;
+   const {error:eventError}=await db.from('kwl_live_events').insert({
+    tournament_key:tour.tournament_key,match_id:Number(match.id),game_number:gameNo,
+    event_type:'system',team_id:winner,player_name:'AI自動進行',
+    message:'AI同士の自動対戦：第'+gameNo+'試合 '+String(winnerPlayer.player_name||winnerPlayer.player_id)+' が勝利',
+    payload:{mode:'ai_simulation',winner_player_id:winnerPlayer.player_id,loser_player_id:loserPlayer.player_id,win_probability:Number((winner===Number(team1.id)?chanceA:1-chanceA).toFixed(4)),series_completed:!!resultData?.series_completed}
+   });
+   if(eventError)console.warn('KWL AI event logging failed:',eventError.message);
    resolved++;
   }
  }
