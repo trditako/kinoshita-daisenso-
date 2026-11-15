@@ -445,18 +445,10 @@ async function processKWLAIAutoMatches(tick:number){
    const {data:players,error:playerError}=await db.from('kwl_game_players').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
    if(gameError||playerError){console.warn('KWL AI series lookup failed:',gameError?.message||playerError?.message);continue;}
    const gameRows=arr<any>(games),playerRows=arr<any>(players);
-   let game=gameRows.find(g=>!['completed','cancelled'].includes(String(g.status))&&playerRows.filter(p=>Number(p.game_number)===Number(g.game_number)).length<2);
-   if(!game){
-    const maxGame=Math.max(0,...gameRows.map(g=>Number(g.game_number)||0));
-    if(maxGame>=5)continue;
-    const nextNo=maxGame+1;
-    const {data:created,error:createError}=await db.from('kwl_games').insert({
-     tournament_key:tour.tournament_key,match_id:match.id,game_number:nextNo,status:'waiting'
-    }).select('*').maybeSingle();
-    if(createError){console.warn('KWL AI game creation deferred:',createError.message);continue;}
-    game=created;
-   }
-   const gameNo=Number(game.game_number);
+   const game=gameRows.find(g=>!['completed','cancelled'].includes(String(g.status)));
+   const maxGame=Math.max(0,...gameRows.map(g=>Number(g.game_number)||0));
+   const gameNo=Number(game?.game_number||maxGame+1);
+   if(gameNo>5)continue;
    for(const team of [team1,team2]){
     const already=playerRows.some(p=>Number(p.game_number)===gameNo&&Number(p.team_id)===Number(team.id));
     if(already)continue;
