@@ -30,7 +30,7 @@ const owned=()=>typeof ownedFlags!=='undefined'?cards.map((c,i)=>ownedFlags[i]?i
 const charKey=i=>String(cards[i]?.name||i);
 const count=id=>Math.max(0,Number(data.inventory[id]||0));
 const add=(id,n=1)=>{data.inventory[id]=count(id)+n;save();};
-const equipped=i=>Array.isArray(data.equipped[charKey(i)])?data.equipped[charKey(i)].slice(0,6):[];
+let tournamentLoadout=null;const equipped=i=>{if(tournamentLoadout&&typeof tournamentLoadout==='object'){const frozen=tournamentLoadout[charKey(i)];return Array.isArray(frozen)?frozen.filter(id=>ITEMS.some(x=>x.id===id)).slice(0,6):[];}return Array.isArray(data.equipped[charKey(i)])?data.equipped[charKey(i)].slice(0,6):[];};
 function totals(i){
  const ids=equipped(i),t={hp:0,atk:0,defense:0,healing:0,waveDamage:0,waveReduce:0,surgeDamage:0,surgeReduce:0},sets={};
  ids.forEach(id=>{const item=ITEMS.find(x=>x.id===id);if(!item)return;sets[item.set]=(sets[item.set]||0)+1;Object.entries(item.stats).forEach(([k,v])=>t[k]=(t[k]||0)+v);});
@@ -100,6 +100,7 @@ function stageDrop(win){
  const r=Math.random(),rarity=r<.025?3:r<.18?2:r<.55?1:0,pool=ITEMS.filter(it=>it.rarity===rarity),it=pool[Math.floor(Math.random()*pool.length)];
  add(it.id);const el=document.getElementById('resultText');if(el)el.textContent+='\n🛡️ 装備ドロップ：'+it.name+'を獲得！';
 }
+window.KinoshitaEquipment={exportLoadout(){const out={};for(const i of owned()){const ids=(Array.isArray(data.equipped[charKey(i)])?data.equipped[charKey(i)]:[]).filter(id=>ITEMS.some(x=>x.id===id)).slice(0,6);if(ids.length)out[charKey(i)]=ids;}return out;},useTournamentLoadout(snapshot){if(snapshot&&typeof snapshot==='object'&&!Array.isArray(snapshot)){const clean={};Object.entries(snapshot).slice(0,250).forEach(([key,ids])=>{if(typeof key==='string'&&key.length<=128&&Array.isArray(ids))clean[key]=ids.filter(id=>ITEMS.some(x=>x.id===id)).slice(0,6);});tournamentLoadout=clean;}else tournamentLoadout=null;}};
 function init(){
  ensureUI();
  if(typeof showResult==='function'&&!window.__eqResultWrapped){const prev=showResult;showResult=function(win){const result=prev.apply(this,arguments);try{stageDrop(!!win);}catch(e){console.warn('equipment reward',e);}return result;};window.__eqResultWrapped=true;}
