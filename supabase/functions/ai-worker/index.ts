@@ -480,21 +480,35 @@ async function processKWLAIAutoMatches(tick:number){
     const accountById=new Map<number,any>();for(const a of arr<any>(accounts))accountById.set(Number(a.account_id),a);
     const aiA=accountById.get(idA),aiB=accountById.get(idB);
     if(!aiA||!aiB)continue;
-    const {data:locks,error:locksError}=await db.from('kwl_character_locks').select('team_id,character_key').eq('match_id',match.id);
+    const {data:locks,error:locksError}=await db.from('kwl_character_locks').select('team_id,character_key,first_game_number').eq('match_id',match.id);
     if(locksError){if(!schemaNotReady(locksError))console.warn('KWL AI character lock lookup failed:',locksError.message);continue;}
     const lockedByTeam=new Map<number,Set<number>>();
-    for(const row of arr<any>(locks)){const set=lockedByTeam.get(Number(row.team_id))||new Set<number>();const id=Number(row.character_key);if(Number.isInteger(id))set.add(id);lockedByTeam.set(Number(row.team_id),set);}
+    const selectedByTeam=new Map<number,number>();
+    for(const row of arr<any>(locks)){
+     const teamId=Number(row.team_id),id=Number(row.character_key);
+     const set=lockedByTeam.get(teamId)||new Set<number>();
+     if(Number.isInteger(id))set.add(id);
+     lockedByTeam.set(teamId,set);
+     if(Number(row.first_game_number)===gameNo&&Number.isInteger(id))selectedByTeam.set(teamId,id);
+    }
     const chooseCharacter=(ai:any,teamId:number)=>{
      const owned=new Set(arr<any>(ai.owned_characters).map(x=>Math.floor(num(x))).filter(x=>x>=0&&x<MAX_CHARS));
      const formation=[...new Set(arr<any>(ai.formation).map(x=>Math.floor(num(x))).filter(x=>owned.has(x)))];
      const pool=(formation.length?formation:[...owned]).filter(id=>!(lockedByTeam.get(teamId)||new Set<number>()).has(id));
      return pool.sort((a,b)=>aiCharacterQuality(b)-aiCharacterQuality(a)||a-b)[0];
     };
-    const charA=chooseCharacter(aiA,Number(team1.id)),charB=chooseCharacter(aiB,Number(team2.id));
+    // Reuse a character already locked for this game after a partial retry.
+    const charA=selectedByTeam.has(Number(team1.id))?selectedByTeam.get(Number(team1.id)):chooseCharacter(aiA,Number(team1.id));
+    const charB=selectedByTeam.has(Number(team2.id))?selectedByTeam.get(Number(team2.id)):chooseCharacter(aiB,Number(team2.id));
     if(!Number.isInteger(charA)||!Number.isInteger(charB))continue;
-    const lockA=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team1.id),p_player_id:String(sideA.player_id),p_player_type:'ai',p_character_key:String(charA)});
-    const lockB=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team2.id),p_player_id:String(sideB.player_id),p_player_type:'ai',p_character_key:String(charB)});
-    if(lockA.error||lockB.error){if(lockA.error&&!String(lockA.error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',lockA.error.message);if(lockB.error&&!String(lockB.error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',lockB.error.message);continue;}
+    if(!selectedByTeam.has(Number(team1.id))){
+     const {error}=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team1.id),p_player_id:String(sideA.player_id),p_player_type:'ai',p_character_key:String(charA)});
+     if(error){if(!String(error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',error.message);continue;}
+    }
+    if(!selectedByTeam.has(Number(team2.id))){
+     const {error}=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team2.id),p_player_id:String(sideB.player_id),p_player_type:'ai',p_character_key:String(charB)});
+     if(error){if(!String(error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',error.message);continue;}
+    }
     const profileA=prof(aiA),profileB=prof(aiB);
     let qualityA=.25+profileA.skill*.42+(profileA.strength-.5)*.25;
     let qualityB=.25+profileB.skill*.42+(profileB.strength-.5)*.25;
