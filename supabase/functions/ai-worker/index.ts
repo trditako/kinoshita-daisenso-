@@ -467,7 +467,7 @@ async function processKWLAIAutoMatches(tick:number){
    const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
    const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
    if(!sideA||!sideB)continue;
-   const accountId=(id:any)=>{const m=String(id||'').match(/^AI-(\\d{1,4})$/);return m?Number(m[1]):0;};
+   const accountId=(id:any)=>{const m=String(id||'').match(/^AI-(\d{1,4})$/);return m?Number(m[1]):0;};
    const idA=accountId(sideA.player_id),idB=accountId(sideB.player_id);
    if(!idA||!idB)continue;
    const {data:accounts,error:accountError}=await db.from('ai_accounts').select('*').in('account_id',[idA,idB]);
