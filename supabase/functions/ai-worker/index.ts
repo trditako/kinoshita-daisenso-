@@ -420,30 +420,28 @@ async function issueAILotteryTickets(ais:any[]){const pending:{ai:any,count:numb
 
 async function processKWLAIAutoMatches(tick:number){
  let resolved=0;
+ const schemaNotReady=(e:any)=>['42P01','PGRST202','PGRST204','PGRST205'].includes(String(e?.code||''))||/does not exist|could not find the table|could not find the function/i.test(String(e?.message||''));
  const now=new Date().toISOString();
  const {data:tournaments,error:tournamentError}=await db.from('kwl_tournaments')
   .select('tournament_key,status,starts_at')
   .in('status',['drawn','live']).lte('starts_at',now).limit(10);
- if(tournamentError){
-  console.warn('KWL AI automation unavailable (tournament schema/migration may not be applied):',tournamentError.message);
-  return 0;
- }
+ if(tournamentError){if(!schemaNotReady(tournamentError))console.warn('KWL AI tournament lookup failed:',tournamentError.message);return 0;}
  for(const tour of arr<any>(tournaments)){
   const {data:teams,error:teamError}=await db.from('kwl_teams')
    .select('id,leader_type,roster,alliance_name').eq('tournament_key',tour.tournament_key);
-  if(teamError){console.warn('KWL AI team lookup failed:',teamError.message);continue;}
+  if(teamError){if(!schemaNotReady(teamError))console.warn('KWL AI team lookup failed:',teamError.message);continue;}
   const teamById=new Map<number,any>();for(const t of arr<any>(teams))teamById.set(Number(t.id),t);
   const {data:matches,error:matchError}=await db.from('kwl_matches')
    .select('id,team1_id,team2_id,status').eq('tournament_key',tour.tournament_key)
    .in('status',['ready','live']).order('round_number',{ascending:true}).order('match_number',{ascending:true});
-  if(matchError){console.warn('KWL AI match lookup failed:',matchError.message);continue;}
+  if(matchError){if(!schemaNotReady(matchError))console.warn('KWL AI match lookup failed:',matchError.message);continue;}
   for(const match of arr<any>(matches)){
    const team1=teamById.get(Number(match.team1_id)),team2=teamById.get(Number(match.team2_id));
    const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\d{1,4}$/.test(String(p.id||'')));
    if(!isFullAI(team1)||!isFullAI(team2))continue;
    const {data:games,error:gameError}=await db.from('kwl_games').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
    const {data:players,error:playerError}=await db.from('kwl_game_players').select('*').eq('match_id',match.id).order('game_number',{ascending:true});
-   if(gameError||playerError){console.warn('KWL AI series lookup failed:',gameError?.message||playerError?.message);continue;}
+   if(gameError||playerError){const e=gameError||playerError;if(!schemaNotReady(e))console.warn('KWL AI series lookup failed:',e?.message);continue;}
    const gameRows=arr<any>(games),playerRows=arr<any>(players);
    const lastCompleted=gameRows.filter(g=>String(g.status)==='completed').reduce((latest,g)=>Math.max(latest,Date.parse(String(g.completed_at||''))||0),0);
    if(lastCompleted&&Date.now()-lastCompleted<120000)continue;
