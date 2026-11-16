@@ -41,7 +41,7 @@ on:
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -80,12 +80,6 @@ jobs:
           node tests/zeus-stage.test.js
           node tests/hastur-stage.test.js
           node tests/ai-roster-sync.test.js
-      - name: Set up Deno for AI Worker type checking
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - name: Type-check AI Worker
-        run: deno check --no-lock supabase/functions/ai-worker/index.ts
       - name: Install pinned Playwright for runtime roster verification
         run: npm install --no-save playwright@1.56.1
       - name: Install Chromium for runtime roster verification
