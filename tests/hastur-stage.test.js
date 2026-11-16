@@ -3,9 +3,11 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
-assert.match(sw, /kinoshita-daisen-v101/);
-assert.match(sw, /hastur\.js\?v=20261114-hastur-formation-hp-display/);
+assert.match(sw, /kinoshita-daisen-v109/);
+assert.match(sw, /hastur\.js\?v=20261116-final-roster-audit/);
 assert.ok(sw.includes('./hastur.js'));
+assert.match(source,/function publishCharacterRosterAudit\(\)/,'final runtime roster audit is exported after late character registration');
+assert.match(source,/window\.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT=publishCharacterRosterAudit/,'other late registrations can refresh the shared roster audit');
 assert.match(source, /document\.getElementById\('effects'\)/, 'tentacle animation uses the world-space effects layer');
 assert.match(source, /position:absolute;z-index:24/);
 assert.match(source, /left:'\+x\+'px;bottom:40px/);
@@ -94,6 +96,15 @@ assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 26);
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].ability.hastur.madnessInterval, 22);
 assert.equal(calls.stage, 1);
 assert.equal(calls.cards, 1);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.phase, 'final-runtime-roster');
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, 1);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, 0);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.idsAligned, true);
+assert.deepEqual(JSON.parse(JSON.stringify(window.KINOSHITA_CHARACTER_ROSTER[0])), {
+  id: 0, name: '最高神:ハスター', rarity: 'UR', specialReward: false,
+  chapterReward: null, eventReward: null, rewardStage: '最高神:ハスター降臨', series: '最高神'
+});
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.id121, null, 'unregistered ID 121 is not invented');
 
 const api = sandbox.window.HASTUR_RAID_TEST_API;
 assert.deepEqual(JSON.parse(JSON.stringify(api.growthStatusEntries({}, api.allyCfg))), [], 'inactive and passive abilities do not create battle labels');
