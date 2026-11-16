@@ -105,6 +105,14 @@ assert.deepEqual(JSON.parse(JSON.stringify(window.KINOSHITA_CHARACTER_ROSTER[0])
   chapterReward: null, eventReward: null, rewardStage: '最高神:ハスター降臨', series: '最高神'
 });
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.id121, null, 'unregistered ID 121 is not invented');
+const auditProbe = { id: 1, name: '一時追加キャラ', rarity: '伝説レア' };
+sandbox.cards.push(auditProbe);
+const refreshedAudit = window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
+assert.equal(refreshedAudit.total, 2, 'runtime audit refreshes after another card is registered');
+assert.equal(refreshedAudit.roster[1].name, '一時追加キャラ');
+assert.equal(refreshedAudit.roster[1].rarity, '伝説レア');
+sandbox.cards.pop();
+window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
 
 const api = sandbox.window.HASTUR_RAID_TEST_API;
 assert.deepEqual(JSON.parse(JSON.stringify(api.growthStatusEntries({}, api.allyCfg))), [], 'inactive and passive abilities do not create battle labels');
