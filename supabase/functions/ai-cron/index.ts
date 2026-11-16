@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const batchStart = batchIndex * 50 + 1
     const batchEnd = batchStart + 49
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 20000)
+    const timeout = setTimeout(() => controller.abort(), 8000)
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-worker`, {
         method: 'POST',
