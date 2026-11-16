@@ -30,7 +30,7 @@ try{
   const eventRewards=audit.roster.filter(c=>c.rewardStage).map(c=>({id:c.id,name:c.name,stageName:c.rewardStage}));
   const manifest={schemaVersion:1,sourceCommit:process.env.GITHUB_SHA||null,generatedAt:new Date().toISOString(),count:audit.total,characters:audit.roster,eventRewards};
   fs.writeFileSync(path.join(root,'character-roster.json'),JSON.stringify(manifest,null,2)+'\n');
-  console.log('Character roster exported: '+manifest.count+' cards; ID 121: '+JSON.stringify(manifest.characters[121]||null));
+  console.log('Character roster exported: '+manifest.count+' cards; final IDs: '+JSON.stringify(manifest.characters.slice(-4)));
 }finally{
   if(browser)await browser.close();
   await new Promise(resolve=>server.close(resolve));
