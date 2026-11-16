@@ -1,0 +1,52 @@
+name: Sync runtime character roster
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - '*.js'
+      - 'service-worker.js'
+      - 'scripts/export-character-roster.mjs'
+      - '.github/workflows/sync-character-roster.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - '*.js'
+      - 'service-worker.js'
+      - 'scripts/export-character-roster.mjs'
+      - '.github/workflows/sync-character-roster.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || 'main' }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Playwright
+        run: npm install --no-save playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Export final runtime character roster
+        run: node scripts/export-character-roster.mjs
+      - name: Commit generated roster when changed
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          git add character-roster.json
+          if git diff --cached --quiet; then
+            echo "Character roster is unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync runtime character roster"
+          git push origin main
