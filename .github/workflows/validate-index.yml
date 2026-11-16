@@ -86,3 +86,9 @@ jobs:
           deno-version: v2.x
       - name: Type-check AI Worker
         run: deno check --no-lock supabase/functions/ai-worker/index.ts
+      - name: Install pinned Playwright for runtime roster verification
+        run: npm install --no-save playwright@1.56.1
+      - name: Install Chromium for runtime roster verification
+        run: npx playwright install --with-deps chromium
+      - name: Verify final runtime character roster export
+        run: node scripts/export-character-roster.mjs
