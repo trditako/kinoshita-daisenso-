@@ -23,6 +23,25 @@ if(typeof cards!=='undefined'&&typeof enemyTypes!=='undefined'&&typeof eventStag
  const stage={name:STAGE,width:2600,baseHp:500000,xp:20000,eventReward:NAME,rewardCharacter:NAME,enemies:[NAME,SERVANT],schedule:[{t:0,enemy:NAME,mult:1,fixedMultiplier:true,role:'boss'}],repeatSpawns:[{start:2,interval:35,enemy:SERVANT,mult:1.2,fixedMultiplier:true}]};
  const si=eventStages.findIndex(s=>s?.name===STAGE);if(si>=0)eventStages[si]=stage;else eventStages.push(stage);
 }
+// Publish the final roster only after this last-loaded character module has registered.
+// This replaces the earlier Hitman-only count with the complete runtime card list.
+function publishCharacterRosterAudit(){
+ if(!Array.isArray(cards))return null;
+ const roster=cards.map((entry,id)=>{
+  if(!entry||typeof entry!=='object')return null;
+  const name=String(entry.name||'').trim();
+  const rewardStage=Array.isArray(eventStages)?eventStages.find(stage=>stage&&(stage.rewardCharacter===name||stage.eventReward===name)):null;
+  return {id,name,rarity:String(entry.rarity||'未設定'),specialReward:entry.specialReward===true,chapterReward:entry.chapterReward??null,eventReward:entry.eventReward??entry.rewardCharacter??null,rewardStage:rewardStage?.name||null,series:entry.series||null};
+ });
+ const idsAligned=roster.every((entry,id)=>!entry||entry.id===id);
+ const audit={phase:'final-runtime-roster',total:cards.length,latestId:cards.length-1,idsAligned,roster,id121:roster[121]||null};
+ window.KINOSHITA_CHARACTER_ROSTER=roster;
+ window.KINOSHITA_CHARACTER_ID_AUDIT=audit;
+ if(typeof CURRENT_CHARACTER_COUNT!=='undefined')CURRENT_CHARACTER_COUNT=cards.length;
+ return audit;
+}
+window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT=publishCharacterRosterAudit;
+publishCharacterRosterAudit();
 const tracked=new Set();let monitor=null,waveContext=false;
 function updateHp(e){const b=e?.el?.querySelector?.('.hp i');if(b)b.style.width=Math.max(0,Math.min(100,100*Number(e.hp||0)/Math.max(1,Number(e.maxhp||1))))+'%';const l=e?.el?.querySelector?.('.hpLabel');if(l)l.textContent=Math.ceil(Number(e.hp||0)).toLocaleString()+' / '+Math.ceil(Number(e.maxhp||0)).toLocaleString();}
 function baseStats(e){return e.hasturBaseStats||(e.hasturBaseStats={hp:Number(e.maxhp||e.hp||1),atk:Number(e.atk||1),range:Number(e.range||1),spd:Number(e.spd||1),interval:Number(e.interval||1)});}
