@@ -13,6 +13,10 @@ on:
       - 'hastur.js'
       - 'tests/zeus-stage.test.js'
       - 'tests/hastur-stage.test.js'
+      - 'tests/ai-roster-sync.test.js'
+      - 'scripts/export-character-roster.mjs'
+      - 'supabase/functions/ai-worker/index.ts'
+      - '.github/workflows/sync-character-roster.yml'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -30,6 +34,10 @@ on:
       - 'tests/formation-buff-summary.test.js'
       - 'tests/zeus-stage.test.js'
       - 'tests/hastur-stage.test.js'
+      - 'tests/ai-roster-sync.test.js'
+      - 'scripts/export-character-roster.mjs'
+      - 'supabase/functions/ai-worker/index.ts'
+      - '.github/workflows/sync-character-roster.yml'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
@@ -71,3 +79,4 @@ jobs:
           node tests/ice-wyvern.test.js
           node tests/zeus-stage.test.js
           node tests/hastur-stage.test.js
+          node tests/ai-roster-sync.test.js
