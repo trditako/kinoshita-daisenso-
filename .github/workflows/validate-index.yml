@@ -13,6 +13,10 @@ on:
       - 'hastur.js'
       - 'tests/zeus-stage.test.js'
       - 'tests/hastur-stage.test.js'
+      - 'tests/ai-roster-sync.test.js'
+      - 'scripts/export-character-roster.mjs'
+      - 'supabase/functions/ai-worker/index.ts'
+      - '.github/workflows/sync-character-roster.yml'
       - '.github/workflows/validate-index.yml'
   push:
     branches:
@@ -30,10 +34,14 @@ on:
       - 'tests/formation-buff-summary.test.js'
       - 'tests/zeus-stage.test.js'
       - 'tests/hastur-stage.test.js'
+      - 'tests/ai-roster-sync.test.js'
+      - 'scripts/export-character-roster.mjs'
+      - 'supabase/functions/ai-worker/index.ts'
+      - '.github/workflows/sync-character-roster.yml'
       - '.github/workflows/validate-index.yml'
 jobs:
   syntax:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,3 +79,10 @@ jobs:
           node tests/ice-wyvern.test.js
           node tests/zeus-stage.test.js
           node tests/hastur-stage.test.js
+          node tests/ai-roster-sync.test.js
+      - name: Install pinned Playwright for runtime roster verification
+        run: npm install --no-save playwright@1.56.1
+      - name: Install Chromium for runtime roster verification
+        run: npx playwright install --with-deps chromium
+      - name: Verify final runtime character roster export
+        run: node scripts/export-character-roster.mjs
