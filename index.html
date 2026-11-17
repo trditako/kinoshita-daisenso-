@@ -5510,7 +5510,7 @@ function globalRebalanceAbility(ability,limits,report,name,path){
  if(ability.slow&&typeof ability.slow==='object'){
   for(const key of ['chance','duration']){
    if(Number.isFinite(Number(ability.slow[key]))){
-    const cap=key==='chance'?.5:3.5,next=Math.min(Number(ability.slow[key]),cap);
+    const cap=key==='chance' ? 0.5 : 3.5,next=Math.min(Number(ability.slow[key]),cap);
     if(next!==ability.slow[key]){report.push({name,field:path+'.slow.'+key,before:ability.slow[key],after:next,reason:'妨害効果の過剰値を抑制'});ability.slow[key]=next;}
    }
   }
