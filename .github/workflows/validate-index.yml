@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'kwl.js'
       - 'genesis.js'
       - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
@@ -69,6 +70,7 @@ jobs:
           done
       - name: Check Genesis Kinoshita script and regression tests
         run: |
+          node --check kwl.js
           node --check genesis.js
           node --check hitman.js
           node --check zeus.js
