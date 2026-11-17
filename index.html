@@ -5538,6 +5538,7 @@ for(let balanceIndex=0;balanceIndex<cards.length;balanceIndex++){
  for(const key of ['hp','atk','range']){const before=old[key],after=Number(card[key]||0);if(before!==after)changes.push({field:key,before,after});}
  if(changes.length)GLOBAL_REBALANCE_REPORT.push({id:balanceIndex,name,rarity:rarity||'未設定',changes});
  const limits=GLOBAL_REBALANCE_EXCEPTIONS[name]||{};
+ globalRebalanceAbility(card,limits,GLOBAL_REBALANCE_REPORT,name,'root');
  globalRebalanceAbility(card.ability,limits,GLOBAL_REBALANCE_REPORT,name,'ability');
  if(Array.isArray(card.skills)){
   for(let si=0;si<card.skills.length;si++){
