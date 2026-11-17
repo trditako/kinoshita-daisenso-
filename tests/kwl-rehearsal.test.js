@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const kwl = fs.readFileSync('kwl.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
+const sw = fs.readFileSync('service-worker.js', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.79'/);
 assert.match(html, /<script src="\.\/kwl\.js\?v=20261118-local-rehearsal"><\/script>/);
