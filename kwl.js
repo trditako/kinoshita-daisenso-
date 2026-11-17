@@ -1,4 +1,6 @@
 (()=>{'use strict';
+// KWL local rehearsal: browser-only BO5 flow; no production RPC result writes.
+// Rehearsal result handling intentionally bypasses the regular reward-bearing result handler.
 if(window.__KWL_BOOTED)return;window.__KWL_BOOTED=true;
 const API='https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1';
 const KEY='sb_publishable_bofrXTgGnFd-s52JoE2OnQ_75sLT_Jg';
@@ -53,6 +55,7 @@ function render(){
  if(operator)html+='<section style="margin-top:12px;padding:12px;border:2px solid #f59e0b;border-radius:12px;background:#3f1d0b"><div style="font-weight:1000;color:#fde68a">🛠 大会運営専用・緊急管理</div><div style="font-size:12px;color:#fed7aa;margin:5px 0 9px">現在の状態：'+(tournament.status==='paused'?'緊急停止中':'稼働中（'+esc(tournament.status)+'）')+'</div>'+(tournament.status==='paused'?'<button id="kwlEmergencyResume" class="formationBtn" style="width:100%;background:#166534;color:#fff">▶ 大会を再開する</button>':'<input id="kwlPauseReason" maxlength="120" placeholder="停止理由（任意・120文字以内）" style="box-sizing:border-box;width:100%;padding:9px;border-radius:7px;margin-bottom:7px;color:#111"><button id="kwlEmergencyStop" class="formationBtn" style="width:100%;background:#b91c1c;color:#fff;border:1px solid #fecaca">⛔ 大会を緊急停止する</button>')+'<div style="font-size:11px;color:#fed7aa;margin-top:7px">停止しても大会データ・対戦表・確定済みの勝敗は削除されません。再開すると停止前の状態に戻ります。</div></section>';
 
  html+='<div style="margin-top:12px;padding:12px;background:#1e293b;border-radius:10px"><button id="kwlRulesToggle" class="formationBtn" style="width:100%">📖 大会ルール・日程を確認する ▼</button><div id="kwlRules" hidden style="padding:10px 2px 0;font-size:13px;line-height:1.8;color:#e2e8f0"><b style="color:#facc15">大会日程</b><br>エントリー開始：'+esc(date(tournament.entry_opens_at))+'<br>エントリー締切：'+esc(date(tournament.entry_closes_at))+'<br>組み合わせ抽選：'+esc(date(tournament.bracket_draw_at))+'<br>大会開始：'+esc(date(tournament.starts_at))+'<br><br><b style="color:#facc15">参加ルール</b><br>・参加上限は10チーム。<br>・登録選手は1チーム5〜10人。<br>・エントリー操作は同盟リーダーが行います。<br>・トーナメントはシングルエリミネーション方式。<br>・各カードはBO5（先に3勝したチームが勝利）。<br>・1シリーズ内で同じ選手は2回出場できません。<br>・同じチームがシリーズ中に使用したキャラクターは、チームメイトも再使用できません。<br>・試合結果と進行状況は大会記録に従います。</div></div>';
+ html+='<section style="margin-top:14px;padding:14px;border:2px solid #38bdf8;border-radius:12px;background:linear-gradient(130deg,#082f49,#172554)"><div style="font-size:11px;color:#7dd3fc;font-weight:900;letter-spacing:2px">LOCAL REHEARSAL / NO REWARDS</div><h2 style="font-size:19px;margin:4px 0 7px">🧪 無料・報酬なしのリハーサル</h2><p style="font-size:12px;color:#dbeafe;line-height:1.7;margin:4px 0 10px">リハーサル試合の登録・結果送信は本番KWLのデータベースに行わず、ブラウザ内だけで進行します。実際のバトルエンジンでBO5を行い、結果はこのタブ内だけに記録します。コイン・XP・報酬・ランキング・戦績は更新しません。</p><div style="font-size:12px;color:#bfdbfe;margin-bottom:8px">対戦：運営テストチーム VS テストAIチーム ／ 3勝先取（最大5試合）</div><button id="kwlStartRehearsal" class="formationBtn" style="width:100%;background:#0369a1;color:#fff;border:1px solid #7dd3fc">🧪 リハーサルを開始する</button><div style="font-size:10px;color:#bae6fd;margin-top:7px">ステージ：'+esc((typeof currentStage==='function'&&currentStage()?.name)||'日本編 第1章 1ステージ')+'（現在選択中のステージ）</div></section>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">エントリー</h2>';
  if(tournament.status==='paused'&&!mine)html+='<div style="padding:12px;border-radius:10px;background:#7f1d1d">大会は緊急停止中のため、新規エントリーを受け付けていません。</div>';
  else if(mine)html+='<div style="padding:12px;border-radius:10px;background:#14532d">✅ '+esc(mine.alliance_name)+' はエントリー済みです。登録選手：'+(mine.roster||[]).length+'人</div>';
@@ -71,7 +74,7 @@ function render(){
  html+='<div id="kwlMatchDetail" style="margin-top:12px"></div>';
  html+='<p style="font-size:12px;color:#cbd5e1;margin-top:18px">※大会の対戦はBO5。1カード内で同じ選手は再出場できません。各チーム5人以上の登録が必要です。</p>';
  c.innerHTML=html;
- const rulesToggle=c.querySelector('#kwlRulesToggle');if(rulesToggle)rulesToggle.onclick=()=>{const panel=c.querySelector('#kwlRules');panel.hidden=!panel.hidden;rulesToggle.textContent=panel.hidden?'📖 大会ルール・日程を確認する ▼':'📖 大会ルール・日程を閉じる ▲';};updateCountdown();const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;const stop=c.querySelector('#kwlEmergencyStop');if(stop)stop.onclick=()=>setTournamentPaused(true);const resume=c.querySelector('#kwlEmergencyResume');if(resume)resume.onclick=()=>setTournamentPaused(false);
+ const rulesToggle=c.querySelector('#kwlRulesToggle');if(rulesToggle)rulesToggle.onclick=()=>{const panel=c.querySelector('#kwlRules');panel.hidden=!panel.hidden;rulesToggle.textContent=panel.hidden?'📖 大会ルール・日程を確認する ▼':'📖 大会ルール・日程を閉じる ▲';};updateCountdown();const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;const rehearsal=c.querySelector('#kwlStartRehearsal');if(rehearsal)rehearsal.onclick=kwlRehearsalStart;const stop=c.querySelector('#kwlEmergencyStop');if(stop)stop.onclick=()=>setTournamentPaused(true);const resume=c.querySelector('#kwlEmergencyResume');if(resume)resume.onclick=()=>setTournamentPaused(false);
  c.querySelectorAll('[data-kwl-match]').forEach(x=>x.onclick=()=>loadMatchDetail(Number(x.dataset.kwlMatch)));
 }
 async function refreshBroadcast(){
@@ -129,9 +132,67 @@ function recordActiveSeries(localWin){const a=activeSeries();if(!a)return;const 
 function patchBattleHooks(){
  const restored=activeSeries();if(restored)try{window.KinoshitaEquipment?.useTournamentLoadout?.(restored.equipmentSnapshot||{})}catch(_){}
  if(typeof window.deploy==='function'&&!window.deploy.__kwlWrapped){const original=window.deploy;const wrapped=function(i){const a=activeSeries();if(!a||!(typeof pvpMode!=='undefined'&&pvpMode))return original.apply(this,arguments);const base=(typeof activeCard==='function'?activeCard(i):null)||(typeof cards!=='undefined'?cards[i]:null);if(!running||!hasCharacter(i)||!formation.includes(i)||money<base.cost||(rechargeLeft[i]||0)>0||(base.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))||(base.ability?.modeSwitch&&units.some(u=>u.hp>0&&u.ability?.modeSwitch)))return original.apply(this,arguments);const key=String(base?.name||'');if(!key)return original.apply(this,arguments);if((a.locked||[]).includes(key)){alert(key+' はこのBO5シリーズですでに使用済みです。');return;}rpc('kwl_lock_character',{p_match_id:a.matchId,p_game_number:a.gameNumber,p_team_id:a.teamId,p_player_id:a.playerId,p_player_type:a.playerType,p_character_key:key}).then(()=>{const next=activeSeries();if(!next||next.matchId!==a.matchId)return;next.locked=[...(next.locked||[]),key];setActiveSeries(next);original.call(this,i);}).catch(e=>alert('キャラクター使用を登録できません：'+e.message));};wrapped.__kwlWrapped=true;window.deploy=wrapped;}
- if(typeof window.showResult==='function'&&!window.showResult.__kwlWrapped){const original=window.showResult;const wrapped=function(win){const shouldRecord=!handlingRemoteFinish&&!!activeSeries()&&typeof pvpMode!=='undefined'&&pvpMode;const result=original.apply(this,arguments);if(shouldRecord)recordActiveSeries(!!win);return result;};wrapped.__kwlWrapped=true;window.showResult=wrapped;}
+ if(typeof window.showResult==='function'&&!window.showResult.__kwlWrapped){const original=window.showResult;const wrapped=function(win){if(window.__KWL_REHEARSAL_ACTIVE){kwlRehearsalFinish(!!win);return;}const shouldRecord=!handlingRemoteFinish&&!!activeSeries()&&typeof pvpMode!=='undefined'&&pvpMode;const result=original.apply(this,arguments);if(shouldRecord)recordActiveSeries(!!win);return result;};wrapped.__kwlWrapped=true;window.showResult=wrapped;}
  if(typeof window.pvpFinish==='function'&&!window.pvpFinish.__kwlWrapped){const original=window.pvpFinish;const wrapped=function(opponentWon){const shouldRecord=!!activeSeries();handlingRemoteFinish=true;const result=original.apply(this,arguments);handlingRemoteFinish=false;if(shouldRecord)recordActiveSeries(!opponentWon);return result;};wrapped.__kwlWrapped=true;window.pvpFinish=wrapped;}
  if(typeof window.pvpQuit==='function'&&!window.pvpQuit.__kwlWrapped){const original=window.pvpQuit;const wrapped=function(){const shouldRecord=!!activeSeries();const result=original.apply(this,arguments);if(shouldRecord)recordActiveSeries(false);return result;};wrapped.__kwlWrapped=true;window.pvpQuit=wrapped;}
+}
+
+const KWL_REHEARSAL_KEY='kwl-local-rehearsal-v1';
+let kwlRehearsalSaveOriginal=null,kwlRehearsalRankSyncOriginal=null,kwlRehearsalNextOriginal=null,kwlRehearsalBackOriginal=null;
+function kwlRehearsalState(){try{return JSON.parse(sessionStorage.getItem(KWL_REHEARSAL_KEY)||'null')}catch(_){return null}}
+function kwlRehearsalStore(v){try{sessionStorage.setItem(KWL_REHEARSAL_KEY,JSON.stringify(v))}catch(_){}}
+function kwlRehearsalSuppressPersistence(){
+ if(typeof window.save==='function'&&!kwlRehearsalSaveOriginal){kwlRehearsalSaveOriginal=window.save;window.save=function(){if(window.__KWL_REHEARSAL_ACTIVE)return;return kwlRehearsalSaveOriginal.apply(this,arguments);};}
+ if(typeof window.syncPlayerRanking==='function'&&!kwlRehearsalRankSyncOriginal){kwlRehearsalRankSyncOriginal=window.syncPlayerRanking;window.syncPlayerRanking=function(){if(window.__KWL_REHEARSAL_ACTIVE)return;return kwlRehearsalRankSyncOriginal.apply(this,arguments);};}
+}
+function kwlRehearsalRestorePersistence(){
+ if(kwlRehearsalSaveOriginal){window.save=kwlRehearsalSaveOriginal;kwlRehearsalSaveOriginal=null;}
+ if(kwlRehearsalRankSyncOriginal){window.syncPlayerRanking=kwlRehearsalRankSyncOriginal;kwlRehearsalRankSyncOriginal=null;}
+}
+function kwlRehearsalQuitButton(){
+ document.getElementById('kwlRehearsalQuit')?.remove();
+ const b=document.createElement('button');b.id='kwlRehearsalQuit';b.type='button';b.textContent='🧪 リハーサル終了';
+ b.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px;z-index:100000;background:#075985;color:#fff;border:2px solid #bae6fd;border-radius:10px;padding:10px;font-weight:900;box-shadow:0 2px 10px #0008';
+ b.onclick=kwlRehearsalExit;document.body.appendChild(b);
+}
+function kwlRehearsalStart(){
+ if(!confirm('無料のローカルリハーサルを開始します。通常の報酬・セーブ・ランキング更新は無効化されます。本番大会データは使用しません。'))return;
+ let mode=typeof selectedMode!=='undefined'?selectedMode:'japan',chapter=typeof selectedChapter!=='undefined'?Number(selectedChapter)||1:1,stage=typeof selectedStage!=='undefined'?Number(selectedStage)||1:1;
+ if(['pvp','daily','bossrush'].includes(mode)||typeof currentStage!=='function'||!currentStage()){mode='japan';chapter=1;stage=1;}
+ const stageName=String((typeof currentStage==='function'&&currentStage()?.name)||'日本編 第1章 1ステージ');
+ const state={active:true,game:1,team1Wins:0,team2Wins:0,history:[],mode,chapter,stage,stageName,previousMode:typeof selectedMode!=='undefined'?selectedMode:'japan',previousChapter:typeof selectedChapter!=='undefined'?selectedChapter:1,previousStage:typeof selectedStage!=='undefined'?selectedStage:1};
+ kwlRehearsalStore(state);window.__KWL_REHEARSAL_ACTIVE=true;kwlRehearsalSuppressPersistence();
+ selectedMode=mode;selectedChapter=chapter;selectedStage=stage;rankMode=false;pvpMode=false;
+ if(root)root.style.display='none';
+ try{startStage(stage);kwlRehearsalQuitButton();}
+ catch(e){console.error('KWL local rehearsal start failed',e);kwlRehearsalExit();alert('リハーサルを開始できませんでした：'+e.message);}
+}
+function kwlRehearsalFinish(win){
+ const s=kwlRehearsalState();if(!s?.active)return;
+ s.history.push({game:s.game,win:!!win});if(win)s.team1Wins++;else s.team2Wins++;
+ s.completed=s.team1Wins>=3||s.team2Wins>=3||s.game>=5;kwlRehearsalStore(s);
+ running=false;paused=false;rankMode=false;pvpMode=false;try{stopBGM();}catch(_){}
+ document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('start').style.display='none';
+ document.getElementById('rankLobby').style.display='none';document.getElementById('pvpLobby').style.display='none';document.getElementById('battlePauseBtn').style.display='';
+ const r=document.getElementById('result');r.style.setProperty('display','flex','important');r.style.setProperty('position','fixed','important');r.style.setProperty('inset','0','important');r.style.setProperty('z-index','99999','important');r.style.setProperty('pointer-events','auto','important');
+ document.getElementById('resultTitle').textContent=s.completed?'🧪 リハーサルシリーズ終了':'🧪 リハーサル第'+s.game+'試合終了';
+ document.getElementById('resultText').textContent=(win?'今回の試合：運営テストチームの勝利':'今回の試合：テストAIチームの勝利')+'\nBO5スコア：'+s.team1Wins+' - '+s.team2Wins+'\n試合数：'+s.game+' / 5\n\n報酬・コイン・XP・ランキング・プレイヤー戦績は一切更新していません。'+(s.completed?'\nシリーズ結果をローカルに記録しました。':'\n次の試合へ進めます。');
+ const next=document.getElementById('nextBtn'),back=document.getElementById('stageBack');
+ if(!kwlRehearsalNextOriginal)kwlRehearsalNextOriginal=next.onclick;if(!kwlRehearsalBackOriginal)kwlRehearsalBackOriginal=back.onclick;
+ next.style.display='inline-block';next.textContent=s.completed?'リハーサルを終了':'次の試合へ';next.onclick=()=>{if(s.completed){kwlRehearsalExit();return;}const n=kwlRehearsalState();n.game++;kwlRehearsalStore(n);r.style.display='none';try{startStage(n.stage);kwlRehearsalQuitButton();}catch(e){kwlRehearsalExit();alert('次の試合を開始できませんでした：'+e.message);}};
+ back.style.display='inline-block';back.textContent='リハーサル終了';back.onclick=kwlRehearsalExit;
+ document.getElementById('kwlRehearsalQuit')?.remove();
+}
+function kwlRehearsalExit(){
+ const s=kwlRehearsalState();window.__KWL_REHEARSAL_ACTIVE=false;running=false;paused=false;try{stopBGM();}catch(_){}
+ kwlRehearsalRestorePersistence();document.getElementById('kwlRehearsalQuit')?.remove();sessionStorage.removeItem(KWL_REHEARSAL_KEY);
+ if(s){selectedMode=s.previousMode;selectedChapter=s.previousChapter;selectedStage=s.previousStage;}
+ const r=document.getElementById('result');if(r)r.style.display='none';
+ const next=document.getElementById('nextBtn'),back=document.getElementById('stageBack');
+ if(next&&kwlRehearsalNextOriginal!==null){next.onclick=kwlRehearsalNextOriginal;kwlRehearsalNextOriginal=null;}
+ if(back&&kwlRehearsalBackOriginal!==null){back.onclick=kwlRehearsalBackOriginal;kwlRehearsalBackOriginal=null;}
+ document.getElementById('start').style.display='flex';if(typeof renderStageSelect==='function')renderStageSelect();if(typeof renderCards==='function')renderCards();
+ if(root)root.style.display='none';
 }
 
 async function setTournamentPaused(paused){
