@@ -20,3 +20,10 @@ assert.match(exporter,/window\.KINOSHITA_CHARACTER_ID_AUDIT/,'exporter validates
 assert.match(workflow,/playwright@1\.56\.1/,'browser dependency is pinned');
 assert.match(workflow,/git push origin main/,'generated manifest is published for the AI Worker');
 console.log('AI character roster sync tests passed.');
+
+assert.match(worker,/async function processKWLAIAutoEntries\(\)/,'AI alliance leaders automatically enter KWL during the registration window');
+assert.match(worker,/leader_type:'ai',roster/,'AI entries are stored as AI-led teams with a roster snapshot');
+assert.match(worker,/entry_opens_at/,'AI entries are restricted to the configured registration window');
+assert.match(worker,/const kwlAiEntries=await processKWLAIAutoEntries\(\)/,'AI alliance registration runs during every worker batch');
+assert.match(worker,/kwlAiEntries/,'AI entry count is returned and included in server status');
+console.log('KWL AI alliance auto-entry tests passed.');
