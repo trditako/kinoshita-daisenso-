@@ -26,6 +26,9 @@ try{
   await page.waitForFunction(()=>Array.isArray(window.KINOSHITA_CHARACTER_ROSTER)&&window.KINOSHITA_CHARACTER_ID_AUDIT?.phase==='final-runtime-roster',null,{timeout:15000});
   const audit=await page.evaluate(()=>window.KINOSHITA_CHARACTER_ID_AUDIT);
   if(!audit||!Array.isArray(audit.roster)||audit.total!==audit.roster.length||!audit.idsAligned)throw new Error('Runtime character roster audit is inconsistent');
+  const rebalanceAudit=await page.evaluate(()=>({processed:window.KINOSHITA_GLOBAL_REBALANCE_CARD_COUNT||0,report:Array.isArray(window.KINOSHITA_GLOBAL_REBALANCE_REPORT)?window.KINOSHITA_GLOBAL_REBALANCE_REPORT:[]}));
+  if(rebalanceAudit.processed!==audit.total)throw new Error('Global rebalance coverage mismatch: processed '+rebalanceAudit.processed+' of '+audit.total+' runtime cards');
+  console.log('Global rebalance coverage: '+rebalanceAudit.processed+'/'+audit.total+' runtime cards; stat-adjusted characters: '+new Set(rebalanceAudit.report.filter(x=>Array.isArray(x.changes)).map(x=>x.name)).size);
   if(audit.roster.some((c,i)=>!c||c.id!==i||!c.name))throw new Error('Character roster contains an unregistered or misaligned ID');
   const eventRewards=audit.roster.filter(c=>c.rewardStage).map(c=>({id:c.id,name:c.name,stageName:c.rewardStage}));
   const manifest={schemaVersion:1,sourceCommit:process.env.GITHUB_SHA||null,generatedAt:new Date().toISOString(),count:audit.total,characters:audit.roster,eventRewards};
