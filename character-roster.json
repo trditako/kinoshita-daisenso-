@@ -1,0 +1,1305 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "e27b5a786ef8ade810cae9f96a2b4c64eecf889f",
+  "generatedAt": "2026-11-17T17:52:45.563Z",
+  "count": 122,
+  "characters": [
+    {
+      "id": 0,
+      "name": "木下",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 1,
+      "name": "強化木下",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 2,
+      "name": "マッチョ木下",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 3,
+      "name": "木下（野球）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 4,
+      "name": "木下（覚醒）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 5,
+      "name": "木下（忍者）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 6,
+      "name": "木下（博士）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 7,
+      "name": "木下（ロボ）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 8,
+      "name": "木下（王）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 9,
+      "name": "木下（超覚醒）",
+      "rarity": "未設定",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": null
+    },
+    {
+      "id": 10,
+      "name": "森の守護木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "森の守護者"
+    },
+    {
+      "id": 11,
+      "name": "森の杖木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "森の守護者"
+    },
+    {
+      "id": 12,
+      "name": "森王木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "森の守護者"
+    },
+    {
+      "id": 13,
+      "name": "木下（電脳）",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "電脳木下隊"
+    },
+    {
+      "id": 14,
+      "name": "木下（ドローン）",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "電脳木下隊"
+    },
+    {
+      "id": 15,
+      "name": "木下（AI）",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "電脳木下隊"
+    },
+    {
+      "id": 16,
+      "name": "星読み木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "星空の木下団"
+    },
+    {
+      "id": 17,
+      "name": "流星木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "星空の木下団"
+    },
+    {
+      "id": 18,
+      "name": "星王木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "星空の木下団"
+    },
+    {
+      "id": 19,
+      "name": "狂乱の木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "狂乱の木下降臨",
+      "series": "狂乱の木下"
+    },
+    {
+      "id": 20,
+      "name": "突撃ハーランド木下",
+      "rarity": "SR",
+      "specialReward": true,
+      "chapterReward": 1,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "日本編 第1章クリア報酬"
+    },
+    {
+      "id": 21,
+      "name": "異常木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": 2,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "日本編 第2章クリア報酬"
+    },
+    {
+      "id": 22,
+      "name": "吉田",
+      "rarity": "SR",
+      "specialReward": true,
+      "chapterReward": 3,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "日本編 第3章クリア報酬"
+    },
+    {
+      "id": 23,
+      "name": "対無木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 24,
+      "name": "赤狩り木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 25,
+      "name": "黒追撃木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 26,
+      "name": "天使迎撃木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 27,
+      "name": "宇宙観測木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 28,
+      "name": "宇宙突破木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 29,
+      "name": "赤壁木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 30,
+      "name": "無敵壁木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 31,
+      "name": "黒速攻木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 32,
+      "name": "天使封殺木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 33,
+      "name": "宇宙砕き木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 34,
+      "name": "未来探査木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 35,
+      "name": "攻略隊長木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 36,
+      "name": "日本防衛木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 37,
+      "name": "日本制圧木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 38,
+      "name": "未来制圧木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 39,
+      "name": "四属性討伐木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 40,
+      "name": "銀河攻略木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 41,
+      "name": "最終攻略木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 42,
+      "name": "宇宙決戦木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "攻略特化隊"
+    },
+    {
+      "id": 43,
+      "name": "波動木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "波動木下降臨",
+      "rewardStage": "波動木下降臨",
+      "series": "波動木下降臨クリア報酬"
+    },
+    {
+      "id": 44,
+      "name": "ファイティング木下",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 45,
+      "name": "炎撃木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 46,
+      "name": "水帝木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 47,
+      "name": "大地木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 48,
+      "name": "疾風木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 49,
+      "name": "雷光木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 50,
+      "name": "木下&吉田",
+      "rarity": "LR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ランク1位限定"
+    },
+    {
+      "id": 51,
+      "name": "千年に一歩歩く木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "千年に一歩"
+    },
+    {
+      "id": 52,
+      "name": "ヤバすぎ木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "ヤバすぎ木下降臨",
+      "rewardStage": "ヤバすぎ木下降臨",
+      "series": "ヤバすぎ木下降臨クリア報酬"
+    },
+    {
+      "id": 53,
+      "name": "呪木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 54,
+      "name": "呪怨木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 55,
+      "name": "呪詛木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 56,
+      "name": "呪影木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 57,
+      "name": "呪王木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 58,
+      "name": "呪神木下",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 59,
+      "name": "パーフェクト木下",
+      "rarity": "LR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "パーフェクト木下降臨",
+      "rewardStage": "パーフェクト木下降臨",
+      "series": "パーフェクト木下降臨クリア報酬"
+    },
+    {
+      "id": 60,
+      "name": "前衛木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ランク戦小型隊"
+    },
+    {
+      "id": 61,
+      "name": "突撃木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ランク戦小型隊"
+    },
+    {
+      "id": 62,
+      "name": "連撃木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ランク戦小型隊"
+    },
+    {
+      "id": 63,
+      "name": "機甲前線木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 64,
+      "name": "電磁砲木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 65,
+      "name": "高速機動木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 66,
+      "name": "古代掃討砲木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 67,
+      "name": "超装甲木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 68,
+      "name": "機神木下",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "機械防衛隊！木下s"
+    },
+    {
+      "id": 69,
+      "name": "哲学の賢者ゾクラテス",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 70,
+      "name": "発明の賢者アルキメデェス",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 71,
+      "name": "星空の賢者ガリレオ・ガリレェン",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 72,
+      "name": "重力の賢者ニュトーン",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 73,
+      "name": "芸術の賢者レオナルド・ダ・ピンチ",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 74,
+      "name": "教えの賢者コウシィ",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "聖なる偉人達"
+    },
+    {
+      "id": 75,
+      "name": "フェニックス",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "フェニックス降臨",
+      "series": null
+    },
+    {
+      "id": 76,
+      "name": "パンプキン木下",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "👑 ジャック・オー・木下降臨",
+      "series": "ハロウィンナイト2026"
+    },
+    {
+      "id": 77,
+      "name": "ワイバーン",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "ワイバーン襲来",
+      "rewardStage": "ワイバーン襲来",
+      "series": null
+    },
+    {
+      "id": 78,
+      "name": "富豪木下",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "特別真髄"
+    },
+    {
+      "id": 79,
+      "name": "異次元木下",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "日替わり異次元戦線"
+    },
+    {
+      "id": 80,
+      "name": "アイヴィ",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "アイヴィ降臨",
+      "rewardStage": "アイヴィ降臨",
+      "series": null
+    },
+    {
+      "id": 81,
+      "name": "吉田（ハロウィン）",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ハロウィンナイト2026 第二弾"
+    },
+    {
+      "id": 82,
+      "name": "マッチョ木下（ハロウィン）",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ハロウィンナイト2026 第二弾"
+    },
+    {
+      "id": 83,
+      "name": "木下（野球・ハロウィン）",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ハロウィンナイト2026 第二弾"
+    },
+    {
+      "id": 84,
+      "name": "異常木下（ハロウィン）",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ハロウィンナイト2026 第二弾"
+    },
+    {
+      "id": 85,
+      "name": "木下（覚醒・ハロウィン）",
+      "rarity": "超激レア",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "ハロウィンナイト2026 第二弾"
+    },
+    {
+      "id": 86,
+      "name": "超越木下・天翔",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "超木下祭"
+    },
+    {
+      "id": 87,
+      "name": "超越木下・冥王",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "超木下祭"
+    },
+    {
+      "id": 88,
+      "name": "超越木下・時空王",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "超木下祭"
+    },
+    {
+      "id": 89,
+      "name": "超越木下・創世神",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "超木下祭"
+    },
+    {
+      "id": 90,
+      "name": "天使神:木下",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "超木下祭"
+    },
+    {
+      "id": 91,
+      "name": "駆け出しの木下",
+      "rarity": "レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 92,
+      "name": "白銀の疾走者",
+      "rarity": "激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 93,
+      "name": "荒野の狙撃手",
+      "rarity": "激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 94,
+      "name": "砂塵の機巧騎手",
+      "rarity": "激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 95,
+      "name": "大地の調教師",
+      "rarity": "超激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 96,
+      "name": "紅蓮の突撃騎手",
+      "rarity": "超激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 97,
+      "name": "時渡りの旅人",
+      "rarity": "超激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 98,
+      "name": "黄金の王道騎手",
+      "rarity": "超激レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 99,
+      "name": "黒嵐の競争者",
+      "rarity": "伝説レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 100,
+      "name": "KBRの覇者・木下",
+      "rarity": "伝説レア",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "Kinoshita Ball Run"
+    },
+    {
+      "id": 101,
+      "name": "狂乱の強化木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "狂乱の強化木下降臨",
+      "rewardStage": "狂乱の強化木下降臨",
+      "series": "狂乱シリーズ"
+    },
+    {
+      "id": 102,
+      "name": "覇風",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "エレメンタル木下s"
+    },
+    {
+      "id": 103,
+      "name": "MiraiK",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "特別真髄"
+    },
+    {
+      "id": 104,
+      "name": "狂乱のマッチョ木下",
+      "rarity": "SSR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "狂乱のマッチョ木下降臨",
+      "rewardStage": "狂乱のマッチョ木下降臨",
+      "series": "狂乱シリーズ"
+    },
+    {
+      "id": 105,
+      "name": "木下ガード",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 106,
+      "name": "木下ランナー",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 107,
+      "name": "木下スナイパー",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 108,
+      "name": "赤対策木下",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 109,
+      "name": "木下ブラスター",
+      "rarity": "R",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 110,
+      "name": "天使迎撃木下・改",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 111,
+      "name": "バリア割り木下",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 112,
+      "name": "木下ノックバック",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 113,
+      "name": "木下サポーター",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 114,
+      "name": "木下シールド隊長",
+      "rarity": "SR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "通常交換所・実用隊"
+    },
+    {
+      "id": 115,
+      "name": "ノヴァ木下",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "呪いの木下達"
+    },
+    {
+      "id": 116,
+      "name": "創世木下",
+      "rarity": "UR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "創世木下",
+      "rewardStage": "創世神話",
+      "series": "創世神話"
+    },
+    {
+      "id": 117,
+      "name": "創世討伐兵器・零式",
+      "rarity": "UR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "創世討伐兵器・零式",
+      "rewardStage": "創世討伐訓練",
+      "series": "創世神話"
+    },
+    {
+      "id": 118,
+      "name": "ヒットマン木下",
+      "rarity": "伝説レア",
+      "specialReward": true,
+      "chapterReward": 7,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "神話編全48ステージクリア報酬"
+    },
+    {
+      "id": 119,
+      "name": "アイスワイバーン",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "アイスワイバーン襲来",
+      "series": "ワイバーンシリーズ"
+    },
+    {
+      "id": 120,
+      "name": "最高神:ゼウス",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "最高神:ゼウス降臨",
+      "series": "最高神"
+    },
+    {
+      "id": 121,
+      "name": "最高神:ハスター",
+      "rarity": "UR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": "最高神:ハスター降臨",
+      "series": "最高神"
+    }
+  ],
+  "eventRewards": [
+    {
+      "id": 19,
+      "name": "狂乱の木下",
+      "stageName": "狂乱の木下降臨"
+    },
+    {
+      "id": 43,
+      "name": "波動木下",
+      "stageName": "波動木下降臨"
+    },
+    {
+      "id": 52,
+      "name": "ヤバすぎ木下",
+      "stageName": "ヤバすぎ木下降臨"
+    },
+    {
+      "id": 59,
+      "name": "パーフェクト木下",
+      "stageName": "パーフェクト木下降臨"
+    },
+    {
+      "id": 75,
+      "name": "フェニックス",
+      "stageName": "フェニックス降臨"
+    },
+    {
+      "id": 76,
+      "name": "パンプキン木下",
+      "stageName": "👑 ジャック・オー・木下降臨"
+    },
+    {
+      "id": 77,
+      "name": "ワイバーン",
+      "stageName": "ワイバーン襲来"
+    },
+    {
+      "id": 80,
+      "name": "アイヴィ",
+      "stageName": "アイヴィ降臨"
+    },
+    {
+      "id": 101,
+      "name": "狂乱の強化木下",
+      "stageName": "狂乱の強化木下降臨"
+    },
+    {
+      "id": 104,
+      "name": "狂乱のマッチョ木下",
+      "stageName": "狂乱のマッチョ木下降臨"
+    },
+    {
+      "id": 116,
+      "name": "創世木下",
+      "stageName": "創世神話"
+    },
+    {
+      "id": 117,
+      "name": "創世討伐兵器・零式",
+      "stageName": "創世討伐訓練"
+    },
+    {
+      "id": 119,
+      "name": "アイスワイバーン",
+      "stageName": "アイスワイバーン襲来"
+    },
+    {
+      "id": 120,
+      "name": "最高神:ゼウス",
+      "stageName": "最高神:ゼウス降臨"
+    },
+    {
+      "id": 121,
+      "name": "最高神:ハスター",
+      "stageName": "最高神:ハスター降臨"
+    }
+  ]
+}
