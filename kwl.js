@@ -44,13 +44,18 @@ function roundLabel(round,maxRound){const left=maxRound-Number(round);if(left===
 function render(){
  const c=root.querySelector('#kwlContent');if(!tournament){c.innerHTML='<p>大会データがまだ準備されていません。</p>';return;}
  const now=Date.now(),opens=new Date(tournament.entry_opens_at).getTime(),closes=new Date(tournament.entry_closes_at).getTime();
+ const operator=typeof playerRankingId!=='undefined'&&String(playerRankingId)==='cd19b245-1a70-45de-9bb7-967f6c568425';
  const alliance=(typeof myAlliance!=='undefined'?myAlliance:null);
  const mine=teams.find(t=>Number(t.alliance_id)===Number(alliance?.id));
  let html='<div style="padding:14px;border:1px solid #64748b;border-radius:14px;background:#0f172acc"><div style="font-size:12px;color:#facc15">第1回大会 日程</div><div style="font-size:20px;font-weight:1000;margin:5px 0">11/21（土）13:30 開幕</div><div style="font-size:13px;color:#cbd5e1">エントリー：11/17 00:00 ～ 11/19 23:59（日本時間）</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><span>参加 '+teams.length+'/10チーム</span><span>BO5</span><span>トーナメント方式</span></div></div>';
  html+='<div style="margin-top:10px;padding:12px;border:1px solid #f59e0b;border-radius:10px;background:#451a03"><div id="kwlCountdown" style="font-size:18px;font-weight:900;color:#fde68a">日程を確認中…</div><div style="font-size:11px;color:#fed7aa;margin-top:4px">すべて日本時間（JST）</div></div>';
+ if(tournament.status==='paused')html+='<div style="margin-top:10px;padding:12px;border:2px solid #ef4444;border-radius:10px;background:#450a0a;color:#fee2e2"><b>⛔ 大会は運営により緊急停止中です</b><div style="font-size:12px;margin-top:4px">大会の進行・出場登録・試合結果の確定を一時停止しています。再開までお待ちください。</div>'+(tournament.pause_reason?'<div style="font-size:12px;margin-top:5px">停止理由：'+esc(tournament.pause_reason)+'</div>':'')+'</div>';
+ if(operator)html+='<section style="margin-top:12px;padding:12px;border:2px solid #f59e0b;border-radius:12px;background:#3f1d0b"><div style="font-weight:1000;color:#fde68a">🛠 大会運営専用・緊急管理</div><div style="font-size:12px;color:#fed7aa;margin:5px 0 9px">現在の状態：'+(tournament.status==='paused'?'緊急停止中':'稼働中（'+esc(tournament.status)+'）')+'</div>'+(tournament.status==='paused'?'<button id="kwlEmergencyResume" class="formationBtn" style="width:100%;background:#166534;color:#fff">▶ 大会を再開する</button>':'<input id="kwlPauseReason" maxlength="120" placeholder="停止理由（任意・120文字以内）" style="box-sizing:border-box;width:100%;padding:9px;border-radius:7px;margin-bottom:7px;color:#111"><button id="kwlEmergencyStop" class="formationBtn" style="width:100%;background:#b91c1c;color:#fff;border:1px solid #fecaca">⛔ 大会を緊急停止する</button>')+'<div style="font-size:11px;color:#fed7aa;margin-top:7px">停止しても大会データ・対戦表・確定済みの勝敗は削除されません。再開すると停止前の状態に戻ります。</div></section>';
+
  html+='<div style="margin-top:12px;padding:12px;background:#1e293b;border-radius:10px"><button id="kwlRulesToggle" class="formationBtn" style="width:100%">📖 大会ルール・日程を確認する ▼</button><div id="kwlRules" hidden style="padding:10px 2px 0;font-size:13px;line-height:1.8;color:#e2e8f0"><b style="color:#facc15">大会日程</b><br>エントリー開始：'+esc(date(tournament.entry_opens_at))+'<br>エントリー締切：'+esc(date(tournament.entry_closes_at))+'<br>組み合わせ抽選：'+esc(date(tournament.bracket_draw_at))+'<br>大会開始：'+esc(date(tournament.starts_at))+'<br><br><b style="color:#facc15">参加ルール</b><br>・参加上限は10チーム。<br>・登録選手は1チーム5〜10人。<br>・エントリー操作は同盟リーダーが行います。<br>・トーナメントはシングルエリミネーション方式。<br>・各カードはBO5（先に3勝したチームが勝利）。<br>・1シリーズ内で同じ選手は2回出場できません。<br>・同じチームがシリーズ中に使用したキャラクターは、チームメイトも再使用できません。<br>・試合結果と進行状況は大会記録に従います。</div></div>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">エントリー</h2>';
- if(mine)html+='<div style="padding:12px;border-radius:10px;background:#14532d">✅ '+esc(mine.alliance_name)+' はエントリー済みです。登録選手：'+(mine.roster||[]).length+'人</div>';
+ if(tournament.status==='paused'&&!mine)html+='<div style="padding:12px;border-radius:10px;background:#7f1d1d">大会は緊急停止中のため、新規エントリーを受け付けていません。</div>';
+ else if(mine)html+='<div style="padding:12px;border-radius:10px;background:#14532d">✅ '+esc(mine.alliance_name)+' はエントリー済みです。登録選手：'+(mine.roster||[]).length+'人</div>';
  else if(!alliance)html+='<div style="padding:12px;border-radius:10px;background:#334155">大会に参加するには同盟への所属が必要です。同盟リーダーのみエントリーできます。</div>';
  else if(String(alliance.owner_id)!==String(playerRankingId))html+='<div style="padding:12px;border-radius:10px;background:#334155">エントリー操作は同盟リーダーのみ行えます。</div>';
  else if(now<opens)html+='<div style="padding:12px;border-radius:10px;background:#334155">エントリー開始までお待ちください。</div>';
@@ -61,12 +66,12 @@ function render(){
  html+=teams.length?teams.map((t,i)=>'<div style="padding:9px 11px;margin:5px 0;background:#1e293b;border-radius:8px;display:flex;justify-content:space-between;gap:8px"><b>'+(i+1)+'. '+esc(t.alliance_name)+'</b><span style="color:#cbd5e1;font-size:12px">'+(t.roster||[]).length+'選手</span></div>').join(''):'<div style="color:#cbd5e1">まだエントリーはありません。</div>';
  html+='<section style="margin-top:16px;padding:14px;border:1px solid #facc15;border-radius:14px;background:linear-gradient(120deg,#111827,#1e3a8a)"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div style="font-size:11px;color:#facc15;font-weight:900;letter-spacing:2px">KWL LIVE BROADCAST</div><h2 style="font-size:20px;margin:3px 0">📡 大会配信・観戦</h2></div><span style="font-size:11px;color:#bfdbfe">15秒ごとに更新</span></div><p style="font-size:12px;color:#cbd5e1;margin:4px 0 10px">全対戦カードのスコア、出場選手、キャラクター使用履歴、実況イベントを確認できます。</p><div id="kwlBroadcast"><div style="color:#cbd5e1">配信データを読み込み中…</div></div></section>';
  html+='<h2 style="font-size:18px;margin:18px 0 8px">トーナメント</h2>';
- if(typeof playerRankingId!=='undefined'&&String(playerRankingId)==='cd19b245-1a70-45de-9bb7-967f6c568425'&&Date.now()>=new Date(tournament.bracket_draw_at).getTime()&&!matches.length)html+='<button id="kwlDraw" class="formationBtn" style="background:#b45309;color:white">組み合わせ抽選を実行</button>';
+ if(typeof playerRankingId!=='undefined'&&String(playerRankingId)==='cd19b245-1a70-45de-9bb7-967f6c568425'&&tournament.status!=='paused'&&Date.now()>=new Date(tournament.bracket_draw_at).getTime()&&!matches.length)html+='<button id="kwlDraw" class="formationBtn" style="background:#b45309;color:white">組み合わせ抽選を実行</button>';
  if(matches.length){const maxRound=Math.max(...matches.map(m=>Number(m.round_number)||1)),grouped={};matches.forEach(m=>(grouped[m.round_number]||(grouped[m.round_number]=[])).push(m));html+='<div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;align-items:stretch">'+Object.keys(grouped).sort((a,b)=>Number(a)-Number(b)).map(r=>'<div style="min-width:220px;flex:1"><div style="font-weight:900;color:#facc15;margin:4px 0 8px">'+roundLabel(r,maxRound)+'</div>'+grouped[r].map(m=>'<button data-kwl-match="'+m.id+'" style="display:block;width:100%;text-align:left;padding:10px;margin:6px 0;background:#1e293b;color:#fff;border:1px solid '+(m.status==='completed'?'#22c55e':'#64748b')+';border-radius:8px"><b>試合 '+m.match_number+'</b><div style="font-size:12px;margin-top:7px;padding:5px;background:#0f172a;border-radius:5px">'+esc(teamName(m.team1_id))+'<br><b style="color:#facc15">'+Number(m.team1_wins||0)+' 勝</b></div><div style="font-size:12px;margin-top:4px;padding:5px;background:#0f172a;border-radius:5px">'+esc(teamName(m.team2_id))+'<br><b style="color:#facc15">'+Number(m.team2_wins||0)+' 勝</b></div><small style="color:#cbd5e1">'+esc(m.status)+'</small></button>').join('')+'</div>').join('')+'</div>';}else html+='<div style="color:#cbd5e1">抽選結果は11月20日に公開します。</div>';
  html+='<div id="kwlMatchDetail" style="margin-top:12px"></div>';
  html+='<p style="font-size:12px;color:#cbd5e1;margin-top:18px">※大会の対戦はBO5。1カード内で同じ選手は再出場できません。各チーム5人以上の登録が必要です。</p>';
  c.innerHTML=html;
- const rulesToggle=c.querySelector('#kwlRulesToggle');if(rulesToggle)rulesToggle.onclick=()=>{const panel=c.querySelector('#kwlRules');panel.hidden=!panel.hidden;rulesToggle.textContent=panel.hidden?'📖 大会ルール・日程を確認する ▼':'📖 大会ルール・日程を閉じる ▲';};updateCountdown();const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;
+ const rulesToggle=c.querySelector('#kwlRulesToggle');if(rulesToggle)rulesToggle.onclick=()=>{const panel=c.querySelector('#kwlRules');panel.hidden=!panel.hidden;rulesToggle.textContent=panel.hidden?'📖 大会ルール・日程を確認する ▼':'📖 大会ルール・日程を閉じる ▲';};updateCountdown();const btn=c.querySelector('#kwlRegister');if(btn)btn.onclick=register;const draw=c.querySelector('#kwlDraw');if(draw)draw.onclick=drawBracket;const stop=c.querySelector('#kwlEmergencyStop');if(stop)stop.onclick=()=>setTournamentPaused(true);const resume=c.querySelector('#kwlEmergencyResume');if(resume)resume.onclick=()=>setTournamentPaused(false);
  c.querySelectorAll('[data-kwl-match]').forEach(x=>x.onclick=()=>loadMatchDetail(Number(x.dataset.kwlMatch)));
 }
 async function refreshBroadcast(){
@@ -129,6 +134,17 @@ function patchBattleHooks(){
  if(typeof window.pvpQuit==='function'&&!window.pvpQuit.__kwlWrapped){const original=window.pvpQuit;const wrapped=function(){const shouldRecord=!!activeSeries();const result=original.apply(this,arguments);if(shouldRecord)recordActiveSeries(false);return result;};wrapped.__kwlWrapped=true;window.pvpQuit=wrapped;}
 }
 
+async function setTournamentPaused(paused){
+ const action=paused?'緊急停止':'再開';
+ const reason=paused?String(root?.querySelector('#kwlPauseReason')?.value||'').trim().slice(0,120):'';
+ if(!confirm(paused?'KWL大会を直ちに緊急停止します。出場登録と試合結果の確定を停止します。よろしいですか？':'KWL大会を停止前の状態に戻して再開します。よろしいですか？'))return;
+ const button=root?.querySelector(paused?'#kwlEmergencyStop':'#kwlEmergencyResume');if(button){button.disabled=true;button.textContent=paused?'停止処理中…':'再開処理中…';}
+ try{
+  await rpc('kwl_set_tournament_pause',{p_actor_id:String(playerRankingId),p_paused:!!paused,p_reason:reason});
+  await refresh();
+  alert('KWL大会を'+action+'しました。');
+ }catch(e){alert(action+'できませんでした：'+e.message);if(button){button.disabled=false;button.textContent=paused?'⛔ 大会を緊急停止する':'▶ 大会を再開する';}}
+}
 async function register(){
  const b=root.querySelector('#kwlRegister');if(!b)return;
  if(typeof playerRankingId==='undefined'||!playerRankingId||typeof myAlliance==='undefined'||!myAlliance)return alert('プレイヤー・同盟情報を確認できません。');
