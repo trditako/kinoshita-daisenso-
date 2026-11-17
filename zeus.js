@@ -581,3 +581,4 @@ if (typeof renderOwnedStart === 'function') renderOwnedStart();
 if (typeof renderFormation === 'function') renderFormation();
 if (typeof renderFormationBuffSummary === 'function') renderFormationBuffSummary();
 })();
+;try{if(typeof window!=='undefined'&&typeof window.KINOSHITA_APPLY_GLOBAL_REBALANCE==='function')window.KINOSHITA_APPLY_GLOBAL_REBALANCE();}catch(e){console.warn('Global character rebalance late-registration pass failed:',e);}
