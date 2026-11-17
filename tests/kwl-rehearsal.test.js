@@ -5,20 +5,20 @@ const kwl = fs.readFileSync('kwl.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.match(html, /GAME_VERSION='v1\\.9\\.79'/);
-assert.doesNotMatch(html, /<script src="\\.\\/kwl\\.js/, 'KWL is injected once by the service worker');
-assert.match(sw, /kinoshita-daisen-v110/);
-assert.match(sw, /kwl\\.js\\?v=20261118-local-rehearsal/);
-assert.match(sw, /equipment\\.js[\\s\\S]*kwl\\.js/, 'KWL loads after equipment');
-assert.match(kwl, /id="kwlStartRehearsal"/);
-assert.match(kwl, /function kwlRehearsalSuppressPersistence\\(\\)/);
-assert.match(kwl, /if\\(window\\.__KWL_REHEARSAL_ACTIVE\\)\\{kwlRehearsalFinish\\(!!win\\);return;\\}/);
-assert.match(kwl, /function kwlRehearsalExit\\(\\)/);
+assert.ok(html.includes("const GAME_VERSION='v1.9.79'"), 'game version updated');
+assert.ok(!html.includes('<script src="./kwl.js'), 'KWL is not injected twice by index');
+assert.ok(sw.includes('kinoshita-daisen-v110'), 'service worker cache is refreshed');
+assert.ok(sw.includes('kwl.js?v=20261118-local-rehearsal'), 'service worker loads the new KWL script');
+assert.ok(sw.indexOf('equipment.js') < sw.indexOf('kwl.js'), 'KWL loads after equipment');
+assert.ok(kwl.includes('id="kwlStartRehearsal"'), 'rehearsal button exists');
+assert.ok(kwl.includes('function kwlRehearsalSuppressPersistence()'), 'persistence suppression exists');
+assert.ok(kwl.includes('if(window.__KWL_REHEARSAL_ACTIVE){kwlRehearsalFinish(!!win);return;}'), 'result handler bypasses normal rewards');
+assert.ok(kwl.includes('function kwlRehearsalExit()'), 'rehearsal exit handler exists');
 
 const finishStart = kwl.indexOf('function kwlRehearsalFinish(win)');
 const finishEnd = kwl.indexOf('function kwlRehearsalExit()', finishStart);
 assert.ok(finishStart >= 0 && finishEnd > finishStart, 'rehearsal finish handler must exist');
 const finish = kwl.slice(finishStart, finishEnd);
-assert.doesNotMatch(finish, /rpc\\(|addStageXP\\(|syncPlayerRanking\\(/, 'rehearsal result handler must not submit results or grant rewards');
+assert.doesNotMatch(finish, /rpc\(|addStageXP\(|syncPlayerRanking\(/, 'rehearsal result handler must not submit results or grant rewards');
 
 console.log('KWL local rehearsal isolation checks passed');
