@@ -11,7 +11,8 @@ assert.ok(sw.includes('kinoshita-daisen-v110'), 'service worker cache is refresh
 assert.ok(sw.includes('kwl.js?v=20261118-local-rehearsal'), 'service worker loads the new KWL script');
 const injection = sw.slice(sw.indexOf('const inject='));
 assert.ok(injection.indexOf('equipment.js') < injection.indexOf('kwl.js'), 'KWL loads after equipment');
-assert.ok(kwl.includes('id="kwlStartRehearsal"'), 'rehearsal button exists');
+assert.ok(kwl.includes("if(operator)html+='<section") && kwl.includes('id="kwlStartRehearsal"'), 'rehearsal button is rendered only for the operator');
+assert.ok(kwl.includes('function kwlIsOperator()') && kwl.includes("if(!kwlIsOperator()){alert('リハーサルを開始できるのは運営アカウントのみです。');return;}"), 'rehearsal start handler independently enforces operator access');
 assert.ok(kwl.includes('function kwlRehearsalSuppressPersistence()'), 'persistence suppression exists');
 assert.ok(kwl.includes('if(window.__KWL_REHEARSAL_ACTIVE){kwlRehearsalFinish(!!win);return;}'), 'result handler bypasses normal rewards');
 assert.ok(kwl.includes('function kwlRehearsalExit()'), 'rehearsal exit handler exists');
