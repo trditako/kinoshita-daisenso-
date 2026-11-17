@@ -71,6 +71,7 @@ jobs:
       - name: Check Genesis Kinoshita script and regression tests
         run: |
           node --check kwl.js
+          node tests/kwl-rehearsal.test.js
           node --check genesis.js
           node --check hitman.js
           node --check zeus.js
