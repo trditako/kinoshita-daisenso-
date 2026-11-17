@@ -1,4 +1,5 @@
 (()=>{'use strict';
+// KWL local rehearsal: browser-only BO5 flow; no production RPC result writes.
 if(window.__KWL_BOOTED)return;window.__KWL_BOOTED=true;
 const API='https://jhohdvuoyvbzwjumnibc.supabase.co/rest/v1';
 const KEY='sb_publishable_bofrXTgGnFd-s52JoE2OnQ_75sLT_Jg';
