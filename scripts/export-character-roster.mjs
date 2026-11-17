@@ -29,6 +29,7 @@ try{
   const rebalanceAudit=await page.evaluate(()=>({processed:window.KINOSHITA_GLOBAL_REBALANCE_CARD_COUNT||0,report:Array.isArray(window.KINOSHITA_GLOBAL_REBALANCE_REPORT)?window.KINOSHITA_GLOBAL_REBALANCE_REPORT:[]}));
   if(rebalanceAudit.processed!==audit.total)throw new Error('Global rebalance coverage mismatch: processed '+rebalanceAudit.processed+' of '+audit.total+' runtime cards');
   console.log('Global rebalance coverage: '+rebalanceAudit.processed+'/'+audit.total+' runtime cards; stat-adjusted characters: '+new Set(rebalanceAudit.report.filter(x=>Array.isArray(x.changes)).map(x=>x.name)).size);
+  console.log('GLOBAL_REBALANCE_FULL_REPORT='+JSON.stringify(rebalanceAudit.report));
   if(audit.roster.some((c,i)=>!c||c.id!==i||!c.name))throw new Error('Character roster contains an unregistered or misaligned ID');
   const eventRewards=audit.roster.filter(c=>c.rewardStage).map(c=>({id:c.id,name:c.name,stageName:c.rewardStage}));
   const manifest={schemaVersion:1,sourceCommit:process.env.GITHUB_SHA||null,generatedAt:new Date().toISOString(),count:audit.total,characters:audit.roster,eventRewards};
