@@ -9,7 +9,8 @@ assert.ok(html.includes("const GAME_VERSION='v1.9.79'"), 'game version updated')
 assert.ok(!html.includes('<script src="./kwl.js'), 'KWL is not injected twice by index');
 assert.ok(sw.includes('kinoshita-daisen-v110'), 'service worker cache is refreshed');
 assert.ok(sw.includes('kwl.js?v=20261118-local-rehearsal'), 'service worker loads the new KWL script');
-assert.ok(sw.indexOf('equipment.js') < sw.indexOf('kwl.js'), 'KWL loads after equipment');
+const injection = sw.slice(sw.indexOf('const inject='));
+assert.ok(injection.indexOf('equipment.js') < injection.indexOf('kwl.js'), 'KWL loads after equipment');
 assert.ok(kwl.includes('id="kwlStartRehearsal"'), 'rehearsal button exists');
 assert.ok(kwl.includes('function kwlRehearsalSuppressPersistence()'), 'persistence suppression exists');
 assert.ok(kwl.includes('if(window.__KWL_REHEARSAL_ACTIVE){kwlRehearsalFinish(!!win);return;}'), 'result handler bypasses normal rewards');
