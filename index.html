@@ -5488,6 +5488,8 @@ const GLOBAL_REBALANCE_EXCEPTIONS = {
  '大富豪木下':{strongMax:3,resistMin:.55}
 };
 const GLOBAL_REBALANCE_REPORT=[];
+const GLOBAL_REBALANCE_PROCESSED=new WeakSet();
+let GLOBAL_REBALANCE_PROCESSED_COUNT=0;
 function globalRebalanceSoftCap(value,cap,ratio){
  const n=Number(value);
  if(!Number.isFinite(n)||n<=0)return value;
@@ -5523,9 +5525,13 @@ function globalRebalanceAbility(ability,limits,report,name,path){
   report.push({name,field:path+'.iceWyvern.mythDamageDealt',before,after:ability.iceWyvern.mythDamageDealt,reason:'対神話特効を調整'});
  }
 }
-for(let balanceIndex=0;balanceIndex<cards.length;balanceIndex++){
+function applyGlobalRebalanceToCards(){
+ for(let balanceIndex=0;balanceIndex<cards.length;balanceIndex++){
  const card=cards[balanceIndex];
- if(!card||typeof card!=='object'||!Number.isFinite(Number(card.hp))||!Number.isFinite(Number(card.atk)))continue;
+ if(!card||typeof card!=='object'||GLOBAL_REBALANCE_PROCESSED.has(card))continue;
+ GLOBAL_REBALANCE_PROCESSED.add(card);
+ GLOBAL_REBALANCE_PROCESSED_COUNT++;
+ if(!Number.isFinite(Number(card.hp))||!Number.isFinite(Number(card.atk)))continue;
  const name=String(card.name||('ID '+balanceIndex));
  const rarity=String(card.rarity||'');
  const caps=GLOBAL_REBALANCE_V1.rarityCaps[rarity]||GLOBAL_REBALANCE_V1.fallback;
@@ -5552,8 +5558,13 @@ for(let balanceIndex=0;balanceIndex<cards.length;balanceIndex++){
   }
  }
 }
-window.KINOSHITA_GLOBAL_REBALANCE_REPORT=GLOBAL_REBALANCE_REPORT;
-console.info('[Global Rebalance v1] adjusted characters:',new Set(GLOBAL_REBALANCE_REPORT.map(x=>x.name)).size,'changes:',GLOBAL_REBALANCE_REPORT.length);
+ window.KINOSHITA_GLOBAL_REBALANCE_REPORT=GLOBAL_REBALANCE_REPORT;
+ window.KINOSHITA_GLOBAL_REBALANCE_CARD_COUNT=GLOBAL_REBALANCE_PROCESSED_COUNT;
+ console.info('[Global Rebalance v1] processed cards:',GLOBAL_REBALANCE_PROCESSED_COUNT,'adjusted characters:',new Set(GLOBAL_REBALANCE_REPORT.filter(x=>Array.isArray(x.changes)).map(x=>x.name)).size,'changes:',GLOBAL_REBALANCE_REPORT.length);
+ return GLOBAL_REBALANCE_REPORT;
+}
+applyGlobalRebalanceToCards();
+window.KINOSHITA_APPLY_GLOBAL_REBALANCE=applyGlobalRebalanceToCards;
 // 既存ID・所持情報・編成配列は維持。
 CURRENT_CHARACTER_COUNT=cards.length;
 // 後から追加されたキャラクターにもレベル関連配列を必ず用意する。未定義・null（過去のNaN保存値）はLv.1へ安全に補正。
