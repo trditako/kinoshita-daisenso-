@@ -131,7 +131,7 @@ function pullEnemies(unit, radius, strength) {
   for (const enemy of inRadius(unit, radius, false)) {
     const dx = Number(unit.x || 0) - Number(enemy.x || 0);
     enemy.x = Number(enemy.x || 0) + dx * strength;
-    if (enemy.el) enemy.el.style.left = enemy.x + 'px';
+    if (enemy.el?.style) enemy.el.style.left = enemy.x + 'px';
   }
 }
 function windEffect(unit, size) {
