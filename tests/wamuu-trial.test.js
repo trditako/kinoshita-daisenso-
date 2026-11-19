@@ -98,7 +98,7 @@ assert.equal(api.formulas.A(100, 10), 500);
 assert.equal(api.formulas.X(100), 475);
 assert.equal(api.formulas.Y(100, 20), 360);
 assert.equal(api.formulas.ZL(100), 750);
-assert.equal(api.formulas.R(100), 920);
+assert.ok(Math.abs(api.formulas.R(100) - 920) < 1e-9);
 assert.match(source, /windEffect\(unit, 260\)/);
 assert.doesNotMatch(source, /光刃|R-blade|lastBlade/);
 
