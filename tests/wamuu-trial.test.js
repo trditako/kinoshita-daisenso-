@@ -95,10 +95,10 @@ assert.equal(runtime.window.WAMUU_OPERATOR_TRIAL_API.stats.indomitableThreshold,
 const api = runtime.window.WAMUU_OPERATOR_TRIAL_API;
 assert.equal(api.formulas.sandstorm(100), 45);
 assert.equal(api.formulas.A(100, 10), 500);
-assert.equal(api.formulas.X(100), 240);
+assert.equal(api.formulas.X(100), 475);
 assert.equal(api.formulas.Y(100, 20), 360);
-assert.equal(api.formulas.ZL(100), 300);
-assert.equal(api.formulas.R(100), 650);
+assert.equal(api.formulas.ZL(100), 750);
+assert.equal(api.formulas.R(100), 920);
 assert.match(source, /R-wind-wave/);
 assert.doesNotMatch(source, /光刃|R-blade|lastBlade/);
 
@@ -134,6 +134,6 @@ assert.equal(enemy.hp, 0, 'skill damage reduces enemy HP to zero');
 assert.equal(enemy.removed, true, 'dead enemy is passed to the normal removeEnemy routine');
 assert.equal(runtime.enemies.includes(enemy), false, 'dead enemy is removed from the active enemy list');
 
-assert.match(fs.readFileSync('service-worker.js', 'utf8'), /wamuu\.js\?v=20261120-operator-trial/);
+assert.match(fs.readFileSync('service-worker.js', 'utf8'), /wamuu\.js\?v=20261120-row-death-balance/);
 assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v112/);
 process.stdout.write('Wamuu operator-only trial, access gating, skills, formulas, cooldowns and ranked-mode exclusion passed.\n');
