@@ -100,7 +100,7 @@ assert.equal(api.cooldownMap(unit).X, 4.8);
 runtime.setClock(4800);
 assert.equal(api.canUse(unit, 'X'), true, 'X becomes ready after 3.8 seconds');
 assert.equal(api.activate(unit, 'A'), true);
-assert.equal(api.cooldownMap(unit).A, 21);
+assert.equal(api.cooldownMap(unit).A, 24.8);
 
 runtime.rankMode = true;
 runtime.window.deploy(api.id);
