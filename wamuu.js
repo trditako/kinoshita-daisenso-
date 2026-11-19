@@ -110,10 +110,11 @@ function damageEnemy(unit, enemy, damage, tag) {
   window.hit(enemy, Math.max(1, Math.round(Number(damage) || 1)), unit, { wamuuSkill: true, wamuuDamageTag: tag || 'skill' });
   if (Number(enemy.hp || 0) <= 0 && !enemy.wamuuRemoved) {
     enemy.wamuuRemoved = true;
-    if (typeof window.removeEnemy === 'function') window.removeEnemy(enemy);
-    else if (typeof removeEnemy === 'function') removeEnemy(enemy);
-    else {
-      const index = Array.isArray(enemies) ? enemies.indexOf(enemy) : -1;
+    const stillTracked = Array.isArray(enemies) && enemies.includes(enemy);
+    if (stillTracked && typeof window.removeEnemy === 'function') window.removeEnemy(enemy);
+    else if (stillTracked && typeof removeEnemy === 'function') removeEnemy(enemy);
+    else if (stillTracked) {
+      const index = enemies.indexOf(enemy);
       if (index >= 0) enemies.splice(index, 1);
       enemy.el?.remove?.();
     }
@@ -457,7 +458,7 @@ const timer = window.setInterval(tick, 100);
 window.WAMUU_OPERATOR_TRIAL_API = Object.freeze({
   id, stats: TRIAL_STATS, skills: SKILLS,
   formulas: Object.freeze({
-    sandstorm: (hp, shield, healed) => hp + shield + healed * 0.03,
+    sandstorm: atk => atk * 0.45,
     A: (hp, shield, healed) => hp + shield + healed * 0.01,
     X: atk => atk * 2.4,
     A: (atk, ticks = 10) => atk * 0.5 * ticks,
