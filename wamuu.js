@@ -48,8 +48,8 @@ const card = {
 };
 cards.push(card);
 const id = cards.length - 1;
-for (const [key, fallback] of [['charLevel', 1], ['charMaxLevel', 20], ['charForm', 1], ['normalEvolved', false], ['ownedFlags', false], ['rechargeLeft', 0]]) {
-  if (Array.isArray(globalThis[key])) while (globalThis[key].length < cards.length) globalThis[key].push(fallback);
+for (const [array, fallback] of [[charLevel, 1], [charMaxLevel, 20], [charForm, 1], [normalEvolved, false], [ownedFlags, false], [rechargeLeft, 0]]) {
+  if (Array.isArray(array)) while (array.length < cards.length) array.push(fallback);
 }
 if (Array.isArray(ownedFlags)) ownedFlags[id] = true;
 if (typeof CURRENT_CHARACTER_COUNT !== 'undefined') {
@@ -88,8 +88,8 @@ const updateShield = entity => {
     if (label && Number(entity.barrierMax || 0) > 0) label.textContent = '🛡 シールド ' + Math.ceil(Number(entity.barrier || 0)).toLocaleString() + ' / ' + Math.ceil(Number(entity.barrierMax)).toLocaleString();
   } catch (_) {}
 };
-const popup = (text, unit) => {
-  try { if (typeof mythicPopup === 'function') mythicPopup(text, unit); else if (typeof popup === 'function') popup(text, unit?.x || 0, 90); } catch (_) {}
+const showPopup = (text, unit) => {
+  try { if (typeof mythicPopup === 'function') mythicPopup(text, unit); else if (typeof window.popup === 'function') window.popup(text, unit?.x || 0, 90); } catch (_) {}
 };
 function heal(unit, hpAmount, shieldAmount) {
   if (!live(unit)) return;
@@ -191,23 +191,23 @@ function activate(unit, key) {
   const list = effectList(unit);
   if (key === 'X') {
     list.push({ key, started, lastRush1: -1, lastRush2: -1, lastStorm: -1, finisher: false });
-    windEffect(unit, 220); popup('🌪️ ワムウ X発動', unit);
+    windEffect(unit, 220); showPopup('🌪️ ワムウ X発動', unit);
   } else if (key === 'A') {
     list.push({ key, started, lastTick: -1 });
-    windEffect(unit, 180); popup('🌀 ワムウ A発動', unit);
+    windEffect(unit, 180); showPopup('🌀 ワムウ A発動', unit);
   } else if (key === 'Y') {
     list.push({ key, started, lastTick1: -1, lastTick2: -1 });
     setInvulnerable(unit, 3);
-    windEffect(unit, 200); popup('🛡️ ワムウ Y発動', unit);
+    windEffect(unit, 200); showPopup('🛡️ ワムウ Y発動', unit);
   } else if (key === 'ZL') {
     unit.wamuuZlDamageTaken = 0;
     list.push({ key, started, lastTick: -1, finished: false });
-    windEffect(unit, 200); popup('🌪️ ワムウ ZL発動', unit);
+    windEffect(unit, 200); showPopup('🌪️ ワムウ ZL発動', unit);
   } else if (key === 'R') {
     list.push({ key, started, lastBlade: -1, lastStorm: -1, pulled: false, finisher: false });
     setInvulnerable(unit, 10);
     unit.wamuuHealBlockUntil = Math.max(Number(unit.wamuuHealBlockUntil || 0), started + 10);
-    windEffect(unit, 260); popup('✨ ワムウ R発動', unit);
+    windEffect(unit, 260); showPopup('✨ ワムウ R発動', unit);
   }
   return true;
 }
@@ -303,7 +303,7 @@ function tick() {
   for (const unit of wamuuUnits()) {
     if (Number(unit.maxhp || 0) > 0 && unit.barrierMax == null) unit.barrierMax = Number(unit.maxhp) * 0.5;
     tickEffects(unit, time);
-    if (shieldOf(unit) <= 0 && time - lastShieldDrain >= 1) {
+    if (wamuuUnits().every(candidate => shieldOf(candidate) <= 0) && time - lastShieldDrain >= 1) {
       for (const enemy of enemiesAlive()) {
         if (Number(enemy.barrier || 0) > 0) {
           enemy.barrier = Math.max(0, Number(enemy.barrier) - 1000);
@@ -325,8 +325,9 @@ if (typeof originalHit === 'function') {
     let adjusted = Number(damage || 0);
     if (isWamuu) adjusted *= (1 - TRIAL_STATS.damageReduction);
     if (target?.isEnemy && Number(target.wamuuDamageTakenBonus || 0) > 0) adjusted *= 1 + Number(target.wamuuDamageTakenBonus || 0);
+    if (isWamuu && abilitySource?.wamuuDamageType === 'followup') adjusted *= 0.25;
     if (isWamuu && abilitySource?.wamuuDamageType === 'piercing') {
-      if (Number(target.wamuuPiercingNullUntil || 0) > time) return 0;
+      if (shieldOf(target) > 0 || Number(target.wamuuPiercingNullUntil || 0) > time) return 0;
       target.wamuuPiercingPendingUntil = time + 0.2;
     }
     const result = originalHit.call(this, target, adjusted, source, abilitySource);
@@ -363,7 +364,7 @@ if (typeof originalHit === 'function') {
         setTimeout(() => {
           if (live(target)) heal(target, target.maxhp * TRIAL_STATS.lifeReversalHeal, target.maxhp * TRIAL_STATS.lifeReversalHeal);
         }, 1000);
-        popup('🔄 生命反転！', target);
+        showPopup('🔄 生命反転！', target);
       }
       if (Number(target.hp || 0) >= Number(target.maxhp || 1) * TRIAL_STATS.indomitableThreshold) {
         const currentTime = now();
@@ -390,7 +391,7 @@ if (typeof originalDeploy === 'function') {
         unit.wamuuDamageWindowTotal = 0;
         unit.wamuuZlDamageTaken = 0;
         updateShield(unit);
-        popup('🌪️ ワムウ（運営試用版）出撃', unit);
+        showPopup('🌪️ ワムウ（運営試用版）出撃', unit);
       }
     }
     return result;
