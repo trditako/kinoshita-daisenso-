@@ -93,6 +93,8 @@ assert.equal(api.formulas.A(100, 50, 200), 152);
 assert.equal(api.formulas.X(100, 50), 102);
 assert.equal(api.formulas.Y(100, 50, 50), 6);
 assert.equal(api.formulas.R(100, 200), 90);
+assert.match(source, /R-wind-wave/);
+assert.doesNotMatch(source, /光刃|R-blade|lastBlade/);
 
 const unit = { name: 'ワムウ', hp: 1000000, maxhp: 1000000, isEnemy: false };
 assert.equal(api.canUse(unit, 'X'), true);
