@@ -330,13 +330,30 @@ if (typeof originalHit === 'function') {
       if (shieldOf(target) > 0 || Number(target.wamuuPiercingNullUntil || 0) > time) return 0;
       target.wamuuPiercingPendingUntil = time + 0.2;
     }
+    if (isWamuu) {
+      if (time - Number(target.wamuuDamageWindowStarted || 0) > 0.15) {
+        target.wamuuDamageWindowStarted = time;
+        target.wamuuDamageWindowTotal = 0;
+      }
+      const predictedHpDamage = Math.max(0, adjusted - beforeShield);
+      const threshold = Number(target.maxhp || 1) * TRIAL_STATS.lifeReversalRatio;
+      if (Number(target.wamuuDamageWindowTotal || 0) + predictedHpDamage >= threshold &&
+          time >= Number(target.wamuuLifeReversalReadyAt || 0)) {
+        target.wamuuLifeReversalReadyAt = time + 15;
+        setInvulnerable(target, 2);
+        heal(target, target.maxhp * TRIAL_STATS.lifeReversalHeal, target.maxhp * TRIAL_STATS.lifeReversalHeal);
+        setTimeout(() => {
+          if (live(target)) heal(target, target.maxhp * TRIAL_STATS.lifeReversalHeal, target.maxhp * TRIAL_STATS.lifeReversalHeal);
+        }, 1000);
+        showPopup('🔄 生命反転！', target);
+        return 0;
+      }
+    }
     const result = originalHit.call(this, target, adjusted, source, abilitySource);
     if (isWamuu) {
       const hpDamage = Math.max(0, beforeHp - Number(target.hp || 0));
       const shieldDamage = Math.max(0, beforeShield - shieldOf(target));
-      if (Number(target.wamuuZlDamageTaken || 0) >= 0 && effectList(target).some(effect => effect.key === 'ZL')) {
-        target.wamuuZlDamageTaken += hpDamage + shieldDamage;
-      }
+      if (effectList(target).some(effect => effect.key === 'ZL')) target.wamuuZlDamageTaken += hpDamage + shieldDamage;
       if (abilitySource?.wamuuDamageType === 'followup') {
         const followup = Math.max(0, Number(damage || 0));
         heal(target, followup * 0.35, followup * 0.35);
@@ -350,22 +367,7 @@ if (typeof originalHit === 'function') {
           if (live(target)) target.wamuuPiercingNullUntil = now() + 1;
         }, 200);
       }
-      const current = now();
-      if (current - Number(target.wamuuDamageWindowStarted || 0) > 0.15) {
-        target.wamuuDamageWindowStarted = current;
-        target.wamuuDamageWindowTotal = 0;
-      }
       target.wamuuDamageWindowTotal = Number(target.wamuuDamageWindowTotal || 0) + hpDamage;
-      if (target.wamuuDamageWindowTotal >= Number(target.maxhp || 1) * TRIAL_STATS.lifeReversalRatio &&
-          current >= Number(target.wamuuLifeReversalReadyAt || 0)) {
-        target.wamuuLifeReversalReadyAt = current + 15;
-        setInvulnerable(target, 2);
-        heal(target, target.maxhp * TRIAL_STATS.lifeReversalHeal, target.maxhp * TRIAL_STATS.lifeReversalHeal);
-        setTimeout(() => {
-          if (live(target)) heal(target, target.maxhp * TRIAL_STATS.lifeReversalHeal, target.maxhp * TRIAL_STATS.lifeReversalHeal);
-        }, 1000);
-        showPopup('🔄 生命反転！', target);
-      }
       if (Number(target.hp || 0) >= Number(target.maxhp || 1) * TRIAL_STATS.indomitableThreshold) {
         const currentTime = now();
         for (const key of Object.keys(target)) {
