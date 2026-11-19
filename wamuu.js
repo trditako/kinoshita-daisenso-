@@ -35,7 +35,7 @@ const card = {
       { name: 'A・引き寄せ', desc: '3秒間、周囲の敵を自身へ引き寄せ、0.1秒ごとに「敵HP＋敵シールド＋試合中の累計回復量の1%」の通常ダメージ。自身のHP・シールドも回復。再使用20秒。' },
       { name: 'Y・絶対防御', desc: '3秒間すべてのダメージを無効化し、0.3秒ごとに自身HP・シールド・敵シールド合計の3%を範囲ダメージ。発動6秒後に同じ効果を再発動。再使用22秒。' },
       { name: 'ZL・流法', desc: '3秒間、砂嵐を発生させながら高速前進。移動中に受けたダメージの合計を2倍にして範囲へ通常ダメージとして返し、自身のHPを回復。再使用26秒。' },
-      { name: 'R・究極奥義', desc: '3秒間の光刃攻撃中はAと同じ効果。5秒後に3秒間の砂嵐と引き寄せ、8秒後に「自身HP＋敵の累計回復量」の30%を通常ダメージ。10秒間無敵、敵HP回復を99%抑制。再使用31秒。' }
+      { name: 'R・究極奥義', desc: '最初の3秒間、前方へ風圧波を放ち、Aと同じ引き寄せ・連続ダメージ効果を発生。5秒後に3秒間の砂嵐と引き寄せ、8秒後に「自身HP＋敵の累計回復量」の30%を通常ダメージ。10秒間無敵、敵HP回復を99%抑制。再使用31秒。' }
     ]
   },
   skills: [
@@ -43,7 +43,7 @@ const card = {
     { name: 'A・引き寄せ', desc: '3秒間引き寄せと連続攻撃。CT20秒（発動時から計測）。' },
     { name: 'Y・絶対防御', desc: '無敵と範囲攻撃を2回発生。CT22秒（発動時から計測）。' },
     { name: 'ZL・流法', desc: '被ダメージを蓄積して2倍にして返す。CT26秒（発動時から計測）。' },
-    { name: 'R・究極奥義', desc: '光刃・砂嵐・引き寄せ・最終攻撃。CT31秒（発動時から計測）。' }
+    { name: 'R・究極奥義', desc: '前方への風圧波・砂嵐・引き寄せ・最終攻撃。CT31秒（発動時から計測）。' }
   ]
 };
 cards.push(card);
@@ -204,7 +204,7 @@ function activate(unit, key) {
     list.push({ key, started, lastTick: -1, finished: false });
     windEffect(unit, 200); showPopup('🌪️ ワムウ ZL発動', unit);
   } else if (key === 'R') {
-    list.push({ key, started, lastBlade: -1, lastStorm: -1, pulled: false, finisher: false });
+    list.push({ key, started, lastWave: -1, lastStorm: -1, pulled: false, finisher: false });
     setInvulnerable(unit, 10);
     unit.wamuuHealBlockUntil = Math.max(Number(unit.wamuuHealBlockUntil || 0), started + 10);
     windEffect(unit, 260); showPopup('✨ ワムウ R発動', unit);
@@ -259,9 +259,10 @@ function tickEffects(unit, time) {
         heal(unit, returned, 0);
       } else list.splice(i, 1);
     } else if (effect.key === 'R') {
-      if (elapsed < 3 && (effect.lastBlade < 0 || elapsed - effect.lastBlade >= 0.1)) {
-        effect.lastBlade = elapsed;
-        for (const enemy of inRadius(unit, 620, true)) damageEnemy(unit, enemy, unit.atk * 0.8, 'R-blade');
+      if (elapsed < 3 && (effect.lastWave < 0 || elapsed - effect.lastWave >= 0.1)) {
+        effect.lastWave = elapsed;
+        windEffect(unit, 260);
+        for (const enemy of inRadius(unit, 620, true)) damageEnemy(unit, enemy, unit.atk * 0.8, 'R-wind-wave');
         pullEnemies(unit, 620, 0.08); aTick(unit, 620);
       }
       if (elapsed >= 5 && elapsed < 8 && (effect.lastStorm < 0 || elapsed - effect.lastStorm >= 0.55)) {
