@@ -125,7 +125,7 @@ assert.equal(runtime.units.length, 0, 'trial character cannot be deployed in ran
 runtime.rankMode = false;
 runtime.window.deploy(api.id);
 assert.equal(runtime.units.length, 1, 'operator can deploy Wamuu in a normal battle');
-runtime.enemies.push({ hp: 100, maxhp: 100, isEnemy: true, x: 700, el: { remove() {} } });
+runtime.enemies.push({ hp: 100, maxhp: 100, isEnemy: true, x: 700, el: { style: {}, remove() {} } });
 const enemy = runtime.enemies[0];
 runtime.window.WAMUU_OPERATOR_TRIAL_API.activate(runtime.units[0], 'A');
 runtime.setClock(11900);
