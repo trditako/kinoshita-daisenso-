@@ -128,12 +128,12 @@ assert.equal(runtime.units.length, 1, 'operator can deploy Wamuu in a normal bat
 runtime.enemies.push({ hp: 100, maxhp: 100, isEnemy: true, x: 700, el: { remove() {} } });
 const enemy = runtime.enemies[0];
 runtime.window.WAMUU_OPERATOR_TRIAL_API.activate(runtime.units[0], 'A');
-runtime.setClock(12000);
+runtime.setClock(11900);
 runtime.intervals[0].fn();
 assert.equal(enemy.hp, 0, 'skill damage reduces enemy HP to zero');
 assert.equal(enemy.removed, true, 'dead enemy is passed to the normal removeEnemy routine');
 assert.equal(runtime.enemies.includes(enemy), false, 'dead enemy is removed from the active enemy list');
 
 assert.match(fs.readFileSync('service-worker.js', 'utf8'), /wamuu\.js\?v=20261120-operator-trial/);
-assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v111/);
+assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v112/);
 process.stdout.write('Wamuu operator-only trial, access gating, skills, formulas, cooldowns and ranked-mode exclusion passed.\n');
