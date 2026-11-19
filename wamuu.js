@@ -185,8 +185,8 @@ function sandstormTick(unit, radius) {
     enemy.wamuuDamageTakenBonus = Math.min(15, Number(enemy.wamuuDamageTakenBonus || 0) + 0.00001);
   }
 }
-function aTick(unit, radius) {
-  for (const enemy of inRadius(unit, radius || 520, false)) {
+function aTick(unit, radius, frontOnly = false) {
+  for (const enemy of inRadius(unit, radius || 520, frontOnly)) {
     damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 0.5, 'A');
   }
   heal(unit, Math.max(1, unit.maxhp * 0.0025), Math.max(1, unit.maxhp * 0.0025));
@@ -276,7 +276,7 @@ function tickEffects(unit, time) {
       if (elapsed < 3 && (effect.lastWave < 0 || elapsed - effect.lastWave >= 0.3)) {
         effect.lastWave = elapsed;
         windEffect(unit, 260);
-        pullEnemies(unit, 620, 0.08); aTick(unit, 620);
+        pullEnemies(unit, 620, 0.08); aTick(unit, 620, true);
       }
       if (elapsed >= 5 && elapsed < 8 && (effect.lastStorm < 0 || elapsed - effect.lastStorm >= 0.55)) {
         effect.lastStorm = elapsed; pullEnemies(unit, 650, 0.12); sandstormTick(unit, 650);
