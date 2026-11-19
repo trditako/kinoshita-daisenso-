@@ -12,6 +12,8 @@ on:
       - 'tests/ice-wyvern.test.js'
       - 'zeus.js'
       - 'hastur.js'
+      - 'wamuu.js'
+      - 'tests/wamuu-trial.test.js'
       - 'tests/zeus-stage.test.js'
       - 'tests/hastur-stage.test.js'
       - 'tests/ai-roster-sync.test.js'
@@ -76,6 +78,8 @@ jobs:
           node --check hitman.js
           node --check zeus.js
           node --check hastur.js
+          node --check wamuu.js
+          node tests/wamuu-trial.test.js
           node tests/genesis-kinoshita.test.js
           node tests/hitman-kinoshita.test.js
           node tests/formation-buff-summary.test.js
