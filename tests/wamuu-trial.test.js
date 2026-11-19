@@ -93,7 +93,7 @@ assert.equal(runtime.window.WAMUU_OPERATOR_TRIAL_API.stats.lifeReversalRatio, 0.
 assert.equal(runtime.window.WAMUU_OPERATOR_TRIAL_API.stats.indomitableThreshold, 0.35);
 
 const api = runtime.window.WAMUU_OPERATOR_TRIAL_API;
-assert.equal(api.formulas.sandstorm(100, 50, 200), 156);
+assert.equal(api.formulas.sandstorm(100), 45);
 assert.equal(api.formulas.A(100, 10), 500);
 assert.equal(api.formulas.X(100), 240);
 assert.equal(api.formulas.Y(100, 20), 360);
