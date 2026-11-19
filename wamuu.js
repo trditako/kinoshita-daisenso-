@@ -384,6 +384,10 @@ if (typeof originalHit === 'function') {
 const originalDeploy = window.deploy;
 if (typeof originalDeploy === 'function') {
   window.deploy = function(index) {
+    if (Number(index) === id && ((typeof rankMode !== 'undefined' && rankMode) || (typeof pvpMode !== 'undefined' && pvpMode))) {
+      showPopup('ワムウの運営試用版は通常バトルでのみ使用できます', null);
+      return;
+    }
     const result = originalDeploy.apply(this, arguments);
     if (Number(index) === id) {
       const unit = [...(Array.isArray(units) ? units : [])].reverse().find(candidate => candidate && candidate.cardIndex === id && !candidate.isEnemy);
