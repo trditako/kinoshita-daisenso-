@@ -8,17 +8,17 @@ window.__KINOSHITA_WAMUU_OPERATOR_TRIAL__ = true;
 
 const NAME = 'ワムウ'; // Operator-only prototype; tune after live trial battles.
 const TRIAL_STATS = Object.freeze({
-  hp: 1000000, atk: 35000, range: 300, spd: 0.75,
+  hp: 250000, atk: 22200, range: 300, spd: 0.75,
   interval: 1.2, cost: 1800, recharge: 60,
   lifeReversalRatio: 0.08, lifeReversalHeal: 0.045,
   indomitableThreshold: 0.35, damageReduction: 0.10
 });
 const SKILLS = Object.freeze({
-  X: { cooldown: 3.8, label: 'X・神砂嵐' },
+  X: { cooldown: 8, label: 'X・神砂嵐' },
   A: { cooldown: 20, label: 'A・引き寄せ' },
   Y: { cooldown: 22, label: 'Y・絶対防御' },
   ZL: { cooldown: 26, label: 'ZL・流法' },
-  R: { cooldown: 31, label: 'R・究極奥義' }
+  R: { cooldown: 45, label: 'R・究極奥義' }
 });
 const card = {
   id: cards.length, name: NAME, cost: TRIAL_STATS.cost,
@@ -31,19 +31,19 @@ const card = {
     name: '風の流法・究極生命体',
     desc: '通常ダメージ10%軽減。0.15秒以内に最大HPの8%以上の実HPダメージを受けると、2秒間すべてのダメージを無効化し、HP・シールドを最大HPの4.5%ずつ2回回復（再発動15秒）。HP35%以上で状態異常の残り時間を98%短縮。シールドの有無に応じて敵シールドへ干渉する。数値は運営試用版。',
     skills: [
-      { name: 'X・神砂嵐', desc: '前方突進を2段階で行い、広範囲に1.5秒間砂嵐を発生。2.8秒後、近くの敵に「敵HP＋敵シールド×4%」の通常ダメージ。再使用3.8秒。' },
-      { name: 'A・引き寄せ', desc: '3秒間、周囲の敵を自身へ引き寄せ、0.1秒ごとに「敵HP＋敵シールド＋試合中の累計回復量の1%」の通常ダメージ。自身のHP・シールドも回復。再使用20秒。' },
-      { name: 'Y・絶対防御', desc: '3秒間すべてのダメージを無効化し、0.3秒ごとに自身HP・シールド・敵シールド合計の3%を範囲ダメージ。発動6秒後に同じ効果を再発動。再使用22秒。' },
-      { name: 'ZL・流法', desc: '3秒間、砂嵐を発生させながら高速前進。移動中に受けたダメージの合計を2倍にして範囲へ通常ダメージとして返し、自身のHPを回復。再使用26秒。' },
-      { name: 'R・究極奥義', desc: '最初の3秒間、前方へ風圧波を放ち、Aと同じ引き寄せ・連続ダメージ効果を発生。5秒後に3秒間の砂嵐と引き寄せ、8秒後に「自身HP＋敵の累計回復量」の30%を通常ダメージ。10秒間無敵、敵HP回復を99%抑制。再使用31秒。' }
+      { name: 'X・神砂嵐', desc: '前方へ2段階で突進し、砂嵐を重ねる。攻撃はワムウの攻撃力を基準に調整。再使用8秒。' },
+      { name: 'A・引き寄せ', desc: '3秒間、周囲の敵を自身へ引き寄せ、0.3秒ごとに攻撃力の50%の範囲ダメージ。自身のHP・シールドを少量回復。再使用20秒。' },
+      { name: 'Y・絶対防御', desc: '3秒間ダメージを無効化し、0.3秒ごとに攻撃力の18%の範囲ダメージ。発動6秒後に同じ効果を再発動。再使用22秒。' },
+      { name: 'ZL・流法', desc: '3秒間、砂嵐を発生させながら高速前進。移動中に受けたダメージを蓄積し、攻撃力の3倍を上限に反撃して自身のHPを回復。再使用26秒。' },
+      { name: 'R・究極奥義', desc: '最初の3秒間、風圧波で引き寄せと攻撃力50%の連続ダメージ。5秒後に砂嵐、8秒後に攻撃力150%の範囲攻撃。6秒間無敵、敵HP回復を99%抑制。再使用45秒。' }
     ]
   },
   skills: [
-    { name: 'X・神砂嵐', desc: '突進2段階、砂嵐、2.8秒後の追加攻撃。CT3.8秒（発動時から計測）。' },
-    { name: 'A・引き寄せ', desc: '3秒間引き寄せと連続攻撃。CT20秒（発動時から計測）。' },
-    { name: 'Y・絶対防御', desc: '無敵と範囲攻撃を2回発生。CT22秒（発動時から計測）。' },
-    { name: 'ZL・流法', desc: '被ダメージを蓄積して2倍にして返す。CT26秒（発動時から計測）。' },
-    { name: 'R・究極奥義', desc: '前方への風圧波・砂嵐・引き寄せ・最終攻撃。CT31秒（発動時から計測）。' }
+    { name: 'X・神砂嵐', desc: '2段階突進と砂嵐、最後に攻撃力基準の追加攻撃。CT8秒。' },
+    { name: 'A・引き寄せ', desc: '3秒間引き寄せと攻撃力基準の連続攻撃。CT20秒。' },
+    { name: 'Y・絶対防御', desc: '無敵と攻撃力基準の範囲攻撃を2回発生。CT22秒。' },
+    { name: 'ZL・流法', desc: '被ダメージを蓄積し、攻撃力の3倍を上限に反撃。CT26秒。' },
+    { name: 'R・究極奥義', desc: '風圧波・砂嵐・引き寄せ・最終攻撃。CT45秒。' }
   ]
 };
 cards.push(card);
@@ -70,7 +70,7 @@ if (typeof renderCards === 'function') renderCards();
 const now = () => performance.now() / 1000;
 const live = unit => !!unit && Number(unit.hp) > 0;
 const wamuuUnits = () => (Array.isArray(units) ? units : []).filter(unit => live(unit) && !unit.isEnemy && unit.name === NAME);
-const enemiesAlive = () => (Array.isArray(enemies) ? enemies : []).filter(enemy => live(enemy));
+const enemiesAlive = () => (Array.isArray(enemies) ? enemies : []).filter(enemy => live(enemy) && !enemy.wamuuRemoved);
 const shieldOf = entity => Math.max(0, Number(entity?.barrier || entity?.mythBarrier || entity?.powerShield || 0));
 const healedOf = enemy => Math.max(0, Number(enemy?.wamuuCumulativeHealing || 0));
 const updateHp = entity => {
@@ -108,6 +108,17 @@ function damageEnemy(unit, enemy, damage, tag) {
   if (!live(unit) || !live(enemy) || typeof window.hit !== 'function') return 0;
   const before = Number(enemy.hp || 0);
   window.hit(enemy, Math.max(1, Math.round(Number(damage) || 1)), unit, { wamuuSkill: true, wamuuDamageTag: tag || 'skill' });
+  if (Number(enemy.hp || 0) <= 0 && !enemy.wamuuRemoved) {
+    enemy.wamuuRemoved = true;
+    const stillTracked = Array.isArray(enemies) && enemies.includes(enemy);
+    if (stillTracked && typeof window.removeEnemy === 'function') window.removeEnemy(enemy);
+    else if (stillTracked && typeof removeEnemy === 'function') removeEnemy(enemy);
+    else if (stillTracked) {
+      const index = enemies.indexOf(enemy);
+      if (index >= 0) enemies.splice(index, 1);
+      enemy.el?.remove?.();
+    }
+  }
   return Math.max(0, before - Number(enemy.hp || 0));
 }
 function inRadius(unit, radius, frontOnly) {
@@ -120,7 +131,7 @@ function pullEnemies(unit, radius, strength) {
   for (const enemy of inRadius(unit, radius, false)) {
     const dx = Number(unit.x || 0) - Number(enemy.x || 0);
     enemy.x = Number(enemy.x || 0) + dx * strength;
-    if (enemy.el) enemy.el.style.left = enemy.x + 'px';
+    if (enemy.el?.style) enemy.el.style.left = enemy.x + 'px';
   }
 }
 function windEffect(unit, size) {
@@ -161,27 +172,28 @@ function startCooldown(unit, key) {
   const map = cooldownMap(unit);
   map[key] = now() + SKILLS[key].cooldown;
 }
+function isTopRow(unit) {
+  return !!unit && Number(unit.cardIndex) === id && Array.isArray(formation) &&
+    formation.slice(0, 5).some(index => Number(index) === id);
+}
 function canUse(unit, key) {
-  return live(unit) && now() >= Number(cooldownMap(unit)[key] || 0);
+  return live(unit) && isTopRow(unit) && !!SKILLS[key] && now() >= Number(cooldownMap(unit)[key] || 0);
 }
 function sandstormTick(unit, radius) {
   for (const enemy of inRadius(unit, radius || 520, false)) {
-    const amount = Number(enemy.hp || 0) + shieldOf(enemy) + healedOf(enemy) * 0.03;
-    damageEnemy(unit, enemy, amount, 'sandstorm');
+    damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 0.45, 'sandstorm');
     enemy.wamuuDamageTakenBonus = Math.min(15, Number(enemy.wamuuDamageTakenBonus || 0) + 0.00001);
   }
 }
-function aTick(unit, radius) {
-  for (const enemy of inRadius(unit, radius || 520, false)) {
-    const amount = Number(enemy.hp || 0) + shieldOf(enemy) + healedOf(enemy) * 0.01;
-    damageEnemy(unit, enemy, amount, 'A');
+function aTick(unit, radius, frontOnly = false) {
+  for (const enemy of inRadius(unit, radius || 520, frontOnly)) {
+    damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 0.5, 'A');
   }
-  heal(unit, Math.max(1, unit.maxhp * 0.01), Math.max(1, unit.maxhp * 0.01));
+  heal(unit, Math.max(1, unit.maxhp * 0.0025), Math.max(1, unit.maxhp * 0.0025));
 }
 function yTick(unit) {
   for (const enemy of inRadius(unit, 520, false)) {
-    const amount = (Number(unit.hp || 0) + shieldOf(unit) + shieldOf(enemy)) * 0.03;
-    damageEnemy(unit, enemy, amount, 'Y');
+    damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 0.18, 'Y');
   }
 }
 function activate(unit, key) {
@@ -205,8 +217,8 @@ function activate(unit, key) {
     windEffect(unit, 200); showPopup('🌪️ ワムウ ZL発動', unit);
   } else if (key === 'R') {
     list.push({ key, started, lastWave: -1, lastStorm: -1, pulled: false, finisher: false });
-    setInvulnerable(unit, 10);
-    unit.wamuuHealBlockUntil = Math.max(Number(unit.wamuuHealBlockUntil || 0), started + 10);
+    setInvulnerable(unit, 6);
+    unit.wamuuHealBlockUntil = Math.max(Number(unit.wamuuHealBlockUntil || 0), started + 6);
     windEffect(unit, 260); showPopup('✨ ワムウ R発動', unit);
   }
   return true;
@@ -216,24 +228,26 @@ function tickEffects(unit, time) {
   for (let i = list.length - 1; i >= 0; i--) {
     const effect = list[i], elapsed = time - effect.started;
     if (effect.key === 'X') {
-      if (elapsed >= 0.3 && elapsed < 0.8 && (effect.lastRush1 < 0 || elapsed - effect.lastRush1 >= 0.1)) {
+      if (elapsed >= 0.3 && effect.lastRush1 < 0) {
         effect.lastRush1 = elapsed; unit.x = Math.max(120, Number(unit.x || 0) - 32);
-        for (const enemy of inRadius(unit, 420, true)) damageEnemy(unit, enemy, unit.atk * 1.4, 'X-rush-1');
+        windEffect(unit, 220);
+        for (const enemy of inRadius(unit, 420, true)) damageEnemy(unit, enemy, unit.atk * 1.0, 'X-rush-1');
       }
-      if (elapsed >= 0.8 && elapsed < 1.4 && (effect.lastRush2 < 0 || elapsed - effect.lastRush2 >= 0.1)) {
+      if (elapsed >= 0.8 && effect.lastRush2 < 0) {
         effect.lastRush2 = elapsed; unit.x = Math.max(120, Number(unit.x || 0) - 42);
-        for (const enemy of inRadius(unit, 680, true)) damageEnemy(unit, enemy, unit.atk * 2, 'X-rush-2');
+        windEffect(unit, 300);
+        for (const enemy of inRadius(unit, 680, true)) damageEnemy(unit, enemy, unit.atk * 1.4, 'X-rush-2');
       }
       if (elapsed >= 1.3 && elapsed < 2.8 && (effect.lastStorm < 0 || elapsed - effect.lastStorm >= 0.55)) {
         effect.lastStorm = elapsed; sandstormTick(unit, 600); pullEnemies(unit, 600, 0.08);
       }
       if (elapsed >= 2.8 && !effect.finisher) {
         effect.finisher = true;
-        for (const enemy of inRadius(unit, 600, false)) damageEnemy(unit, enemy, Number(enemy.hp || 0) + shieldOf(enemy) * 0.04, 'X-finisher');
+        for (const enemy of inRadius(unit, 600, false)) damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 1.0, 'X-finisher');
       }
       if (elapsed >= 3.2) list.splice(i, 1);
     } else if (effect.key === 'A') {
-      if (elapsed < 3 && (effect.lastTick < 0 || elapsed - effect.lastTick >= 0.1)) {
+      if (elapsed < 3 && (effect.lastTick < 0 || elapsed - effect.lastTick >= 0.3)) {
         effect.lastTick = elapsed; pullEnemies(unit, 650, 0.12); aTick(unit, 650);
       }
       if (elapsed >= 3) list.splice(i, 1);
@@ -254,16 +268,15 @@ function tickEffects(unit, time) {
         }
       } else if (!effect.finished) {
         effect.finished = true;
-        const returned = Math.max(1, Number(unit.wamuuZlDamageTaken || 0) * 2);
+        const returned = Math.min(Number(unit.atk || TRIAL_STATS.atk) * 3, Math.max(1, Number(unit.wamuuZlDamageTaken || 0) * 1.25));
         for (const enemy of inRadius(unit, 650, false)) damageEnemy(unit, enemy, returned, 'ZL-return');
-        heal(unit, returned, 0);
+        heal(unit, returned * 0.5, 0);
       } else list.splice(i, 1);
     } else if (effect.key === 'R') {
-      if (elapsed < 3 && (effect.lastWave < 0 || elapsed - effect.lastWave >= 0.1)) {
+      if (elapsed < 3 && (effect.lastWave < 0 || elapsed - effect.lastWave >= 0.3)) {
         effect.lastWave = elapsed;
         windEffect(unit, 260);
-        for (const enemy of inRadius(unit, 620, true)) damageEnemy(unit, enemy, unit.atk * 0.8, 'R-wind-wave');
-        pullEnemies(unit, 620, 0.08); aTick(unit, 620);
+        pullEnemies(unit, 620, 0.08); aTick(unit, 620, true);
       }
       if (elapsed >= 5 && elapsed < 8 && (effect.lastStorm < 0 || elapsed - effect.lastStorm >= 0.55)) {
         effect.lastStorm = elapsed; pullEnemies(unit, 650, 0.12); sandstormTick(unit, 650);
@@ -271,7 +284,7 @@ function tickEffects(unit, time) {
       if (elapsed >= 8 && !effect.finisher) {
         effect.finisher = true;
         for (const enemy of inRadius(unit, 700, false)) {
-          const amount = (Number(unit.hp || 0) + healedOf(enemy)) * 0.30;
+          const amount = Number(unit.atk || TRIAL_STATS.atk) * 1.5;
           damageEnemy(unit, enemy, amount, 'R-finisher');
         }
       }
@@ -421,21 +434,22 @@ if (typeof originalDeploy === 'function') {
 function ensureBattleState() {
   const unit = wamuuUnits()[0];
   const active = !!unit && typeof running !== 'undefined' && running;
-  panel.style.display = active ? 'flex' : 'none';
-  if (!active) return;
+  const topRow = active && isTopRow(unit);
+  panel.style.display = topRow ? 'flex' : 'none';
+  if (!topRow) return;
   for (const button of panel.querySelectorAll('[data-wamuu-skill]')) {
     const key = button.dataset.wamuuSkill;
     const left = Math.max(0, Number(cooldownMap(unit)[key] || 0) - now());
     button.disabled = left > 0;
     button.textContent = left > 0 ? key + ' ' + left.toFixed(1) + 's' : key;
-    button.title = SKILLS[key].label + ' / CT ' + SKILLS[key].cooldown + '秒';
+    button.title = SKILLS[key].label + ' / CT ' + SKILLS[key].cooldown + '秒 / 編成上段限定';
   }
 }
 function updateSkillPanel() { ensureBattleState(); }
 panel.querySelectorAll('[data-wamuu-skill]').forEach(button => {
   button.addEventListener('click', () => {
     const unit = wamuuUnits()[0];
-    if (!unit || typeof running === 'undefined' || !running) return;
+    if (!unit || typeof running === 'undefined' || !running || !isTopRow(unit)) return;
     activate(unit, button.dataset.wamuuSkill);
     updateSkillPanel();
   });
@@ -444,13 +458,14 @@ const timer = window.setInterval(tick, 100);
 window.WAMUU_OPERATOR_TRIAL_API = Object.freeze({
   id, stats: TRIAL_STATS, skills: SKILLS,
   formulas: Object.freeze({
-    sandstorm: (hp, shield, healed) => hp + shield + healed * 0.03,
-    A: (hp, shield, healed) => hp + shield + healed * 0.01,
-    X: (hp, shield) => hp + shield * 0.04,
-    Y: (selfHp, selfShield, enemyShield) => (selfHp + selfShield + enemyShield) * 0.03,
-    R: (selfHp, healed) => (selfHp + healed) * 0.30
+    sandstorm: atk => atk * 0.45,
+    X: (atk, sandstormTicks = 3) => atk * (1 + 1.4 + 0.45 * sandstormTicks + 1),
+    A: (atk, ticks = 10) => atk * 0.5 * ticks,
+    Y: (atk, ticks = 20) => atk * 0.18 * ticks,
+    ZL: (atk, sandstormTicks = 10) => atk * (0.45 * sandstormTicks + 3),
+    R: (atk, waveTicks = 10, stormTicks = 6) => atk * (0.5 * waveTicks + 0.45 * stormTicks + 1.5)
   }),
-  activate, canUse, cooldownMap, effectList,
+  activate, canUse, isTopRow, cooldownMap, effectList,
   dispose() { window.clearInterval(timer); panel.remove(); }
 });
 })();
