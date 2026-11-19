@@ -243,7 +243,7 @@ function tickEffects(unit, time) {
       }
       if (elapsed >= 2.8 && !effect.finisher) {
         effect.finisher = true;
-        for (const enemy of inRadius(unit, 600, false)) damageEnemy(unit, enemy, Number(enemy.hp || 0) + shieldOf(enemy) * 0.04, 'X-finisher');
+        for (const enemy of inRadius(unit, 600, false)) damageEnemy(unit, enemy, Number(unit.atk || TRIAL_STATS.atk) * 1.0, 'X-finisher');
       }
       if (elapsed >= 3.2) list.splice(i, 1);
     } else if (effect.key === 'A') {
@@ -459,12 +459,11 @@ window.WAMUU_OPERATOR_TRIAL_API = Object.freeze({
   id, stats: TRIAL_STATS, skills: SKILLS,
   formulas: Object.freeze({
     sandstorm: atk => atk * 0.45,
-    A: (hp, shield, healed) => hp + shield + healed * 0.01,
-    X: atk => atk * 2.4,
+    X: (atk, sandstormTicks = 3) => atk * (1 + 1.4 + 0.45 * sandstormTicks + 1),
     A: (atk, ticks = 10) => atk * 0.5 * ticks,
     Y: (atk, ticks = 20) => atk * 0.18 * ticks,
-    ZL: atk => atk * 3,
-    R: atk => atk * 6.5
+    ZL: (atk, sandstormTicks = 10) => atk * (0.45 * sandstormTicks + 3),
+    R: (atk, waveTicks = 10, stormTicks = 6) => atk * (0.5 * waveTicks + 0.45 * stormTicks + 1.5)
   }),
   activate, canUse, isTopRow, cooldownMap, effectList,
   dispose() { window.clearInterval(timer); panel.remove(); }
