@@ -34,6 +34,11 @@ function createRuntime(operator = true) {
       target.hp = Math.max(0, Number(target.hp || 0) - remaining);
       return remaining;
     },
+    removeEnemy(enemy) {
+      enemy.removed = true;
+      const index = runtimeContext.enemies.indexOf(enemy);
+      if (index >= 0) runtimeContext.enemies.splice(index, 1);
+    },
     deploy(index) {
       const c = runtimeContext.cards[index];
       runtimeContext.units.push({ ...c, hp: c.hp, maxhp: c.hp, barrier: 0, barrierMax: 0, x: 800, isEnemy: false, cardIndex: index });
@@ -81,30 +86,38 @@ assert.equal(runtime.cards.length, 1, 'operator receives one trial character');
 assert.equal(runtime.cards[0].name, 'ワムウ');
 assert.equal(runtime.cards[0].operatorOnly, true);
 assert.equal(runtime.ownedFlags[0], true, 'operator trial copy is granted automatically');
-assert.equal(runtime.cards[0].hp, 1000000);
-assert.equal(runtime.cards[0].atk, 35000);
+assert.equal(runtime.cards[0].hp, 250000);
+assert.equal(runtime.cards[0].atk, 22200);
 assert.equal(runtime.cards[0].skills.length, 5, 'five active skills are displayed separately');
 assert.equal(runtime.window.WAMUU_OPERATOR_TRIAL_API.stats.lifeReversalRatio, 0.08);
 assert.equal(runtime.window.WAMUU_OPERATOR_TRIAL_API.stats.indomitableThreshold, 0.35);
 
 const api = runtime.window.WAMUU_OPERATOR_TRIAL_API;
 assert.equal(api.formulas.sandstorm(100, 50, 200), 156);
-assert.equal(api.formulas.A(100, 50, 200), 152);
-assert.equal(api.formulas.X(100, 50), 102);
-assert.equal(api.formulas.Y(100, 50, 50), 6);
-assert.equal(api.formulas.R(100, 200), 90);
+assert.equal(api.formulas.A(100, 10), 500);
+assert.equal(api.formulas.X(100), 240);
+assert.equal(api.formulas.Y(100, 20), 360);
+assert.equal(api.formulas.ZL(100), 300);
+assert.equal(api.formulas.R(100), 650);
 assert.match(source, /R-wind-wave/);
 assert.doesNotMatch(source, /光刃|R-blade|lastBlade/);
 
-const unit = { name: 'ワムウ', hp: 1000000, maxhp: 1000000, isEnemy: false };
+const unit = { name: 'ワムウ', hp: 250000, maxhp: 250000, isEnemy: false, cardIndex: api.id, atk: 22200, x: 800 };
+runtime.formation.push(api.id);
+assert.equal(api.isTopRow(unit), true);
 assert.equal(api.canUse(unit, 'X'), true);
 assert.equal(api.activate(unit, 'X'), true);
 assert.equal(api.canUse(unit, 'X'), false, 'cooldown starts at activation');
-assert.equal(api.cooldownMap(unit).X, 4.8);
-runtime.setClock(4800);
-assert.equal(api.canUse(unit, 'X'), true, 'X becomes ready after 3.8 seconds');
+assert.equal(api.cooldownMap(unit).X, 9);
+runtime.setClock(9000);
+assert.equal(api.canUse(unit, 'X'), true, 'X becomes ready after 8 seconds');
 assert.equal(api.activate(unit, 'A'), true);
-assert.equal(api.cooldownMap(unit).A, 24.8);
+assert.equal(api.cooldownMap(unit).A, 29);
+runtime.formation = [1, 2, 3, 4, 5, api.id];
+assert.equal(api.isTopRow(unit), false, 'bottom-row Wamuu cannot use skills');
+assert.equal(api.canUse(unit, 'Y'), false, 'bottom-row skills are locked');
+assert.equal(api.activate(unit, 'Y'), false, 'bottom-row activation is rejected');
+runtime.formation = [api.id];
 
 runtime.rankMode = true;
 runtime.window.deploy(api.id);
@@ -112,6 +125,14 @@ assert.equal(runtime.units.length, 0, 'trial character cannot be deployed in ran
 runtime.rankMode = false;
 runtime.window.deploy(api.id);
 assert.equal(runtime.units.length, 1, 'operator can deploy Wamuu in a normal battle');
+runtime.enemies.push({ hp: 100, maxhp: 100, isEnemy: true, x: 700, el: { remove() {} } });
+const enemy = runtime.enemies[0];
+runtime.window.WAMUU_OPERATOR_TRIAL_API.activate(runtime.units[0], 'A');
+runtime.setClock(12000);
+runtime.intervals[0].fn();
+assert.equal(enemy.hp, 0, 'skill damage reduces enemy HP to zero');
+assert.equal(enemy.removed, true, 'dead enemy is passed to the normal removeEnemy routine');
+assert.equal(runtime.enemies.includes(enemy), false, 'dead enemy is removed from the active enemy list');
 
 assert.match(fs.readFileSync('service-worker.js', 'utf8'), /wamuu\.js\?v=20261120-operator-trial/);
 assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v111/);
