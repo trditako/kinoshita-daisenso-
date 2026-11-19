@@ -21,6 +21,7 @@ function createRuntime(operator = true) {
     querySelector() { return null; }
   });
   const panel = makeElement();
+  let runtimeContext = null;
   const window = {
     __KINOSHITA_WAMUU_OPERATOR_TRIAL__: false,
     hit(target, damage) {
@@ -34,8 +35,8 @@ function createRuntime(operator = true) {
       return remaining;
     },
     deploy(index) {
-      const c = cards[index];
-      units.push({ ...c, hp: c.hp, maxhp: c.hp, barrier: 0, barrierMax: 0, x: 800, isEnemy: false, cardIndex: index });
+      const c = runtimeContext.cards[index];
+      runtimeContext.units.push({ ...c, hp: c.hp, maxhp: c.hp, barrier: 0, barrierMax: 0, x: 800, isEnemy: false, cardIndex: index });
     },
     setInterval(fn, ms) { intervals.push({ fn, ms }); return intervals.length; },
     clearInterval() {}
@@ -65,6 +66,7 @@ function createRuntime(operator = true) {
     get buttons() { return buttons; },
     get elements() { return elements; }
   };
+  runtimeContext = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox, { filename: 'wamuu.js' });
   return sandbox;
