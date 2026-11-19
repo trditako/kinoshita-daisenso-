@@ -99,7 +99,7 @@ assert.equal(api.formulas.X(100), 475);
 assert.equal(api.formulas.Y(100, 20), 360);
 assert.equal(api.formulas.ZL(100), 750);
 assert.equal(api.formulas.R(100), 920);
-assert.match(source, /R-wind-wave/);
+assert.match(source, /windEffect\(unit, 260\)/);
 assert.doesNotMatch(source, /光刃|R-blade|lastBlade/);
 
 const unit = { name: 'ワムウ', hp: 250000, maxhp: 250000, isEnemy: false, cardIndex: api.id, atk: 22200, x: 800 };
