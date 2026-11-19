@@ -6,7 +6,7 @@ if (typeof cards === 'undefined' || typeof ownedFlags === 'undefined') return;
 if (cards.some(card => card && card.name === 'ワムウ')) return;
 window.__KINOSHITA_WAMUU_OPERATOR_TRIAL__ = true;
 
-const NAME = 'ワムウ';
+const NAME = 'ワムウ'; // Operator-only prototype; tune after live trial battles.
 const TRIAL_STATS = Object.freeze({
   hp: 1000000, atk: 35000, range: 300, spd: 0.75,
   interval: 1.2, cost: 1800, recharge: 60,
@@ -349,7 +349,21 @@ if (typeof originalHit === 'function') {
         return 0;
       }
     }
-    const result = originalHit.call(this, target, adjusted, source, abilitySource);
+    let protectedShieldBreakSource = null;
+    let savedBarrierBreak = null;
+    if (isWamuu && Number(target.hp || 0) >= Number(target.maxhp || 1) * TRIAL_STATS.indomitableThreshold) {
+      protectedShieldBreakSource = source?.ability?.barrierBreak ? source : (abilitySource?.ability?.barrierBreak ? abilitySource : null);
+      if (protectedShieldBreakSource) {
+        savedBarrierBreak = protectedShieldBreakSource.ability.barrierBreak;
+        protectedShieldBreakSource.ability.barrierBreak = false;
+      }
+    }
+    let result;
+    try {
+      result = originalHit.call(this, target, adjusted, source, abilitySource);
+    } finally {
+      if (protectedShieldBreakSource) protectedShieldBreakSource.ability.barrierBreak = savedBarrierBreak;
+    }
     if (isWamuu) {
       const hpDamage = Math.max(0, beforeHp - Number(target.hp || 0));
       const shieldDamage = Math.max(0, beforeShield - shieldOf(target));
