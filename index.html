@@ -2372,16 +2372,15 @@ function damageAgainst(u,target,baseAtk){
  return Math.max(1,Math.round(resolved.rawDamage*mult));
 }
 function miraiKLimitDamage(target,attacker,damage){
- const dealt=Math.max(0,Number(damage)||0);
- if(target?.name!=='MiraiK'||!attacker||dealt<=0)return dealt;
- const cap=Math.max(1,Math.round(Number(target.maxhp||1)*.25));
- if(dealt<=cap)return dealt;
  const now=KinoshitaBattleCore.now()/1000;
- attacker.attackDownUntil=Math.max(Number(attacker.attackDownUntil||0),now+7);
- attacker.attackDownFactor=Math.min(Number(attacker.attackDownFactor??1),.1);
- setStatusMark(attacker,'⚔️','攻撃力90%低下',7,'miraiKAttackDown');
- applyCurseStatus({ability:{curseChance:1,curseDuration:2}},attacker);
- return cap;
+ const result=KinoshitaBattleCore.resolveMiraiKIncomingDamage({target,attacker,damage,time:now,multipliersApplied:true});
+ if(result.capped){
+  attacker.attackDownUntil=Math.max(Number(attacker.attackDownUntil||0),result.attackDownUntil);
+  attacker.attackDownFactor=Math.min(Number(attacker.attackDownFactor??1),result.attackDownFactor);
+  setStatusMark(attacker,'⚔️','攻撃力90%低下',7,'miraiKAttackDown');
+  applyCurseStatus({ability:{curseChance:1,curseDuration:2}},attacker);
+ }
+ return result.damage;
 }
 function damageTakenBy(u,attacker){
  if(!u||!attacker)return 1;
