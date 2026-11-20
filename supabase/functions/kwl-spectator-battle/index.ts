@@ -136,8 +136,10 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
     attackDownUntil:attacker.attack_down_until,attackDownFactor:attacker.attack_down_factor,
     cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time ? .5 : 1}
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until}
+  const sealed=BattleCore.isAbilitySealed(normalizedAttacker,time)
+  if(sealed)normalizedAttacker.phoenixLowHpMultiplier=0
   return BattleCore.calculateAttackDamage({attacker:normalizedAttacker,target:normalizedTarget,
-    baseAttack:attacker.atk,time,ability:attacker.ability||{},random:rng,traitMultiplier}).damage
+    baseAttack:attacker.atk,time,ability:sealed?{}:(attacker.ability||{}),random:rng,traitMultiplier}).damage
 }
 
 function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void) {
@@ -178,9 +180,10 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
   const hit=(side:any,target:Unit,attacker:Unit,damage:number)=>{
     if(target.hp<=0)return
     const dealt=applyResolvedDamage(attacker,target,damage,time,rng,emit)
-    const a=attacker.ability||{}
+    const sealed=BattleCore.isAbilitySealed(attacker,time)
+    const a=sealed?{}:(attacker.ability||{})
     // A defeated unit cannot receive new status effects or knockback.
-    if(target.hp>0){
+    if(target.hp>0&&!sealed){
       const effects=BattleCore.resolveOnHitEffects({attacker,target,time,random:rng,knockbackDistance:45,guaranteedKnockbackDistance:48})
       target.slow_until=effects.slowUntil;target.slow_factor=effects.slowFactor;target.stop_until=effects.stopUntil
       target.cursed_until=effects.cursedUntil;target.attack_down_until=effects.attackDownUntil;target.attack_down_factor=effects.attackDownFactor
