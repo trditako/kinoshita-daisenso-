@@ -23,6 +23,9 @@ assert.match(indexHtml,/KinoshitaBattleCore\.now\(\)/,'game combat uses shared b
 assert.match(serverBattle,/import '\.\.\/\.\.\/\.\.\/battle-core\.js'/,'server replay imports the same battle core');
 assert.match(serverBattle,/BattleCore\.createRng\(seedText\)/,'server replay uses shared seeded RNG');
 assert.match(serverBattle,/BattleCore\.createClock\(0\)/,'server replay uses shared battle clock');
+assert.match(serverBattle,/BattleCore\.matchesTrait\(target,rule\)/,'server and browser share trait matching');
+assert.match(serverBattle,/BattleCore\.traitMultiplier\(table,target,mode\)/,'server and browser share trait multipliers');
+assert.match(serverBattle,/traitMultiplier\(a\.resist,attacker,'min'\)/,'server applies the same resistance factor as the game');
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
 assert.match(kwl,/kwl_set_match_phase/);
