@@ -180,7 +180,7 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
     target.zeusDefenseStacks=Math.min(15,num(target.zeusDefenseStacks)+1)
     if(shieldDamage>0&&attacker.hp>0&&!flags.zeusReflection){
       applyResolvedDamage(target,attacker,Math.max(1,Math.round(shieldDamage*.1)),time,rng,emit,{zeusReflection:true})
-      attacker.stop_until=Math.max(num(attacker.stop_until),time+1)
+      if(!attacker.stopImmune&&!attacker.ability?.stopImmune)attacker.stop_until=Math.max(num(attacker.stop_until),time+1)
       if(attacker.zeus_range_base==null)attacker.zeus_range_base=attacker.range
       attacker.range=Math.max(1,num(attacker.zeus_range_base)*.2)
       attacker.zeus_range_until=time+3
@@ -390,6 +390,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       const other=sides.find((x:any)=>x.key!==side.key)
       for(const u of side.units) {
         if(u.hp<=0)continue
+        if(u.zeus_range_until&&time>=num(u.zeus_range_until)){u.range=Math.max(1,num(u.zeus_range_base,u.range));u.zeus_range_base=null;u.zeus_range_until=0}
         if(u.isFlying&&u.ability?.iceWyvern){
           u.state='fly';u.x=BattleCore.advancePosition({x:u.x,speed:u.spd,dt:STEP,direction:side.key==='team1'?-1:1,minX:side.key==='team1'?120:undefined,maxX:side.key==='team2'?WORLD_WIDTH-96:undefined});continue
         }
