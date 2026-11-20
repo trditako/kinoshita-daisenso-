@@ -139,6 +139,17 @@
       (Number(e.abilitySealedUntil??e.ability_sealed_until)>now)||
       (Number(e.cursedUntil??e.cursed_until)>now));
   }
+  function resolveIceWyvernIncomingDamage(options){
+    const o=options||{},attacker=o.attacker||{},target=o.target||{},ice=target.ability?.iceWyvern;
+    let damage=Math.max(0,Number(o.damage)||0);
+    const mythologyAttacker=!!ice&&matchesTrait(attacker,'神話');
+    if(!ice)return {damage,mythologyAttacker:false,capped:false};
+    if(mythologyAttacker)damage*=Number(ice.mythDamageTaken??.05);
+    const capRatio=Math.max(0,Number(ice.damageCap??.15));
+    const cap=capRatio>0?Math.max(1,Number(target.maxhp??target.max_hp??1)*capRatio):Infinity;
+    const adjusted=Math.min(damage,cap);
+    return {damage:adjusted,mythologyAttacker,capped:adjusted<damage};
+  }
   function resolveOnHitEffects(options){
     const o=options||{},attacker=o.attacker||{},target=o.target||{},ability=o.ability||attacker.ability||{};
     const random=typeof o.random==='function'?o.random:Math.random;
@@ -148,7 +159,7 @@
       attackDownUntil:Number(target.attackDownUntil??target.attack_down_until)||0,
       attackDownFactor:Number(target.attackDownFactor??target.attack_down_factor)||1,
       knockback:0,effects:[]};
-    if(isAbilitySealed(attacker,time))return state;
+    if(isAbilitySealed(attacker,time)||matchesTrait(attacker,'神話')&&target.ability?.iceWyvern)return state;
     const immune=(...keys)=>keys.some(key=>typeof o.hasAbilityFlag==='function'?o.hasAbilityFlag(target,key):!!(target[key]||target.ability?.[key]));
     const eligible=(rule)=>!rule||matchesTrait(target,rule);
     if(ability.slow&&!ability.slow.all&&!immune('slowImmune','slowImmunity')&&eligible(ability.slow.trait||'*')&&random()<Number(ability.slow.chance||0)){
@@ -199,6 +210,7 @@
     calculateDamageTaken,
     resolveDamage,
     resolveOnHitEffects,
+    resolveIceWyvernIncomingDamage,
     isAbilitySealed,
     selectTarget,
     createClock,
