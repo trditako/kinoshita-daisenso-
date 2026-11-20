@@ -19,9 +19,10 @@ begin
   if coalesce(phase_data->>'phase','')<>'draft' then
     raise exception '編成を保存できるのは選手選択・編成時間だけです';
   end if;
-  if jsonb_typeof(p_formation_snapshot)<>'array'
-     or jsonb_array_length(p_formation_snapshot)<1
-     or jsonb_array_length(p_formation_snapshot)>10 then
+  if jsonb_typeof(p_formation_snapshot) is distinct from 'array' then
+    raise exception '編成データは配列で指定してください';
+  end if;
+  if jsonb_array_length(p_formation_snapshot)<1 or jsonb_array_length(p_formation_snapshot)>10 then
     raise exception '編成は1〜10体で登録してください';
   end if;
   if exists(
