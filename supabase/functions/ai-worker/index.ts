@@ -584,7 +584,7 @@ async function processKWLAIAutoMatches(tick:number){
   if(teamError){if(!schemaNotReady(teamError))console.warn('KWL AI team lookup failed:',teamError.message);continue;}
   const teamById=new Map<number,any>();for(const t of arr<any>(teams))teamById.set(Number(t.id),t);
   const {data:matches,error:matchError}=await db.from('kwl_matches')
-   .select('id,team1_id,team2_id,status').eq('tournament_key',tour.tournament_key)
+   .select('id,team1_id,team2_id,status,live_state').eq('tournament_key',tour.tournament_key)
    .in('status',['ready','live']).order('round_number',{ascending:true}).order('match_number',{ascending:true});
   if(matchError){if(!schemaNotReady(matchError))console.warn('KWL AI match lookup failed:',matchError.message);continue;}
   for(const match of arr<any>(matches)){
@@ -624,6 +624,15 @@ async function processKWLAIAutoMatches(tick:number){
     const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
     const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
     if(!sideA||!sideB)continue;
+    const currentPhase=String(obj(match.live_state).presentation?.phase||'');
+    if(currentPhase!=='live'){
+     if(currentPhase!=='draft')continue;
+     const {error:phaseError}=await db.rpc('kwl_set_match_phase',{
+      p_match_id:Number(match.id),p_actor_id:'cd19b245-1a70-45de-9bb7-967f6c568425',
+      p_phase:'live',p_game_number:gameNo
+     });
+     if(phaseError){if(!schemaNotReady(phaseError))console.warn('KWL AI match phase advance deferred:',phaseError.message);continue;}
+    }
     const accountId=(id:any)=>{const m=String(id||'').match(/^AI-(\d{1,4})$/);return m?Number(m[1]):0;};
     const idA=accountId(sideA.player_id),idB=accountId(sideB.player_id);
     if(!idA||!idB)continue;
