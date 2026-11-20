@@ -10,6 +10,10 @@ assert.equal(typeof core.calculateDamageTaken,'function','shared damage mitigati
 assert.equal(core.scaleLevelStat(100,1),100);
 assert.equal(core.scaleLevelStat(100,2),104);
 assert.equal(core.scaleLevelStat(100,3,1),100,'non-growing stats stay constant across levels');
+assert.equal(core.advancePosition({x:500,speed:2,dt:.1,direction:-1}),488,'shared movement advances allied units toward the opposing side');
+assert.equal(core.advancePosition({x:500,speed:2,dt:.1,direction:1,slowFactor:.5,curseFactor:.5}),497,'shared movement applies slow and curse factors');
+assert.equal(core.advancePosition({x:500,speed:2,dt:.1,direction:-1,stopped:true}),500,'stopped units do not move');
+assert.equal(core.advancePosition({x:125,speed:2,dt:.1,direction:-1,minX:120}),120,'movement respects the field boundary');
 assert.deepEqual(core.traits('赤・黒,浮'),['赤','黒','浮']);
 assert.equal(core.hasTrait({trait:'赤・黒'},'黒'),true);
 assert.equal(core.hasTrait({trait:'赤・黒'},'天使'),false);
