@@ -24,7 +24,6 @@ type Unit = {
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const AI_TOKEN = Deno.env.get('AI_WORKER_TOKEN') || ''
-const OPERATOR_REPORTER = 'KWL-AI-WORKER'
 const ENGINE_VERSION = 'kwl-server-replay-v1'
 const CARDS = JSON.parse(await Deno.readTextFile(new URL('./character-data.json', import.meta.url))) as Card[]
 const WORLD_WIDTH = 1900
@@ -113,23 +112,17 @@ function aiFormation(ai: AIAccount, banned: Set<number>) {
   if (!form.length) form = [0]
   return form.slice(0,10)
 }
-function applyFormation(side: any) {
+function applyFormation(side: any, u: Unit) {
   const has = (name:string) => side.form.some((id:number)=>CARDS[id]?.name===name)
   if (has('覇風')) {
     const urCount = side.form.filter((id:number)=>['UR','ウルトラレア'].includes(String(CARDS[id]?.rarity))).length
     const normalCount = side.form.length-urCount
-    for (const u of side.units) {
-      if (!['UR','ウルトラレア'].includes(String(CARDS[u.card_id]?.rarity))) {
-        const m=1+Math.min(2,normalCount*.35);u.max_hp*=m;u.hp*=m;u.atk*=m;u.interval/=m
-      }
-      if (urCount) { const m=1+Math.min(.95,urCount*.35);u.max_hp*=m;u.hp*=m;u.atk*=m;u.spd*=m;u.interval/=m }
-    }
+    const isUr = ['UR','ウルトラレア'].includes(String(CARDS[u.card_id]?.rarity))
+    const m = isUr ? 1+Math.min(.95,urCount*.35) : 1+Math.min(2,normalCount*.35)
+    u.max_hp*=m;u.hp*=m;u.atk*=m;u.spd*=m;u.interval/=m
   }
-  if (has('MiraiK')) {
-    const angels=side.form.filter((id:number)=>traits(CARDS[id]?.trait).includes('天使')&&CARDS[id]?.name!=='MiraiK').length
-    for (const u of side.units) if (u.name!=='MiraiK'&&traits(u.trait).includes('天使')) {
-      const m=1+Math.min(.55,angels*.1);u.max_hp*=m;u.hp*=m;u.atk*=m;u.range*=m;u.spd*=m;u.interval/=m
-    }
+  if (has('MiraiK') && u.name!=='MiraiK' && traits(u.trait).includes('天使')) {
+    u.max_hp*=1.1;u.hp*=1.1;u.atk*=1.1;u.range*=1.1;u.spd*=1.1;u.interval/=1.1
   }
 }
 function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
@@ -143,10 +136,6 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
     attack_down_until:0,attack_down_factor:1,cursed_until:0,barrier:num(card.barrier),
     power_shield:num(card.powerShield||card.ability?.powerShield),kill_stacks:0,target_id:null}
   if (u.name==='ノヴァ木下') u.ability={...u.ability,modeSwitch:false}
-  if (u.name==='覇風') {
-    const urCount=side.form.filter((id:number)=>['UR','ウルトラレア'].includes(String(CARDS[id]?.rarity))).length
-    const m=1+Math.min(.95,urCount*.35);u.max_hp*=m;u.hp*=m;u.atk*=m;u.spd*=m;u.interval/=m
-  }
   return u
 }
 function traitMultiplier(table:any,target:Unit) {
@@ -168,11 +157,9 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
   return Math.max(1,Math.round(attacker.atk*mult))
 }
 function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
-  const a=target.ability||{},aa=attacker.ability||{}
+  const a=target.ability||{}
   let mult=1/Math.max(.01,traitMultiplier(a.resist,attacker))
-  if (aa.strong) mult/=Math.max(.01,traitMultiplier(aa.strong,target))
   if (a.damageReduce&&typeof a.damageReduce==='object'&&rng()<num(a.damageReduce.chance,.5))mult*=num(a.damageReduce.factor,.2)
-  if (attacker.attack_down_until>time)mult*=attacker.attack_down_factor
   if (target.cursed_until>time)mult*=.7
   let out=Math.max(1,Math.round(damage*mult))
   const cap=num(a.damageCapRatio||a.iceWyvern?.damageCap||0)
@@ -200,8 +187,8 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
   })
   const spawn=(side:any,id:number)=>{
     if(side.units.filter((u:Unit)=>u.hp>0).length>=MAX_UNITS_PER_SIDE)return
-    const u=buildUnit(side,id,nextId++,time);side.units.push(u);side.recharge[id]=u.recharge
-    side.used.push(id);applyFormation(side);emit('spawn',side.key,u,null,u.hp)
+    const u=buildUnit(side,id,nextId++,time);applyFormation(side,u);side.units.push(u);side.recharge[id]=u.recharge
+    side.used.push(id);emit('spawn',side.key,u,null,u.hp)
   }
   const hit=(side:any,target:Unit,attacker:Unit,damage:number)=>{
     if(target.hp<=0)return
@@ -211,22 +198,22 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     if(dealt>0)target.hp=Math.max(0,target.hp-dealt)
     emit('hit',attacker.side,attacker,target,dealt)
     const a=attacker.ability||{}
-    if(a.slow&&matchTrait(a.slow.trait||'*',target)&&rng()<num(a.slow.chance)) {
+    if(a.slow&&!target.ability?.slowImmune&&!target.ability?.slowImmunity&&matchTrait(a.slow.trait||'*',target)&&rng()<num(a.slow.chance)) {
       target.slow_until=time+num(a.slow.duration,2);target.slow_factor=clamp(num(a.slow.factor,.6),.05,1)
       emit('skill',attacker.side,attacker,target,0,'鈍足')
     }
-    if(a.slowChance&&rng()<num(a.slowChance)) {target.slow_until=time+num(a.slowDuration,2);target.slow_factor=clamp(num(a.slowFactor,.6),.05,1);emit('skill',attacker.side,attacker,target,0,'鈍足')}
-    if(a.stopChance&&rng()<num(a.stopChance)) {target.stop_until=time+num(a.stopDuration,1);emit('skill',attacker.side,attacker,target,0,'停止')}
-    if(a.curseChance&&rng()<num(a.curseChance)) {target.cursed_until=time+num(a.curseDuration,2);emit('skill',attacker.side,attacker,target,0,'呪い')}
-    if(a.sealChance&&rng()<num(a.sealChance)) {target.cursed_until=time+num(a.sealDuration,3);emit('skill',attacker.side,attacker,target,0,'能力封印')}
-    if(a.attackDownChance&&rng()<num(a.attackDownChance)) {target.attack_down_until=time+num(a.attackDownDuration,4);target.attack_down_factor=clamp(num(a.attackDownFactor,.5),.01,1);emit('skill',attacker.side,attacker,target,0,'攻撃力低下')}
-    if(a.knockbackChance&&rng()<num(a.knockbackChance)) {target.x+=target.side==='team1'?45:-45;emit('skill',attacker.side,attacker,target,0,'ふっとばし')}
+    if(a.slowChance&&!target.ability?.slowImmune&&!target.ability?.slowImmunity&&rng()<num(a.slowChance)) {target.slow_until=time+num(a.slowDuration,2);target.slow_factor=clamp(num(a.slowFactor,.6),.05,1);emit('skill',attacker.side,attacker,target,0,'鈍足')}
+    if(a.stopChance&&!target.ability?.stopImmune&&!target.ability?.stopImmunity&&rng()<num(a.stopChance)) {target.stop_until=time+num(a.stopDuration,1);emit('skill',attacker.side,attacker,target,0,'停止')}
+    if(a.curseChance&&!target.ability?.curseImmune&&!target.ability?.curseImmunity&&rng()<num(a.curseChance)) {target.cursed_until=time+num(a.curseDuration,2);emit('skill',attacker.side,attacker,target,0,'呪い')}
+    if(a.sealChance&&!target.ability?.sealImmune&&!target.ability?.sealImmunity&&rng()<num(a.sealChance)) {target.cursed_until=time+num(a.sealDuration,3);emit('skill',attacker.side,attacker,target,0,'能力封印')}
+    if(a.attackDownChance&&!target.ability?.attackDownImmune&&rng()<num(a.attackDownChance)) {target.attack_down_until=time+num(a.attackDownDuration,4);target.attack_down_factor=clamp(num(a.attackDownFactor,.5),.01,1);emit('skill',attacker.side,attacker,target,0,'攻撃力低下')}
+    if(a.knockbackChance&&!target.ability?.knockbackImmune&&rng()<num(a.knockbackChance)) {target.x+=target.side==='team1'?45:-45;emit('skill',attacker.side,attacker,target,0,'ふっとばし')}
     if(a.guaranteeKnockback){target.x+=target.side==='team1'?48:-48;emit('skill',attacker.side,attacker,target,0,'確定ふっとばし')}
     if(a.splash&&a.splash>0) {
-      const opponents=side.units===undefined?[]:null
       const other=sides.find((x:any)=>x.key!==attacker.side)
       for(const splashTarget of other.units)if(splashTarget!==target&&splashTarget.hp>0&&Math.abs(splashTarget.x-target.x)<70){
         const extra=Math.max(1,Math.round(dealt*num(a.splash)));splashTarget.hp=Math.max(0,splashTarget.hp-extra);emit('hit',attacker.side,attacker,splashTarget,extra)
+        if(splashTarget.hp<=0)emit('death',splashTarget.side,splashTarget,attacker)
       }
     }
     if(target.hp<=0) {
@@ -255,6 +242,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       for(const u of side.units) {
         if(u.hp<=0)continue
         u.cooldown=Math.max(0,u.cooldown-STEP)
+        if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
         const target=activeEnemies.filter((v:Unit)=>Math.abs(v.x-u.x)<u.range+28).sort((a:Unit,b:Unit)=>Math.abs(a.x-u.x)-Math.abs(b.x-u.x))[0]
         if(target) {
@@ -267,10 +255,10 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
               hit(side,t,u,damage)
               const a=u.ability||{}
               if(a.wave&&rng()<num(a.waveChance,1)) {
-                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-t.x)<160&&w!==t){const d=Math.max(1,Math.round(u.atk*.55));w.hp=Math.max(0,w.hp-d);emit('wave',side.key,u,w,d)}
+                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-t.x)<160&&w!==t){const d=Math.max(1,Math.round(u.atk*.55));w.hp=Math.max(0,w.hp-d);emit('wave',side.key,u,w,d);if(w.hp<=0)emit('death',w.side,w,u)}
               }
               if(a.phoenixSurgeLevel&&rng()<num(a.phoenixSurgeChance,1)) {
-                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-u.x)<=num(a.phoenixSurgeMax,200)){const d=Math.max(1,Math.round(u.atk*.35));w.hp=Math.max(0,w.hp-d);emit('surge',side.key,u,w,d)}
+                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-u.x)<=num(a.phoenixSurgeMax,200)){const d=Math.max(1,Math.round(u.atk*.35));w.hp=Math.max(0,w.hp-d);emit('surge',side.key,u,w,d);if(w.hp<=0)emit('death',w.side,w,u)}
               }
             }
             u.cooldown=u.interval
@@ -375,17 +363,6 @@ async function runBattle(matchId:number,gameNo:number) {
       replay:result.replay,started_at:now,completed_at:now,lease_until:null,updated_at:now,error:null
     }).eq('match_id',matchId).eq('game_number',gameNo).eq('worker_id',workerId)
     if(saveError)throw saveError
-    const {error:eventError}=await client.from('kwl_live_events').insert({
-      tournament_key:String(match.tournament_key),match_id:matchId,game_number:gameNo,event_type:'system',
-      team_id:result.winner_team_id,player_name:'KWLサーバー戦闘',
-      message:'AI同士のサーバー戦闘が終了：'+String(result.replay.team1.name)+' 対 '+String(result.replay.team2.name),
-      payload:{mode:'server_authoritative_replay',engine_version:ENGINE_VERSION,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds}
-    })
-    if(eventError)console.warn('KWL spectator event insert failed:',eventError.message)
-    const {error:resultError}=await client.rpc('kwl_record_game_result',{
-      p_match_id:matchId,p_game_number:gameNo,p_winner_team_id:result.winner_team_id,p_reporter_id:OPERATOR_REPORTER
-    })
-    if(resultError)console.warn('KWL official result will be retried by ai-worker:',resultError.message)
     return {status:'completed',match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,replay:result.replay}
   } catch(error) {
     await client.from('kwl_spectator_battles').update({
