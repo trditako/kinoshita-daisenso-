@@ -31,6 +31,8 @@ assert.match(serverBattle,/BattleCore\.scaleLevelStat\(base,lv,key === 'hp' \|\|
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'game engine delegates damage resolution to shared core');
 assert.match(indexHtml,/KinoshitaBattleCore\.selectTarget\(enemies,u\.target/,'game engine uses shared target selection');
 assert.match(serverBattle,/BattleCore\.selectTarget\(activeEnemies,currentTarget/,'server engine uses shared target selection');
+assert.match(indexHtml,/KinoshitaBattleCore\.advancePosition\(/,'game engine uses shared movement calculation');
+assert.match(serverBattle,/BattleCore\.advancePosition\(/,'server engine uses shared movement calculation');
 assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server engine delegates damage resolution to shared core');
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateDamageTaken\(/,'game engine delegates incoming damage mitigation to shared core');
 assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine delegates incoming damage and shield mitigation to shared core');
