@@ -28,6 +28,8 @@ assert.match(serverBattle,/BattleCore\.traitMultiplier\(table,target,mode\)/,'se
 assert.match(serverBattle,/traitMultiplier\(a\.resist,attacker,'min'\)/,'server applies the same resistance factor as the game');
 assert.match(indexHtml,/KinoshitaBattleCore\.scaleLevelStat\(c\[key\],lv,growth\[key\]\|\|1\)/,'game uses shared level stat growth');
 assert.match(serverBattle,/BattleCore\.scaleLevelStat\(base,lv,key === 'hp' \|\| key === 'atk' \? 1\.04 : 1\)/,'server uses shared level stat growth');
+assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'game engine delegates damage resolution to shared core');
+assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server engine delegates damage resolution to shared core');
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
 assert.match(kwl,/kwl_set_match_phase/);
