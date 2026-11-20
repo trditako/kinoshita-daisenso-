@@ -203,7 +203,7 @@ function kwlStartAiBattle(){
  if(!aiRow)return alert('対戦AIの出場登録がまだ完了していません。運営に確認してください。');
  const accountMatch=String(aiRow.player_id||'').match(/^AI-(\d{1,4})$/);if(!accountMatch)return alert('AI選手IDを確認できません。');
  const profiles=typeof aiProfiles!=='undefined'&&Array.isArray(aiProfiles)?aiProfiles:[];
- const opponent=profiles.find(p=>String(p.accountId)===String(Number(accountMatch[1])));
+ const aiAccountDigits=String(aiRow.player_id).replace(/\D/g,'');const opponent=profiles.find(p=>String(p.accountId)===String(aiRow.player_id)||String(p.accountId).replace(/\D/g,'')===aiAccountDigits);
  if(!opponent)return alert('対戦AIのデータを読み込めません。AIデータの読み込み後に再度お試しください。');
  if(typeof setupWorld!=='function'||!unitsEl||typeof aiBuildFormation!=='function')return alert('戦闘エンジンを初期化できません。');
  const previousFormation=Array.isArray(formation)?formation.slice():[];
