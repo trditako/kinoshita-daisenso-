@@ -24,6 +24,18 @@
       advance(delta){const step=Number(delta);if(!Number.isFinite(step)||step<0)throw new RangeError('Battle clock delta must be finite and non-negative');current+=step;return current;}
     });
   }
+  function advancePosition(options){
+    const o=options||{},x=Number(o.x)||0,speed=Math.max(0,Number(o.speed)||0),dt=Math.max(0,Number(o.dt)||0);
+    if(o.stopped)return x;
+    const direction=Number(o.direction)<0?-1:1;
+    const factors=['slowFactor','curseFactor','voidFactor','weatherFactor'].reduce((value,key)=>{
+      const factor=Number(o[key]??1);return value*(Number.isFinite(factor)?factor:1);
+    },1);
+    let next=x+direction*speed*60*dt*factors;
+    if(Number.isFinite(Number(o.minX)))next=Math.max(Number(o.minX),next);
+    if(Number.isFinite(Number(o.maxX)))next=Math.min(Number(o.maxX),next);
+    return next;
+  }
   function scaleLevelStat(base,level,growth=1.04){const b=Number(base),lv=Math.max(1,Number(level)||1),g=Number(growth);return b*Math.pow(Number.isFinite(g)&&g>0?g:1,lv-1);}
   function traits(value){return String(value||'無').split(/[・,]/).map(x=>x.trim()).filter(Boolean);}
   function hasTrait(entity,trait){if(!entity||!trait)return false;return traits(entity.trait).includes(String(trait));}
@@ -170,6 +182,7 @@
     version:'1.1.0',
     createRng,
     scaleLevelStat,
+    advancePosition,
     traits,
     hasTrait,
     matchesTrait,
