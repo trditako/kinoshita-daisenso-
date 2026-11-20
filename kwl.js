@@ -301,15 +301,7 @@ async function kwlSpectatorStart(requestedGameNo){
  };
  try{
   let replayRow=await getReplay();
-  if(replayRow?.status!=='completed'||!replayRow?.replay){
-   status.textContent='サーバーが共通試合を計算しています…';
-   const response=await fetch(API.replace('/rest/v1','')+'/functions/v1/kwl-spectator-battle',{
-    method:'POST',headers:headers(),body:JSON.stringify({match_id:Number(m.id),game_number:gameNo}),cache:'no-store'
-   });
-   const result=await response.json().catch(()=>null);
-   if(!response.ok||!result?.ok)throw new Error(result?.error||'サーバー戦闘の開始に失敗しました。');
-   if(result.status==='completed'&&result.replay)replayRow={status:'completed',replay:result.replay,winner_team_id:result.winner_team_id};
-  }
+  if(replayRow?.status!=='completed'||!replayRow?.replay)status.textContent='AI Workerがサーバー共通試合を準備しています…';
   for(let attempt=0;(!replayRow||replayRow.status!=='completed'||!replayRow.replay)&&attempt<150&&!closed;attempt++){
    status.textContent='サーバー戦闘の完了を待っています… '+(attempt+1)+'/150';
    await new Promise(resolve=>setTimeout(resolve,2000));
