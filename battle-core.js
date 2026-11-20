@@ -101,6 +101,20 @@
     if(cap>0)damage=Math.min(damage,Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*cap)));
     return {damage,factor,capped:cap>0&&damage>=Math.round(Number(target.maxhp??target.max_hp??1)*cap)};
   }
+  function resolveDamage(options){
+    const o=options||{},target=o.target||{};
+    const mitigation=calculateDamageTaken(o);
+    let remaining=mitigation.damage;
+    const barrier=Math.max(0,Number(target.barrier)||0);
+    const powerShield=Math.max(0,Number(target.powerShield??target.power_shield)||0);
+    const absorbedBarrier=Math.min(barrier,remaining);remaining-=absorbedBarrier;
+    const absorbedPowerShield=Math.min(powerShield,remaining);remaining-=absorbedPowerShield;
+    const hpBefore=Math.max(0,Number(target.hp)||0);
+    const hpDamage=Math.min(hpBefore,remaining);
+    return { ...mitigation, damage:hpDamage, mitigatedDamage:mitigation.damage,
+      absorbedBarrier, absorbedPowerShield, hp:Math.max(0,hpBefore-hpDamage),
+      barrier:barrier-absorbedBarrier, powerShield:powerShield-absorbedPowerShield };
+  }
   let activeRuntime=null;
   function createRuntime(seed,initialTime=0){
     const clock=createClock(initialTime);
