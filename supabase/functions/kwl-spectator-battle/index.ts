@@ -147,6 +147,7 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield}
   const iceWyvernDamage=BattleCore.resolveIceWyvernIncomingDamage({attacker,target:normalizedTarget,damage:rawDamage})
   if(iceWyvernDamage.mythologyAttacker){
+    attacker.healing_disabled_until=time+3
     attacker.kill_stacks=0;attacker.muscleKillStacks=0;attacker.muscleRightBonusAtk=0;attacker.mythSoulAtkFactor=1
     if(attacker.iceWyvernBaseAtk)attacker.atk=Number(attacker.iceWyvernBaseAtk)
     if(attacker.iceWyvernBaseSpd)attacker.spd=Number(attacker.iceWyvernBaseSpd)
