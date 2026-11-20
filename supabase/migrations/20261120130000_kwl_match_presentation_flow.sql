@@ -116,7 +116,7 @@ begin
     raise exception '現在は選手選択・編成の時間ではありません';
   end if;
   phase_end := nullif(presentation->>'phase_ends_at','')::timestamptz;
-  if phase_end is not null and phase_end<now() then
+  if phase_end is not null and phase_end<now() and coalesce(new.player_type,'player')<>'ai' then
     raise exception '選手選択・編成の制限時間が終了しました';
   end if;
   return new;
