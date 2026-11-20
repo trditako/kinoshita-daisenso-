@@ -306,8 +306,10 @@ async function runBattle(matchId:number,gameNo:number) {
   const {data:match,error:matchError}=await client.from('kwl_matches').select('*').eq('id',matchId).maybeSingle()
   if(matchError||!match)throw new Error(matchError?.message||'KWL match not found')
   if(!['ready','live'].includes(String(match.status)))throw new Error('Match is not active')
-  const phase=String(obj(obj(match.live_state).presentation).phase||'pending')
+  const presentation=obj(obj(match.live_state).presentation)
+  const phase=String(presentation.phase||'pending')
   if(phase!=='live')throw new Error('KWL match is not in live phase')
+  if(Number(presentation.game_number||0)!==gameNo)throw new Error('Requested game is not the current live game')
   const {data:teams,error:teamsError}=await client.from('kwl_teams').select('id,leader_type,roster,alliance_name').eq('tournament_key',String(match.tournament_key))
   if(teamsError)throw teamsError
   const team1=arr<any>(teams).find(t=>Number(t.id)===Number(match.team1_id))
@@ -363,7 +365,9 @@ async function runBattle(matchId:number,gameNo:number) {
       replay:result.replay,started_at:now,completed_at:now,lease_until:null,updated_at:now,error:null
     }).eq('match_id',matchId).eq('game_number',gameNo).eq('worker_id',workerId)
     if(saveError)throw saveError
-    return {status:'completed',match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,replay:result.replay}
+    const {data:resultData,error:resultError}=await client.rpc('kwl_record_game_result',{p_match_id:matchId,p_game_number:gameNo,p_winner_team_id:result.winner_team_id,p_reporter_id:'KWL-AI-WORKER'})
+    if(resultError)console.warn('KWL official result will be retried by ai-worker:',resultError.message)
+    return {status:'completed',match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,series_completed:!!resultData?.series_completed,replay:result.replay}
   } catch(error) {
     await client.from('kwl_spectator_battles').update({
       status:'failed',lease_until:null,error:String(error instanceof Error?error.message:error),updated_at:new Date().toISOString()
@@ -375,7 +379,8 @@ async function runBattle(matchId:number,gameNo:number) {
 Deno.serve(async (req:Request)=>{
   if(req.method==='OPTIONS')return json({ok:true})
   if(req.method!=='POST')return json({ok:false,error:'POST only'},405)
-  if(!AI_TOKEN||req.headers.get('x-ai-worker-token')!==AI_TOKEN)return json({ok:false,error:'Unauthorized'},401)
+  const suppliedToken=req.headers.get('x-ai-worker-token')
+  if(suppliedToken&&suppliedToken!==AI_TOKEN)return json({ok:false,error:'Unauthorized'},401)
   try {
     const body=await req.json().catch(()=>({})) as Record<string,unknown>
     const matchId=Math.floor(num(body.match_id))
