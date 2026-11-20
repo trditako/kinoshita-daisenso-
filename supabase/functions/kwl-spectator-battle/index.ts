@@ -365,9 +365,8 @@ async function runBattle(matchId:number,gameNo:number) {
       replay:result.replay,started_at:now,completed_at:now,lease_until:null,updated_at:now,error:null
     }).eq('match_id',matchId).eq('game_number',gameNo).eq('worker_id',workerId)
     if(saveError)throw saveError
-    const {data:resultData,error:resultError}=await client.rpc('kwl_record_game_result',{p_match_id:matchId,p_game_number:gameNo,p_winner_team_id:result.winner_team_id,p_reporter_id:'KWL-AI-WORKER'})
-    if(resultError)console.warn('KWL official result will be retried by ai-worker:',resultError.message)
-    return {status:'completed',match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,series_completed:!!resultData?.series_completed,replay:result.replay}
+    // Official BO5 results are written only by ai-worker after it receives this replay.
+    return {status:'completed',match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,replay:result.replay}
   } catch(error) {
     await client.from('kwl_spectator_battles').update({
       status:'failed',lease_until:null,error:String(error instanceof Error?error.message:error),updated_at:new Date().toISOString()
@@ -380,8 +379,8 @@ Deno.serve(async (req:Request)=>{
   if(req.method==='OPTIONS')return json({ok:true})
   if(req.method!=='POST')return json({ok:false,error:'POST only'},405)
   const suppliedToken=req.headers.get('x-ai-worker-token')
-  if(suppliedToken&&(!AI_TOKEN||suppliedToken!==AI_TOKEN))return json({ok:false,error:'Unauthorized'},401)
-  const workerRequest=!!suppliedToken
+  if(!AI_TOKEN||suppliedToken!==AI_TOKEN)return json({ok:false,error:'Unauthorized'},401)
+  const workerRequest=true
   try {
     const body=await req.json().catch(()=>({})) as Record<string,unknown>
     const matchId=Math.floor(num(body.match_id))
