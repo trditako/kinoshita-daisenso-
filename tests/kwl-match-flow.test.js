@@ -32,6 +32,8 @@ assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'game engi
 assert.match(indexHtml,/KinoshitaBattleCore\.selectTarget\(enemies,u\.target/,'game engine uses shared target selection');
 assert.match(serverBattle,/BattleCore\.selectTarget\(activeEnemies,currentTarget/,'server engine uses shared target selection');
 assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server engine delegates damage resolution to shared core');
+assert.match(indexHtml,/KinoshitaBattleCore\.calculateDamageTaken\(/,'game engine delegates incoming damage mitigation to shared core');
+assert.match(serverBattle,/BattleCore\.calculateDamageTaken\(/,'server engine delegates incoming damage mitigation to shared core');
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
 assert.match(kwl,/kwl_set_match_phase/);
