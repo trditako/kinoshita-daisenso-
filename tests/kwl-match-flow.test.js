@@ -51,7 +51,7 @@ assert.match(serverBattle,/function applyResolvedDamage\(/,'all server-side dama
 assert.match(serverBattle,/applyResolvedDamage\(attacker,splashTarget/,'splash damage respects resistance, barriers, power shields and damage caps');
 assert.match(serverBattle,/applyResolvedDamage\(u,w,d,time,rng,emit\);if\(dealt>0\)emit\('wave'/,'wave damage respects shared damage mitigation');
 assert.match(serverBattle,/applyResolvedDamage\(u,w,d,time,rng,emit\);if\(dealt>0\)emit\('surge'/,'surge damage respects shared damage mitigation');
-assert.match(serverBattle,/if\(target\.hp>0\)\{\s*const effects=BattleCore\.resolveOnHitEffects/,'defeated units do not receive status effects');
+assert.match(serverBattle,/if\(target\.hp>0&&!sealed\)\{\s*const effects=BattleCore\.resolveOnHitEffects/,'defeated units and sealed attackers do not apply status effects');
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
 assert.match(kwl,/kwl_set_match_phase/);
