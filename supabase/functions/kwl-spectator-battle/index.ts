@@ -24,6 +24,7 @@ type Unit = {
   slow_until: number; slow_factor: number; stop_until: number; attack_down_until: number;
   attack_down_factor: number; cursed_until: number; barrier: number; power_shield: number;
   kill_stacks: number; target_id: number|null;
+  [key: string]: any;
 }
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -117,7 +118,9 @@ function applyFormation(side: any, u: Unit) {
 }
 function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
   const card=activeCard(side.ai,cardId), hp=Math.max(1,Math.round(stat(side.ai,cardId,'hp')))
-  const u:Unit={id:nextId,card_id:cardId,name:String(card.name),icon:String(card.icon||'❔'),side:side.key,
+  // Preserve card-level flags (metal, airAttack, immunity flags, boss roles, etc.) so
+  // the server simulation evaluates the same metadata as the browser battle engine.
+  const u:Unit={...card,id:nextId,card_id:cardId,name:String(card.name),icon:String(card.icon||'❔'),side:side.key,
     x:side.key==='team1'?WORLD_WIDTH-145:145,hp,max_hp:hp,atk:Math.max(1,stat(side.ai,cardId,'atk')),
     range:Math.max(1,stat(side.ai,cardId,'range')),spd:Math.max(0,stat(side.ai,cardId,'spd')),
     interval:Math.max(.15,stat(side.ai,cardId,'interval')),cooldown:.15,cost:num(card.cost),recharge:num(card.recharge),
@@ -217,7 +220,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
         const currentTarget=activeEnemies.find((v:Unit)=>v.id===u.target_id)||null
-        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+28,canTarget:(v:Unit)=>!(v as any).is_flying||!!u.ability?.airAttack}) as Unit|null
+        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+28,canTarget:(v:Unit)=>!((v as any).isFlying||(v as any).is_flying)||!!u.airAttack||!!u.ability?.airAttack}) as Unit|null
         if(target) {
           u.state='attack';u.target_id=target.id
           if(u.cooldown<=0&&u.stop_until<=time) {
