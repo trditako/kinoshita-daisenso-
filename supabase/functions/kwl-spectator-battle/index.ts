@@ -146,7 +146,7 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   if(target.hp<=0)return 0
   const resolution=BattleCore.resolveDamage({
     target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield},
-    attacker,damage:rawDamage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
+    attacker,damage:rawDamage,time,ability:{},random:rng,traitMultiplier,curseFactor:1
   })
   target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
   emit('hit',attacker.side,attacker,target,resolution.damage)
