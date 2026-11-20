@@ -17,7 +17,7 @@ const supabaseConfig=fs.readFileSync('supabase/config.toml','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
 const aiWorker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 assert.match(kwl,/チーム紹介は60秒/);
-assert.ok(indexHtml.includes('<script src="./battle-core.js?v=20261120-shared-runtime"></script>'),'game loads shared battle core before battle engine');
+assert.ok(indexHtml.includes('<script src="./battle-core.js?v=20261120-kwl-combat-core-2"></script>'),'game loads shared battle core before battle engine');
 assert.match(indexHtml,/KinoshitaBattleCore\.random\(\)/,'game combat uses shared deterministic random source');
 assert.match(indexHtml,/KinoshitaBattleCore\.now\(\)/,'game combat uses shared battle clock');
 assert.match(serverBattle,/import '\.\.\/\.\.\/\.\.\/battle-core\.js'/,'server replay imports the same battle core');
