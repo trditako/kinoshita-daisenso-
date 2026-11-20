@@ -170,6 +170,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     const dealt=resolution.damage
     target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
     emit('hit',attacker.side,attacker,target,dealt)
+    const a=attacker.ability||{}
     const effects=BattleCore.resolveOnHitEffects({attacker,target,time,random:rng,knockbackDistance:45,guaranteedKnockbackDistance:48})
     target.slow_until=effects.slowUntil;target.slow_factor=effects.slowFactor;target.stop_until=effects.stopUntil
     target.cursed_until=effects.cursedUntil;target.attack_down_until=effects.attackDownUntil;target.attack_down_factor=effects.attackDownFactor
