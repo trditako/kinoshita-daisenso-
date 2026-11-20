@@ -6,6 +6,10 @@ const migration=fs.readFileSync('supabase/migrations/20261120130000_kwl_match_pr
 const replayMigration=fs.readFileSync('supabase/migrations/20261120150000_kwl_server_authoritative_spectator.sql','utf8');
 const spectatorWorker=fs.readFileSync('supabase/functions/kwl-spectator-battle/index.ts','utf8');
 const characterData=JSON.parse(fs.readFileSync('supabase/functions/kwl-spectator-battle/character-data.json','utf8'));
+const runtimeRoster=JSON.parse(fs.readFileSync('character-roster.json','utf8'));
+assert.equal(characterData.length,runtimeRoster.count,'server battle data uses the full runtime roster');
+assert.deepEqual(characterData.map((card,id)=>({id:card.id,name:card.name})),runtimeRoster.characters.map(card=>({id:card.id,name:card.name})),'server battle character IDs match the game runtime IDs');
+for(const name of ['創世木下','創世討伐兵器・零式','ヒットマン木下','アイスワイバーン','最高神:ゼウス','最高神:ハスター'])assert.ok(characterData.some(card=>card.name===name),'server roster includes '+name);
 const supabaseConfig=fs.readFileSync('supabase/config.toml','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
 const aiWorker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
