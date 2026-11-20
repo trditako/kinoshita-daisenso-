@@ -24,6 +24,16 @@
       advance(delta){const step=Number(delta);if(!Number.isFinite(step)||step<0)throw new RangeError('Battle clock delta must be finite and non-negative');current+=step;return current;}
     });
   }
+  function traits(value){return String(value||'無').split(/[・,]/).map(x=>x.trim()).filter(Boolean);}
+  function hasTrait(entity,trait){if(!entity||!trait)return false;return traits(entity.trait).includes(String(trait));}
+  function matchesTrait(entity,rules){return (Array.isArray(rules)?rules:[rules]).some(trait=>hasTrait(entity,trait));}
+  function tableMatches(table,entity){return !!table&&traits(entity?.trait||'無').some(trait=>Object.prototype.hasOwnProperty.call(table,trait));}
+  function traitMultiplier(table,entity,mode='max'){
+    if(!table||!entity)return 1;
+    const values=traits(entity.trait).map(trait=>Number(table[trait])).filter(value=>Number.isFinite(value)&&value>0);
+    if(values.length)return mode==='min'?Math.min(...values):Math.max(...values);
+    return Number(table['*'])>0?Number(table['*']):1;
+  }
   let activeRuntime=null;
   function createRuntime(seed,initialTime=0){
     const clock=createClock(initialTime);
@@ -37,6 +47,11 @@
   root.KinoshitaBattleCore=Object.freeze({
     version:'1.0.0',
     createRng,
+    traits,
+    hasTrait,
+    matchesTrait,
+    tableMatches,
+    traitMultiplier,
     createClock,
     createRuntime,
     setActiveRuntime,
