@@ -37,11 +37,20 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Export final runtime character roster
         run: node scripts/export-character-roster.mjs
+      - name: Upload generated KWL runtime character data
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kwl-runtime-character-data
+          path: |
+            character-roster.json
+            supabase/functions/kwl-spectator-battle/character-data.json
+          if-no-files-found: error
       - name: Commit generated roster when changed
         if: github.event_name == 'push'
         shell: bash
         run: |
-          git add character-roster.json
+          git add character-roster.json supabase/functions/kwl-spectator-battle/character-data.json
           if git diff --cached --quiet; then
             echo "Character roster is unchanged."
             exit 0
