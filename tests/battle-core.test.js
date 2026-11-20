@@ -16,6 +16,22 @@ assert.equal(core.tableMatches({赤:0.5},{trait:'赤・黒'}),true);
 assert.equal(core.traitMultiplier({赤:1.5,黒:2},{trait:'赤・黒'},'max'),2);
 assert.equal(core.traitMultiplier({赤:1.5,黒:2},{trait:'赤・黒'},'min'),1.5);
 assert.equal(core.traitMultiplier({'*':1.8},{trait:'無'}),1.8);
+const baseAttack=core.calculateAttackDamage({
+  attacker:{atk:100,hp:100,maxhp:100},target:{trait:'赤'},baseAttack:100,time:0,
+  ability:{strong:{赤:2}},random:()=>.99
+});
+assert.equal(baseAttack.damage,200,'shared attack damage applies trait strength');
+const criticalAttack=core.calculateAttackDamage({
+  attacker:{atk:100,hp:100,maxhp:100},target:{trait:'赤'},baseAttack:100,time:0,
+  ability:{strong:{赤:2},criticalChance:.5,criticalMultiplier:3},random:()=>0
+});
+assert.equal(criticalAttack.damage,600,'shared attack damage applies deterministic critical hits');
+assert.equal(criticalAttack.critical,true);
+const metalAttack=core.calculateAttackDamage({
+  attacker:{atk:100,hp:100,maxhp:100},target:{trait:'赤',metal:true},baseAttack:100,time:0,
+  ability:{strong:{赤:2}},random:()=>.99
+});
+assert.equal(metalAttack.damage,1,'metal target keeps the non-critical one-damage rule');
 const rngA=core.createRng('kwl-shared-core-regression');
 const rngB=core.createRng('kwl-shared-core-regression');
 const seqA=Array.from({length:32},()=>rngA());
