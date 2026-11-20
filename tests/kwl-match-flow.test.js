@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const kwl=fs.readFileSync('kwl.js','utf8');
 const migration=fs.readFileSync('supabase/migrations/20261120130000_kwl_match_presentation_flow.sql','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
+const aiWorker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 assert.match(kwl,/チーム紹介は60秒/);
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
