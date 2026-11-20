@@ -43,7 +43,7 @@
     const inRange=typeof options.inRange==='function'
       ? options.inRange
       : candidate=>Math.abs(Number(candidate?.x||0)-x)<range;
-    const valid=candidate=>!!candidate&&Number(candidate.hp)>0&&!candidate.muscleGrabbedBy&&canTarget(candidate)&&inRange(candidate);
+    const valid=candidate=>!!candidate&&list.includes(candidate)&&Number(candidate.hp)>0&&!candidate.muscleGrabbedBy&&canTarget(candidate)&&inRange(candidate);
     if(valid(currentTarget))return currentTarget;
     let best=null,bestDistance=Infinity;
     for(const candidate of list){
