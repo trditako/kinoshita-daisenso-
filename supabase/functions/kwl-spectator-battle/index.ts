@@ -380,13 +380,15 @@ Deno.serve(async (req:Request)=>{
   if(req.method==='OPTIONS')return json({ok:true})
   if(req.method!=='POST')return json({ok:false,error:'POST only'},405)
   const suppliedToken=req.headers.get('x-ai-worker-token')
-  if(suppliedToken&&suppliedToken!==AI_TOKEN)return json({ok:false,error:'Unauthorized'},401)
+  if(suppliedToken&&(!AI_TOKEN||suppliedToken!==AI_TOKEN))return json({ok:false,error:'Unauthorized'},401)
+  const workerRequest=!!suppliedToken
   try {
     const body=await req.json().catch(()=>({})) as Record<string,unknown>
     const matchId=Math.floor(num(body.match_id))
     const gameNo=Math.floor(num(body.game_number))
     if(matchId<=0||gameNo<1||gameNo>5)return json({ok:false,error:'Invalid match/game'},400)
     const result=await runBattle(matchId,gameNo)
+    if(workerRequest)return json({ok:true,status:result.status,match_id:matchId,game_number:gameNo,winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds})
     return json({ok:true,...result})
   } catch(error) {
     console.error('KWL spectator server battle failed:',error)
