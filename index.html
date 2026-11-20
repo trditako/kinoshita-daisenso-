@@ -2363,14 +2363,12 @@ function damageAgainst(u,target,baseAtk){
   mult*=1+Math.min(Number(ability.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(ability.cosmicFormationBonus.perUnit||.15));
  }
  if(u?.name==='天使神:木下'&&entityTraitMatch(target,['古代','赤','黒','浮','神話']))mult*=8;
- if(u?.ability?.iceWyvern&&entityHasTrait(target,'神話'))mult*=Number(u.ability.iceWyvern.mythDamageDealt||1);
  if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;
  if(u?.name==='MiraiK'){
   const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return Number.isInteger(i)&&hasCharacter(i)&&card&&card.name!=='MiraiK'&&entityHasTrait(card,'天使');}).length;
   mult*=1+Math.min(.55,angelCount*.10);
   if(target?.attackType==='single')mult*=3;
  }
- if(u?.ability?.iceWyvern&&Number(target.powerShieldMax||0)>0)mult*=Number(u.ability.iceWyvern.shieldMultiplier||1);
  return Math.max(1,Math.round(resolved.rawDamage*mult));
 }
 function miraiKLimitDamage(target,attacker,damage){
