@@ -137,13 +137,6 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
     baseAttack:attacker.atk,time,ability:attacker.ability||{},random:rng,traitMultiplier}).damage
 }
 
-function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
-  const result=BattleCore.calculateDamageTaken({
-    target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until},
-    attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
-  })
-  return result.damage
-}
 function snapshot(time:number,sides:any[],events:any[]) {
   return {t:Number(time.toFixed(2)),team1_base_hp:Math.max(0,Math.round(sides[0].base_hp)),
     team2_base_hp:Math.max(0,Math.round(sides[1].base_hp)),team1_money:Math.floor(sides[0].money),
