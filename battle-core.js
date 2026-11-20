@@ -94,10 +94,10 @@
     const time=Number(o.time)||0, incoming=Math.max(0,Number(o.damage)||0);
     let factor=multiplier(ability.resist,attacker,'min');
     const reduction=ability.damageReduce;
-    if(reduction&&typeof reduction==='object'&&random()<Number(reduction.chance??.5))factor*=Number(reduction.factor??.2);
-    if(Number(target.cursedUntil)>time)factor*=.7;
+    if(reduction&&random()<Number(reduction.chance??.5))factor*=Number(reduction.factor??reduction)||1;
+    if(Number(target.cursedUntil)>time)factor*=Number(o.curseFactor??ability.cursedAttackMultiplier??1);
     let damage=Math.max(1,Math.round(incoming*factor));
-    const cap=Number(ability.damageCapRatio||ability.iceWyvern?.damageCap||0);
+    const cap=o.applyCap?Number(ability.damageCapRatio||ability.iceWyvern?.damageCap||0):0;
     if(cap>0)damage=Math.min(damage,Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*cap)));
     return {damage,factor,capped:cap>0&&damage>=Math.round(Number(target.maxhp??target.max_hp??1)*cap)};
   }
@@ -121,6 +121,7 @@
     tableMatches,
     traitMultiplier,
     calculateAttackDamage,
+    calculateDamageTaken,
     selectTarget,
     createClock,
     createRuntime,
