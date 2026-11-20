@@ -2338,7 +2338,7 @@ function statAt(i,key){
   if(key==='recharge')v*=Math.max(.55,1-tree.recharge*.05);
   return Math.round(v*100)/100;
  }
- let v=c[key]*Math.pow(growth[key]||1,lv-1);
+ let v=KinoshitaBattleCore.scaleLevelStat(c[key],lv,growth[key]||1);
  if(rankMode&&(key==='hp'||key==='atk'))v*=rankMul*weakMul;
  if(key==='hp')v*=1+tree.hp*.05;
  if(key==='atk')v*=1+tree.atk*.05;
