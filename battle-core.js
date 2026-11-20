@@ -26,7 +26,7 @@
   }
   function traits(value){return String(value||'無').split(/[・,]/).map(x=>x.trim()).filter(Boolean);}
   function hasTrait(entity,trait){if(!entity||!trait)return false;return traits(entity.trait).includes(String(trait));}
-  function matchesTrait(entity,rules){return (Array.isArray(rules)?rules:[rules]).some(trait=>hasTrait(entity,trait));}
+  function matchesTrait(entity,rules){return (Array.isArray(rules)?rules:[rules]).some(trait=>String(trait)==='*'||hasTrait(entity,trait));}
   function tableMatches(table,entity){return !!table&&traits(entity?.trait||'無').some(trait=>Object.prototype.hasOwnProperty.call(table,trait));}
   function traitMultiplier(table,entity,mode='max'){
     if(!table||!entity)return 1;
