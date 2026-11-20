@@ -2524,10 +2524,10 @@ function applyFrogAbility(target){
  }
 }
 function hasAbilityFlag(entity,flag){return !!(entity&&(entity[flag]||entity.ability?.[flag]||(entity.isEnemy&&muscleEnemyAuraActive()&&['waveImmune','stopImmune','knockbackImmune','surgeImmune'].includes(flag))));}
-function entityHasTrait(entity,trait){if(!entity||!trait)return false;return String(entity.trait||'無').split(/[・,]/).map(x=>x.trim()).includes(String(trait));}
-function entityTraitMatch(entity,traits){return (Array.isArray(traits)?traits:[traits]).some(trait=>entityHasTrait(entity,trait));}
-function traitTableMatches(table,entity){return !!table&&String(entity?.trait||'無').split(/[・,]/).some(t=>Object.prototype.hasOwnProperty.call(table,t));}
-function traitMultiplier(table,entity,mode='max'){if(!table||!entity)return 1;const vals=String(entity.trait||'無').split(/[・,]/).map(t=>Number(table[t])).filter(v=>Number.isFinite(v)&&v>0);if(vals.length)return mode==='min'?Math.min(...vals):Math.max(...vals);return Number(table['*'])>0?Number(table['*']):1;}
+function entityHasTrait(entity,trait){return KinoshitaBattleCore.hasTrait(entity,trait);}
+function entityTraitMatch(entity,traits){return KinoshitaBattleCore.matchesTrait(entity,traits);}
+function traitTableMatches(table,entity){return KinoshitaBattleCore.tableMatches(table,entity);}
+function traitMultiplier(table,entity,mode='max'){return KinoshitaBattleCore.traitMultiplier(table,entity,mode);}
 function applySlow(target,slow,source=null){if(!target||!slow||hasAbilityFlag(target,'slowImmune')||(source&&entityHasTrait(source,'神話')&&target.ability?.iceWyvern))return;if(slow.trait!=="*"&&!entityHasTrait(target,slow.trait))return;target.slowUntil=KinoshitaBattleCore.now()/1000+slow.duration;target.slowFactor=slow.factor;setStatusMark(target,'🐌','速度低下',slow.duration,'slow');}
 function isAbilitySealed(target){const now=KinoshitaBattleCore.now()/1000;return !!(target?.muscleGrabbedBy||(target?.abilitySealed)||(target?.abilitySealedUntil&&now<target.abilitySealedUntil)||(target?.cursedUntil&&now<target.cursedUntil))}
 function applySimCurseStatus(source,target,time){if(!source||!target||hasAbilityFlag(target,'curseImmune'))return false;const a=source.ability||{};if(!a.curseChance||KinoshitaBattleCore.random()>=Number(a.curseChance))return false;const duration=Number(a.curseDuration||4);target.cursedUntil=time+duration;if(a.cursedSpeedFactor)target.cursedSpeedFactor=Number(a.cursedSpeedFactor);if(a.cursedAttackFactor)target.cursedAttackFactor=Number(a.cursedAttackFactor);return true}
