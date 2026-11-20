@@ -178,6 +178,7 @@
     calculateAttackDamage,
     calculateDamageTaken,
     resolveDamage,
+    resolveOnHitEffects,
     selectTarget,
     createClock,
     createRuntime,
