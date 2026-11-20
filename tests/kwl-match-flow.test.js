@@ -44,6 +44,12 @@ assert.match(serverBattle,/BattleCore\.resolveIceWyvernIncomingDamage\(/,'server
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernIncomingDamage\(/,'browser engine uses the same Ice Wyvern damage resolver');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernAfterHit\(/,'browser engine uses shared Ice Wyvern growth and healing');
 assert.match(serverBattle,/BattleCore\.resolveIceWyvernAfterHit\(/,'server replay uses the same Ice Wyvern growth and healing');
+assert.match(serverBattle,/const tickIceWyvern=\(\)=>/,'server replay simulates Ice Wyvern timed skills');
+assert.match(serverBattle,/a\.flightInterval/,'server replay schedules Ice Wyvern flight');
+assert.match(serverBattle,/a\.beamInterval/,'server replay schedules Ice Wyvern beam');
+assert.match(serverBattle,/iceZones\.push\(/,'server replay creates persistent ice zones during flight');
+assert.match(serverBattle,/num\(u\.ice_frozen_until\)>time/,'server movement respects Ice Wyvern freeze state');
+assert.match(serverBattle,/is_flying:!!u\.isFlying/,'spectator frames expose flight state');
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'browser attack damage uses the shared Ice Wyvern bonus resolver');
 assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server attack damage uses the same Ice Wyvern bonus resolver');
 assert.match(serverBattle,/attacker,damage:iceWyvernDamage\.damage,time,ability:\{\},random:rng,traitMultiplier,curseFactor:1/,'server generic damage mitigation matches browser semantics and leaves character-specific mitigation to explicit handlers');
