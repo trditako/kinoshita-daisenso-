@@ -137,7 +137,7 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number,baseAt
     cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time ? .5 : 1}
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until}
   const sealed=BattleCore.isAbilitySealed(normalizedAttacker,time)
-  if(sealed)normalizedAttacker.phoenixLowHpMultiplier=0
+  if(sealed)(normalizedAttacker as any).phoenixLowHpMultiplier=0
   return BattleCore.calculateAttackDamage({attacker:normalizedAttacker,target:normalizedTarget,
     baseAttack,time,ability:sealed?{}:(attacker.ability||{}),random:rng,traitMultiplier}).damage
 }
@@ -351,10 +351,10 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         if(time>=actor.ice_skill_next_beam){
           actor.ice_skill_next_beam=time+num(a.beamInterval,46)
           const opposing=sides.find(side=>side.key!==actor.side)
-          const candidates=opposing.units.filter(target=>target.hp>0&&
+          const candidates=opposing.units.filter((target:Unit)=>target.hp>0&&
             (actor.side==='team1'?target.x<actor.x:target.x>actor.x)&&
             Math.abs(target.x-actor.x)<=num(a.beamRange,600))
-            .sort((x,y)=>Math.abs(x.x-actor.x)-Math.abs(y.x-actor.x)).slice(0,num(a.beamHits,2))
+            .sort((x:Unit,y:Unit)=>Math.abs(x.x-actor.x)-Math.abs(y.x-actor.x)).slice(0,num(a.beamHits,2))
           for(const target of candidates){
             let damage=Math.max(1,Math.round(actor.atk*2.5))
             if(BattleCore.matchesTrait(target,'神話'))damage=Math.round(damage*num(a.mythDamageDealt,1))
