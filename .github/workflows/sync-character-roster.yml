@@ -46,6 +46,20 @@ jobs:
             character-roster.json
             supabase/functions/kwl-spectator-battle/character-data.json
           if-no-files-found: error
+      - name: Commit generated runtime battle data to PR branch
+        if: github.event_name == 'pull_request'
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git add character-roster.json supabase/functions/kwl-spectator-battle/character-data.json
+          if git diff --cached --quiet; then
+            echo "Runtime character data is unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync runtime KWL battle character data"
+          git push origin HEAD:"$PR_HEAD_REF"
       - name: Commit generated roster when changed
         if: github.event_name == 'push'
         shell: bash
