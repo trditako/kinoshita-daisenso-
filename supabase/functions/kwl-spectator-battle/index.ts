@@ -305,11 +305,11 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
         const currentTarget=activeEnemies.find((v:Unit)=>v.id===u.target_id)||null
-        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+28,canTarget:(v:Unit)=>!((v as any).isFlying||(v as any).is_flying)||!!u.airAttack||!!u.ability?.airAttack}) as Unit|null
+        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+30,inRange:(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30},canTarget:(v:Unit)=>!((v as any).isFlying||(v as any).is_flying)||!!u.airAttack||!!u.ability?.airAttack}) as Unit|null
         if(target) {
           u.state='attack';u.target_id=target.id
           if(u.cooldown<=0&&u.stop_until<=time) {
-            const targets=u.attack_type==='area'?activeEnemies.filter((v:Unit)=>Math.abs(v.x-u.x)<u.range+28):[target]
+            const inAttackRange=(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30};const targets=u.attack_type==='area'||u.attack_type==='allrange'?activeEnemies.filter(inAttackRange):[target]
             emit('attack',side.key,u,target)
             for(const t of targets) {
               let damage=damageDealt(u,t,rng,time)
