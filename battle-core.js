@@ -150,9 +150,9 @@
     const mythologyAttacker=matchesTrait(attacker,'神話');
     const healed=mythologyAttacker?Math.round(actualDamage*Number(ice.mythHeal||0)):0;
     hp=Math.min(currentMax,hp+healed);
-    const perHit=Math.max(0,Number(ice.damageGrowthPerHit||0));
+    const perHit=Math.max(.0001,Number(ice.damageGrowthPerHit||.01));
     const maxGrowth=Math.max(0,Number(ice.damageGrowthMax||0));
-    const maxStacks=perHit>0?Math.floor(maxGrowth/perHit+1e-9):0;
+    const maxStacks=Math.round(maxGrowth/perHit);
     const stacks=Math.min(maxStacks,Math.max(0,Number(target.iceDamageStacks)||0)+1);
     const growth=1+stacks*perHit;
     const base=target.iceWyvernBaseStats||{
@@ -173,7 +173,7 @@
     const mythologyAttacker=!!ice&&matchesTrait(attacker,'神話');
     if(!ice)return {damage,mythologyAttacker:false,capped:false};
     if(mythologyAttacker)damage*=Number(ice.mythDamageTaken??.05);
-    const capRatio=Math.max(0,Number(ice.damageCap??.15));
+    const capRatio=Math.max(0,Number(ice.damageCap||.15));
     const cap=capRatio>0?Math.max(1,Number(target.maxhp??target.max_hp??1)*capRatio):Infinity;
     const adjusted=Math.min(damage,cap);
     return {damage:adjusted,mythologyAttacker,capped:adjusted<damage};
