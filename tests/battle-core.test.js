@@ -32,6 +32,14 @@ const metalAttack=core.calculateAttackDamage({
   ability:{strong:{赤:2}},random:()=>.99
 });
 assert.equal(metalAttack.damage,1,'metal target keeps the non-critical one-damage rule');
+const resisted=core.calculateDamageTaken({target:{maxhp:100,cursedUntil:0,ability:{resist:{赤:.5}}},attacker:{trait:'赤'},damage:100,time:0,random:()=>.99});
+assert.equal(resisted.damage,50,'shared damage mitigation applies the strongest resistance reduction');
+const reduced=core.calculateDamageTaken({target:{maxhp:100,ability:{damageReduce:{chance:1,factor:.2}}},attacker:{trait:'無'},damage:100,time:0,random:()=>0});
+assert.equal(reduced.damage,20,'shared damage mitigation applies deterministic damage reduction');
+const cursed=core.calculateDamageTaken({target:{maxhp:100,cursedUntil:5,ability:{}},attacker:{trait:'無'},damage:100,time:1,random:()=>.99});
+assert.equal(cursed.damage,70,'shared damage mitigation applies the cursed damage factor');
+const capped=core.calculateDamageTaken({target:{maxhp:100,ability:{damageCapRatio:.25}},attacker:{trait:'無'},damage:1000,time:0,random:()=>.99});
+assert.equal(capped.damage,25,'shared damage mitigation enforces the maximum-HP damage cap');
 const farTarget={id:1,x:90,hp:100};
 const nearTarget={id:2,x:25,hp:100};
 const deadTarget={id:3,x:5,hp:0};
