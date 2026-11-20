@@ -45,12 +45,9 @@ const num = (v: unknown, fallback = 0) => Number.isFinite(Number(v)) ? Number(v)
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 const arr = <T>(v: unknown): T[] => Array.isArray(v) ? v as T[] : []
 const obj = (v: unknown): Record<string, any> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, any> : {}
-const traits = (v: unknown) => String(v || '無').split(/[・,、]/).map(x => x.trim()).filter(Boolean)
-const matchTrait = (rule: unknown, target: Unit|Card) => {
-  const rules = Array.isArray(rule) ? rule.map(String) : [String(rule || '')]
-  const ts = traits(target.trait)
-  return rules.includes('*') || rules.some(x => ts.includes(x))
-}
+const traits = (v: unknown) => BattleCore.traits(v)
+const matchTrait = (rule: unknown, target: Unit|Card) => BattleCore.matchesTrait(target,rule)
+const traitMultiplier = (table: any, target: Unit|Card, mode: 'min'|'max'='max') => BattleCore.traitMultiplier(table,target,mode)
 const makeRng = (seedText: string) => BattleCore.createRng(seedText)
 
 function powerMultiplier(ai: AIAccount) {
@@ -132,13 +129,6 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
   if (u.name==='ノヴァ木下') u.ability={...u.ability,modeSwitch:false}
   return u
 }
-function traitMultiplier(table:any,target:Unit) {
-  if (!table||typeof table!=='object') return 1
-  let best=1
-  for (const tr of traits(target.trait)) best=Math.max(best,num(table[tr],1))
-  if (table['*']!==undefined) best=Math.max(best,num(table['*'],1))
-  return best
-}
 function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
   const a=attacker.ability||{}
   let mult=traitMultiplier(a.strong,target)
@@ -152,7 +142,7 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
 }
 function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
   const a=target.ability||{}
-  let mult=1/Math.max(.01,traitMultiplier(a.resist,attacker))
+  let mult=traitMultiplier(a.resist,attacker,'min')
   if (a.damageReduce&&typeof a.damageReduce==='object'&&rng()<num(a.damageReduce.chance,.5))mult*=num(a.damageReduce.factor,.2)
   if (target.cursed_until>time)mult*=.7
   let out=Math.max(1,Math.round(damage*mult))
