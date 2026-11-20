@@ -2420,11 +2420,11 @@ function damageTakenBy(u,attacker){
  mult*=traitMultiplier(aa.strong,u,'max');
  if(aa.ancientHunter&&entityHasTrait(u,'古代'))mult*=Number(aa.ancientHunter)||1;
  if(aa.attributeOverload&&!entityHasTrait(u,'古代'))mult*=Number(aa.attributeOverload.outgoing)||1;
- mult*=traitMultiplier(ua.resist,attacker,'min');
+
  if(ua.ancientHunter&&entityHasTrait(attacker,'古代'))mult*=Number(ua.ancientHunterResist)||1;
  if(ua.attributeOverload&&!entityHasTrait(attacker,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(ua.attributeOverload.incoming)||1;
  if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(attacker,'古代'))mult*=2.5;
- if(ua.damageReduce&&KinoshitaBattleCore.random()<Number(ua.damageReduce.chance??.5))mult*=Number(ua.damageReduce.factor??ua.damageReduce)||1;
+
  if(attacker.isEnemy&&!u.isEnemy){const haifuCount=units.filter(x=>x&&!x.isEnemy&&x.hp>0&&x.name==='覇風').length;if(haifuCount)mult*=Math.max(.3,1-Math.min(.7,haifuCount*.35));}
  if(attacker.cursedUntil&&now<attacker.cursedUntil&&attacker.cursedAttackFactor)mult*=Number(attacker.cursedAttackFactor)||1;
  if(u.cursedUntil&&now<u.cursedUntil&&aa.cursedAttackMultiplier)mult*=Number(aa.cursedAttackMultiplier)||1;
@@ -2432,7 +2432,12 @@ function damageTakenBy(u,attacker){
   if(Math.abs(Number(u.x||0)-Number(attacker.x||0))>=150)mult*=.15;
   if(attacker.attackType==='single')mult*=.75;
  }
- return miraiKLimitDamage(u,attacker,Math.max(1,Math.round(effectiveAtk*mult)));
+ const mitigation=KinoshitaBattleCore.calculateDamageTaken({
+  target:u,attacker,damage:effectiveAtk*mult,time:now,ability:ua,
+  random:KinoshitaBattleCore.random,traitMultiplier,
+  curseFactor:aa.cursedAttackMultiplier?Number(aa.cursedAttackMultiplier):1
+ });
+ return miraiKLimitDamage(u,attacker,mitigation.damage);
 }
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;try{const d=Number.isFinite(Number(duration))?Math.max(0,Number(duration)):0;if(!target.statuses||typeof target.statuses!=='object')target.statuses={};target.statuses[type]={icon:String(icon||''),text:String(text||''),until:KinoshitaBattleCore.now()/1000+d};updateStatusMark(target);}catch(err){console.warn('status mark skipped',err);}}
 function updateStatusMark(target){
