@@ -173,7 +173,7 @@ function snapshot(time:number,sides:any[],events:any[]) {
     team2_money:Math.floor(sides[1].money),units:sides.flatMap((s:any)=>s.units.filter((u:Unit)=>u.hp>0).map((u:Unit)=>({
       id:u.id,card_id:u.card_id,side:u.side,x:Number(u.x.toFixed(1)),hp:Math.max(0,Math.round(u.hp)),
       max_hp:Math.max(1,Math.round(u.max_hp)),state:u.state,trait:u.trait,barrier:Math.round(u.barrier),
-      power_shield:Math.round(u.power_shield),slow:u.slow_until>time,stopped:u.stop_until>time
+      power_shield:Math.round(u.power_shield),slow:u.slow_until>time,stopped:u.stop_until>time,frozen:num(u.ice_frozen_until)>time,is_flying:!!u.isFlying
     })))}
 }
 function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[],form2:number[],seed:string) {
@@ -213,6 +213,68 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     }
     if(target.hp<=0&&a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
   }
+  const iceZones:any[]=[]
+  const freezeByIce=(target:Unit,duration:number,source:Unit)=>{
+    if(!target||target.hp<=0||target.freezeImmune||target.ability?.freezeImmune||target.ability?.iceWyvern?.freezeImmune)return
+    target.ice_frozen_until=Math.max(num(target.ice_frozen_until),time+duration)
+    target.ice_freeze_source_id=source.id
+  }
+  const tickIceWyvern=()=>{
+    for(let i=iceZones.length-1;i>=0;i--){
+      const zone=iceZones[i]
+      if(time>=zone.until){iceZones.splice(i,1);continue}
+      const opposing=sides.find(side=>side.key!==zone.source.side)
+      for(const target of opposing.units){
+        if(target.hp<=0||Math.abs(target.x-zone.x)>48)continue
+        freezeByIce(target,Math.max(.2,zone.until-time),zone.source)
+        if(time>=num(target.ice_zone_tick_at)){
+          target.ice_zone_tick_at=time+1
+          const damage=Math.max(1,Math.round(target.max_hp*.15))
+          applyResolvedDamage(zone.source,target,damage,time,rng,emit)
+        }
+      }
+    }
+    for(const actorSide of sides){
+      for(const actor of actorSide.units){
+        const a=actor.ability?.iceWyvern
+        if(actor.hp<=0||!a)continue
+        actor.ice_skill_next_flight=num(actor.ice_skill_next_flight,time+num(a.flightInterval,55))
+        actor.ice_skill_next_beam=num(actor.ice_skill_next_beam,time+num(a.beamInterval,46))
+        if(actor.isFlying&&Math.abs(actor.x-num(actor.ice_last_zone_x,-9999))>=28){
+          actor.ice_last_zone_x=actor.x
+          iceZones.push({x:actor.x,until:time+4,source:actor})
+          emit('skill',actor.side,actor,null,0,'氷結エリア生成')
+        }
+        if(time>=actor.ice_skill_next_flight&&!actor.isFlying){
+          actor.ice_skill_next_flight=time+num(a.flightInterval,55)
+          actor.isFlying=true;actor.ice_flight_until=time+num(a.flightDuration,3)
+          actor.ice_wyvern_base_spd=actor.ice_wyvern_base_spd??actor.spd
+          actor.spd=num(a.flightSpeed,1.5);actor.target_id=null;actor.state='fly'
+          emit('skill',actor.side,actor,null,0,'飛行開始')
+        }
+        if(actor.isFlying&&time>=num(actor.ice_flight_until)){
+          actor.isFlying=false;actor.spd=num(actor.ice_wyvern_base_spd,actor.spd)
+          emit('skill',actor.side,actor,null,0,'飛行終了')
+        }
+        if(time>=actor.ice_skill_next_beam){
+          actor.ice_skill_next_beam=time+num(a.beamInterval,46)
+          const opposing=sides.find(side=>side.key!==actor.side)
+          const candidates=opposing.units.filter(target=>target.hp>0&&
+            (actor.side==='team1'?target.x<actor.x:target.x>actor.x)&&
+            Math.abs(target.x-actor.x)<=num(a.beamRange,600))
+            .sort((x,y)=>Math.abs(x.x-actor.x)-Math.abs(y.x-actor.x)).slice(0,num(a.beamHits,2))
+          for(const target of candidates){
+            let damage=Math.max(1,Math.round(actor.atk*2.5))
+            if(BattleCore.matchesTrait(target,'神話'))damage=Math.round(damage*num(a.mythDamageDealt,1))
+            applyResolvedDamage(actor,target,damage,time,rng,emit)
+            freezeByIce(target,num(a.beamFreeze,3),actor)
+            if(!num(actor.healing_disabled_until)||time>=num(actor.healing_disabled_until))actor.hp=Math.min(actor.max_hp,actor.hp+Math.round(damage*num(a.beamHeal,0)))
+            emit('skill',actor.side,actor,target,damage,'冷凍ビーム')
+          }
+        }
+      }
+    }
+  }
   while(time<MAX_TIME&&sides.every(s=>s.base_hp>0)) {
     for(const side of sides) {
       const skill=clamp(num(side.ai.skill,.25),.05,.995)
@@ -229,10 +291,15 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         }
       }
     }
+    tickIceWyvern()
     for(const side of sides) {
       const other=sides.find((x:any)=>x.key!==side.key)
       for(const u of side.units) {
         if(u.hp<=0)continue
+        if(u.isFlying&&u.ability?.iceWyvern){
+          u.state='fly';u.x=BattleCore.advancePosition({x:u.x,speed:u.spd,dt:STEP,direction:side.key==='team1'?-1:1,minX:side.key==='team1'?120:undefined,maxX:side.key==='team2'?WORLD_WIDTH-96:undefined});continue
+        }
+        if(num(u.ice_frozen_until)>time){u.state='frozen';continue}
         u.cooldown=Math.max(0,u.cooldown-STEP)
         if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
