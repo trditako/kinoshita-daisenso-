@@ -50,9 +50,9 @@
         critical=true;
         let metalDamage=effectiveAttack*Number(ability.criticalMultiplier||2);
         if(ability.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(ability.hpBelowThreshold||.5))metalDamage*=Number(ability.hpBelowThresholdMultiplier)||1;
-        return {damage:Math.max(1,Math.round(metalDamage)),critical,effectiveAttack};
+        return {damage:Math.max(1,Math.round(metalDamage)),rawDamage:metalDamage,critical,effectiveAttack};
       }
-      return {damage:1,critical:false,effectiveAttack};
+      return {damage:1,rawDamage:1,critical:false,effectiveAttack};
     }
     let mult=1;
     if(attacker.mythDomainUntil&&now<Number(attacker.mythDomainUntil))mult*=Number(attacker.mythDomainAtk||.72);
@@ -66,7 +66,8 @@
     if(ability.ancientHunter&&hasTrait(target,'古代'))mult*=Number(ability.ancientHunter)||1;
     if(ability.attributeOverload&&!hasTrait(target,'古代')&&attacker.series!=='機械防衛隊！木下s')mult*=Number(ability.attributeOverload.outgoing)||1;
     if(target.cursedUntil&&now<Number(target.cursedUntil)&&ability.cursedAttackMultiplier)mult*=Number(ability.cursedAttackMultiplier)||1;
-    return {damage:Math.max(1,Math.round(effectiveAttack*mult)),critical,effectiveAttack};
+    const rawDamage=effectiveAttack*mult;
+    return {damage:Math.max(1,Math.round(rawDamage)),rawDamage,critical,effectiveAttack};
   }
   let activeRuntime=null;
   function createRuntime(seed,initialTime=0){
