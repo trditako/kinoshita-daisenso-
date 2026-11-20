@@ -131,7 +131,7 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
   if (u.name==='ノヴァ木下') u.ability={...u.ability,modeSwitch:false}
   return u
 }
-function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
+function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number,baseAttack=num(attacker.atk,1)) {
   const normalizedAttacker={...attacker,maxhp:attacker.max_hp,killAttackStacks:attacker.kill_stacks,
     attackDownUntil:attacker.attack_down_until,attackDownFactor:attacker.attack_down_factor,
     cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time ? .5 : 1}
@@ -139,7 +139,7 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
   const sealed=BattleCore.isAbilitySealed(normalizedAttacker,time)
   if(sealed)normalizedAttacker.phoenixLowHpMultiplier=0
   return BattleCore.calculateAttackDamage({attacker:normalizedAttacker,target:normalizedTarget,
-    baseAttack:attacker.atk,time,ability:sealed?{}:(attacker.ability||{}),random:rng,traitMultiplier}).damage
+    baseAttack,time,ability:sealed?{}:(attacker.ability||{}),random:rng,traitMultiplier}).damage
 }
 
 function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void) {
@@ -213,6 +213,28 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       }
     }
     if(target.hp<=0&&a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
+  }
+  const processFollowups=()=>{
+    for(const side of sides){
+      const opposing=sides.find((entry:any)=>entry.key!==side.key)
+      for(const attacker of side.units){
+        const queue=arr<any>(attacker.followup_attacks)
+        if(!queue.length||attacker.hp<=0)continue
+        const pending:any[]=[]
+        for(const followup of queue){
+          if(num(followup.at)>time+1e-6){pending.push(followup);continue}
+          const target=opposing.units.find((unit:Unit)=>unit.id===Number(followup.target_id)&&unit.hp>0)
+          if(!target)continue
+          const damage=damageDealt(attacker,target,rng,time,num(followup.damage,attacker.atk))
+          emit('attack',side.key,attacker,target,0,'追撃 '+Number(followup.hitIndex+1)+'段目')
+          hit(side,target,attacker,damage)
+          const stopChance=num(attacker.waveStopChance??attacker.ability?.waveStopChance)
+          if(!BattleCore.isAbilitySealed(attacker,time)&&stopChance>0&&rng()<stopChance)
+            target.stop_until=Math.max(target.stop_until,time+num(attacker.waveStopDuration??attacker.ability?.waveStopDuration,1))
+        }
+        attacker.followup_attacks=pending
+      }
+    }
   }
   const iceZones:any[]=[];let nextIceZoneId=1
   const freezeByIce=(target:Unit,duration:number,source:Unit)=>{
@@ -293,6 +315,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       }
     }
     tickIceWyvern()
+    processFollowups()
     for(const side of sides) {
       const other=sides.find((x:any)=>x.key!==side.key)
       for(const u of side.units) {
@@ -312,8 +335,13 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
             const inAttackRange=(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30};const targets=u.attack_type==='area'||u.attack_type==='allrange'?activeEnemies.filter(inAttackRange):[target]
             emit('attack',side.key,u,target)
             for(const t of targets) {
-              let damage=damageDealt(u,t,rng,time)
+              const sequence=Array.isArray(u.multiAttack)&&u.multiAttack.length?u.multiAttack:[u.atk,...(u.secondAtk!=null?[u.secondAtk]:[]),...(u.thirdAtk!=null?[u.thirdAtk]:[])]
+              let damage=damageDealt(u,t,rng,time,num(sequence[0],u.atk))
               hit(side,t,u,damage)
+              for(let hitIndex=1;hitIndex<sequence.length;hitIndex++){
+                if(!Array.isArray(u.followup_attacks))u.followup_attacks=[]
+                u.followup_attacks.push({at:time+hitIndex*.1,target_id:t.id,damage:num(sequence[hitIndex],u.atk),hitIndex})
+              }
               const a=u.ability||{}
               if(a.wave&&rng()<num(a.waveChance,1)) {
                 for(const w of other.units)if(w.hp>0&&Math.abs(w.x-t.x)<160&&w!==t){const d=Math.max(1,Math.round(u.atk*.55));const dealt=applyResolvedDamage(u,w,d,time,rng,emit);if(dealt>0)emit('wave',side.key,u,w,dealt)}
