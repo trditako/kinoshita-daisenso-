@@ -101,6 +101,6 @@ assert.match(migration,/phase_ends_at/);
 assert.match(migration,/kwl_set_game_formation/);
 assert.match(migration,/kwl_register_ai_players_for_game/);
 assert.match(migration,/next_phase='draft'/);
-assert.match(sw,/kinoshita-daisen-v117/);
-assert.match(sw,/kwl\.js\?v=20261120-server-authoritative-spectator/);
+assert.match(sw,/kinoshita-daisen-v118/);
+assert.match(sw,/kwl\.js\?v=20261120-kwl-combat-core-2/);
 process.stdout.write('KWL IJL-style match-flow regression checks passed.\\n');
