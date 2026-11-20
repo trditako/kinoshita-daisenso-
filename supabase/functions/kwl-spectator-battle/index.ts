@@ -168,14 +168,14 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   if(target.hp<=0)emit('death',target.side,target,attacker)
   return resolution.damage
 }
-function snapshot(time:number,sides:any[],events:any[]) {
+function snapshot(time:number,sides:any[],events:any[],iceZones:any[] = []) {
   return {t:Number(time.toFixed(2)),team1_base_hp:Math.max(0,Math.round(sides[0].base_hp)),
     team2_base_hp:Math.max(0,Math.round(sides[1].base_hp)),team1_money:Math.floor(sides[0].money),
     team2_money:Math.floor(sides[1].money),units:sides.flatMap((s:any)=>s.units.filter((u:Unit)=>u.hp>0).map((u:Unit)=>({
       id:u.id,card_id:u.card_id,side:u.side,x:Number(u.x.toFixed(1)),hp:Math.max(0,Math.round(u.hp)),
       max_hp:Math.max(1,Math.round(u.max_hp)),state:u.state,trait:u.trait,barrier:Math.round(u.barrier),
       power_shield:Math.round(u.power_shield),slow:u.slow_until>time,stopped:u.stop_until>time,frozen:num(u.ice_frozen_until)>time,is_flying:!!u.isFlying
-    })))}
+    }))),ice_zones:iceZones.filter((z:any)=>z.until>time).map((z:any)=>({id:z.id,x:Number(z.x.toFixed(1)),remaining:Number((z.until-time).toFixed(2)),side:z.source.side}))}
 }
 function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[],form2:number[],seed:string) {
   const rng=makeRng(seed),sides:any[]=[
@@ -214,7 +214,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     }
     if(target.hp<=0&&a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
   }
-  const iceZones:any[]=[]
+  const iceZones:any[]=[];let nextIceZoneId=1
   const freezeByIce=(target:Unit,duration:number,source:Unit)=>{
     if(!target||target.hp<=0||target.freezeImmune||target.ability?.freezeImmune||target.ability?.iceWyvern?.freezeImmune)return
     target.ice_frozen_until=Math.max(num(target.ice_frozen_until),time+duration)
@@ -243,7 +243,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         actor.ice_skill_next_beam=num(actor.ice_skill_next_beam,time+num(a.beamInterval,46))
         if(actor.isFlying&&Math.abs(actor.x-num(actor.ice_last_zone_x,-9999))>=28){
           actor.ice_last_zone_x=actor.x
-          iceZones.push({x:actor.x,until:time+4,source:actor})
+          iceZones.push({id:nextIceZoneId++,x:actor.x,until:time+4,source:actor})
           emit('skill',actor.side,actor,null,0,'氷結エリア生成')
         }
         if(time>=actor.ice_skill_next_flight&&!actor.isFlying){
@@ -338,7 +338,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       side.units=side.units.filter((u:Unit)=>u.hp>0||u.x< -100||u.x>WORLD_WIDTH+100)
     }
     time=Number(clock.advance(STEP).toFixed(4))
-    if(time+1e-6>=nextFrame) {frames.push(snapshot(time,sides,events));nextFrame+=FRAME_INTERVAL}
+    if(time+1e-6>=nextFrame) {frames.push(snapshot(time,sides,events,iceZones));nextFrame+=FRAME_INTERVAL}
   }
   if(sides[0].base_hp===sides[1].base_hp) {
     const hp1=sides[0].units.reduce((a:number,u:Unit)=>a+Math.max(0,u.hp),0)
