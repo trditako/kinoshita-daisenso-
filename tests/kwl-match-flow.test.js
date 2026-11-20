@@ -42,6 +42,8 @@ assert.match(indexHtml,/KinoshitaBattleCore\.resolveDamage\(/,'game engine uses 
 assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine uses shared HP and shield resolution');
 assert.match(sharedCore,/function resolveOnHitEffects\(/,'shared core owns status effect and immunity resolution');
 assert.match(serverBattle,/BattleCore\.resolveOnHitEffects\(/,'server engine delegates on-hit status effects to shared core');
+assert.match(serverBattle,/BattleCore\.isAbilitySealed\(normalizedAttacker,time\)/,'server damage disables ability multipliers while cursed or restrained');
+assert.match(serverBattle,/if\(target\.hp>0&&!sealed\)/,'server replay does not apply on-hit abilities from sealed attackers');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveOnHitEffects\(/,'game engine delegates on-hit status effects to shared core');
 assert.match(serverBattle,/function applyResolvedDamage\(/,'all server-side damage routes through one shield-aware resolver');
 assert.match(serverBattle,/applyResolvedDamage\(attacker,splashTarget/,'splash damage respects resistance, barriers, power shields and damage caps');
