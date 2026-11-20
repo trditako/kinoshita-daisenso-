@@ -5,6 +5,8 @@ const kwl=fs.readFileSync('kwl.js','utf8');
 const migration=fs.readFileSync('supabase/migrations/20261120130000_kwl_match_presentation_flow.sql','utf8');
 const replayMigration=fs.readFileSync('supabase/migrations/20261120150000_kwl_server_authoritative_spectator.sql','utf8');
 const spectatorWorker=fs.readFileSync('supabase/functions/kwl-spectator-battle/index.ts','utf8');
+const characterData=JSON.parse(fs.readFileSync('supabase/functions/kwl-spectator-battle/character-data.json','utf8'));
+const supabaseConfig=fs.readFileSync('supabase/config.toml','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
 const aiWorker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 assert.match(kwl,/チーム紹介は60秒/);
