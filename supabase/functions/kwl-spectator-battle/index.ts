@@ -214,6 +214,39 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     }
     if(target.hp<=0&&a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
   }
+  const processZeusStrikes=()=>{
+    for(const side of sides){
+      const opposing=sides.find((entry:any)=>entry.key!==side.key)
+      for(const source of side.units){
+        const queue=arr<any>(source.zeus_strike_queue)
+        if(!queue.length||source.hp<=0)continue
+        const pending:any[]=[]
+        for(const strike of queue){
+          if(num(strike.at)>time+1e-6){pending.push(strike);continue}
+          const bands=arr<any>(source.ability?.zeusAlly?.bands)
+          const band=bands[Number(strike.bandIndex)]
+          if(!band)continue
+          const senseRange=Math.max(0,num(source.senseRange??source.detectRange,600))
+          const targets=opposing.units.filter((target:Unit)=>{
+            if(target.hp<=0||(target as any).muscleGrabbedBy)return false
+            const distance=(Number(target.x)-Number(source.x))*Number(strike.direction||1)
+            return distance>=num(band.min)&&distance<=num(band.max)&&Math.abs(distance)<=senseRange
+          })
+          const enemyCount=opposing.units.filter((target:Unit)=>target.hp>0).length
+          const bonus=1+Math.min(num(source.ability?.zeusAlly?.enemyCountMax,.2),enemyCount*num(source.ability?.zeusAlly?.enemyCountAttack,.02))
+          for(const target of targets){
+            const traitBonus=BattleCore.matchesTrait(target,['天使','神話','赤','宇宙'])?5:1
+            const rawDamage=Math.max(1,Math.round(num(band.damage,source.atk)*bonus*traitBonus))
+            const damage=damageDealt(source,target,rng,time,rawDamage)
+            emit('attack',side.key,source,target,0,'ゼウス雷撃 '+(Number(strike.bandIndex)+1)+'段目')
+            hit(side,target,source,damage)
+          }
+          if(!targets.length)emit('skill',side.key,source,null,0,'ゼウス雷撃 '+(Number(strike.bandIndex)+1)+'段目・空振り')
+        }
+        source.zeus_strike_queue=pending
+      }
+    }
+  }
   const processFollowups=()=>{
     for(const side of sides){
       const opposing=sides.find((entry:any)=>entry.key!==side.key)
@@ -315,6 +348,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       }
     }
     tickIceWyvern()
+    processZeusStrikes()
     processFollowups()
     for(const side of sides) {
       const other=sides.find((x:any)=>x.key!==side.key)
@@ -328,14 +362,22 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
         const currentTarget=activeEnemies.find((v:Unit)=>v.id===u.target_id)||null
-        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+30,inRange:(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30},canTarget:(v:Unit)=>!((v as any).isFlying||(v as any).is_flying)||!!u.airAttack||!!u.ability?.airAttack}) as Unit|null
+        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.name==='最高神:ゼウス'?num(u.senseRange??u.detectRange,u.range):u.range+30,inRange:(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.name==='最高神:ゼウス'?Math.abs(distance)<=num(u.senseRange??u.detectRange,u.range):u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30},canTarget:(v:Unit)=>!((v as any).isFlying||(v as any).is_flying)||!!u.airAttack||!!u.ability?.airAttack}) as Unit|null
         if(target) {
           u.state='attack';u.target_id=target.id
           if(u.cooldown<=0&&u.stop_until<=time) {
+            if(u.name==='最高神:ゼウス'&&Array.isArray(u.ability?.zeusAlly?.bands)){
+              const direction=Number(target.x)-Number(u.x)<0?-1:1
+              if(!Array.isArray(u.zeus_strike_queue))u.zeus_strike_queue=[]
+              u.ability.zeusAlly.bands.forEach((band:any,index:number)=>u.zeus_strike_queue.push({at:time+index*.5,bandIndex:index,direction}))
+              emit('attack',side.key,u,target,0,'ゼウス雷撃開始')
+              u.cooldown=u.interval
+              continue
+            }
             const inAttackRange=(v:Unit)=>{const distance=Number(v.x)-Number(u.x);return u.attack_type==='allrange'?distance>=num(u.minRange)&&distance<=num(u.maxRange,u.range):Math.abs(distance)<u.range+30};const targets=u.attack_type==='area'||u.attack_type==='allrange'?activeEnemies.filter(inAttackRange):[target]
             emit('attack',side.key,u,target)
             for(const t of targets) {
-              const sequence=Array.isArray(u.multiAttack)&&u.multiAttack.length?u.multiAttack:[u.atk,...(u.secondAtk!=null?[u.secondAtk]:[]),...(u.thirdAtk!=null?[u.thirdAtk]:[])]
+              const sequence=u.name==='最高神:ゼウス'?[u.atk]:(Array.isArray(u.multiAttack)&&u.multiAttack.length?u.multiAttack:[u.atk,...(u.secondAtk!=null?[u.secondAtk]:[]),...(u.thirdAtk!=null?[u.thirdAtk]:[])])
               let damage=damageDealt(u,t,rng,time,num(sequence[0],u.atk))
               hit(side,t,u,damage)
               for(let hitIndex=1;hitIndex<sequence.length;hitIndex++){
@@ -365,6 +407,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       }
       side.units=side.units.filter((u:Unit)=>u.hp>0||u.x< -100||u.x>WORLD_WIDTH+100)
     }
+    processZeusStrikes()
     time=Number(clock.advance(STEP).toFixed(4))
     if(time+1e-6>=nextFrame) {frames.push(snapshot(time,sides,events,iceZones));nextFrame+=FRAME_INTERVAL}
   }
