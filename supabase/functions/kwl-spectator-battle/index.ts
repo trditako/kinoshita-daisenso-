@@ -137,6 +137,17 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
     baseAttack:attacker.atk,time,ability:attacker.ability||{},random:rng,traitMultiplier}).damage
 }
 
+function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void) {
+  if(target.hp<=0)return 0
+  const resolution=BattleCore.resolveDamage({
+    target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield},
+    attacker,damage:rawDamage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
+  })
+  target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
+  emit('hit',attacker.side,attacker,target,resolution.damage)
+  if(target.hp<=0)emit('death',target.side,target,attacker)
+  return resolution.damage
+}
 function snapshot(time:number,sides:any[],events:any[]) {
   return {t:Number(time.toFixed(2)),team1_base_hp:Math.max(0,Math.round(sides[0].base_hp)),
     team2_base_hp:Math.max(0,Math.round(sides[1].base_hp)),team1_money:Math.floor(sides[0].money),
@@ -163,30 +174,24 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
   }
   const hit=(side:any,target:Unit,attacker:Unit,damage:number)=>{
     if(target.hp<=0)return
-    const resolution=BattleCore.resolveDamage({
-      target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield},
-      attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
-    })
-    const dealt=resolution.damage
-    target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
-    emit('hit',attacker.side,attacker,target,dealt)
+    const dealt=applyResolvedDamage(attacker,target,damage,time,rng,emit)
     const a=attacker.ability||{}
-    const effects=BattleCore.resolveOnHitEffects({attacker,target,time,random:rng,knockbackDistance:45,guaranteedKnockbackDistance:48})
-    target.slow_until=effects.slowUntil;target.slow_factor=effects.slowFactor;target.stop_until=effects.stopUntil
-    target.cursed_until=effects.cursedUntil;target.attack_down_until=effects.attackDownUntil;target.attack_down_factor=effects.attackDownFactor
-    if(effects.knockback)target.x+=target.side==='team1'?effects.knockback:-effects.knockback
-    for(const effect of effects.effects)emit('skill',attacker.side,attacker,target,0,effect)
+    // A defeated unit cannot receive new status effects or knockback.
+    if(target.hp>0){
+      const effects=BattleCore.resolveOnHitEffects({attacker,target,time,random:rng,knockbackDistance:45,guaranteedKnockbackDistance:48})
+      target.slow_until=effects.slowUntil;target.slow_factor=effects.slowFactor;target.stop_until=effects.stopUntil
+      target.cursed_until=effects.cursedUntil;target.attack_down_until=effects.attackDownUntil;target.attack_down_factor=effects.attackDownFactor
+      if(effects.knockback)target.x+=target.side==='team1'?effects.knockback:-effects.knockback
+      for(const effect of effects.effects)emit('skill',attacker.side,attacker,target,0,effect)
+    }
     if(a.splash&&a.splash>0) {
       const other=sides.find((x:any)=>x.key!==attacker.side)
       for(const splashTarget of other.units)if(splashTarget!==target&&splashTarget.hp>0&&Math.abs(splashTarget.x-target.x)<70){
-        const extra=Math.max(1,Math.round(dealt*num(a.splash)));splashTarget.hp=Math.max(0,splashTarget.hp-extra);emit('hit',attacker.side,attacker,splashTarget,extra)
-        if(splashTarget.hp<=0)emit('death',splashTarget.side,splashTarget,attacker)
+        const extra=Math.max(1,Math.round(dealt*num(a.splash)))
+        applyResolvedDamage(attacker,splashTarget,extra,time,rng,emit)
       }
     }
-    if(target.hp<=0) {
-      emit('death',target.side,target,attacker)
-      if(a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
-    }
+    if(target.hp<=0&&a.killAttackStack){attacker.kill_stacks=Math.min(30,attacker.kill_stacks+1);attacker.atk=Math.round(attacker.atk*(1+num(a.killAttackStack.perKill,.05)))}
   }
   while(time<MAX_TIME&&sides.every(s=>s.base_hp>0)) {
     for(const side of sides) {
@@ -223,10 +228,10 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
               hit(side,t,u,damage)
               const a=u.ability||{}
               if(a.wave&&rng()<num(a.waveChance,1)) {
-                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-t.x)<160&&w!==t){const d=Math.max(1,Math.round(u.atk*.55));w.hp=Math.max(0,w.hp-d);emit('wave',side.key,u,w,d);if(w.hp<=0)emit('death',w.side,w,u)}
+                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-t.x)<160&&w!==t){const d=Math.max(1,Math.round(u.atk*.55));const dealt=applyResolvedDamage(u,w,d,time,rng,emit);if(dealt>0)emit('wave',side.key,u,w,dealt)}
               }
               if(a.phoenixSurgeLevel&&rng()<num(a.phoenixSurgeChance,1)) {
-                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-u.x)<=num(a.phoenixSurgeMax,200)){const d=Math.max(1,Math.round(u.atk*.35));w.hp=Math.max(0,w.hp-d);emit('surge',side.key,u,w,d);if(w.hp<=0)emit('death',w.side,w,u)}
+                for(const w of other.units)if(w.hp>0&&Math.abs(w.x-u.x)<=num(a.phoenixSurgeMax,200)){const d=Math.max(1,Math.round(u.atk*.35));const dealt=applyResolvedDamage(u,w,d,time,rng,emit);if(dealt>0)emit('surge',side.key,u,w,dealt)}
               }
             }
             u.cooldown=u.interval
