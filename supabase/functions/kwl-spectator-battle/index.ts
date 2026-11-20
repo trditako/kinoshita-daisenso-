@@ -127,7 +127,7 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
     trait:String(card.trait||'無'),attack_type:String(card.attackType||'single'),ability:obj(card.ability),
     kb:Math.max(1,num(card.kb,1)),state:'move',slow_until:0,slow_factor:1,stop_until:0,
     attack_down_until:0,attack_down_factor:1,cursed_until:0,barrier:num(card.barrier),
-    power_shield:num(card.powerShield||card.ability?.powerShield),kill_stacks:0,target_id:null}
+    power_shield:num(card.powerShield||card.ability?.powerShield||card.ability?.zeusAlly?.shield),power_shield_max:num(card.powerShield||card.ability?.powerShield||card.ability?.zeusAlly?.shield),kill_stacks:0,target_id:null}
   if (u.name==='ノヴァ木下') u.ability={...u.ability,modeSwitch:false}
   return u
 }
@@ -142,10 +142,17 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number,baseAt
     baseAttack,time,ability:sealed?{}:(attacker.ability||{}),random:rng,traitMultiplier}).damage
 }
 
-function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void) {
+function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void,flags:any={}) {
   if(target.hp<=0)return 0
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield}
   const iceWyvernDamage=BattleCore.resolveIceWyvernIncomingDamage({attacker,target:normalizedTarget,damage:rawDamage})
+  let incoming=iceWyvernDamage.damage
+  const zeusTarget=target.name==='最高神:ゼウス'
+  if(zeusTarget){
+    if(BattleCore.matchesTrait(attacker,['天使','神話','赤','宇宙']))incoming*=.45
+    incoming=Math.min(incoming,Math.max(1,target.max_hp*.11))
+    incoming*=1-Math.min(.75,num(target.zeusDefenseStacks)*.05)
+  }
   if(iceWyvernDamage.mythologyAttacker){
     attacker.healing_disabled_until=time+3
     attacker.kill_stacks=0;attacker.muscleKillStacks=0;attacker.muscleRightBonusAtk=0;attacker.mythSoulAtkFactor=1
@@ -155,7 +162,7 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   }
   const resolution=BattleCore.resolveDamage({
     target:normalizedTarget,
-    attacker,damage:iceWyvernDamage.damage,time,ability:{},random:rng,traitMultiplier,curseFactor:1
+    attacker,damage:incoming,time,ability:{},random:rng,traitMultiplier,curseFactor:1
   })
   target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
   const iceGrowth=BattleCore.resolveIceWyvernAfterHit({target:{...target,maxhp:target.max_hp},attacker,actualDamage:resolution.damage})
@@ -163,6 +170,35 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
     target.hp=iceGrowth.hp;target.max_hp=iceGrowth.maxHp;target.atk=iceGrowth.atk;target.spd=iceGrowth.spd
     target.range=iceGrowth.range;target.interval=iceGrowth.interval;target.iceDamageStacks=iceGrowth.iceDamageStacks
     target.iceWyvernBaseStats=iceGrowth.iceWyvernBaseStats;target.iceWyvernAppliedGrowth=iceGrowth.iceWyvernAppliedGrowth
+  }
+  const shieldDamage=Math.max(0,num(normalizedTarget.power_shield)-num(target.power_shield))
+  if(zeusTarget&&(resolution.damage>0||shieldDamage>0)){
+    if(resolution.damage>0){
+      target.hp=Math.min(target.max_hp,target.hp+Math.round(resolution.damage*.3))
+      if(attacker.hp>0&&!flags.zeusReflection)applyResolvedDamage(target,attacker,Math.max(1,Math.round(resolution.damage*.2)),time,rng,emit,{zeusReflection:true})
+    }
+    target.zeusDefenseStacks=Math.min(15,num(target.zeusDefenseStacks)+1)
+    if(shieldDamage>0&&attacker.hp>0&&!flags.zeusReflection){
+      applyResolvedDamage(target,attacker,Math.max(1,Math.round(shieldDamage*.1)),time,rng,emit,{zeusReflection:true})
+      attacker.stop_until=Math.max(num(attacker.stop_until),time+1)
+      if(attacker.zeus_range_base==null)attacker.zeus_range_base=attacker.range
+      attacker.range=Math.max(1,num(attacker.zeus_range_base)*.2)
+      attacker.zeus_range_until=time+3
+    }
+  }
+  if(target.hp<=0&&attacker.name==='最高神:ゼウス'){
+    const maxShield=num(attacker.power_shield_max)
+    attacker.power_shield=Math.min(maxShield,num(attacker.power_shield)+maxShield*num(attacker.ability?.zeusAlly?.shieldKillRestore,.02))
+  }
+  if(attacker.name==='最高神:ゼウス'&&resolution.damage>0&&!flags.zeusReflection){
+    const z=attacker.ability?.zeusAlly||{},chance=Math.max(0,Math.min(1,num(z.stopChance)))
+    if(rng()<chance){
+      const canStop=!(target.stopImmune||target.ability?.stopImmune)
+      const canLower=!(target.attackDownImmune||target.ability?.attackDownImmune)
+      if(rng()<.5&&canStop)target.stop_until=Math.max(num(target.stop_until),time+num(z.stopDuration,2))
+      else if(canLower){target.attack_down_until=Math.max(num(target.attack_down_until),time+num(z.attackDownDuration,2));target.attack_down_factor=num(z.attackDownFactor,.2)}
+      else if(canStop)target.stop_until=Math.max(num(target.stop_until),time+num(z.stopDuration,2))
+    }
   }
   emit('hit',attacker.side,attacker,target,resolution.damage)
   if(target.hp<=0)emit('death',target.side,target,attacker)
