@@ -33,6 +33,13 @@ assert.match(indexHtml,/KinoshitaBattleCore\.selectTarget\(enemies,u\.target/,'g
 assert.match(serverBattle,/BattleCore\.selectTarget\(activeEnemies,currentTarget/,'server engine uses shared target selection');
 assert.match(serverBattle,/u\.attack_type==='allrange'\?distance>=num\(u\.minRange\)/,'server replay respects all-range minimum and maximum attack bands');
 assert.match(serverBattle,/u\.attack_type==='area'\|\|u\.attack_type==='allrange'/,'server replay resolves all-range attacks against every eligible target');
+assert.match(serverBattle,/const processZeusStrikes=\(\)=>/,'server replay resolves Zeus lightning bands on its deterministic clock');
+assert.match(serverBattle,/source\.ability\?\.zeusAlly\?\.bands/,'server replay reads the same Zeus strike bands as the browser');
+assert.match(serverBattle,/damageDealt\(attacker:Unit,target:Unit,rng:\(\)=>number,time:number,baseAttack=/,'server damage resolver accepts band-specific Zeus and multi-hit attack values');
+assert.match(serverBattle,/target\.name==='最高神:ゼウス'/,'server replay applies Zeus-specific defensive mechanics');
+assert.match(serverBattle,/power_shield:num\(card\.powerShield\|\|card\.ability\?\.powerShield\|\|card\.ability\?\.zeusAlly\?\.shield\)/,'server spawns Zeus with its configured power shield');
+assert.match(serverBattle,/attacker\.zeus_range_until=time\+3/,'Zeus shield reflection applies a timed range penalty');
+assert.match(serverBattle,/u\.zeus_range_until&&time>=num\(u\.zeus_range_until\)/,'Zeus range penalty expires on server time');
 assert.match(serverBattle,/const u:Unit=\{\.\.\.card,id:nextId/,'server units retain card-level combat flags and immunities');
 assert.match(serverBattle,/\(v as any\)\.isFlying\|\|\(v as any\)\.is_flying/,'server target selection recognizes browser camelCase and serialized snake_case flight flags');
 assert.match(indexHtml,/KinoshitaBattleCore\.advancePosition\(/,'game engine uses shared movement calculation');
