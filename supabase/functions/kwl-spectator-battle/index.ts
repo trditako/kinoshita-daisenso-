@@ -170,10 +170,12 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
   }
   const hit=(side:any,target:Unit,attacker:Unit,damage:number)=>{
     if(target.hp<=0)return
-    let dealt=damageTaken(target,attacker,damage,rng,time)
-    if(target.barrier>0){const absorbed=Math.min(target.barrier,dealt);target.barrier-=absorbed;dealt-=absorbed}
-    if(target.power_shield>0&&dealt>0){const absorbed=Math.min(target.power_shield,dealt);target.power_shield-=absorbed;dealt-=absorbed}
-    if(dealt>0)target.hp=Math.max(0,target.hp-dealt)
+    const resolution=BattleCore.resolveDamage({
+      target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield},
+      attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
+    })
+    const dealt=resolution.damage
+    target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
     emit('hit',attacker.side,attacker,target,dealt)
     const a=attacker.ability||{}
     if(a.slow&&!target.ability?.slowImmune&&!target.ability?.slowImmunity&&matchTrait(a.slow.trait||'*',target)&&rng()<num(a.slow.chance)) {
