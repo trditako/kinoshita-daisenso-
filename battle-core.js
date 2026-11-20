@@ -130,9 +130,9 @@
       attackDownUntil:Number(target.attackDownUntil??target.attack_down_until)||0,
       attackDownFactor:Number(target.attackDownFactor??target.attack_down_factor)||1,
       knockback:0,effects:[]};
-    const immune=(...keys)=>keys.some(key=>!!target.ability?.[key]);
+    const immune=(...keys)=>keys.some(key=>typeof o.hasAbilityFlag==='function'?o.hasAbilityFlag(target,key):!!(target[key]||target.ability?.[key]));
     const eligible=(rule)=>!rule||matchesTrait(target,rule);
-    if(ability.slow&&!immune('slowImmune','slowImmunity')&&eligible(ability.slow.trait||'*')&&random()<Number(ability.slow.chance||0)){
+    if(ability.slow&&!ability.slow.all&&!immune('slowImmune','slowImmunity')&&eligible(ability.slow.trait||'*')&&random()<Number(ability.slow.chance||0)){
       state.slowUntil=time+Number(ability.slow.duration||2);state.slowFactor=Math.max(.05,Math.min(1,Number(ability.slow.factor||.6)));state.effects.push('鈍足');
     }
     if(ability.slowChance&&!immune('slowImmune','slowImmunity')&&random()<Number(ability.slowChance)){
@@ -144,16 +144,16 @@
     if(ability.curseChance&&!immune('curseImmune','curseImmunity')&&random()<Number(ability.curseChance)){
       state.cursedUntil=time+Number(ability.curseDuration||2);state.effects.push('呪い');
     }
-    if(ability.sealChance&&!immune('sealImmune','sealImmunity')&&random()<Number(ability.sealChance)){
+    if(ability.sealChance&&!immune('sealImmune','sealImmunity','curseImmune')&&random()<Number(ability.sealChance)){
       state.cursedUntil=time+Number(ability.sealDuration||3);state.effects.push('能力封印');
     }
     if(ability.attackDownChance&&!immune('attackDownImmune')&&random()<Number(ability.attackDownChance)){
       state.attackDownUntil=time+Number(ability.attackDownDuration||4);state.attackDownFactor=Math.max(.01,Math.min(1,Number(ability.attackDownFactor||.5)));state.effects.push('攻撃力低下');
     }
-    if(ability.knockbackChance&&!immune('knockbackImmune')&&random()<Number(ability.knockbackChance)){
+    if(Number(target.hp??1)>0&&ability.knockbackChance&&!immune('knockbackImmune')&&random()<Number(ability.knockbackChance)){
       state.knockback+=Number(o.knockbackDistance||45);state.effects.push('ふっとばし');
     }
-    if(ability.guaranteeKnockback){state.knockback+=Number(o.guaranteedKnockbackDistance||48);state.effects.push('確定ふっとばし');}
+    if(Number(target.hp??1)>0&&ability.guaranteeKnockback&&!immune('knockbackImmune')){state.knockback+=Number(o.guaranteedKnockbackDistance||48);state.effects.push('確定ふっとばし');}
     return state;
   }
   let activeRuntime=null;
