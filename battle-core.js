@@ -35,6 +35,25 @@
     if(values.length)return mode==='min'?Math.min(...values):Math.max(...values);
     return Number(table['*'])>0?Number(table['*']):1;
   }
+  function selectTarget(candidates,currentTarget,options={}) {
+    const list=Array.isArray(candidates)?candidates:[];
+    const x=Number(options.x)||0;
+    const range=Math.max(0,Number(options.range)||0);
+    const allRange=options.attackType==='allrange';
+    const canTarget=typeof options.canTarget==='function'?options.canTarget:()=>true;
+    const inRange=typeof options.inRange==='function'
+      ? options.inRange
+      : candidate=>Math.abs(Number(candidate?.x||0)-x)<range;
+    const valid=candidate=>!!candidate&&Number(candidate.hp)>0&&!candidate.muscleGrabbedBy&&canTarget(candidate)&&inRange(candidate);
+    if(valid(currentTarget))return currentTarget;
+    let best=null,bestDistance=Infinity;
+    for(const candidate of list){
+      if(!valid(candidate))continue;
+      const distance=Math.abs(Number(candidate.x||0)-x);
+      if(distance<bestDistance){best=candidate;bestDistance=distance;}
+    }
+    return best;
+  }
   function calculateAttackDamage(options){
     const o=options||{},attacker=o.attacker||{},target=o.target||{},ability=o.ability||{};
     const now=Number(o.time)||0,random=typeof o.random==='function'?o.random:Math.random;
@@ -88,7 +107,7 @@
     matchesTrait,
     tableMatches,
     traitMultiplier,
-    calculateAttackDamage,
+    calculateAttackDamage,\n    selectTarget,
     createClock,
     createRuntime,
     setActiveRuntime,
