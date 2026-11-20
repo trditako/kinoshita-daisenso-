@@ -146,7 +146,14 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   if(target.hp<=0)return 0
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield}
   const iceWyvernDamage=BattleCore.resolveIceWyvernIncomingDamage({attacker,target:normalizedTarget,damage:rawDamage})
-  let incoming=iceWyvernDamage.damage
+  const miraiKDamage=BattleCore.resolveMiraiKIncomingDamage({target:normalizedTarget,attacker,damage:iceWyvernDamage.damage,time})
+  let incoming=miraiKDamage.damage
+  if(miraiKDamage.capped){
+    attacker.attack_down_until=Math.max(num(attacker.attack_down_until),miraiKDamage.attackDownUntil)
+    attacker.attack_down_factor=Math.min(num(attacker.attack_down_factor,1),miraiKDamage.attackDownFactor)
+    attacker.cursed_until=Math.max(num(attacker.cursed_until),miraiKDamage.cursedUntil)
+    attacker.cursedAttackFactor=miraiKDamage.cursedAttackFactor
+  }
   const zeusTarget=target.name==='最高神:ゼウス'
   if(zeusTarget){
     if(BattleCore.matchesTrait(attacker,['天使','神話','赤','宇宙']))incoming*=.45
