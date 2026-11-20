@@ -140,7 +140,7 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
 function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
   const result=BattleCore.calculateDamageTaken({
     target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until},
-    attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier
+    attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier,curseFactor:.7,applyCap:true
   })
   return result.damage
 }
