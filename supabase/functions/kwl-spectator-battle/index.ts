@@ -225,7 +225,8 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         u.cooldown=Math.max(0,u.cooldown-STEP)
         if(u.stop_until>time){u.state='stopped';continue}
         const activeEnemies=other.units.filter((v:Unit)=>v.hp>0)
-        const target=activeEnemies.filter((v:Unit)=>Math.abs(v.x-u.x)<u.range+28).sort((a:Unit,b:Unit)=>Math.abs(a.x-u.x)-Math.abs(b.x-u.x))[0]
+        const currentTarget=activeEnemies.find((v:Unit)=>v.id===u.target_id)||null
+        const target=BattleCore.selectTarget(activeEnemies,currentTarget,{x:u.x,range:u.range+28,canTarget:(v:Unit)=>!(v as any).is_flying||!!u.ability?.airAttack}) as Unit|null
         if(target) {
           u.state='attack';u.target_id=target.id
           if(u.cooldown<=0&&u.stop_until<=time) {
