@@ -44,6 +44,7 @@ assert.match(serverBattle,/BattleCore\.resolveIceWyvernIncomingDamage\(/,'server
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernIncomingDamage\(/,'browser engine uses the same Ice Wyvern damage resolver');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernAfterHit\(/,'browser engine uses shared Ice Wyvern growth and healing');
 assert.match(serverBattle,/BattleCore\.resolveIceWyvernAfterHit\(/,'server replay uses the same Ice Wyvern growth and healing');
+assert.match(serverBattle,/attacker\.healing_disabled_until=time\+3/,'Ice Wyvern mythology hits disable attacker healing for the same duration');
 assert.match(serverBattle,/const tickIceWyvern=\(\)=>/,'server replay simulates Ice Wyvern timed skills');
 assert.match(serverBattle,/a\.flightInterval/,'server replay schedules Ice Wyvern flight');
 assert.match(serverBattle,/a\.beamInterval/,'server replay schedules Ice Wyvern beam');
