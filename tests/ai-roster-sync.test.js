@@ -15,6 +15,8 @@ assert.match(worker,/aiCharacterRosterLength/,'per-account arrays resize when th
 assert.match(worker,/await syncCharacterRoster\(\)/,'roster sync runs before AI account processing');
 assert.match(worker,/isRegisteredCharacter\(id\)/,'gacha candidates exclude unused ID slots');
 assert.match(exporter,/window\.KINOSHITA_CHARACTER_ROSTER/,'exporter reads the final game runtime roster');
+assert.match(exporter,/const runtimeCards=await page\.evaluate\(\(\)=>cards\.map/,'exporter reads full runtime card objects');
+assert.match(exporter,/supabase\/functions\/kwl-spectator-battle\/character-data\.json/,'exporter writes server battle card data');
 assert.match(exporter,/最高神:ゼウス/,'exporter waits for the late Zeus registration before adding Hastur');
 assert.match(exporter,/window\.KINOSHITA_CHARACTER_ID_AUDIT/,'exporter validates the final ID audit');
 assert.match(workflow,/playwright@1\.56\.1/,'browser dependency is pinned');
