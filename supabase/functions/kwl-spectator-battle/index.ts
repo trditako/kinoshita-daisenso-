@@ -239,7 +239,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
         } else {
           u.state='move';u.target_id=null
           const slow=u.slow_until>time?u.slow_factor:1
-          u.x+=side.key==='team1'?-u.spd*60*STEP*slow:u.spd*60*STEP*slow
+          u.x=BattleCore.advancePosition({x:u.x,speed:u.spd,dt:STEP,direction:side.key==='team1'?-1:1,slowFactor:slow})
           const reached=side.key==='team1'?u.x<=118:u.x>=WORLD_WIDTH-178
           if(reached&&u.cooldown<=0) {
             side // keep type inference stable for Deno
