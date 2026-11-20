@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'battle-core.js'
+      - 'tests/battle-core.test.js'
       - 'kwl.js'
       - 'genesis.js'
       - 'hitman.js'
@@ -72,6 +74,8 @@ jobs:
           done
       - name: Check Genesis Kinoshita script and regression tests
         run: |
+          node --check battle-core.js
+          node tests/battle-core.test.js
           node --check kwl.js
           node tests/kwl-rehearsal.test.js
           node tests/kwl-match-flow.test.js
