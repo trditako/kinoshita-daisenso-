@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('node:fs');
+const assert=require('node:assert/strict');
+const kwl=fs.readFileSync('kwl.js','utf8');
+const migration=fs.readFileSync('supabase/migrations/20261120130000_kwl_match_presentation_flow.sql','utf8');
+const sw=fs.readFileSync('service-worker.js','utf8');
+assert.match(kwl,/チーム紹介は60秒/);
+assert.match(kwl,/選手選択・編成は90秒/);
+assert.match(kwl,/次ラウンドまで休憩（5分）/);
+assert.match(kwl,/kwl_set_match_phase/);
+assert.match(kwl,/updateMatchPhaseCountdown/);
+assert.match(migration,/KWL運営者のみ実行できます/);
+assert.match(migration,/kwl_game_players_phase_guard/);
+assert.match(migration,/kwl_character_locks_phase_guard/);
+assert.match(migration,/phase_ends_at/);
+assert.match(sw,/kinoshita-daisen-v114/);
+assert.match(sw,/kwl\.js\?v=20261120-ijllike-match-flow/);
+process.stdout.write('KWL IJL-style match-flow regression checks passed.\\n');
