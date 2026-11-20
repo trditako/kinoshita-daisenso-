@@ -138,14 +138,11 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
 }
 
 function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
-  const a=target.ability||{}
-  let mult=traitMultiplier(a.resist,attacker,'min')
-  if (a.damageReduce&&typeof a.damageReduce==='object'&&rng()<num(a.damageReduce.chance,.5))mult*=num(a.damageReduce.factor,.2)
-  if (target.cursed_until>time)mult*=.7
-  let out=Math.max(1,Math.round(damage*mult))
-  const cap=num(a.damageCapRatio||a.iceWyvern?.damageCap||0)
-  if (cap>0)out=Math.min(out,Math.max(1,Math.round(target.max_hp*cap)))
-  return out
+  const result=BattleCore.calculateDamageTaken({
+    target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until},
+    attacker,damage,time,ability:target.ability||{},random:rng,traitMultiplier
+  })
+  return result.damage
 }
 function snapshot(time:number,sides:any[],events:any[]) {
   return {t:Number(time.toFixed(2)),team1_base_hp:Math.max(0,Math.round(sides[0].base_hp)),
