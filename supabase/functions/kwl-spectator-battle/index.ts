@@ -146,11 +146,23 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
   if(target.hp<=0)return 0
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield}
   const iceWyvernDamage=BattleCore.resolveIceWyvernIncomingDamage({attacker,target:normalizedTarget,damage:rawDamage})
+  if(iceWyvernDamage.mythologyAttacker){
+    attacker.kill_stacks=0;attacker.muscleKillStacks=0;attacker.muscleRightBonusAtk=0;attacker.mythSoulAtkFactor=1
+    if(attacker.iceWyvernBaseAtk)attacker.atk=Number(attacker.iceWyvernBaseAtk)
+    if(attacker.iceWyvernBaseSpd)attacker.spd=Number(attacker.iceWyvernBaseSpd)
+    if(attacker.iceWyvernBaseInterval)attacker.interval=Number(attacker.iceWyvernBaseInterval)
+  }
   const resolution=BattleCore.resolveDamage({
     target:normalizedTarget,
     attacker,damage:iceWyvernDamage.damage,time,ability:{},random:rng,traitMultiplier,curseFactor:1
   })
   target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
+  const iceGrowth=BattleCore.resolveIceWyvernAfterHit({target:{...target,maxhp:target.max_hp},attacker,actualDamage:resolution.damage})
+  if(iceGrowth.applied){
+    target.hp=iceGrowth.hp;target.max_hp=iceGrowth.maxHp;target.atk=iceGrowth.atk;target.spd=iceGrowth.spd
+    target.range=iceGrowth.range;target.interval=iceGrowth.interval;target.iceDamageStacks=iceGrowth.iceDamageStacks
+    target.iceWyvernBaseStats=iceGrowth.iceWyvernBaseStats;target.iceWyvernAppliedGrowth=iceGrowth.iceWyvernAppliedGrowth
+  }
   emit('hit',attacker.side,attacker,target,resolution.damage)
   if(target.hp<=0)emit('death',target.side,target,attacker)
   return resolution.damage
