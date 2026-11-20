@@ -42,6 +42,8 @@ assert.equal(core.selectTarget([farTarget,nearTarget],farTarget,{x:0,range:100})
   'shared targeting preserves a still-valid current target');
 assert.equal(core.selectTarget([farTarget],farTarget,{x:0,range:20}),null,
   'shared targeting drops a current target that leaves range');
+assert.equal(core.selectTarget([nearTarget],farTarget,{x:0,range:100}),nearTarget,
+  'shared targeting rejects a current target removed from the active candidate list');
 assert.equal(core.selectTarget([farTarget,nearTarget],null,{x:0,range:100,canTarget:t=>t.id!==2}),farTarget,
   'shared targeting applies caller-specific target eligibility');
 const rngA=core.createRng('kwl-shared-core-regression');
