@@ -173,7 +173,7 @@ function renderMatchDetail(){
    h+='<div style="margin-top:10px;padding:10px;background:#14532d;border-radius:8px"><b>試合開始</b><p style="font-size:11px;color:#dcfce7">'+(myCurrentPlayer?'出場選手：'+esc(myCurrentPlayer.player_name):'登録済みの出場選手を確認してください')+'。既存の対人戦ルームで相手と接続してください。</p><button id="kwlOpenPvp" class="formationBtn" style="width:100%">⚔️ 対人戦ルームを開く</button></div>';
   }else if(isInMatch&&m.status!=='completed'){
    h+='<div style="padding:9px;background:#334155;border-radius:8px">現在は出場登録受付外です。運営によるチーム紹介・選手選択・試合開始の進行をお待ちください。</div>';
-  }else if(!isInMatch)h+='<div style="padding:9px;background:#334155;border-radius:8px">自分の同盟チームが出場するカードではありません。</div>';background:#334155;border-radius:8px">自分の同盟チームが出場するカードではありません。</div>';
+  }else if(!isInMatch)h+='<div style="padding:9px;background:#334155;border-radius:8px">自分の同盟チームが出場するカードではありません。</div>';
  h+='<h4 style="margin:12px 0 5px">チーム別使用禁止キャラクター</h4>';
  for(const tid of [m.team1_id,m.team2_id]){const ls=locks.filter(x=>Number(x.team_id)===Number(tid));h+='<div style="font-size:12px;margin:4px 0"><b>'+esc(teamName(tid))+'：</b>'+(ls.map(x=>esc(x.character_key)+'（第'+x.first_game_number+'試合）').join('、')||'まだ使用なし')+'</div>';}
  h+='<h4 style="margin:12px 0 5px">ライブ実況・試合ログ</h4><div id="kwlEventList" style="max-height:190px;overflow:auto;background:#111827;padding:8px;border-radius:8px">'+(events.length?events.slice().reverse().map(e=>'<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #334155"><b>'+esc(e.player_name||e.event_type)+'</b> '+esc(e.message)+'</div>').join(''):'<div style="color:#94a3b8;font-size:12px">まだイベントはありません。</div>')+'</div>';
