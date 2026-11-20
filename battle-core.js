@@ -24,6 +24,7 @@
       advance(delta){const step=Number(delta);if(!Number.isFinite(step)||step<0)throw new RangeError('Battle clock delta must be finite and non-negative');current+=step;return current;}
     });
   }
+  function scaleLevelStat(base,level,growth=1.04){const b=Number(base),lv=Math.max(1,Number(level)||1),g=Number(growth);return b*Math.pow(Number.isFinite(g)&&g>0?g:1,lv-1);}
   function traits(value){return String(value||'無').split(/[・,]/).map(x=>x.trim()).filter(Boolean);}
   function hasTrait(entity,trait){if(!entity||!trait)return false;return traits(entity.trait).includes(String(trait));}
   function matchesTrait(entity,rules){return (Array.isArray(rules)?rules:[rules]).some(trait=>String(trait)==='*'||hasTrait(entity,trait));}
@@ -47,6 +48,7 @@
   root.KinoshitaBattleCore=Object.freeze({
     version:'1.0.0',
     createRng,
+    scaleLevelStat,
     traits,
     hasTrait,
     matchesTrait,
