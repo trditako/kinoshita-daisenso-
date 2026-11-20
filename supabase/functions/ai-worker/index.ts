@@ -670,16 +670,29 @@ async function processKWLAIAutoMatches(tick:number){
      const {error}=await db.rpc('kwl_lock_character',{p_match_id:Number(match.id),p_game_number:gameNo,p_team_id:Number(team2.id),p_player_id:String(sideB.player_id),p_player_type:'ai',p_character_key:String(charB)});
      if(error){if(!String(error.message||'').includes('すでに使用'))console.warn('KWL AI character lock deferred:',error.message);continue;}
     }
-    const profileA=prof(aiA),profileB=prof(aiB);
-    let qualityA=.25+profileA.skill*.42+(profileA.strength-.5)*.25;
-    let qualityB=.25+profileB.skill*.42+(profileB.strength-.5)*.25;
-    if(profileA.s==='counter')qualityA+=.15;
-    if(profileB.s==='counter')qualityB+=.15;
-    qualityA=clamp(qualityA,.08,.93);qualityB=clamp(qualityB,.08,.93);
-    const scoreA=qualityA*.72+profileA.strength*.18+num(aiA.rp)*.00002+aiFormationPower(aiA)*.45+aiCharacterQuality(charA)*.08;
-    const scoreB=qualityB*.72+profileB.strength*.18+num(aiB.rp)*.00002+aiFormationPower(aiB)*.45+aiCharacterQuality(charB)*.08;
-    const chanceA=clamp(.5+(scoreA-scoreB)*.62,.08,.92);
-    const winner=rnd('kwl-ai:'+String(match.id)+':'+String(gameNo)+':'+String(Math.min(idA,idB))+':'+String(Math.max(idA,idB)))<chanceA?Number(team1.id):Number(team2.id);
+    const phase=String(obj(obj(match.live_state).presentation).phase||'pending');
+    if(phase!=='live')continue;
+    const controller=new AbortController();
+    const spectatorTimeout=setTimeout(()=>controller.abort(),12000);
+    let spectator:any=null;
+    try{
+     const response=await fetch(`${URL}/functions/v1/kwl-spectator-battle`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-ai-worker-token':TOKEN},
+      body:JSON.stringify({match_id:Number(match.id),game_number:gameNo}),
+      signal:controller.signal
+     });
+     spectator=await response.json().catch(()=>null);
+     if(!response.ok||!spectator?.ok||spectator.status!=='completed'){
+      if(!spectator?.status||spectator.status!=='simulating')console.warn('KWL server battle replay deferred:',String(spectator?.error||response.status));
+      continue;
+     }
+    }catch(e){
+     console.warn('KWL server battle replay request deferred:',e instanceof Error?e.message:String(e));
+     continue;
+    }finally{clearTimeout(spectatorTimeout);}
+    const winner=Number(spectator.winner_team_id);
+    if(winner!==Number(team1.id)&&winner!==Number(team2.id))continue;
     const {data:resultData,error:resultError}=await db.rpc('kwl_record_game_result',{
      p_match_id:Number(match.id),p_game_number:gameNo,p_winner_team_id:winner,
      p_reporter_id:'KWL-AI-WORKER'
@@ -692,8 +705,8 @@ async function processKWLAIAutoMatches(tick:number){
     const {error:eventError}=await db.from('kwl_live_events').insert({
      tournament_key:tour.tournament_key,match_id:Number(match.id),game_number:gameNo,
      event_type:'system',team_id:winner,player_name:'AI自動進行',
-     message:'AI同士の自動対戦：第'+gameNo+'試合 '+String(winnerPlayer.player_name||winnerPlayer.player_id)+' が勝利（使用キャラ #'+(winnerCharacter+1)+'）',
-     payload:{mode:'ai_simulation',winner_player_id:winnerPlayer.player_id,loser_player_id:loserPlayer.player_id,winner_character_id:winnerCharacter,loser_character_id:loserCharacter,win_probability:Number((winner===Number(team1.id)?chanceA:1-chanceA).toFixed(4)),series_completed:!!resultData?.series_completed}
+     message:'AI同士のサーバー戦闘：第'+gameNo+'試合 '+String(winnerPlayer.player_name||winnerPlayer.player_id)+' が勝利（使用キャラ #'+(winnerCharacter+1)+'）',
+     payload:{mode:'server_authoritative_replay',engine_version:'kwl-server-replay-v1',winner_player_id:winnerPlayer.player_id,loser_player_id:loserPlayer.player_id,winner_character_id:winnerCharacter,loser_character_id:loserCharacter,duration_seconds:Number(spectator.duration_seconds||0),series_completed:!!resultData?.series_completed}
     });
     if(eventError)console.warn('KWL AI event logging failed:',eventError.message);
     resolved++;
