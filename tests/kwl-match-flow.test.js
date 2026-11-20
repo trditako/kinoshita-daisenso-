@@ -51,6 +51,9 @@ assert.match(serverBattle,/a\.beamInterval/,'server replay schedules Ice Wyvern 
 assert.match(serverBattle,/iceZones\.push\(/,'server replay creates persistent ice zones during flight');
 assert.match(serverBattle,/num\(u\.ice_frozen_until\)>time/,'server movement respects Ice Wyvern freeze state');
 assert.match(serverBattle,/is_flying:!!u\.isFlying/,'spectator frames expose flight state');
+assert.match(serverBattle,/ice_zones:iceZones\.filter/,'spectator frames persist active ice zones');
+assert.match(kwl,/kwlReplayZones/,'spectator replay renders a dedicated ice-zone layer');
+assert.match(kwl,/zoneLayer\.appendChild\(el\)/,'spectator replay draws persistent ice areas on the battlefield');
 assert.match(kwl,/state==='fly'/,'spectator replay renders flying units above the ground lane');
 assert.match(kwl,/🧊 凍結/,'spectator replay visibly labels frozen units');
 assert.match(kwl,/✊ 拘束/,'spectator replay visibly labels restrained units');
