@@ -2525,13 +2525,23 @@ function applyCurseStatus(source,target){if(!source||!target||hasAbilityFlag(tar
 function applyAbility(u,target,damage){const now=KinoshitaBattleCore.now()/1000;if(!target||isAbilitySealed(u)||(entityHasTrait(u,'神話')&&target.ability?.iceWyvern))return;const a=u.ability||{};const isSocrates=u?.name==='哲学の賢者ゾクラテス';if(!isSocrates&&u?.name!=='フェニックス')applyCurseStatus(u,target);if(isSocrates){const dist=Math.abs(Number(target.x||0)-Number(u.x||0));const tr=target.trait||'無';const inBand=dist>=251&&dist<=600;if(inBand&&a.rangeBands?.[2]){const band=a.rangeBands[2],allowed=entityTraitMatch(target,['黒','宇宙','無']);if(allowed){const factor=Math.max(.01,Math.min(1,Number(band.rangeDownFactor??.2)));const duration=Math.max(.1,Number(band.rangeDownDuration??5));target.rangeOriginal=target.rangeOriginal??target.range;target.rangeDownUntil=now+duration;target.range=target.rangeOriginal*factor;const curseOK=!hasAbilityFlag(target,'curseImmune')&&Number(band.curseChance||0)>0&&KinoshitaBattleCore.random()<Number(band.curseChance||0);if(curseOK){const curseDuration=Math.max(.1,Number(band.curseDuration??5));target.cursedUntil=now+curseDuration;target.cursedBy=u;if(a.curseSeal){}target.cursedSpeedFactor=Number(a.cursedSpeedFactor||1);target.cursedAttackFactor=Number(a.cursedAttackFactor||1);setStatusMark(target,'🎯', '射程80%低下'+(curseOK?'・呪い':''),Math.max(duration,curseDuration),'socratesDebuff');}else setStatusMark(target,'🎯','射程80%低下',duration,'socratesRangeDown');}}}if(a.curseSlowChance&&!hasAbilityFlag(target,'slowImmune')&&KinoshitaBattleCore.random()<Number(a.curseSlowChance)){target.slowUntil=now+Number(a.curseSlowDuration||2);target.slowFactor=Number(a.curseSlowFactor||.5);setStatusMark(target,'🪬','呪い鈍足',Number(a.curseSlowDuration||2),'curseSlow');}
  if(a.splash){const splashTargets=u.isEnemy?units:enemies;for(const e of [...splashTargets])if(e&&e!==target&&e.hp>0&&Math.abs(e.x-target.x)<70)hit(e,Math.round(damage*a.splash),{airAttack:!!u.airAttack,x:u.x,isEnemy:!!u.isEnemy},null);}
  // エレメンタル木下sの超激レア能力
- if(a.stopChance&&!hasAbilityFlag(target,'stopImmune')&&KinoshitaBattleCore.random()<Number(a.stopChance)){target.stopUntil=KinoshitaBattleCore.now()/1000+Number(a.stopDuration||1);target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Number(a.stopDuration||1),'stop');}
- if(a.slowChance&&!hasAbilityFlag(target,'slowImmune')&&KinoshitaBattleCore.random()<Number(a.slowChance))applySlow(target,{trait:'*',factor:Number(a.slowFactor||.6),duration:Number(a.slowDuration||2)});
- if(a.guaranteeKnockback&&target.hp>0&&!hasAbilityFlag(target,'knockbackImmune')){const distance=48;target.x=target.isEnemy?Math.max(120,target.x-distance):Math.min(worldWidth-178,target.x+distance);target.cd=Math.max(target.cd,.22);}if(a.knockbackChance&&target.hp>0&&!hasAbilityFlag(target,'knockbackImmune')&&KinoshitaBattleCore.random()<Number(a.knockbackChance)){const distance=42;target.x=target.isEnemy?Math.max(120,target.x-distance):Math.min(worldWidth-178,target.x+distance);target.cd=Math.max(Number(target.cd||0),.22);target.hitbackUntil=now+.22;target.el?.classList.remove('hitback');target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);}
+ const sharedAbility={...a,curseChance:0};
+ const status=KinoshitaBattleCore.resolveOnHitEffects({
+  attacker:u,target,ability:sharedAbility,time:now,random:KinoshitaBattleCore.random,
+  hasAbilityFlag,knockbackDistance:42,guaranteedKnockbackDistance:48
+ });
+ target.slowUntil=status.slowUntil;target.slowFactor=status.slowFactor;target.stopUntil=status.stopUntil;
+ target.cursedUntil=status.cursedUntil;target.attackDownUntil=status.attackDownUntil;target.attackDownFactor=status.attackDownFactor;
+ if(status.effects.includes('停止')){target.spdOriginal=target.spdOriginal??target.spd;setStatusMark(target,'⏸️','停止',Math.max(0,status.stopUntil-now),'stop');}
+ if(status.effects.includes('鈍足'))setStatusMark(target,'🐌','速度低下',Math.max(0,status.slowUntil-now),'slow');
+ if(status.effects.includes('能力封印')){target.cursedBy=u;setStatusMark(target,'🪬','能力封印',Math.max(0,status.cursedUntil-now),'curse');}
+ if(status.effects.includes('攻撃力低下'))setStatusMark(target,'⚔️','攻撃力低下',Math.max(0,status.attackDownUntil-now),'attackDown');
+ if(status.knockback>0){
+  target.x=target.isEnemy?Math.max(120,target.x-status.knockback):Math.min(worldWidth-178,target.x+status.knockback);
+  target.cd=Math.max(Number(target.cd||0),.22);
+  if(status.effects.includes('ふっとばし')){target.hitbackUntil=now+.22;target.el?.classList.remove('hitback');target.el?.classList.add('hitback');setTimeout(()=>target.el?.classList.remove('hitback'),220);}
+ }
  /* 範囲攻撃力低下は攻撃単位の処理 applyAreaAttackDown で判定する。 */
- if(a.attackDownChance&&!hasAbilityFlag(target,'attackDownImmune')&&KinoshitaBattleCore.random()<Number(a.attackDownChance)){target.attackDownUntil=now+Number(a.attackDownDuration||4);target.attackDownFactor=Number(a.attackDownFactor||.5);setStatusMark(target,'⚔️','攻撃力低下',Number(a.attackDownDuration||4),'attackDown');}
- if(a.sealChance&&!hasAbilityFlag(target,'curseImmune')&&KinoshitaBattleCore.random()<Number(a.sealChance)){const duration=Number(a.sealDuration||3);target.cursedUntil=Math.max(Number(target.cursedUntil||0),now+duration);target.cursedBy=u;setStatusMark(target,'🪬','呪い',duration,'curse');}
- if(a.slow&&!a.slow.all&&KinoshitaBattleCore.random()<Number(a.slow.chance||0))applySlow(target,a.slow,u);
  if(u.name==='MiraiK'&&target.isEnemy){
   if(entityTraitMatch(target,['黒','浮','神話'])){
    target.rangeOriginal=target.rangeOriginal??target.range;
