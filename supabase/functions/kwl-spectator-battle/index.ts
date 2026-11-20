@@ -348,7 +348,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
   }
   const winner=sides[0].base_hp>sides[1].base_hp?sides[0]:sides[1]
   emit('match_end',winner.key,null,null,winner.base_hp,'server_authoritative')
-  frames.push(snapshot(time,sides,events))
+  frames.push(snapshot(time,sides,events,iceZones))
   return {winner_team_id:winner.team_id,duration_seconds:Number(time.toFixed(2)),
     replay:{version:ENGINE_VERSION,seed,world_width:WORLD_WIDTH,frame_interval:FRAME_INTERVAL,
       team1:{id:sides[0].team_id,name:sides[0].name},team2:{id:sides[1].team_id,name:sides[1].name},
