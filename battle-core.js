@@ -95,7 +95,7 @@
     let factor=multiplier(ability.resist,attacker,'min');
     const reduction=ability.damageReduce;
     if(reduction&&random()<Number(reduction.chance??.5))factor*=Number(reduction.factor??reduction)||1;
-    if(Number(target.cursedUntil)>time)factor*=Number(o.curseFactor??ability.cursedAttackMultiplier??1);
+    if(Number(target.cursedUntil)>time)factor*=Number(o.curseFactor??ability.cursedAttackMultiplier??.7);
     let damage=Math.max(1,Math.round(incoming*factor));
     const cap=o.applyCap?Number(ability.damageCapRatio||ability.iceWyvern?.damageCap||0):0;
     if(cap>0)damage=Math.min(damage,Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*cap)));
