@@ -74,6 +74,7 @@ jobs:
         run: |
           node --check kwl.js
           node tests/kwl-rehearsal.test.js
+          node tests/kwl-match-flow.test.js
           node --check genesis.js
           node --check hitman.js
           node --check zeus.js
