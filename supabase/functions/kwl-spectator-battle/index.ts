@@ -170,18 +170,11 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     const dealt=resolution.damage
     target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
     emit('hit',attacker.side,attacker,target,dealt)
-    const a=attacker.ability||{}
-    if(a.slow&&!target.ability?.slowImmune&&!target.ability?.slowImmunity&&matchTrait(a.slow.trait||'*',target)&&rng()<num(a.slow.chance)) {
-      target.slow_until=time+num(a.slow.duration,2);target.slow_factor=clamp(num(a.slow.factor,.6),.05,1)
-      emit('skill',attacker.side,attacker,target,0,'鈍足')
-    }
-    if(a.slowChance&&!target.ability?.slowImmune&&!target.ability?.slowImmunity&&rng()<num(a.slowChance)) {target.slow_until=time+num(a.slowDuration,2);target.slow_factor=clamp(num(a.slowFactor,.6),.05,1);emit('skill',attacker.side,attacker,target,0,'鈍足')}
-    if(a.stopChance&&!target.ability?.stopImmune&&!target.ability?.stopImmunity&&rng()<num(a.stopChance)) {target.stop_until=time+num(a.stopDuration,1);emit('skill',attacker.side,attacker,target,0,'停止')}
-    if(a.curseChance&&!target.ability?.curseImmune&&!target.ability?.curseImmunity&&rng()<num(a.curseChance)) {target.cursed_until=time+num(a.curseDuration,2);emit('skill',attacker.side,attacker,target,0,'呪い')}
-    if(a.sealChance&&!target.ability?.sealImmune&&!target.ability?.sealImmunity&&rng()<num(a.sealChance)) {target.cursed_until=time+num(a.sealDuration,3);emit('skill',attacker.side,attacker,target,0,'能力封印')}
-    if(a.attackDownChance&&!target.ability?.attackDownImmune&&rng()<num(a.attackDownChance)) {target.attack_down_until=time+num(a.attackDownDuration,4);target.attack_down_factor=clamp(num(a.attackDownFactor,.5),.01,1);emit('skill',attacker.side,attacker,target,0,'攻撃力低下')}
-    if(a.knockbackChance&&!target.ability?.knockbackImmune&&rng()<num(a.knockbackChance)) {target.x+=target.side==='team1'?45:-45;emit('skill',attacker.side,attacker,target,0,'ふっとばし')}
-    if(a.guaranteeKnockback){target.x+=target.side==='team1'?48:-48;emit('skill',attacker.side,attacker,target,0,'確定ふっとばし')}
+    const effects=BattleCore.resolveOnHitEffects({attacker,target,time,random:rng,knockbackDistance:45,guaranteedKnockbackDistance:48})
+    target.slow_until=effects.slowUntil;target.slow_factor=effects.slowFactor;target.stop_until=effects.stopUntil
+    target.cursed_until=effects.cursedUntil;target.attack_down_until=effects.attackDownUntil;target.attack_down_factor=effects.attackDownFactor
+    if(effects.knockback)target.x+=target.side==='team1'?effects.knockback:-effects.knockback
+    for(const effect of effects.effects)emit('skill',attacker.side,attacker,target,0,effect)
     if(a.splash&&a.splash>0) {
       const other=sides.find((x:any)=>x.key!==attacker.side)
       for(const splashTarget of other.units)if(splashTarget!==target&&splashTarget.hp>0&&Math.abs(splashTarget.x-target.x)<70){
