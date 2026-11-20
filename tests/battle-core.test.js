@@ -4,6 +4,7 @@ require('../battle-core.js');
 const core=globalThis.KinoshitaBattleCore;
 assert.ok(core,'shared battle runtime is registered');
 assert.equal(core.version,'1.1.0');
+assert.equal(typeof core.calculateDamageTaken,'function','shared damage mitigation is exported for the server replay worker');
 assert.equal(core.scaleLevelStat(100,1),100);
 assert.equal(core.scaleLevelStat(100,2),104);
 assert.equal(core.scaleLevelStat(100,3,1),100,'non-growing stats stay constant across levels');
