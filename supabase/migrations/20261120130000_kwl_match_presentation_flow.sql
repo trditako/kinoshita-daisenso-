@@ -20,7 +20,7 @@ begin
   if p_actor_id is distinct from 'cd19b245-1a70-45de-9bb7-967f6c568425' then
     raise exception 'KWL運営者のみ実行できます';
   end if;
-  if p_phase not in ('intro','draft','live','result','break') then
+  if p_phase is null or p_phase not in ('intro','draft','live','result','break') then
     raise exception '大会進行フェーズが不正です';
   end if;
   select * into m from public.kwl_matches where id=p_match_id for update;
@@ -31,6 +31,12 @@ begin
 
   if p_phase='intro' and (m.status<>'ready' or exists(select 1 from public.kwl_games where match_id=p_match_id)) then
     raise exception 'チーム紹介を開始できる状態ではありません';
+  elsif p_phase='intro' and m.round_number>1 and exists(
+    select 1 from public.kwl_matches prior
+    where prior.tournament_key=m.tournament_key and prior.round_number=m.round_number-1
+      and prior.status not in ('completed','bye')
+  ) then
+    raise exception '前ラウンドの全試合が終了するまで次ラウンドは開始できません';
   elsif p_phase='draft' and m.status not in ('ready','live') then
     raise exception '選手選択・編成を開始できる状態ではありません';
   elsif p_phase='live' then
@@ -43,6 +49,12 @@ begin
       where match_id=p_match_id and game_number=game_no;
   elsif p_phase in ('result','break') and m.status<>'completed' then
     raise exception 'シリーズ終了後に実行できます';
+  elsif p_phase='break' and exists(
+    select 1 from public.kwl_matches same_round
+    where same_round.tournament_key=m.tournament_key and same_round.round_number=m.round_number
+      and same_round.status not in ('completed','bye')
+  ) then
+    raise exception 'このラウンドの全試合が終了するまで休憩へ移動できません';
   end if;
 
   if p_phase='intro' and old_phase not in ('pending','break') then
@@ -92,7 +104,6 @@ $function$;
 create or replace function public.kwl_guard_player_selection_phase()
 returns trigger
 language plpgsql
-security definer
 set search_path=public
 as $function$
 declare
@@ -120,7 +131,6 @@ for each row execute function public.kwl_guard_player_selection_phase();
 create or replace function public.kwl_guard_character_live_phase()
 returns trigger
 language plpgsql
-security definer
 set search_path=public
 as $function$
 declare phase text;
