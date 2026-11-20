@@ -67,9 +67,8 @@ function activeCard(ai: AIAccount, id: number): Card {
 function stat(ai: AIAccount, id: number, key: 'hp'|'atk'|'range'|'spd'|'interval') {
   const card = activeCard(ai,id)
   const lv = clamp(Math.floor(num(arr<number>(ai.char_levels)[id],1)),1,30)
-  const growth = Math.pow(1.04, Math.max(0,lv-1))
   const base = num(card[key])
-  const scaled = key === 'hp' || key === 'atk' ? base*growth : base
+  const scaled = BattleCore.scaleLevelStat(base,lv,key === 'hp' || key === 'atk' ? 1.04 : 1)
   const power = powerMultiplier(ai)
   if (key === 'range' || key === 'spd') return scaled*power
   if (key === 'interval') return scaled/power
