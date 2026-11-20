@@ -92,6 +92,8 @@
     if(ability.criticalChance&&random()<Number(ability.criticalChance)){critical=true;mult*=Number(ability.criticalMultiplier||2);}
     if(ability.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(ability.hpBelowThreshold||.5))mult*=Number(ability.hpBelowThresholdMultiplier)||1;
     if(ability.wyvernStrongTraits&&traits(target.trait).some(trait=>ability.wyvernStrongTraits.includes(trait)))mult*=Number(ability.wyvernStrongMultiplier||4);
+    if(ability.iceWyvern&&matchesTrait(target,'神話'))mult*=Number(ability.iceWyvern.mythDamageDealt||1);
+    if(ability.iceWyvern&&Number(target.powerShieldMax??target.power_shield??target.powerShield??0)>0)mult*=Number(ability.iceWyvern.shieldMultiplier||1);
     else mult*=multiplier(ability.strong,target,'max');
     if(ability.ancientHunter&&hasTrait(target,'古代'))mult*=Number(ability.ancientHunter)||1;
     if(ability.attributeOverload&&!hasTrait(target,'古代')&&attacker.series!=='機械防衛隊！木下s')mult*=Number(ability.attributeOverload.outgoing)||1;
