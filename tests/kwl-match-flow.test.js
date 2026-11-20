@@ -50,6 +50,8 @@ assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine delegates
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveDamage\(/,'game engine uses shared HP and shield resolution');
 assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine uses shared HP and shield resolution');
 assert.match(serverBattle,/BattleCore\.resolveIceWyvernIncomingDamage\(/,'server replay uses shared Ice Wyvern damage cap and mythology reduction');
+assert.match(serverBattle,/BattleCore\.resolveMiraiKIncomingDamage\(/,'server replay uses shared MiraiK distance defense and hit cap');
+assert.match(indexHtml,/KinoshitaBattleCore\.resolveMiraiKIncomingDamage\(/,'browser engine uses the same MiraiK damage cap');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernIncomingDamage\(/,'browser engine uses the same Ice Wyvern damage resolver');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernAfterHit\(/,'browser engine uses shared Ice Wyvern growth and healing');
 assert.match(serverBattle,/BattleCore\.resolveIceWyvernAfterHit\(/,'server replay uses the same Ice Wyvern growth and healing');
