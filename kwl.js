@@ -42,7 +42,7 @@ async function refresh(){
  }catch(e){c.innerHTML='<div style="background:#7f1d1d;padding:14px;border-radius:10px">大会情報を取得できませんでした。<br>'+esc(e.message)+'<br><button id="kwlRetry" class="formationBtn">再読み込み</button></div>';c.querySelector('#kwlRetry').onclick=refresh;}
 }
 function countdownLabel(target,now){const ms=Math.max(0,target-now),d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);return d+'日 '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
-function updateCountdown(){const el=root?.querySelector('#kwlCountdown');if(!el||!tournament)return;const now=Date.now(),opens=new Date(tournament.entry_opens_at).getTime(),closes=new Date(tournament.entry_closes_at).getTime(),draw=new Date(tournament.bracket_draw_at).getTime(),starts=new Date(tournament.starts_at).getTime();let label,target;if(now<opens){label='エントリー開始まで';target=opens;}else if(now<closes){label='エントリー締切まで';target=closes;}else if(now<draw){label='組み合わせ抽選まで';target=draw;}else if(now<starts){label='大会開幕まで';target=starts;}else{el.textContent='大会開催期間です';return;}el.textContent=label+'：'+countdownLabel(target,now);}
+function updateCountdown(){updateMatchPhaseCountdown();const el=root?.querySelector('#kwlCountdown');if(!el||!tournament)return;const now=Date.now(),opens=new Date(tournament.entry_opens_at).getTime(),closes=new Date(tournament.entry_closes_at).getTime(),draw=new Date(tournament.bracket_draw_at).getTime(),starts=new Date(tournament.starts_at).getTime();let label,target;if(now<opens){label='エントリー開始まで';target=opens;}else if(now<closes){label='エントリー締切まで';target=closes;}else if(now<draw){label='組み合わせ抽選まで';target=draw;}else if(now<starts){label='大会開幕まで';target=starts;}else{el.textContent='大会開催期間です';return;}el.textContent=label+'：'+countdownLabel(target,now);}
 function roundLabel(round,maxRound){const left=maxRound-Number(round);if(left===0)return '決勝';if(left===1)return '準決勝';if(left===2)return '準々決勝';return '第'+round+'回戦';}
 const KWL_GUIDE_ENTRIES=[
 {id:102,name:'覇風',role:'編成支援',importance:'高',when:'URを複数採用する編成で、味方全体を支える枠。',strength:'UR数に応じた全体強化。過去の調整方針は1体につき+35%、最大+95%。射程・再生産時間は対象外。',caution:'旧仕様の+75%/体・最大+450%を前提にしない。'},
@@ -115,14 +115,52 @@ async function loadMatchDetail(id){
  request('/kwl_games'+q+'&order=game_number.asc'),request('/kwl_game_players'+q+'&order=game_number.asc'),request('/kwl_character_locks'+q+'&order=first_game_number.asc'),request('/kwl_live_events'+q+'&order=id.desc&limit=30')
  ]);matchDetail={games,players,locks,events};renderMatchDetail();}catch(e){box.innerHTML='<div style="padding:12px;background:#7f1d1d;border-radius:10px">BO5情報を取得できません：'+esc(e.message)+'</div>';}
 }
+
+const KWL_PHASE_LABELS={intro:'チーム紹介',draft:'選手選択・編成',live:'試合中',result:'結果発表',break:'ラウンド間休憩'};
+function kwlPresentation(m){return m?.live_state?.presentation||{};}
+function kwlPhaseMarkup(m,operator){
+ const p=kwlPresentation(m),phase=String(p.phase||'pending'),names=[m.team1_id,m.team2_id].map(id=>{
+  const t=teams.find(x=>Number(x.id)===Number(id));
+  const members=(t?.roster||[]).map(x=>esc(x.name||x.id)).filter(Boolean);
+  return '<div style="padding:8px;background:#0f172a;border-radius:7px;margin-top:5px"><b>'+esc(teamName(id))+'</b><div style="font-size:11px;color:#cbd5e1;margin-top:3px">'+(members.length?members.join(' ・ '):'登録選手情報なし')+'</div></div>';
+ }).join('');
+ let controls='';
+ if(operator){
+  if(phase==='pending')controls='<button data-kwl-phase="intro" class="formationBtn" style="width:100%;background:#92400e;color:#fff">▶ チーム紹介を開始（1分）</button>';
+  else if(phase==='intro')controls='<button data-kwl-phase="draft" class="formationBtn" style="width:100%;background:#1d4ed8;color:#fff">選手選択・編成へ（1分30秒）</button>';
+  else if(phase==='draft')controls='<button data-kwl-phase="draft" class="formationBtn" style="width:100%;background:#1d4ed8;color:#fff">選手選択・編成を90秒延長</button><button data-kwl-phase="live" class="formationBtn" style="width:100%;margin-top:6px;background:#166534;color:#fff">⚔️ 試合開始（両チーム登録後）</button>';
+  else if(phase==='result')controls='<button data-kwl-phase="break" class="formationBtn" style="width:100%;background:#475569;color:#fff">次ラウンドまで休憩（5分）</button>';
+ }
+ const label=phase==='pending'?'運営開始待ち':(KWL_PHASE_LABELS[phase]||'進行状況未設定');
+ const remaining=p.phase_ends_at?Math.max(0,Math.ceil((new Date(p.phase_ends_at).getTime()-Date.now())/1000)):null;
+ const time=remaining===null?'':remaining===0?'時間終了・運営の次操作待ち':'残り '+Math.floor(remaining/60)+'分'+String(remaining%60).padStart(2,'0')+'秒';
+ return '<section style="margin-top:10px;padding:11px;border:1px solid #facc15;border-radius:10px;background:#172554"><div style="font-size:11px;color:#fde68a;font-weight:900;letter-spacing:1px">MATCH PRESENTATION</div><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px"><b>'+label+'</b><span id="kwlPhaseCountdown" style="font-size:12px;color:#fde68a">'+time+'</span></div><div style="font-size:11px;color:#cbd5e1;margin-top:5px">チーム紹介は60秒、選手選択・編成は90秒。試合・結果・休憩は運営操作で進行します。</div>'+names+(phase==='break'?'<div style="font-size:11px;color:#86efac;margin-top:7px">休憩中です。次の対戦カードを選択し、次ラウンドの開始時にチーム紹介を開始してください。</div>':'')+(controls?'<div style="margin-top:9px">'+controls+'</div>':'')+'</section>';
+}
+async function kwlSetMatchPhase(phase){
+ const m=selectedMatch;if(!m||!kwlIsOperator())return;
+ const p=kwlPresentation(m);
+ const gameNumber=Number(p.game_number)||Number((matchDetail.games||[]).filter(g=>g.status!=='completed').sort((a,b)=>a.game_number-b.game_number)[0]?.game_number)||1;
+ const b=root?.querySelector('[data-kwl-phase="'+phase+'"]');if(b)b.disabled=true;
+ try{
+  await rpc('kwl_set_match_phase',{p_match_id:Number(m.id),p_actor_id:String(playerRankingId),p_phase:phase,p_game_number:gameNumber});
+  await refresh();await loadMatchDetail(m.id);
+ }catch(e){alert('大会進行を更新できませんでした：'+e.message);if(b)b.disabled=false;}
+}
+function updateMatchPhaseCountdown(){
+ const el=root?.querySelector('#kwlPhaseCountdown');if(!el||!selectedMatch)return;
+ const p=kwlPresentation(selectedMatch);if(!p.phase_ends_at){el.textContent='';return;}
+ const remaining=Math.max(0,Math.ceil((new Date(p.phase_ends_at).getTime()-Date.now())/1000));
+ el.textContent=remaining===0?'時間終了・運営の次操作待ち':'残り '+Math.floor(remaining/60)+'分'+String(remaining%60).padStart(2,'0')+'秒';
+}
+
 function renderMatchDetail(){
  const box=root?.querySelector('#kwlMatchDetail'),m=selectedMatch;if(!box||!m)return;
  const alliance=(typeof myAlliance!=='undefined'?myAlliance:null),mine=teams.find(t=>Number(t.alliance_id)===Number(alliance?.id));
  const myTeamId=Number(mine?.id||0),isInMatch=myTeamId&&(myTeamId===Number(m.team1_id)||myTeamId===Number(m.team2_id));
  const roster=mine?.roster||[];const humanRoster=roster.filter(p=>String(p.type||'player')==='player');const aiRoster=roster.filter(p=>String(p.type||'player')==='ai');const opts=humanRoster.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name||p.id)+'</option>').join('');
- const games=matchDetail.games||[],players=matchDetail.players||[],locks=matchDetail.locks||[],events=matchDetail.events||[];
+ const games=matchDetail.games||[],players=matchDetail.players||[],locks=matchDetail.locks||[],events=matchDetail.events||[],operator=kwlIsOperator();
  let h='<section style="padding:12px;background:#0f172acc;border:1px solid #64748b;border-radius:12px"><h3 style="margin:0 0 8px">BO5シリーズ管理</h3><div>'+esc(teamName(m.team1_id))+' '+Number(m.team1_wins||0)+' - '+Number(m.team2_wins||0)+' '+esc(teamName(m.team2_id))+'</div>';
- h+='<div style="margin:8px 0;font-size:12px;color:#cbd5e1">各試合で別の選手が出場。シリーズ中、同じチームが一度出撃させたキャラクターは再使用できません。</div>';
+ h+='<div style="margin:8px 0;font-size:12px;color:#cbd5e1">各試合で別の選手が出場。シリーズ中、同じチームが一度出撃させたキャラクターは再使用できません。</div>';h+=kwlPhaseMarkup(m,operator);
  for(let n=1;n<=5;n++){const g=games.find(x=>Number(x.game_number)===n),ps=players.filter(x=>Number(x.game_number)===n);h+='<div style="padding:8px;margin:5px 0;background:#1e293b;border-radius:8px"><b>第'+n+'試合</b> · '+esc(g?.status||'未登録')+'<div style="font-size:12px">'+(ps.map(p=>esc(teamName(p.team_id))+'：'+esc(p.player_name)+'<div style="font-size:11px;color:#cbd5e1;margin-top:3px">装備固定：'+equipmentSummary(p.equipment_snapshot)+'</div>').join('')||'出場選手未登録')+'</div></div>';}
  if(isInMatch&&m.status!=='completed'){
   h+='<div style="margin-top:10px;padding:10px;background:#172554;border-radius:8px"><b>出場選手登録</b><select id="kwlPlayerSelect" style="width:100%;padding:10px;margin:7px 0;color:#111">'+(opts||'<option value="">出場可能な人間選手がいません</option>')+'</select><button id="kwlClaimPlayer" class="formationBtn" style="width:100%;background:#b45309;color:#fff" '+(!humanRoster.length?'disabled':'')+'>この選手で次の試合に出場登録</button><p style="font-size:11px;color:#cbd5e1">登録後は既存の対人戦ルームで相手と接続してください。試合終了時に勝敗を記録します。</p><button id="kwlOpenPvp" class="formationBtn" style="width:100%">⚔️ 対人戦ルームを開く</button>'+(aiRoster.length?'<p style="font-size:11px;color:#fbbf24">AI登録選手 '+aiRoster.length+'人：AI同士の対戦はAIワーカーが自動シミュレーションします。人間チームが含まれる対戦は通常の対人戦です。</p>':'')+'</div>';
