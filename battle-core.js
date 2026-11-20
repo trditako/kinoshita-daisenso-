@@ -39,7 +39,6 @@
     const list=Array.isArray(candidates)?candidates:[];
     const x=Number(options.x)||0;
     const range=Math.max(0,Number(options.range)||0);
-    const allRange=options.attackType==='allrange';
     const canTarget=typeof options.canTarget==='function'?options.canTarget:()=>true;
     const inRange=typeof options.inRange==='function'
       ? options.inRange
@@ -99,7 +98,7 @@
   function now(){return activeRuntime?activeRuntime.now():(root.performance?.now?.()??Date.now());}
   function setFrameTime(value){if(activeRuntime)activeRuntime.setNow(value);}
   root.KinoshitaBattleCore=Object.freeze({
-    version:'1.0.0',
+    version:'1.1.0',
     createRng,
     scaleLevelStat,
     traits,
