@@ -129,16 +129,14 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
   return u
 }
 function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
-  const a=attacker.ability||{}
-  let mult=traitMultiplier(a.strong,target)
-  if (a.criticalChance&&rng()<num(a.criticalChance)) mult*=num(a.criticalMultiplier,2)
-  if (a.hpBelowThresholdMultiplier&&attacker.hp<attacker.max_hp*num(a.hpBelowThreshold,.5)) mult*=num(a.hpBelowThresholdMultiplier,1)
-  if (a.killAttackStack) mult*=1+Math.min(num(a.killAttackStack.maxBonus),attacker.kill_stacks*num(a.killAttackStack.perKill,.05))
-  if (attacker.attack_down_until>time) mult*=attacker.attack_down_factor
-  if (attacker.cursed_until>time) mult*=.5
-  if (target.name==='MiraiK'&&attacker.attack_type==='single') mult*=3
-  return Math.max(1,Math.round(attacker.atk*mult))
+  const normalizedAttacker={...attacker,maxhp:attacker.max_hp,killAttackStacks:attacker.kill_stacks,
+    attackDownUntil:attacker.attack_down_until,attackDownFactor:attacker.attack_down_factor,
+    cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time?.5:1}
+  const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until}
+  return BattleCore.calculateAttackDamage({attacker:normalizedAttacker,target:normalizedTarget,
+    baseAttack:attacker.atk,time,ability:attacker.ability||{},random:rng,traitMultiplier}).damage
 }
+
 function damageTaken(target:Unit,attacker:Unit,damage:number,rng:()=>number,time:number) {
   const a=target.ability||{}
   let mult=traitMultiplier(a.resist,attacker,'min')
