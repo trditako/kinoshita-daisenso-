@@ -141,6 +141,32 @@
       (Number(e.abilitySealedUntil??e.ability_sealed_until)>now)||
       (Number(e.cursedUntil??e.cursed_until)>now));
   }
+  function resolveIceWyvernAfterHit(options){
+    const o=options||{},target=o.target||{},attacker=o.attacker||{},ice=target.ability?.iceWyvern;
+    const actualDamage=Math.max(0,Number(o.actualDamage)||0);
+    if(!ice||actualDamage<=0)return {applied:false};
+    const currentMax=Math.max(1,Number(target.maxhp??target.max_hp??1));
+    let hp=Math.max(0,Number(target.hp)||0);
+    const mythologyAttacker=matchesTrait(attacker,'神話');
+    const healed=mythologyAttacker?Math.round(actualDamage*Number(ice.mythHeal||0)):0;
+    hp=Math.min(currentMax,hp+healed);
+    const perHit=Math.max(0,Number(ice.damageGrowthPerHit||0));
+    const maxGrowth=Math.max(0,Number(ice.damageGrowthMax||0));
+    const maxStacks=perHit>0?Math.floor(maxGrowth/perHit+1e-9):0;
+    const stacks=Math.min(maxStacks,Math.max(0,Number(target.iceDamageStacks)||0)+1);
+    const growth=1+stacks*perHit;
+    const base=target.iceWyvernBaseStats||{
+      maxhp:currentMax,atk:Number(target.atk)||1,spd:Number(target.spd)||0,
+      range:Number(target.range)||0,interval:Number(target.interval)||1
+    };
+    const previousGrowth=Math.max(.0001,Number(target.iceWyvernAppliedGrowth)||1);
+    const ratio=growth/previousGrowth;
+    const maxHp=Math.max(1,Math.round(Number(base.maxhp||currentMax)*growth));
+    return {applied:true,hp:Math.min(maxHp,Math.round(hp*ratio)),maxHp,
+      atk:Math.round(Number(base.atk||1)*growth),spd:Number(base.spd||0)*growth,
+      range:Number(base.range||0)*growth,interval:Number(base.interval||1)*growth,
+      iceDamageStacks:stacks,iceWyvernBaseStats:base,iceWyvernAppliedGrowth:growth,healed,growth};
+  }
   function resolveIceWyvernIncomingDamage(options){
     const o=options||{},attacker=o.attacker||{},target=o.target||{},ice=target.ability?.iceWyvern;
     let damage=Math.max(0,Number(o.damage)||0);
@@ -213,6 +239,7 @@
     resolveDamage,
     resolveOnHitEffects,
     resolveIceWyvernIncomingDamage,
+    resolveIceWyvernAfterHit,
     isAbilitySealed,
     selectTarget,
     createClock,
