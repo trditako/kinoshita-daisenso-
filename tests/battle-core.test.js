@@ -69,6 +69,16 @@ const iceWyvernMythAttack=core.calculateAttackDamage({attacker:{atk:100,trait:'�
 assert.equal(iceWyvernMythAttack.damage,500,'Ice Wyvern shared attack core applies its mythology damage multiplier');
 const iceWyvernShieldAttack=core.calculateAttackDamage({attacker:{atk:100,trait:'氷'},target:{trait:'赤',power_shield:100},ability:{iceWyvern:{shieldMultiplier:3}},random:()=>.99});
 assert.equal(iceWyvernShieldAttack.damage,300,'Ice Wyvern shared attack core applies its power-shield target multiplier');
+const iceGrowth=core.resolveIceWyvernAfterHit({attacker:{trait:'神話'},actualDamage:100,target:{hp:500,maxhp:1000,atk:100,spd:1,range:100,interval:2,ability:{iceWyvern:{mythHeal:.3,damageGrowthPerHit:.03,damageGrowthMax:.9}}}});
+assert.equal(iceGrowth.applied,true);
+assert.equal(iceGrowth.healed,30);
+assert.equal(iceGrowth.iceDamageStacks,1);
+assert.equal(iceGrowth.maxHp,1030);
+assert.equal(iceGrowth.hp,546);
+assert.equal(iceGrowth.atk,103);
+assert.equal(iceGrowth.spd,1.03);
+assert.equal(iceGrowth.range,103);
+assert.equal(iceGrowth.interval,2.06);
 const iceMythHit=core.resolveIceWyvernIncomingDamage({attacker:{trait:'神話'},target:{maxhp:1000,ability:{iceWyvern:{mythDamageTaken:.35,damageCap:.15}}},damage:1000});
 assert.equal(iceMythHit.mythologyAttacker,true);
 assert.equal(iceMythHit.damage,150,'Ice Wyvern applies mythology reduction before its per-hit HP cap');
