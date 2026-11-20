@@ -271,7 +271,7 @@ async function kwlSpectatorStart(requestedGameNo){
   const makeUnit=(u)=>{
    const card=cards[Number(u.card_id)]||{},el=document.createElement('div');el.dataset.unitId=String(u.id);
    el.style.cssText='position:absolute;width:72px;min-height:58px;transform:translateX(-50%);text-align:center;transition:opacity .12s;pointer-events:none;text-shadow:0 1px 2px #000';
-   el.innerHTML='<div style="font-size:25px;line-height:28px">'+esc(card.icon||'❔')+'</div><div style="font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(card.name||('キャラ#'+(Number(u.card_id)+1)))+'</div><div style="height:5px;background:#334155;border:1px solid #0f172a;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:#22c55e"></i></div>';
+   el.innerHTML='<div style="font-size:25px;line-height:28px">'+esc(card.icon||'❔')+'</div><div style="font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(card.name||('キャラ#'+(Number(u.card_id)+1)))+'</div><div data-replay-state style="font-size:8px;line-height:11px;min-height:11px;color:#cbd5e1"></div><div style="height:5px;background:#334155;border:1px solid #0f172a;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:#22c55e"></i></div>';
    unitLayer.appendChild(el);unitNodes.set(Number(u.id),el);return el;
   };
   const paint=(time)=>{
@@ -283,8 +283,11 @@ async function kwlSpectatorStart(requestedGameNo){
    for(const id of ids){
     const x=mapA.get(id)||mapB.get(id),y=mapB.get(id)||mapA.get(id);let el=unitNodes.get(id);if(!el)el=makeUnit(x);
     const pos=Number(x.x)+(Number(y.x)-Number(x.x))*ratio,hp=Number(x.hp)+(Number(y.hp)-Number(x.hp))*ratio,maxHp=Math.max(1,Number(y.max_hp||x.max_hp||1));
-    const side=String(x.side||y.side),bottom=(side==='team1'?44:150)+(id%3)*34;
+    const side=String(x.side||y.side),state=String(y.state||x.state||'move'),flying=!!(y.is_flying||x.is_flying||state==='fly'),frozen=!!(y.frozen||x.frozen||state==='frozen');
+    const bottom=(side==='team1'?44:150)+(id%3)*34+(flying?110:0);
     el.style.left=(clamp(pos/Number(replay.world_width||1900),0,1)*100)+'%';el.style.bottom=bottom+'px';el.style.opacity=mapA.has(id)&&mapB.has(id)?'1':String(mapA.has(id)?1-ratio:ratio);
+    const stateLabel=frozen?'🧊 凍結':flying?'🪽 飛行':state==='grabbed'?'✊ 拘束':state==='stopped'?'⏸ 停止':state==='attack'?'⚔️ 攻撃':state==='move'?'移動':'';
+    const stateNode=el.querySelector('[data-replay-state]');if(stateNode){stateNode.textContent=stateLabel;stateNode.style.color=frozen?'#7dd3fc':flying?'#bae6fd':state==='grabbed'?'#fbbf24':'#cbd5e1';}
     const bar=el.querySelector('i');if(bar)bar.style.width=(clamp(hp/maxHp,0,1)*100)+'%';
    }
    for(const [id,el] of unitNodes)if(!ids.has(id)){el.remove();unitNodes.delete(id);}
