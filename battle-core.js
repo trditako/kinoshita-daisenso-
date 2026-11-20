@@ -121,6 +121,41 @@
       absorbedBarrier, absorbedPowerShield, hp:Math.max(0,hpBefore-hpDamage),
       barrier:barrier-absorbedBarrier, powerShield:powerShield-absorbedPowerShield };
   }
+  function resolveOnHitEffects(options){
+    const o=options||{},attacker=o.attacker||{},target=o.target||{},ability=o.ability||attacker.ability||{};
+    const random=typeof o.random==='function'?o.random:Math.random;
+    const time=Number(o.time)||0;
+    const state={slowUntil:Number(target.slowUntil??target.slow_until)||0,slowFactor:Number(target.slowFactor??target.slow_factor)||1,
+      stopUntil:Number(target.stopUntil??target.stop_until)||0,cursedUntil:Number(target.cursedUntil??target.cursed_until)||0,
+      attackDownUntil:Number(target.attackDownUntil??target.attack_down_until)||0,
+      attackDownFactor:Number(target.attackDownFactor??target.attack_down_factor)||1,
+      knockback:0,effects:[]};
+    const immune=(...keys)=>keys.some(key=>!!target.ability?.[key]);
+    const eligible=(rule)=>!rule||matchesTrait(target,rule);
+    if(ability.slow&&!immune('slowImmune','slowImmunity')&&eligible(ability.slow.trait||'*')&&random()<Number(ability.slow.chance||0)){
+      state.slowUntil=time+Number(ability.slow.duration||2);state.slowFactor=Math.max(.05,Math.min(1,Number(ability.slow.factor||.6)));state.effects.push('鈍足');
+    }
+    if(ability.slowChance&&!immune('slowImmune','slowImmunity')&&random()<Number(ability.slowChance)){
+      state.slowUntil=time+Number(ability.slowDuration||2);state.slowFactor=Math.max(.05,Math.min(1,Number(ability.slowFactor||.6)));state.effects.push('鈍足');
+    }
+    if(ability.stopChance&&!immune('stopImmune','stopImmunity')&&random()<Number(ability.stopChance)){
+      state.stopUntil=time+Number(ability.stopDuration||1);state.effects.push('停止');
+    }
+    if(ability.curseChance&&!immune('curseImmune','curseImmunity')&&random()<Number(ability.curseChance)){
+      state.cursedUntil=time+Number(ability.curseDuration||2);state.effects.push('呪い');
+    }
+    if(ability.sealChance&&!immune('sealImmune','sealImmunity')&&random()<Number(ability.sealChance)){
+      state.cursedUntil=time+Number(ability.sealDuration||3);state.effects.push('能力封印');
+    }
+    if(ability.attackDownChance&&!immune('attackDownImmune')&&random()<Number(ability.attackDownChance)){
+      state.attackDownUntil=time+Number(ability.attackDownDuration||4);state.attackDownFactor=Math.max(.01,Math.min(1,Number(ability.attackDownFactor||.5)));state.effects.push('攻撃力低下');
+    }
+    if(ability.knockbackChance&&!immune('knockbackImmune')&&random()<Number(ability.knockbackChance)){
+      state.knockback+=Number(o.knockbackDistance||45);state.effects.push('ふっとばし');
+    }
+    if(ability.guaranteeKnockback){state.knockback+=Number(o.guaranteedKnockbackDistance||48);state.effects.push('確定ふっとばし');}
+    return state;
+  }
   let activeRuntime=null;
   function createRuntime(seed,initialTime=0){
     const clock=createClock(initialTime);
