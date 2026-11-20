@@ -25,7 +25,7 @@ assert.match(serverBattle,/BattleCore\.createRng\(seedText\)/,'server replay use
 assert.match(serverBattle,/BattleCore\.createClock\(0\)/,'server replay uses shared battle clock');
 assert.match(serverBattle,/BattleCore\.matchesTrait\(target,rule\)/,'server and browser share trait matching');
 assert.match(serverBattle,/BattleCore\.traitMultiplier\(table,target,mode\)/,'server and browser share trait multipliers');
-assert.match(serverBattle,/traitMultiplier\(a\.resist,attacker,'min'\)/,'server applies the same resistance factor as the game');
+assert.match(sharedCore,/function calculateDamageTaken\(/,'shared core owns resistance and incoming damage mitigation');
 assert.match(indexHtml,/KinoshitaBattleCore\.scaleLevelStat\(c\[key\],lv,growth\[key\]\|\|1\)/,'game uses shared level stat growth');
 assert.match(serverBattle,/BattleCore\.scaleLevelStat\(base,lv,key === 'hp' \|\| key === 'atk' \? 1\.04 : 1\)/,'server uses shared level stat growth');
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'game engine delegates damage resolution to shared core');
@@ -33,9 +33,11 @@ assert.match(indexHtml,/KinoshitaBattleCore\.selectTarget\(enemies,u\.target/,'g
 assert.match(serverBattle,/BattleCore\.selectTarget\(activeEnemies,currentTarget/,'server engine uses shared target selection');
 assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server engine delegates damage resolution to shared core');
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateDamageTaken\(/,'game engine delegates incoming damage mitigation to shared core');
-assert.match(serverBattle,/BattleCore\.calculateDamageTaken\(/,'server engine delegates incoming damage mitigation to shared core');
+assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine delegates incoming damage and shield mitigation to shared core');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveDamage\(/,'game engine uses shared HP and shield resolution');
 assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine uses shared HP and shield resolution');
+assert.match(sharedCore,/function resolveOnHitEffects\(/,'shared core owns status effect and immunity resolution');
+assert.match(serverBattle,/BattleCore\.resolveOnHitEffects\(/,'server engine delegates on-hit status effects to shared core');
 assert.match(kwl,/選手選択・編成は90秒/);
 assert.match(kwl,/次ラウンドまで休憩（5分）/);
 assert.match(kwl,/kwl_set_match_phase/);
