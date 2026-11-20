@@ -35,6 +35,39 @@
     if(values.length)return mode==='min'?Math.min(...values):Math.max(...values);
     return Number(table['*'])>0?Number(table['*']):1;
   }
+  function calculateAttackDamage(options){
+    const o=options||{},attacker=o.attacker||{},target=o.target||{},ability=o.ability||{};
+    const now=Number(o.time)||0,random=typeof o.random==='function'?o.random:Math.random;
+    const multiplier=typeof o.traitMultiplier==='function'?o.traitMultiplier:traitMultiplier;
+    const baseAttack=Math.max(1,Number(o.baseAttack??attacker.atk??1)||1);
+    let effectiveAttack=baseAttack;
+    if(attacker.festivalVoidUntil&&now<Number(attacker.festivalVoidUntil))effectiveAttack*=Number(attacker.festivalVoidAttackFactor||.55);
+    if(attacker.attackDownUntil&&now<Number(attacker.attackDownUntil))effectiveAttack*=Number(attacker.attackDownFactor||.01);
+    if(attacker.cursedUntil&&now<Number(attacker.cursedUntil)&&attacker.cursedAttackFactor)effectiveAttack*=Number(attacker.cursedAttackFactor)||1;
+    let critical=false;
+    if(target.metal){
+      if(ability.criticalChance&&random()<Number(ability.criticalChance)){
+        critical=true;
+        let metalDamage=effectiveAttack*Number(ability.criticalMultiplier||2);
+        if(ability.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(ability.hpBelowThreshold||.5))metalDamage*=Number(ability.hpBelowThresholdMultiplier)||1;
+        return {damage:Math.max(1,Math.round(metalDamage)),critical,effectiveAttack};
+      }
+      return {damage:1,critical:false,effectiveAttack};
+    }
+    let mult=1;
+    if(attacker.mythDomainUntil&&now<Number(attacker.mythDomainUntil))mult*=Number(attacker.mythDomainAtk||.72);
+    if(ability.killAttackStack)mult*=1+Math.min(Number(ability.killAttackStack.maxBonus||0),Number(attacker.killAttackStacks||0)*Number(ability.killAttackStack.perKill||.05));
+    if(ability.hpThresholdAttackBonus&&attacker.hp>=attacker.maxhp*Number(ability.hpThresholdAttackBonus.threshold||.5))mult*=Number(ability.hpThresholdAttackBonus.multiplier||1);
+    if(attacker.phoenixLowHpMultiplier&&attacker.hp<attacker.maxhp*.5)mult*=Number(attacker.phoenixLowHpMultiplier)||1;
+    if(ability.criticalChance&&random()<Number(ability.criticalChance)){critical=true;mult*=Number(ability.criticalMultiplier||2);}
+    if(ability.hpBelowThresholdMultiplier&&attacker.hp<attacker.maxhp*Number(ability.hpBelowThreshold||.5))mult*=Number(ability.hpBelowThresholdMultiplier)||1;
+    if(ability.wyvernStrongTraits&&traits(target.trait).some(trait=>ability.wyvernStrongTraits.includes(trait)))mult*=Number(ability.wyvernStrongMultiplier||4);
+    else mult*=multiplier(ability.strong,target,'max');
+    if(ability.ancientHunter&&hasTrait(target,'古代'))mult*=Number(ability.ancientHunter)||1;
+    if(ability.attributeOverload&&!hasTrait(target,'古代')&&attacker.series!=='機械防衛隊！木下s')mult*=Number(ability.attributeOverload.outgoing)||1;
+    if(target.cursedUntil&&now<Number(target.cursedUntil)&&ability.cursedAttackMultiplier)mult*=Number(ability.cursedAttackMultiplier)||1;
+    return {damage:Math.max(1,Math.round(effectiveAttack*mult)),critical,effectiveAttack};
+  }
   let activeRuntime=null;
   function createRuntime(seed,initialTime=0){
     const clock=createClock(initialTime);
@@ -54,6 +87,7 @@
     matchesTrait,
     tableMatches,
     traitMultiplier,
+    calculateAttackDamage,
     createClock,
     createRuntime,
     setActiveRuntime,
