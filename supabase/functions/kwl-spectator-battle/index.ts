@@ -1,4 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import '../../../battle-core.js'
+
+const BattleCore = (globalThis as any).KinoshitaBattleCore
+if (!BattleCore) throw new Error('Shared battle runtime failed to load')
 
 type Card = {
   name: string; cost: number; hp: number; atk: number; range: number; spd: number;
@@ -24,7 +28,7 @@ type Unit = {
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const AI_TOKEN = Deno.env.get('AI_WORKER_TOKEN') || ''
-const ENGINE_VERSION = 'kwl-server-replay-v1'
+const ENGINE_VERSION = 'kwl-server-replay-v2-shared-runtime'
 const CARDS = JSON.parse(await Deno.readTextFile(new URL('./character-data.json', import.meta.url))) as Card[]
 const WORLD_WIDTH = 1900
 const MAX_TIME = 180
@@ -47,18 +51,8 @@ const matchTrait = (rule: unknown, target: Unit|Card) => {
   const ts = traits(target.trait)
   return rules.includes('*') || rules.some(x => ts.includes(x))
 }
-function makeRng(seedText: string) {
-  let seed = 2166136261
-  for (let i=0;i<seedText.length;i++) seed = Math.imul(seed ^ seedText.charCodeAt(i), 16777619)
-  let state = seed >>> 0
-  return () => {
-    state += 0x6D2B79F5
-    let t = state
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
+const makeRng = (seedText: string) => BattleCore.createRng(seedText)
+
 function powerMultiplier(ai: AIAccount) {
   const c = arr<number>(ai.chapter_clears)
   return 1 + num(c[0])*0.01 + num(c[1])*0.002 + num(c[2])*0.003
@@ -180,7 +174,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
     {key:'team1',team_id:Number(team1.id),name:String(team1.alliance_name||'チーム1'),ai:ai1,form:form1,money:1500,base_hp:5000,units:[],recharge:Array(CARDS.length).fill(0),timer:0,cooldown:.25,used:[]},
     {key:'team2',team_id:Number(team2.id),name:String(team2.alliance_name||'チーム2'),ai:ai2,form:form2,money:1500,base_hp:5000,units:[],recharge:Array(CARDS.length).fill(0),timer:0,cooldown:.25,used:[]}
   ]
-  const frames:any[]=[],events:any[]=[];let time=0,nextId=1,nextFrame=0
+  const frames:any[]=[],events:any[]=[];const clock=BattleCore.createClock(0);let time=clock.now(),nextId=1,nextFrame=0
   const emit=(type:string,side:string,unit:Unit|null,target:Unit|null,value=0,detail='')=>events.push({
     t:Number(time.toFixed(2)),type,side,unit_id:unit?.id??null,target_id:target?.id??null,
     character:unit?.name??null,target:target?.name??null,value:Math.round(value),detail
@@ -276,7 +270,7 @@ function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[]
       }
       side.units=side.units.filter((u:Unit)=>u.hp>0||u.x< -100||u.x>WORLD_WIDTH+100)
     }
-    time=Number((time+STEP).toFixed(4))
+    time=Number(clock.advance(STEP).toFixed(4))
     if(time+1e-6>=nextFrame) {frames.push(snapshot(time,sides,events));nextFrame+=FRAME_INTERVAL}
   }
   if(sides[0].base_hp===sides[1].base_hp) {
