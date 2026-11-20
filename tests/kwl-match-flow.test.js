@@ -31,6 +31,8 @@ assert.match(serverBattle,/BattleCore\.scaleLevelStat\(base,lv,key === 'hp' \|\|
 assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'game engine delegates damage resolution to shared core');
 assert.match(indexHtml,/KinoshitaBattleCore\.selectTarget\(enemies,u\.target/,'game engine uses shared target selection');
 assert.match(serverBattle,/BattleCore\.selectTarget\(activeEnemies,currentTarget/,'server engine uses shared target selection');
+assert.match(serverBattle,/const u:Unit=\{\.\.\.card,id:nextId/,'server units retain card-level combat flags and immunities');
+assert.match(serverBattle,/\(v as any\)\.isFlying\|\|\(v as any\)\.is_flying/,'server target selection recognizes browser camelCase and serialized snake_case flight flags');
 assert.match(indexHtml,/KinoshitaBattleCore\.advancePosition\(/,'game engine uses shared movement calculation');
 assert.match(serverBattle,/BattleCore\.advancePosition\(/,'server engine uses shared movement calculation');
 assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server engine delegates damage resolution to shared core');
