@@ -42,6 +42,8 @@ assert.match(indexHtml,/KinoshitaBattleCore\.resolveDamage\(/,'game engine uses 
 assert.match(serverBattle,/BattleCore\.resolveDamage\(/,'server engine uses shared HP and shield resolution');
 assert.match(serverBattle,/BattleCore\.resolveIceWyvernIncomingDamage\(/,'server replay uses shared Ice Wyvern damage cap and mythology reduction');
 assert.match(indexHtml,/KinoshitaBattleCore\.resolveIceWyvernIncomingDamage\(/,'browser engine uses the same Ice Wyvern damage resolver');
+assert.match(indexHtml,/KinoshitaBattleCore\.calculateAttackDamage\(/,'browser attack damage uses the shared Ice Wyvern bonus resolver');
+assert.match(serverBattle,/BattleCore\.calculateAttackDamage\(/,'server attack damage uses the same Ice Wyvern bonus resolver');
 assert.match(serverBattle,/attacker,damage:rawDamage,time,ability:\{\},random:rng,traitMultiplier,curseFactor:1/,'server generic damage mitigation matches browser semantics and leaves character-specific mitigation to explicit handlers');
 assert.match(indexHtml,/ability:\{\},[\s\S]{0,180}shieldOrder:'power-first'/,'browser and server use the same generic shield-resolution order');
 assert.match(sharedCore,/function resolveOnHitEffects\(/,'shared core owns status effect and immunity resolution');
