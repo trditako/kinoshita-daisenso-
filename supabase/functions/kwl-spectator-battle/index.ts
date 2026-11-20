@@ -131,7 +131,7 @@ function buildUnit(side:any, cardId:number, nextId:number, time:number): Unit {
 function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
   const normalizedAttacker={...attacker,maxhp:attacker.max_hp,killAttackStacks:attacker.kill_stacks,
     attackDownUntil:attacker.attack_down_until,attackDownFactor:attacker.attack_down_factor,
-    cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time?.5:1}
+    cursedUntil:attacker.cursed_until,cursedAttackFactor:attacker.cursed_until>time ? .5 : 1}
   const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until}
   return BattleCore.calculateAttackDamage({attacker:normalizedAttacker,target:normalizedTarget,
     baseAttack:attacker.atk,time,ability:attacker.ability||{},random:rng,traitMultiplier}).damage
