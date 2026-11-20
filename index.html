@@ -2348,45 +2348,30 @@ function xpNeed(i){const lv=Math.max(1,Number(charLevel[i]||1));return Math.roun
 function abilityText(i){return cards[i]?.ability?.name||"なし";}
 function damageAgainst(u,target,baseAtk){
  if(u)u._lastDamageCritical=false;
- const a0=isAbilitySealed(u)?{}:{...(u||{}),...(u?.ability||{})};
- const baseAttack=Math.max(1,Number(baseAtk??u?.atk??1)||1);
- const now=KinoshitaBattleCore.now()/1000;
- let effectiveAttack=baseAttack;if(u?.festivalVoidUntil&&KinoshitaBattleCore.now()/1000<u.festivalVoidUntil)effectiveAttack*=Number(u.festivalVoidAttackFactor||.55);
- if(u?.attackDownUntil&&now<u.attackDownUntil)effectiveAttack*=Number(u.attackDownFactor||.01);
- if(u?.cursedUntil&&now<u.cursedUntil&&u.cursedAttackFactor)effectiveAttack*=Number(u.cursedAttackFactor)||1;
- if(target?.metal){
-  if(a0.criticalChance&&KinoshitaBattleCore.random()<Number(a0.criticalChance)){
-   if(u)u._lastDamageCritical=true;
-   let md=effectiveAttack*Number(a0.criticalMultiplier||2);
-   if(a0.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a0.hpBelowThreshold||.5))md*=Number(a0.hpBelowThresholdMultiplier)||1;
-   return Math.max(1,Math.round(md));
-  }
-  return 1;
- }
+ const sealed=isAbilitySealed(u);
+ const ability=sealed?{}:{...(u||{}),...(u?.ability||{})};
+ const attacker=sealed&&u?{...u,phoenixLowHpMultiplier:0}:u;
+ const resolved=KinoshitaBattleCore.calculateAttackDamage({
+  attacker:attacker||{},target:target||{},baseAttack:baseAtk,time:KinoshitaBattleCore.now()/1000,
+  ability,random:KinoshitaBattleCore.random,traitMultiplier
+ });
+ if(u)u._lastDamageCritical=resolved.critical;
+ if(target?.metal)return resolved.damage;
  let mult=1;
- if(u?.mythDomainUntil&&now<u.mythDomainUntil)mult*=Number(u.mythDomainAtk||.72);
- const customAbility=a0;
- if(customAbility.cosmicFormationBonus&&units.includes(u)){const cosmicCount=formation.filter(i=>{const c=activeCard(i)||cards[i];return !!c&&(c.trait==='宇宙'||allyTraits[c.name]==='宇宙');}).length;mult*=1+Math.min(Number(customAbility.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(customAbility.cosmicFormationBonus.perUnit||.15));}
- if(customAbility.killAttackStack)mult*=1+Math.min(Number(customAbility.killAttackStack.maxBonus||0),Number(u.killAttackStacks||0)*Number(customAbility.killAttackStack.perKill||.05));
- if(customAbility.hpThresholdAttackBonus&&u?.hp>=u?.maxhp*Number(customAbility.hpThresholdAttackBonus.threshold||.5))mult*=Number(customAbility.hpThresholdAttackBonus.multiplier||1);
- if(!isAbilitySealed(u)&&u?.phoenixLowHpMultiplier&&u.hp<u.maxhp*.5)mult*=Number(u.phoenixLowHpMultiplier)||1;
- if(u?.name==='天使神:木下'&&entityTraitMatch(target,['古代','赤','黒','浮','神話']))mult*=8;if(u?.ability?.iceWyvern&&entityHasTrait(target,'神話'))mult*=Number(u.ability.iceWyvern.mythDamageDealt||1);
- const tr=target.trait||"無";
- const a=isAbilitySealed(u)?{}:{...(u||{}),...(u?.ability||{})};
- if(a.criticalChance&&KinoshitaBattleCore.random()<Number(a.criticalChance)){mult*=Number(a.criticalMultiplier||2);if(u)u._lastDamageCritical=true;}
- if(a.hpBelowThresholdMultiplier&&u.hp<u.maxhp*Number(a.hpBelowThreshold||.5))mult*=Number(a.hpBelowThresholdMultiplier)||1;
- if(a.wyvernStrongTraits&&String(tr).split(/[・,]/).some(k=>a.wyvernStrongTraits.includes(k)))mult*=Number(a.wyvernStrongMultiplier||4);
- else mult*=traitMultiplier(a.strong,target,'max');
- if(a.ancientHunter&&entityHasTrait(target,'古代'))mult*=Number(a.ancientHunter)||1;
- if(a.attributeOverload&&!entityHasTrait(target,'古代')&&u?.series!=="機械防衛隊！木下s")mult*=Number(a.attributeOverload.outgoing)||1;
+ if(ability.cosmicFormationBonus&&units.includes(u)){
+  const cosmicCount=formation.filter(i=>{const c=activeCard(i)||cards[i];return !!c&&(c.trait==='宇宙'||allyTraits[c.name]==='宇宙');}).length;
+  mult*=1+Math.min(Number(ability.cosmicFormationBonus.maxBonus||1),cosmicCount*Number(ability.cosmicFormationBonus.perUnit||.15));
+ }
+ if(u?.name==='天使神:木下'&&entityTraitMatch(target,['古代','赤','黒','浮','神話']))mult*=8;
+ if(u?.ability?.iceWyvern&&entityHasTrait(target,'神話'))mult*=Number(u.ability.iceWyvern.mythDamageDealt||1);
  if(u?.series==="機械防衛隊！木下s"&&!entityHasTrait(target,'古代'))mult*=.35;
- if(target?.cursedUntil&&now<target.cursedUntil&&a.cursedAttackMultiplier)mult*=Number(a.cursedAttackMultiplier)||1;
  if(u?.name==='MiraiK'){
   const angelCount=formation.filter(i=>{const card=activeCard(i)||cards[i];return Number.isInteger(i)&&hasCharacter(i)&&card&&card.name!=='MiraiK'&&entityHasTrait(card,'天使');}).length;
   mult*=1+Math.min(.55,angelCount*.10);
   if(target?.attackType==='single')mult*=3;
  }
- if(u?.ability?.iceWyvern&&Number(target.powerShieldMax||0)>0)mult*=Number(u.ability.iceWyvern.shieldMultiplier||1);return Math.max(1,Math.round(effectiveAttack*mult));
+ if(u?.ability?.iceWyvern&&Number(target.powerShieldMax||0)>0)mult*=Number(u.ability.iceWyvern.shieldMultiplier||1);
+ return Math.max(1,Math.round(resolved.damage*mult));
 }
 function miraiKLimitDamage(target,attacker,damage){
  const dealt=Math.max(0,Number(damage)||0);
