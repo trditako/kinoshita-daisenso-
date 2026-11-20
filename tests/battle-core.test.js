@@ -32,6 +32,18 @@ const metalAttack=core.calculateAttackDamage({
   ability:{strong:{赤:2}},random:()=>.99
 });
 assert.equal(metalAttack.damage,1,'metal target keeps the non-critical one-damage rule');
+const farTarget={id:1,x:90,hp:100};
+const nearTarget={id:2,x:25,hp:100};
+const deadTarget={id:3,x:5,hp:0};
+const grabbedTarget={id:4,x:10,hp:100,muscleGrabbedBy:{id:99}};
+assert.equal(core.selectTarget([farTarget,nearTarget,deadTarget,grabbedTarget],null,{x:0,range:100}),nearTarget,
+  'shared targeting chooses the nearest living, unrestrained target');
+assert.equal(core.selectTarget([farTarget,nearTarget],farTarget,{x:0,range:100}),farTarget,
+  'shared targeting preserves a still-valid current target');
+assert.equal(core.selectTarget([farTarget],farTarget,{x:0,range:20}),null,
+  'shared targeting drops a current target that leaves range');
+assert.equal(core.selectTarget([farTarget,nearTarget],null,{x:0,range:100,canTarget:t=>t.id!==2}),farTarget,
+  'shared targeting applies caller-specific target eligibility');
 const rngA=core.createRng('kwl-shared-core-regression');
 const rngB=core.createRng('kwl-shared-core-regression');
 const seqA=Array.from({length:32},()=>rngA());
