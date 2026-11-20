@@ -167,6 +167,19 @@
       range:Number(base.range||0)*growth,interval:Number(base.interval||1)*growth,
       iceDamageStacks:stacks,iceWyvernBaseStats:base,iceWyvernAppliedGrowth:growth,healed,growth};
   }
+  function resolveMiraiKIncomingDamage(options){
+    const o=options||{},target=o.target||{},attacker=o.attacker||{},time=Number(o.time)||0;
+    let damage=Math.max(0,Number(o.damage)||0);
+    if(target.name!=='MiraiK'||!attacker||damage<=0)return {damage,capped:false};
+    if(!o.multipliersApplied){
+      if(Math.abs(Number(target.x||0)-Number(attacker.x||0))>=150)damage*=.15;
+      if((attacker.attackType??attacker.attack_type)==='single')damage*=.75;
+    }
+    const cap=Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*.25));
+    const capped=damage>cap;
+    return {damage:Math.min(damage,cap),capped,attackDownUntil:capped?time+7:0,
+      attackDownFactor:capped?.1:1,cursedUntil:capped?time+2:0,cursedAttackFactor:capped?.5:1};
+  }
   function resolveIceWyvernIncomingDamage(options){
     const o=options||{},attacker=o.attacker||{},target=o.target||{},ice=target.ability?.iceWyvern;
     let damage=Math.max(0,Number(o.damage)||0);
@@ -238,6 +251,7 @@
     calculateDamageTaken,
     resolveDamage,
     resolveOnHitEffects,
+    resolveMiraiKIncomingDamage,
     resolveIceWyvernIncomingDamage,
     resolveIceWyvernAfterHit,
     isAbilitySealed,
