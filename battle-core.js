@@ -136,6 +136,7 @@
     traitMultiplier,
     calculateAttackDamage,
     calculateDamageTaken,
+    resolveDamage,
     selectTarget,
     createClock,
     createRuntime,
