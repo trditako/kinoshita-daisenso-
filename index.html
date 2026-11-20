@@ -2371,7 +2371,7 @@ function damageAgainst(u,target,baseAtk){
   if(target?.attackType==='single')mult*=3;
  }
  if(u?.ability?.iceWyvern&&Number(target.powerShieldMax||0)>0)mult*=Number(u.ability.iceWyvern.shieldMultiplier||1);
- return Math.max(1,Math.round(resolved.damage*mult));
+ return Math.max(1,Math.round(resolved.rawDamage*mult));
 }
 function miraiKLimitDamage(target,attacker,damage){
  const dealt=Math.max(0,Number(damage)||0);
