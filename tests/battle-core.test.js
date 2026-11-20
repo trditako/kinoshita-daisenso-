@@ -41,6 +41,14 @@ const cursed=core.calculateDamageTaken({target:{maxhp:100,cursedUntil:5,ability:
 assert.equal(cursed.damage,70,'shared damage mitigation applies the cursed damage factor');
 const capped=core.calculateDamageTaken({target:{maxhp:100,ability:{damageCapRatio:.25}},attacker:{trait:'無'},damage:1000,time:0,random:()=>.99});
 assert.equal(capped.damage,25,'shared damage mitigation enforces the maximum-HP damage cap');
+const shielded=core.resolveDamage({target:{hp:50,maxhp:100,barrier:20,power_shield:10,ability:{}},attacker:{trait:'無'},damage:100,time:0,random:()=>.99});
+assert.equal(shielded.mitigatedDamage,100);
+assert.equal(shielded.absorbedBarrier,20);
+assert.equal(shielded.absorbedPowerShield,10);
+assert.equal(shielded.damage,50);
+assert.equal(shielded.hp,0);
+assert.equal(shielded.barrier,0);
+assert.equal(shielded.powerShield,0);
 const farTarget={id:1,x:90,hp:100};
 const nearTarget={id:2,x:25,hp:100};
 const deadTarget={id:3,x:5,hp:0};
