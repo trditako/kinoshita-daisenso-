@@ -144,9 +144,11 @@ function damageDealt(attacker:Unit,target:Unit,rng:()=>number,time:number) {
 
 function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:number,rng:()=>number,emit:(type:string,side:string,unit:Unit|null,target:Unit|null,value?:number,detail?:string)=>void) {
   if(target.hp<=0)return 0
+  const normalizedTarget={...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield}
+  const iceWyvernDamage=BattleCore.resolveIceWyvernIncomingDamage({attacker,target:normalizedTarget,damage:rawDamage})
   const resolution=BattleCore.resolveDamage({
-    target:{...target,maxhp:target.max_hp,cursedUntil:target.cursed_until,barrier:target.barrier,power_shield:target.power_shield},
-    attacker,damage:rawDamage,time,ability:{},random:rng,traitMultiplier,curseFactor:1
+    target:normalizedTarget,
+    attacker,damage:iceWyvernDamage.damage,time,ability:{},random:rng,traitMultiplier,curseFactor:1
   })
   target.barrier=resolution.barrier;target.power_shield=resolution.powerShield;target.hp=resolution.hp
   emit('hit',attacker.side,attacker,target,resolution.damage)
