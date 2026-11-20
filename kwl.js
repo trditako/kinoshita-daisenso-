@@ -162,7 +162,7 @@ function renderMatchDetail(){
  const games=matchDetail.games||[],players=matchDetail.players||[],locks=matchDetail.locks||[],events=matchDetail.events||[],operator=kwlIsOperator();
  let h='<section style="padding:12px;background:#0f172acc;border:1px solid #64748b;border-radius:12px"><h3 style="margin:0 0 8px">BO5シリーズ管理</h3><div>'+esc(teamName(m.team1_id))+' '+Number(m.team1_wins||0)+' - '+Number(m.team2_wins||0)+' '+esc(teamName(m.team2_id))+'</div>';
  h+='<div style="margin:8px 0;font-size:12px;color:#cbd5e1">各試合で別の選手が出場。シリーズ中、同じチームが一度出撃させたキャラクターは再使用できません。</div>';h+=kwlPhaseMarkup(m,operator);
- for(let n=1;n<=5;n++){const g=games.find(x=>Number(x.game_number)===n),ps=players.filter(x=>Number(x.game_number)===n);h+='<div style="padding:8px;margin:5px 0;background:#1e293b;border-radius:8px"><b>第'+n+'試合</b> · '+esc(g?.status||'未登録')+'<div style="font-size:12px">'+(ps.map(p=>esc(teamName(p.team_id))+'：'+esc(p.player_name)+'<div style="font-size:11px;color:#cbd5e1;margin-top:3px">装備固定：'+equipmentSummary(p.equipment_snapshot)+'</div><div style="font-size:11px;color:#bfdbfe;margin-top:3px">登録編成：'+((Array.isArray(p.formation_snapshot)?p.formation_snapshot:[]).map(esc).join(' ・ ')||'未登録')+'</div>').join('')||'出場選手未登録')+'</div></div>';}
+ for(let n=1;n<=5;n++){const g=games.find(x=>Number(x.game_number)===n),ps=players.filter(x=>Number(x.game_number)===n),aiGame=ps.length===2&&ps.every(p=>String(p.player_type)==='ai');h+='<div style="padding:8px;margin:5px 0;background:#1e293b;border-radius:8px"><b>第'+n+'試合</b> · '+esc(g?.status||'未登録')+'<div style="font-size:12px">'+(ps.map(p=>esc(teamName(p.team_id))+'：'+esc(p.player_name)+'<div style="font-size:11px;color:#cbd5e1;margin-top:3px">装備固定：'+equipmentSummary(p.equipment_snapshot)+'</div><div style="font-size:11px;color:#bfdbfe;margin-top:3px">登録編成：'+((Array.isArray(p.formation_snapshot)?p.formation_snapshot:[]).map(esc).join(' ・ ')||'未登録')+'</div>').join('')||'出場選手未登録')+'</div>'+(aiGame?'<button data-kwl-watch-game="'+n+'" class="formationBtn" style="width:100%;margin-top:7px;background:#1d4ed8;color:#fff">📺 サーバー共通リプレイを観戦</button>':'')+'</div>';}
  const presentation=kwlPresentation(m),phase=String(presentation.phase||'pending'),phaseOpen=phase==='draft'&&(!presentation.phase_ends_at||Date.parse(presentation.phase_ends_at)>Date.now());
   const usedPlayerIds=players.filter(p=>Number(p.team_id)===myTeamId).map(p=>String(p.player_id));
   const availableHumanRoster=humanRoster.filter(p=>!usedPlayerIds.includes(String(p.id)));
@@ -179,7 +179,7 @@ function renderMatchDetail(){
    h+='<div style="padding:9px;background:#334155;border-radius:8px">現在は出場登録受付外です。運営によるチーム紹介・選手選択・試合開始の進行をお待ちください。</div>';
   }else if(!isInMatch)h+='<div style="padding:9px;background:#334155;border-radius:8px">自分の同盟チームが出場するカードではありません。</div>';
  const cg=Number(presentation.game_number||1),cr=players.filter(p=>Number(p.game_number)===cg),aiVsAi=cr.some(p=>Number(p.team_id)===Number(m.team1_id)&&String(p.player_type)==='ai')&&cr.some(p=>Number(p.team_id)===Number(m.team2_id)&&String(p.player_type)==='ai');
- if(phase==='live'&&aiVsAi&&m.status!=='completed')h+='<div style="margin-top:10px;padding:12px;background:#172554;border:1px solid #facc15;border-radius:10px"><b>🤖 AI対AI・ライブ観戦</b><p style="font-size:11px;color:#dbeafe">両チームのAIが通常の戦闘画面でキャラクターを出撃させます。観戦用バトルは大会の公式勝敗・報酬に影響しません。</p><button id="kwlWatchAiVsAi" class="formationBtn" style="width:100%;background:#b45309;color:#fff">📺 AI対AIの試合を観戦する</button></div>';
+ if(phase==='live'&&aiVsAi&&m.status!=='completed')h+='<div style="margin-top:10px;padding:12px;background:#172554;border:1px solid #facc15;border-radius:10px"><b>🤖 AI対AI・ライブ観戦</b><p style="font-size:11px;color:#dbeafe">サーバーが試合を一度だけ計算し、同じ戦闘記録を全観戦者へ配信します。表示される勝敗は大会の公式結果に反映されます。</p><button id="kwlWatchAiVsAi" data-kwl-watch-game="'+cg+'" class="formationBtn" style="width:100%;background:#b45309;color:#fff">📺 サーバー共通試合を観戦する</button></div>';
  h+='<h4 style="margin:12px 0 5px">チーム別使用禁止キャラクター</h4>';
  for(const tid of [m.team1_id,m.team2_id]){const ls=locks.filter(x=>Number(x.team_id)===Number(tid));h+='<div style="font-size:12px;margin:4px 0"><b>'+esc(teamName(tid))+'：</b>'+(ls.map(x=>esc(x.character_key)+'（第'+x.first_game_number+'試合）').join('、')||'まだ使用なし')+'</div>';}
  h+='<h4 style="margin:12px 0 5px">ライブ実況・試合ログ</h4><div id="kwlEventList" style="max-height:190px;overflow:auto;background:#111827;padding:8px;border-radius:8px">'+(events.length?events.slice().reverse().map(e=>'<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #334155"><b>'+esc(e.player_name||e.event_type)+'</b> '+esc(e.message)+'</div>').join(''):'<div style="color:#94a3b8;font-size:12px">まだイベントはありません。</div>')+'</div>';
@@ -192,7 +192,7 @@ function renderMatchDetail(){
  h+='</section>';box.innerHTML=h;
  const claim=box.querySelector('#kwlClaimPlayer');if(claim)claim.onclick=async()=>{const pid=box.querySelector('#kwlPlayerSelect').value,p=humanRoster.find(x=>String(x.id)===String(pid));if(!p||String(p.id)!==String(playerRankingId))return alert('自分の選手IDのみ出場登録できます。');claim.disabled=true;try{const formationSnapshot=(Array.isArray(formation)?formation:[]).map(i=>cards[Number(i)]?.name).filter(Boolean).slice(0,10);if(!formationSnapshot.length)throw new Error('出場前に通常の編成画面で編成を設定してください。');const result=await rpc('kwl_claim_game_player',{p_match_id:Number(m.id),p_team_id:myTeamId,p_player_id:String(p.id),p_player_type:String(p.type||'player'),p_player_name:String(p.name||p.id),p_equipment_snapshot:window.KinoshitaEquipment?.exportLoadout?.()||{}});const row=Array.isArray(result)?result[0]:result;await rpc('kwl_set_game_formation',{p_match_id:Number(m.id),p_game_number:Number(row.game_number),p_team_id:myTeamId,p_player_id:String(p.id),p_formation_snapshot:formationSnapshot});setActiveSeries({matchId:Number(m.id),teamId:myTeamId,opponentTeamId:Number(myTeamId)===Number(m.team1_id)?Number(m.team2_id):Number(m.team1_id),gameNumber:Number(row.game_number),playerId:String(p.id),playerType:String(p.type||'player'),playerName:String(p.name||p.id),equipmentSnapshot:row.equipment_snapshot||{},formationSnapshot,locked:[]});alert('第'+row.game_number+'試合の出場選手・編成を登録しました。');await loadMatchDetail(m.id);}catch(e){alert('出場登録・編成保存ができません：'+e.message);claim.disabled=false;}};
  const openBtn=box.querySelector('#kwlOpenPvp');if(openBtn)openBtn.onclick=()=>{if(typeof openPvp==='function')openPvp();else alert('対人戦画面を開けません。');};const aiBattleBtn=box.querySelector('#kwlStartAiBattle');if(aiBattleBtn)aiBattleBtn.onclick=()=>kwlStartAiBattle();
- const watchAiBtn=box.querySelector('#kwlWatchAiVsAi');if(watchAiBtn)watchAiBtn.onclick=()=>kwlSpectatorStart();
+ const watchAiBtn=box.querySelector('#kwlWatchAiVsAi');if(watchAiBtn)watchAiBtn.onclick=()=>kwlSpectatorStart(Number(watchAiBtn.dataset.kwlWatchGame||kwlPresentation(m).game_number||1));box.querySelectorAll('[data-kwl-watch-game]').forEach(btn=>{btn.onclick=()=>kwlSpectatorStart(Number(btn.dataset.kwlWatchGame));});
  const ref=box.querySelector('#kwlRefreshDetail');if(ref)ref.onclick=()=>loadMatchDetail(m.id);
  const adminResult=box.querySelector('#kwlAdminResult');if(adminResult)adminResult.onclick=async()=>{const game=Number(box.querySelector('#kwlAdminGame').value),winner=Number(box.querySelector('#kwlAdminWinner').value);if(!game||!confirm('第'+game+'試合の勝者を確定します。結果は取り消せません。'))return;adminResult.disabled=true;try{await rpc('kwl_record_game_result',{p_match_id:Number(m.id),p_game_number:game,p_winner_team_id:winner,p_reporter_id:String(playerRankingId)});alert('試合結果を記録しました。');await refresh();await loadMatchDetail(m.id);}catch(e){alert('結果を確定できません：'+e.message);adminResult.disabled=false;}};
  const adminPost=box.querySelector('#kwlAdminPost');if(adminPost)adminPost.onclick=async()=>{const msg=box.querySelector('#kwlAdminComment').value.trim();if(!msg)return alert('実況コメントを入力してください。');adminPost.disabled=true;try{await rpc('kwl_post_commentary',{p_match_id:Number(m.id),p_message:msg,p_author:'公式実況'});box.querySelector('#kwlAdminComment').value='';await loadMatchDetail(m.id);await refreshBroadcast();}catch(e){alert('実況を投稿できません：'+e.message);adminPost.disabled=false;}};
@@ -243,49 +243,89 @@ function recordActiveSeries(localWin){const a=activeSeries();if(!a)return;const 
 
 let kwlSpectatorActive=false,kwlSpectatorContext=null;
 function kwlFindAiProfile(row){const ps=typeof aiProfiles!=='undefined'&&Array.isArray(aiProfiles)?aiProfiles:[],id=String(row?.player_id||''),digits=id.replace(/\\D/g,'');return ps.find(p=>String(p.accountId)===id||String(p.accountId).replace(/\\D/g,'')===digits)||null;}
-function kwlSpectatorStart(){
- const m=selectedMatch,n=Number(kwlPresentation(m).game_number||1),rows=(matchDetail.players||[]).filter(p=>Number(p.match_id)===Number(m?.id)&&Number(p.game_number)===n);
- const r1=rows.find(p=>Number(p.team_id)===Number(m.team1_id)&&String(p.player_type)==='ai'),r2=rows.find(p=>Number(p.team_id)===Number(m.team2_id)&&String(p.player_type)==='ai');
- if(!m||!r1||!r2)return alert('両チームのAI出場登録がそろっていません。');
- const a1=kwlFindAiProfile(r1),a2=kwlFindAiProfile(r2);if(!a1||!a2)return alert('AIプロフィールを読み込めません。');
- if(typeof setupWorld!=='function'||!unitsEl||typeof aiBuildFormation!=='function')return alert('戦闘エンジンを初期化できません。');
- const l1=new Set((matchDetail.locks||[]).filter(x=>Number(x.team_id)===Number(m.team1_id)).map(x=>String(x.character_key))),l2=new Set((matchDetail.locks||[]).filter(x=>Number(x.team_id)===Number(m.team2_id)).map(x=>String(x.character_key)));
- const f1=aiBuildFormation(a1).filter(i=>!l1.has(String(cards[i]?.name))).slice(0,10),f2=aiBuildFormation(a2).filter(i=>!l2.has(String(cards[i]?.name))).slice(0,10);
- if(!f1.length||!f2.length)return alert('使用可能なキャラクターが残っていないAIチームがあります。');
- kwlSpectatorContext={name1:String(r1.player_name||a1.name||'AI 1'),name2:String(r2.player_name||a2.name||'AI 2'),ai1:a1,form1:f1,used1:[],recharge1:Array(cards.length).fill(0),money1:1500,timer1:0,cooldown1:.25,formation:Array.isArray(formation)?formation.slice():[],mode:selectedMode,chapter:selectedChapter,stage:selectedStage,previousRankAI:rankAI};
- formation=f1.slice();rankAI={...a2,formation:Array.isArray(a2.formation)?a2.formation.slice():[]};rankAI._battleFormationCache=f2.slice();
- kwlSpectatorActive=true;window.__KWL_AI_VS_AI_SPECTATOR=true;window.__KWL_AI_BATTLE_ACTIVE=true;rankMode=true;pvpMode=false;paused=false;haifuSummonCount=0;gameSpeed=1;updateGameSpeedButton();
- rankPlayerUsed=[];rankAIUsed=[];rankAIMoney=1500;rankAITimer=0;rankAICooldown=.25;rankAIRecharge=Array(cards.length).fill(0);
- for(const id of ['rankLobby','pvpLobby','start','result','pause','detail']){const el=document.getElementById(id);if(el)el.style.display='none';}
- document.getElementById('rankResultOverlay')?.remove();document.getElementById('kwlAiResultOverlay')?.remove();document.getElementById('rankModeTag')?.remove();
- units=[];enemies=[];unitsEl.innerHTML='';enemyMaxHp=5000;enemyHp=5000;baseHp=5000;setupWorld();level=1;workerMax=6000;workerIncome=120;money=1500;running=true;last=0;stageTime=0;spawnIndex=0;rechargeLeft=cards.map(()=>0);repeatNextTimes=[];
- const tag=document.createElement('div');tag.id='rankModeTag';tag.className='rankModeTag';tag.textContent='🏆 KWL 観戦 ｜ '+kwlSpectatorContext.name1+' VS '+kwlSpectatorContext.name2;document.getElementById('field').appendChild(tag);
- cameraX=Math.max(0,Math.min(worldWidth-field.clientWidth,Math.round((worldWidth-field.clientWidth)/2)));applyCamera();if(root)root.style.display='none';document.getElementById('battlePauseBtn').style.display='none';
- if(audioEnabled){if(audioStarted)startBGM('rank');else initAudio();}playSE('boss');requestAnimationFrame(loop);
+function kwlSpectatorThink(){}
+function kwlSpectatorFinish(){const c=kwlSpectatorContext;kwlSpectatorActive=false;kwlSpectatorContext=null;const overlay=document.getElementById('kwlServerSpectator');if(overlay){overlay.__kwlClosed=true;overlay.__kwlCleanup?.();overlay.remove();}if(c?.matchId)loadMatchDetail(c.matchId);}
+async function kwlSpectatorStart(requestedGameNo){
+ const m=selectedMatch;if(!m)return alert('観戦する試合を選択してください。');
+ const gameNo=Math.max(1,Math.min(5,Number(requestedGameNo||kwlPresentation(m).game_number||1)));
+ const old=document.getElementById('kwlServerSpectator');if(old){old.__kwlClosed=true;old.__kwlCleanup?.();old.remove();}
+ const overlay=document.createElement('div');overlay.id='kwlServerSpectator';overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#020617f5;color:#fff;padding:12px;display:flex;align-items:center;justify-content:center;overflow:auto;font-family:system-ui,"Noto Sans JP",sans-serif';
+ overlay.innerHTML='<section style="width:min(100%,980px);background:#0f172a;border:1px solid #64748b;border-radius:16px;padding:12px"><header style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><div style="font-size:11px;color:#facc15;font-weight:900;letter-spacing:2px">KWL SERVER AUTHORITATIVE REPLAY</div><h2 style="font-size:20px;margin:4px 0">🤖 AI対AI・サーバー共通観戦</h2><div id="kwlReplayStatus" style="font-size:12px;color:#cbd5e1">サーバーの試合データを確認しています…</div></div><button id="kwlReplayClose" class="formationBtn">閉じる</button></header><div id="kwlReplayBody" style="margin-top:12px"><div style="padding:28px;text-align:center;background:#1e293b;border-radius:10px">サーバーが試合を一度だけ計算し、共通リプレイを作成しています。<br>観戦者ごとに別々の戦闘は実行しません。</div></div></section>';
+ document.body.appendChild(overlay);kwlSpectatorActive=true;kwlSpectatorContext={matchId:Number(m.id),gameNumber:gameNo,overlay};
+ let closed=false;overlay.__kwlClosed=false;
+ const close=()=>{closed=true;overlay.__kwlClosed=true;overlay.__kwlCleanup?.();kwlSpectatorActive=false;kwlSpectatorContext=null;overlay.remove();};
+ overlay.querySelector('#kwlReplayClose').onclick=close;
+ const status=overlay.querySelector('#kwlReplayStatus'),body=overlay.querySelector('#kwlReplayBody');
+ const replayPath='/kwl_spectator_battles?select=status,winner_team_id,duration_seconds,replay,completed_at&match_id=eq.'+Number(m.id)+'&game_number=eq.'+gameNo+'&limit=1';
+ const getReplay=async()=>{const rows=await request(replayPath);return Array.isArray(rows)?rows[0]||null:null;};
+ const renderReplay=(replay)=>{
+  if(closed||overlay.__kwlClosed)return;
+  const frames=Array.isArray(replay?.frames)?replay.frames:[];
+  if(!frames.length)throw new Error('サーバーリプレイにフレームがありません。');
+  const duration=Math.max(.1,Number(replay.duration_seconds||frames[frames.length-1].t||0));
+  const t1=replay.team1||{},t2=replay.team2||{};
+  body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div style="padding:9px;background:#172554;border:1px solid #3b82f6;border-radius:9px"><b>'+esc(t1.name||'チーム1')+'</b><div id="kwlReplayBase1" style="font-size:12px;color:#bfdbfe">城HP 5000</div></div><div style="padding:9px;background:#451a1a;border:1px solid #ef4444;border-radius:9px"><b>'+esc(t2.name||'チーム2')+'</b><div id="kwlReplayBase2" style="font-size:12px;color:#fecaca">城HP 5000</div></div></div><div id="kwlReplayField" style="position:relative;height:min(55vh,430px);min-height:280px;overflow:hidden;border:1px solid #64748b;border-radius:12px;background:linear-gradient(180deg,#172554 0%,#1e293b 52%,#334155 100%)"><div style="position:absolute;left:0;right:0;top:50%;border-top:2px dashed #94a3b8;opacity:.45"></div><div style="position:absolute;left:8px;bottom:8px;padding:8px;background:#1d4ed8;border-radius:8px;font-size:11px;font-weight:900">TEAM 2 城</div><div style="position:absolute;right:8px;bottom:8px;padding:8px;background:#991b1b;border-radius:8px;font-size:11px;font-weight:900">TEAM 1 城</div><div id="kwlReplayUnits"></div><div id="kwlReplayEnd" style="display:none;position:absolute;inset:0;background:#020617cc;align-items:center;justify-content:center;text-align:center;padding:20px"><div><div style="font-size:12px;color:#facc15;letter-spacing:2px">OFFICIAL SERVER RESULT</div><h2 id="kwlReplayWinner" style="font-size:28px;margin:8px 0"></h2><p style="font-size:12px;color:#cbd5e1">この結果はサーバーで一度だけ計算され、全観戦者に共通です。</p></div></div></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="kwlReplayPlay" class="formationBtn" style="min-width:84px">⏸ 一時停止</button><label style="font-size:12px">速度 <select id="kwlReplaySpeed" style="padding:7px;border-radius:6px;color:#111"><option value="0.5">0.5倍</option><option value="1" selected>1倍</option><option value="2">2倍</option></select></label><input id="kwlReplaySeek" type="range" min="0" max="'+duration+'" step="0.1" value="0" style="flex:1;min-width:130px"><span id="kwlReplayTime" style="font-size:12px;font-variant-numeric:tabular-nums">0.0 / '+duration.toFixed(1)+'秒</span></div><div id="kwlReplayEvent" style="font-size:12px;color:#fde68a;margin-top:8px;min-height:20px">サーバー生成リプレイを再生します。</div>';
+  const unitLayer=body.querySelector('#kwlReplayUnits'),base1=body.querySelector('#kwlReplayBase1'),base2=body.querySelector('#kwlReplayBase2'),playBtn=body.querySelector('#kwlReplayPlay'),speedSelect=body.querySelector('#kwlReplaySpeed'),seek=body.querySelector('#kwlReplaySeek'),timeLabel=body.querySelector('#kwlReplayTime'),eventLabel=body.querySelector('#kwlReplayEvent'),endOverlay=body.querySelector('#kwlReplayEnd'),winnerLabel=body.querySelector('#kwlReplayWinner');
+  const unitNodes=new Map(),events=Array.isArray(replay.events)?replay.events:[];let currentTime=0,playing=true,speed=1,startAt=performance.now(),raf=0;
+  const formatTime=v=>Number(v).toFixed(1)+'秒';
+  const makeUnit=(u)=>{
+   const card=cards[Number(u.card_id)]||{},el=document.createElement('div');el.dataset.unitId=String(u.id);
+   el.style.cssText='position:absolute;width:72px;min-height:58px;transform:translateX(-50%);text-align:center;transition:opacity .12s;pointer-events:none;text-shadow:0 1px 2px #000';
+   el.innerHTML='<div style="font-size:25px;line-height:28px">'+esc(card.icon||'❔')+'</div><div style="font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(card.name||('キャラ#'+(Number(u.card_id)+1)))+'</div><div style="height:5px;background:#334155;border:1px solid #0f172a;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:100%;background:#22c55e"></i></div>';
+   unitLayer.appendChild(el);unitNodes.set(Number(u.id),el);return el;
+  };
+  const paint=(time)=>{
+   let index=0;while(index<frames.length-2&&Number(frames[index+1].t)<time)index++;
+   const a=frames[index],b=frames[Math.min(index+1,frames.length-1)],span=Math.max(.001,Number(b.t)-Number(a.t)),ratio=clamp((time-Number(a.t))/span,0,1);
+   base1.textContent='城HP '+Math.max(0,Math.round(Number(a.team1_base_hp)+(Number(b.team1_base_hp)-Number(a.team1_base_hp))*ratio));
+   base2.textContent='城HP '+Math.max(0,Math.round(Number(a.team2_base_hp)+(Number(b.team2_base_hp)-Number(a.team2_base_hp))*ratio));
+   const ua=Array.isArray(a.units)?a.units:[],ub=Array.isArray(b.units)?b.units:[],mapA=new Map(ua.map(u=>[Number(u.id),u])),mapB=new Map(ub.map(u=>[Number(u.id),u])),ids=new Set([...mapA.keys(),...mapB.keys()]);
+   for(const id of ids){
+    const x=mapA.get(id)||mapB.get(id),y=mapB.get(id)||mapA.get(id);let el=unitNodes.get(id);if(!el)el=makeUnit(x);
+    const pos=Number(x.x)+(Number(y.x)-Number(x.x))*ratio,hp=Number(x.hp)+(Number(y.hp)-Number(x.hp))*ratio,maxHp=Math.max(1,Number(y.max_hp||x.max_hp||1));
+    const side=String(x.side||y.side),bottom=(side==='team1'?44:150)+(id%3)*34;
+    el.style.left=(clamp(pos/Number(replay.world_width||1900),0,1)*100)+'%';el.style.bottom=bottom+'px';el.style.opacity=mapA.has(id)&&mapB.has(id)?'1':String(mapA.has(id)?1-ratio:ratio);
+    const bar=el.querySelector('i');if(bar)bar.style.width=(clamp(hp/maxHp,0,1)*100)+'%';
+   }
+   for(const [id,el] of unitNodes)if(!ids.has(id)){el.remove();unitNodes.delete(id);}
+   timeLabel.textContent=formatTime(time)+' / '+formatTime(duration);seek.value=String(time);
+   const event=events.filter(e=>Number(e.t)<=time).slice(-1)[0];if(event)eventLabel.textContent=formatTime(event.t)+' · '+String(event.character||'戦闘')+' '+String(event.detail||({spawn:'出撃',attack:'攻撃',hit:'ダメージ',death:'撃破',base_hit:'城攻撃',skill:'能力発動',wave:'波動',surge:'烈波',match_end:'試合終了'}[event.type]||event.type))+(event.target?' → '+event.target:'')+(event.value?'（'+Number(event.value).toLocaleString()+'）':'');
+  };
+  const finish=()=>{playing=false;playBtn.textContent='▶ 再生';endOverlay.style.display='flex';winnerLabel.textContent=Number(replay.winner_team_id)===Number(t1.id)?'🏆 '+String(t1.name||'チーム1')+' 勝利':'🏆 '+String(t2.name||'チーム2')+' 勝利';};
+  const tick=()=>{if(closed||overlay.__kwlClosed)return;if(playing){currentTime=Math.min(duration,(performance.now()-startAt)/1000*speed);paint(currentTime);if(currentTime>=duration){finish();return;}}raf=requestAnimationFrame(tick);};
+  playBtn.onclick=()=>{if(playing){playing=false;currentTime=Math.min(duration,(performance.now()-startAt)/1000*speed);playBtn.textContent='▶ 再生';}else{if(currentTime>=duration){currentTime=0;endOverlay.style.display='none';}playing=true;startAt=performance.now()-currentTime/speed*1000;playBtn.textContent='⏸ 一時停止';tick();}};
+  speedSelect.onchange=()=>{speed=Number(speedSelect.value)||1;if(playing)startAt=performance.now()-currentTime/speed*1000;};
+  seek.oninput=()=>{currentTime=Number(seek.value)||0;startAt=performance.now()-currentTime/speed*1000;endOverlay.style.display=currentTime>=duration?'flex':'none';paint(currentTime);if(currentTime<duration){playing=false;playBtn.textContent='▶ 再生';}};
+  paint(0);tick();
+  overlay.__kwlCleanup=()=>{cancelAnimationFrame(raf);playing=false;};
+ };
+ try{
+  let replayRow=await getReplay();
+  if(replayRow?.status!=='completed'||!replayRow?.replay){
+   status.textContent='サーバーが共通試合を計算しています…';
+   const response=await fetch(API.replace('/rest/v1','')+'/functions/v1/kwl-spectator-battle',{
+    method:'POST',headers:headers(),body:JSON.stringify({match_id:Number(m.id),game_number:gameNo}),cache:'no-store'
+   });
+   const result=await response.json().catch(()=>null);
+   if(!response.ok||!result?.ok)throw new Error(result?.error||'サーバー戦闘の開始に失敗しました。');
+   if(result.status==='completed'&&result.replay)replayRow={status:'completed',replay:result.replay,winner_team_id:result.winner_team_id};
+  }
+  for(let attempt=0;(!replayRow||replayRow.status!=='completed'||!replayRow.replay)&&attempt<150&&!closed;attempt++){
+   status.textContent='サーバー戦闘の完了を待っています… '+(attempt+1)+'/150';
+   await new Promise(resolve=>setTimeout(resolve,2000));
+   replayRow=await getReplay();
+   if(replayRow?.status==='failed')throw new Error('サーバー戦闘に失敗しました。運営に確認してください。');
+  }
+  if(closed)return;
+  if(!replayRow?.replay)throw new Error('サーバーリプレイがまだ準備できていません。時間をおいて再度開いてください。');
+  status.textContent='サーバー生成済み・全観戦者共通の試合結果です。';
+  renderReplay(replayRow.replay);
+ }catch(e){
+  if(closed)return;
+  status.textContent='観戦データを取得できませんでした。';
+  body.innerHTML='<div style="padding:16px;background:#7f1d1d;border-radius:10px">'+esc(e.message||e)+'<p style="font-size:12px;color:#fecaca">サーバーDBのマイグレーションとEdge Functionのデプロイが必要です。</p></div>';
+ }
 }
-function kwlSpectatorThink(dt){
- const c=kwlSpectatorContext;if(!kwlSpectatorActive||!c||!rankMode||!running)return;
- c.money1=Math.min(6000,c.money1+(112+Number(c.ai1.skill||0)*28)*dt);c.timer1+=dt; c.cooldown1=Math.max(0,c.cooldown1-dt);
- for(let i=0;i<c.recharge1.length;i++)c.recharge1[i]=Math.max(0,c.recharge1[i]-dt);
- const form=c.form1,aff=form.filter(i=>c.money1>=cards[i].cost&&c.recharge1[i]<=0);if(c.cooldown1>0||!aff.length)return;
- const st=strategyOf(c.ai1),personality=(Number(String(c.ai1.accountId||'0').replace(/\\D/g,''))%17)/100,cadence=1+personality*.8;
- if(c.timer1<((st.save*1.15)+.45)*cadence&&Math.random()<Number(c.ai1.skill||0)*.78)return;
- const fresh=LATEST_RANK_BONUS_IDS.filter(i=>aff.includes(i)&&!c.used1.includes(i)),pick=fresh.length&&Math.random()<.9?fresh[Math.floor(Math.random()*fresh.length)]:aiPickUnit(c.ai1,form,aff);if(pick<0)return;
- c.used1.push(pick);c.money1-=cards[pick].cost;const card=cards[pick],hp=aiRankStat(c.ai1,pick,'hp');
- const u={...card,hp,maxhp:hp,atk:aiRankStat(c.ai1,pick,'atk'),range:aiRankStat(c.ai1,pick,'range'),spd:aiRankStat(c.ai1,pick,'spd'),interval:aiRankStat(c.ai1,pick,'interval'),id:'kwl-watch-'+Date.now()+'-'+Math.random(),x:worldWidth-145,cd:.15,state:'move',ability:card.ability,motion:card.motion,attackType:card.attackType,kb:card.kb,kbRemaining:card.kb,isEnemy:false,isRemote:true,owner:'ai',cardIndex:pick,trait:card.trait||'無',slowUntil:0,slowFactor:1};
- applyAngelGodFormationEffects(u,pick);applyHaifuFormationEffects(u);applyMiraiKFormationEffects(u);if(u.name==='ノヴァ木下')applyNovaMode(u,'destroy',true);if(u.name==='覇風'){u.haifuBaseMaxHp=u.maxhp;u.haifuBaseAtk=u.atk;u.haifuNextGrowthAt=stageTime+2;}
- units.push(u);renderUnitElement(u);if(u.name==='覇風')for(const ally of units)applyHaifuFormationEffects(ally);haifuOnSummoned(u);c.recharge1[pick]=Math.max(1,Number(u.recharge||card.recharge||1));c.timer1=0;
- const jitter=.72+((Number(String(c.ai1.accountId||'0').replace(/\\D/g,''))%13)/20);c.cooldown1=Math.max(.72,stRate(c.ai1)*jitter);
-}
-function kwlSpectatorFinish(win){
- const c=kwlSpectatorContext;kwlSpectatorActive=false;kwlSpectatorContext=null;window.__KWL_AI_VS_AI_SPECTATOR=false;window.__KWL_AI_BATTLE_ACTIVE=false;rankMode=false;pvpMode=false;running=false;paused=false;gameSpeed=normalGameSpeed;updateGameSpeedButton();try{stopBGM();playSE(win?'win':'lose');}catch(_){}
- document.getElementById('battlePauseBtn').style.display='';document.getElementById('pause').style.display='none';document.getElementById('detail').style.display='none';document.getElementById('rankModeTag')?.remove();units=[];enemies=[];if(unitsEl)unitsEl.innerHTML='';
- if(c){formation=c.formation;selectedMode=c.mode;selectedChapter=c.chapter;selectedStage=c.stage;rankAI=c.previousRankAI;}if(typeof renderCards==='function')renderCards();if(root)root.style.display='block';
- const overlay=document.createElement('div');overlay.id='kwlSpectatorResult';overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#020617ef;display:flex;align-items:center;justify-content:center;padding:18px;color:#fff';
- overlay.innerHTML='<div style="width:min(92vw,440px);padding:22px;border:2px solid #facc15;border-radius:16px;background:#172554;text-align:center"><div style="font-size:12px;color:#fde68a;letter-spacing:2px;font-weight:900">KWL AI VS AI SPECTATOR</div><h2 style="font-size:25px;margin:8px 0">'+(win?'🏆 '+esc(c?.name1||'AI 1')+' 勝利':'🏆 '+esc(c?.name2||'AI 2')+' 勝利')+'</h2><p style="font-size:13px;line-height:1.7;color:#dbeafe">観戦用ローカルバトルです。大会の公式勝敗・報酬・XP・ランクポイントには影響しません。</p><button id="kwlSpectatorReturn" class="formationBtn" style="width:100%;background:#b45309;color:#fff">大会の試合詳細へ戻る</button></div>';
- document.body.appendChild(overlay);overlay.querySelector('#kwlSpectatorReturn').onclick=()=>{overlay.remove();if(root)root.style.display='block';if(selectedMatch)loadMatchDetail(selectedMatch.id);};
-}
-
 function patchBattleHooks(){
  const restored=activeSeries();if(restored)try{window.KinoshitaEquipment?.useTournamentLoadout?.(restored.equipmentSnapshot||{})}catch(_){}
  if(typeof window.deploy==='function'&&!window.deploy.__kwlWrapped){const original=window.deploy;const wrapped=function(i){const a=activeSeries();if(!a&&!kwlAiBattleActive)return original.apply(this,arguments);if(!(kwlAiBattleActive||(typeof pvpMode!=='undefined'&&pvpMode)))return original.apply(this,arguments);const base=(typeof activeCard==='function'?activeCard(i):null)||(typeof cards!=='undefined'?cards[i]:null);if(!running||!hasCharacter(i)||!formation.includes(i)||money<base.cost||(rechargeLeft[i]||0)>0||(base.growth&&units.some(u=>!u.isEnemy&&u.cardIndex===i&&u.hp>0))||(base.ability?.modeSwitch&&units.some(u=>u.hp>0&&u.ability?.modeSwitch)))return original.apply(this,arguments);const key=String(base?.name||'');if(!key)return original.apply(this,arguments);if((a.locked||[]).includes(key)){alert(key+' はこのBO5シリーズですでに使用済みです。');return;}rpc('kwl_lock_character',{p_match_id:a.matchId,p_game_number:a.gameNumber,p_team_id:a.teamId,p_player_id:a.playerId,p_player_type:a.playerType,p_character_key:key}).then(()=>{const next=activeSeries();if(!next||next.matchId!==a.matchId)return;next.locked=[...(next.locked||[]),key];setActiveSeries(next);original.call(this,i);}).catch(e=>alert('キャラクター使用を登録できません：'+e.message));};wrapped.__kwlWrapped=true;window.deploy=wrapped;}
