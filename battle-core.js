@@ -96,7 +96,7 @@
     const reduction=ability.damageReduce;
     if(reduction&&random()<Number(reduction.chance??.5))factor*=Number(reduction.factor??reduction)||1;
     if(Number(target.cursedUntil)>time)factor*=Number(o.curseFactor??ability.cursedAttackMultiplier??.7);
-    let damage=Math.max(1,Math.round(incoming*factor));
+    let damage=incoming>0?Math.max(1,Math.round(incoming*factor)):0;
     const cap=o.applyCap?Number(ability.damageCapRatio||ability.iceWyvern?.damageCap||0):0;
     if(cap>0)damage=Math.min(damage,Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*cap)));
     return {damage,factor,capped:cap>0&&damage>=Math.round(Number(target.maxhp??target.max_hp??1)*cap)};
@@ -107,8 +107,14 @@
     let remaining=mitigation.damage;
     const barrier=Math.max(0,Number(target.barrier)||0);
     const powerShield=Math.max(0,Number(target.powerShield??target.power_shield)||0);
-    const absorbedBarrier=Math.min(barrier,remaining);remaining-=absorbedBarrier;
-    const absorbedPowerShield=Math.min(powerShield,remaining);remaining-=absorbedPowerShield;
+    let absorbedBarrier=0,absorbedPowerShield=0;
+    if(o.shieldOrder==='power-first'){
+      absorbedPowerShield=Math.min(powerShield,remaining);remaining-=absorbedPowerShield;
+      absorbedBarrier=Math.min(barrier,remaining);remaining-=absorbedBarrier;
+    }else{
+      absorbedBarrier=Math.min(barrier,remaining);remaining-=absorbedBarrier;
+      absorbedPowerShield=Math.min(powerShield,remaining);remaining-=absorbedPowerShield;
+    }
     const hpBefore=Math.max(0,Number(target.hp)||0);
     const hpDamage=Math.min(hpBefore,remaining);
     return { ...mitigation, damage:hpDamage, mitigatedDamage:mitigation.damage,
