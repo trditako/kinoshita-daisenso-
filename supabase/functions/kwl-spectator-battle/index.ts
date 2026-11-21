@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import '../../../battle-core.js'
+import './battle-core.js'
 
 const BattleCore = (globalThis as any).KinoshitaBattleCore
 if (!BattleCore) throw new Error('Shared battle runtime failed to load')
