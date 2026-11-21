@@ -9,6 +9,7 @@ const credentialCleanup = fs.readFileSync('supabase/migrations/20261122130000_kw
 assert.match(edge, /action==='rehearsal_start'/, 'server rehearsal start action exists');
 assert.match(edge, /action==='rehearsal_read'/, 'public replay read action exists');
 assert.match(edge, /rehearsalCredentialValid\(req\)/, 'server validates the operator credential');
+assert.match(edge, /Server rehearsal operator key is not configured/, 'missing secret fails closed with a clear setup message');
 assert.match(edge, /Deno\.env\.get\('KWL_REHEARSAL_OPERATOR_KEY'\)/, 'operator key is read from an Edge Function secret');
 assert.match(edge, /rehearsalSafeEqual/, 'credential comparison avoids early character mismatch exit');
 assert.match(edge, /function startIsolatedRehearsal/, 'isolated BO5 simulator exists');
