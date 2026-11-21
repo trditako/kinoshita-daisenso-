@@ -77,9 +77,9 @@ begin
     ));
   end loop;
   if jsonb_array_length(normalized_lineup)<>5 then raise exception '出場選手の登録が不足しています'; end if;
-  if exists(select 1 from generate_series(1,5) g where not exists(
+  if exists(select 1 from generate_series(1,5) as gs(game_number) where not exists(
     select 1 from jsonb_array_elements(normalized_lineup) x(value)
-    where (x.value->>'game_number')::integer=g
+    where (x.value->>'game_number')::integer=gs.game_number
   )) then raise exception '第1〜第5試合の出場順をすべて指定してください'; end if;
   if exists(select 1 from public.kwl_teams where tournament_key=t.tournament_key and alliance_id=a.id) then
     raise exception 'この同盟は既にエントリー済みです';
