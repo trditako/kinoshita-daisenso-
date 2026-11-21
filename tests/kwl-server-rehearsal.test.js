@@ -24,6 +24,8 @@ assert.match(kwl, /kwlServerRehearsalStart/, 'server rehearsal UI action is wire
 assert.match(kwl, /prompt\('運営用サーバーリハーサルキー/, 'server rehearsal requires an operator key at start');
 assert.match(kwl, /action:'rehearsal_start'/, 'UI calls the server rehearsal action');
 assert.match(kwl, /action:'rehearsal_read'/, 'UI reads the stored replay');
+assert.match(kwl, /id="kwlRehearsalOpenReplay"/, 'shared replay viewer is available to all players');
+assert.match(kwl, /kwlServerRehearsalWatch\(runId,gameNo\)/, 'shared replay UI opens the stored server replay');
 assert.match(kwl, /async function kwlSpectatorStart\(requestedGameNo,replayOverride=null/, 'same replay viewer can play isolated rehearsal replays');
 
 assert.match(migration, /create table if not exists public\.kwl_rehearsal_runs/, 'isolated run table exists');
