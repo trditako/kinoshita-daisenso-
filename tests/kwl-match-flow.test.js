@@ -4,6 +4,8 @@ const assert=require('node:assert/strict');
 const kwl=fs.readFileSync('kwl.js','utf8');
 const indexHtml=fs.readFileSync('index.html','utf8');
 const sharedCore=fs.readFileSync('battle-core.js','utf8');
+const bundledCore=fs.readFileSync('supabase/functions/kwl-spectator-battle/battle-core.js','utf8');
+assert.equal(bundledCore,sharedCore,'spectator Edge Function bundles the exact shared combat core');
 const serverBattle=fs.readFileSync('supabase/functions/kwl-spectator-battle/index.ts','utf8');
 const migration=fs.readFileSync('supabase/migrations/20261120130000_kwl_match_presentation_flow.sql','utf8');
 const replayMigration=fs.readFileSync('supabase/migrations/20261120150000_kwl_server_authoritative_spectator.sql','utf8');
