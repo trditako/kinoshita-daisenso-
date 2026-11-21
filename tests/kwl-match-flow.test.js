@@ -19,6 +19,12 @@ const supabaseConfig=fs.readFileSync('supabase/config.toml','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
 const aiWorker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 assert.match(kwl,/チーム紹介は60秒/);
+assert.match(kwl,/dateLabel=value=>new Date\(value\)\.toLocaleString/,'KWL dates are formatted from the tournament record in JST');
+assert.match(kwl,/dateLabel\(tournament\.starts_at\)/,'opening date is read from the tournament record');
+assert.match(kwl,/dateLabel\(tournament\.entry_opens_at\)/,'entry start is read from the tournament record');
+assert.match(kwl,/dateLabel\(tournament\.entry_closes_at\)/,'entry deadline is read from the tournament record');
+assert.doesNotMatch(kwl,/11\/21（土）13:30 開幕|11\/17 00:00 ～ 11\/19 23:59/,'old tournament dates must not remain hardcoded');
+
 assert.ok(indexHtml.includes('<script src="./battle-core.js?v=20261120-kwl-combat-core-2"></script>'),'game loads shared battle core before battle engine');
 assert.match(indexHtml,/KinoshitaBattleCore\.random\(\)/,'game combat uses shared deterministic random source');
 assert.match(indexHtml,/KinoshitaBattleCore\.now\(\)/,'game combat uses shared battle clock');
