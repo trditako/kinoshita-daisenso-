@@ -125,4 +125,4 @@ assert.match(aiWorkerSource,/match_lineup:matchLineup/);
 assert.match(aiWorkerSource,/Number\(p\.game_number\)===gameNo/);
 
 assert.match(kwl,/p_tournament_key:TOURNAMENT/);
-assert.match(ai,/String\(p\.player_type\|\|'player'\)!=='ai'/);
+assert.match(aiWorkerSource,/String\(p\.player_type\|\|'player'\)!=='ai'/);
