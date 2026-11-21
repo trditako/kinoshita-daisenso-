@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const edge = fs.readFileSync('supabase/functions/kwl-spectator-battle/index.ts', 'utf8');
 const kwl = fs.readFileSync('kwl.js', 'utf8');
 const migration = fs.readFileSync('supabase/migrations/20261122123000_kwl_server_rehearsal_isolation.sql', 'utf8');
+const credentialCleanup = fs.readFileSync('supabase/migrations/20261122130000_kwl_rehearsal_env_secret_auth.sql', 'utf8');
 
 assert.match(edge, /action==='rehearsal_start'/, 'server rehearsal start action exists');
 assert.match(edge, /action==='rehearsal_read'/, 'public replay read action exists');
