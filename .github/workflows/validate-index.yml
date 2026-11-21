@@ -10,6 +10,8 @@ on:
       - 'supabase/functions/kwl-spectator-battle/**'
       - 'tests/kwl-match-flow.test.js'
       - 'tests/kwl-rehearsal.test.js'
+      - 'tests/kwl-server-rehearsal.test.js'
+      - 'supabase/migrations/20261122123000_kwl_server_rehearsal_isolation.sql'
       - 'genesis.js'
       - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
@@ -87,6 +89,7 @@ jobs:
           node tests/battle-core.test.js
           node --check kwl.js
           node tests/kwl-rehearsal.test.js
+          node tests/kwl-server-rehearsal.test.js
           node tests/kwl-match-flow.test.js
           node --check genesis.js
           node --check hitman.js
