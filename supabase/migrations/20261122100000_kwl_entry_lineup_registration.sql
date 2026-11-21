@@ -10,6 +10,7 @@ alter table public.kwl_teams validate constraint kwl_teams_match_lineup_array_ch
 
 drop function if exists public.kwl_register_team(text, bigint);
 create or replace function public.kwl_register_team(
+  p_tournament_key text,
   p_player_id text,
   p_alliance_id bigint,
   p_lineup jsonb
@@ -30,7 +31,8 @@ declare
   player_id_value text;
   player_type_value text;
 begin
-  select * into t from public.kwl_tournaments where tournament_key='kwl-2026-01' for update;
+  if coalesce(p_tournament_key,'')='' then raise exception '大会IDが指定されていません'; end if;
+  select * into t from public.kwl_tournaments where tournament_key=p_tournament_key for update;
   if not found then raise exception '大会データがありません'; end if;
   if now()<t.entry_opens_at then raise exception 'エントリー開始前です'; end if;
   if now()>t.entry_closes_at or t.status<>'registration' then raise exception 'エントリー期間外です'; end if;
