@@ -1,0 +1,4 @@
+project_id = "jhohdvuoyvbzwjumnibc"
+
+[functions.kwl-spectator-battle]
+verify_jwt = false

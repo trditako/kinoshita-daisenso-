@@ -3,7 +3,13 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'battle-core.js'
+      - 'tests/battle-core.test.js'
       - 'kwl.js'
+      - 'service-worker.js'
+      - 'supabase/functions/kwl-spectator-battle/**'
+      - 'tests/kwl-match-flow.test.js'
+      - 'tests/kwl-rehearsal.test.js'
       - 'genesis.js'
       - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
@@ -50,6 +56,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.1.4
+      - name: Type-check KWL Edge Function with Deno
+        run: deno check --no-lock supabase/functions/kwl-spectator-battle/index.ts
       - name: Check inline JavaScript syntax in index.html
         shell: bash
         run: |
@@ -72,6 +83,8 @@ jobs:
           done
       - name: Check Genesis Kinoshita script and regression tests
         run: |
+          node --check battle-core.js
+          node tests/battle-core.test.js
           node --check kwl.js
           node tests/kwl-rehearsal.test.js
           node tests/kwl-match-flow.test.js
