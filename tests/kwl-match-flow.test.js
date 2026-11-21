@@ -115,3 +115,11 @@ assert.match(migration,/next_phase='draft'/);
 assert.match(sw,/kinoshita-daisen-v118/);
 assert.match(sw,/kwl\.js\?v=20261120-kwl-combat-core-2/);
 process.stdout.write('KWL IJL-style match-flow regression checks passed.\\n');
+
+// KWL entry-time lineup is locked to five unique players and the AI worker follows the same slots.
+const aiWorkerSource=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
+assert.match(kwl,/p_lineup:lineup/);
+assert.match(kwl,/kwlStarter[0-9]/);
+assert.match(kwl,/expectedLineup/);
+assert.match(aiWorkerSource,/match_lineup:matchLineup/);
+assert.match(aiWorkerSource,/Number\(p\.game_number\)===gameNo/);
