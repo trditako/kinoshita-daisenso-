@@ -29,6 +29,7 @@ type Unit = {
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const AI_TOKEN = Deno.env.get('AI_WORKER_TOKEN') || ''
+const REHEARSAL_OPERATOR_KEY = Deno.env.get('KWL_REHEARSAL_OPERATOR_KEY') || ''
 const ENGINE_VERSION = 'kwl-server-replay-v3-shared-combat'
 const CARDS = JSON.parse(await Deno.readTextFile(new URL('./character-data.json', import.meta.url))) as Card[]
 const WORLD_WIDTH = 1900
@@ -561,15 +562,11 @@ function rehearsalSafeEqual(a:string,b:string) {
   for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i)
   return diff===0
 }
-async function rehearsalCredentialValid(req:Request,client:any) {
-  const supplied=req.headers.get('x-kwl-operator-key')||''
-  if(!/^[a-f0-9]{64}$/i.test(supplied))return false
-  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(supplied))
-  const actual=rehearsalHex(digest)
-  const {data,error}=await client.from('kwl_rehearsal_credentials')
-    .select('secret_hash').eq('credential_key','primary').maybeSingle()
-  if(error||!data?.secret_hash)return false
-  return rehearsalSafeEqual(actual,String(data.secret_hash).toLowerCase())
+function rehearsalCredentialValid(req:Request) {
+  const supplied=(req.headers.get('x-kwl-operator-key')||'').toLowerCase()
+  const expected=REHEARSAL_OPERATOR_KEY.toLowerCase()
+  if(!/^[a-f0-9]{64}$/.test(supplied)||!/^[a-f0-9]{64}$/.test(expected))return false
+  return rehearsalSafeEqual(supplied,expected)
 }
 async function startIsolatedRehearsal(client:any) {
   const {data:accounts,error:accountError}=await client.from('ai_accounts').select('*')
@@ -663,7 +660,7 @@ Deno.serve(async (req:Request)=>{
       return json(result)
     }
     if(action==='rehearsal_start') {
-      if(!await rehearsalCredentialValid(req,client))return json({ok:false,error:'Operator authentication failed'},401)
+      if(!rehearsalCredentialValid(req))return json({ok:false,error:'Operator authentication failed'},401)
       const result=await startIsolatedRehearsal(client)
       return json({ok:true,...result})
     }
