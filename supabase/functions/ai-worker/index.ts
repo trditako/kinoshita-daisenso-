@@ -554,10 +554,11 @@ async function processKWLAIAutoEntries(){
    if(roster.length<5||roster.some(member=>!member))continue;
    const leaderId=String(alliance.owner_id);
    if(!roster.some(member=>member?.id===leaderId))continue;
+   const matchLineup=roster.slice(0,5).map((member,index)=>({game_number:index+1,player_id:String(member.id),player_type:'ai',player_name:String(member.name||member.id)}));
    const {data:inserted,error:insertError}=await db.from('kwl_teams').insert({
     tournament_key:tour.tournament_key,alliance_id:Number(alliance.id),
     alliance_name:String(alliance.name||'AI同盟'),leader_id:leaderId,
-    leader_type:'ai',roster
+    leader_type:'ai',roster,match_lineup:matchLineup
    }).select('id').maybeSingle();
    if(insertError){
     if(!String(insertError.code||'').includes('23505'))console.warn('KWL AI alliance entry deferred:',insertError.message);
@@ -580,7 +581,7 @@ async function processKWLAIAutoMatches(tick:number){
  if(tournamentError){if(!schemaNotReady(tournamentError))console.warn('KWL AI tournament lookup failed:',tournamentError.message);return 0;}
  for(const tour of arr<any>(tournaments)){
   const {data:teams,error:teamError}=await db.from('kwl_teams')
-   .select('id,leader_type,roster,alliance_name').eq('tournament_key',tour.tournament_key);
+   .select('id,leader_type,roster,alliance_name,match_lineup').eq('tournament_key',tour.tournament_key);
   if(teamError){if(!schemaNotReady(teamError))console.warn('KWL AI team lookup failed:',teamError.message);continue;}
   const teamById=new Map<number,any>();for(const t of arr<any>(teams))teamById.set(Number(t.id),t);
   const {data:matches,error:matchError}=await db.from('kwl_matches')
@@ -590,7 +591,10 @@ async function processKWLAIAutoMatches(tick:number){
   for(const match of arr<any>(matches)){
    const team1=teamById.get(Number(match.team1_id)),team2=teamById.get(Number(match.team2_id));
    const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\d{1,4}$/.test(String(p.id||'')));
-   if(!isFullAI(team1)||!isFullAI(team2))continue;
+   if(!team1||!team2)continue;
+   const fullAiMatch=isFullAI(team1)&&isFullAI(team2);
+   const hasAiLineup=(team:any)=>arr<any>(team.match_lineup).some(p=>String(p.player_type||'player')==='ai');
+   if(!hasAiLineup(team1)&&!hasAiLineup(team2))continue;
    const workerId='kwl-ai:'+String(tick)+':'+crypto.randomUUID();
    const {data:lockData,error:lockError}=await db.rpc('kwl_try_claim_ai_match',{p_match_id:Number(match.id),p_worker_id:workerId,p_lease_seconds:180});
    if(lockError){if(!schemaNotReady(lockError))console.warn('KWL AI match lock unavailable:',lockError.message);continue;}
@@ -609,8 +613,9 @@ async function processKWLAIAutoMatches(tick:number){
     for(const team of [team1,team2]){
      const already=playerRows.some(p=>Number(p.game_number)===gameNo&&Number(p.team_id)===Number(team.id));
      if(already)continue;
-     const used=new Set(playerRows.filter(p=>Number(p.team_id)===Number(team.id)).map(p=>String(p.player_id)));
-     const candidate=arr<any>(team.roster).find(p=>!used.has(String(p.id)));
+     const assigned=arr<any>(team.match_lineup).find(p=>Number(p.game_number)===gameNo);
+     if(!assigned||String(assigned.player_type||'player')!=='ai')continue;
+     const candidate=arr<any>(team.roster).find(p=>String(p.id)===String(assigned.player_id)&&String(p.type||'player')==='ai');
      if(!candidate)continue;
      const {error:claimError}=await db.rpc('kwl_claim_game_player',{
       p_match_id:Number(match.id),p_team_id:Number(team.id),p_player_id:String(candidate.id),
@@ -621,6 +626,7 @@ async function processKWLAIAutoMatches(tick:number){
     const {data:currentPlayers,error:currentPlayerError}=await db.from('kwl_game_players')
      .select('*').eq('match_id',match.id).eq('game_number',gameNo);
     if(currentPlayerError||arr<any>(currentPlayers).length!==2)continue;
+    if(!fullAiMatch)continue;
     const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
     const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
     if(!sideA||!sideB)continue;
