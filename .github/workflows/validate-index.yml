@@ -12,6 +12,7 @@ on:
       - 'tests/kwl-rehearsal.test.js'
       - 'tests/kwl-server-rehearsal.test.js'
       - 'supabase/migrations/20261122123000_kwl_server_rehearsal_isolation.sql'
+      - 'supabase/migrations/20261122130000_kwl_rehearsal_env_secret_auth.sql'
       - 'genesis.js'
       - 'hitman.js'
       - 'tests/genesis-kinoshita.test.js'
