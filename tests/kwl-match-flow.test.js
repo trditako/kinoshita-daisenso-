@@ -128,5 +128,7 @@ assert.match(kwl,/p_tournament_key:TOURNAMENT/);
 assert.match(aiWorkerSource,/String\(p\.player_type\|\|'player'\)!=='ai'/);
 
 assert.match(kwl,/第1〜第5試合の出場予定選手を5名決め/);
-assert.match(migration,/p_tournament_key text/);
-assert.match(migration,/gs\.game_number/);
+const entryMigration=fs.readFileSync('supabase/migrations/20261122100000_kwl_entry_lineup_registration.sql','utf8');
+assert.match(entryMigration,/p_tournament_key text/);
+assert.match(entryMigration,/gs\.game_number/);
+assert.match(entryMigration,/match_lineup/);
