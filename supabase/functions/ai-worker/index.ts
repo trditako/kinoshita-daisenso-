@@ -590,9 +590,7 @@ async function processKWLAIAutoMatches(tick:number){
   if(matchError){if(!schemaNotReady(matchError))console.warn('KWL AI match lookup failed:',matchError.message);continue;}
   for(const match of arr<any>(matches)){
    const team1=teamById.get(Number(match.team1_id)),team2=teamById.get(Number(match.team2_id));
-   const isFullAI=(team:any)=>team&&String(team.leader_type)==='ai'&&arr<any>(team.roster).length>=5&&arr<any>(team.roster).every(p=>String(p.type||'player')==='ai'&&/^AI-\d{1,4}$/.test(String(p.id||'')));
    if(!team1||!team2)continue;
-   const fullAiMatch=isFullAI(team1)&&isFullAI(team2);
    const hasAiLineup=(team:any)=>arr<any>(team.match_lineup).some(p=>String(p.player_type||'player')==='ai');
    if(!hasAiLineup(team1)&&!hasAiLineup(team2))continue;
    const workerId='kwl-ai:'+String(tick)+':'+crypto.randomUUID();
@@ -626,7 +624,7 @@ async function processKWLAIAutoMatches(tick:number){
     const {data:currentPlayers,error:currentPlayerError}=await db.from('kwl_game_players')
      .select('*').eq('match_id',match.id).eq('game_number',gameNo);
     if(currentPlayerError||arr<any>(currentPlayers).length!==2)continue;
-    if(!fullAiMatch)continue;
+    if(arr<any>(currentPlayers).some(p=>String(p.player_type||'player')!=='ai'))continue;
     const sideA=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team1.id));
     const sideB=arr<any>(currentPlayers).find(p=>Number(p.team_id)===Number(team2.id));
     if(!sideA||!sideB)continue;
