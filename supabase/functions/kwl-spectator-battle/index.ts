@@ -657,6 +657,7 @@ Deno.serve(async (req:Request)=>{
       return json(result)
     }
     if(action==='rehearsal_start') {
+      if(!REHEARSAL_OPERATOR_KEY)return json({ok:false,error:'Server rehearsal operator key is not configured'},503)
       if(!rehearsalCredentialValid(req))return json({ok:false,error:'Operator authentication failed'},401)
       const result=await startIsolatedRehearsal(client)
       return json({ok:true,...result})
