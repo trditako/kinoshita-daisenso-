@@ -8,8 +8,8 @@ const credentialCleanup = fs.readFileSync('supabase/migrations/20261122130000_kw
 
 assert.match(edge, /action==='rehearsal_start'/, 'server rehearsal start action exists');
 assert.match(edge, /action==='rehearsal_read'/, 'public replay read action exists');
-assert.match(edge, /rehearsalCredentialValid\\(req\\)/, 'server validates the operator credential');
-assert.match(edge, /Deno\\.env\\.get\\('KWL_REHEARSAL_OPERATOR_KEY'\\)/, 'operator key is read from an Edge Function secret');
+assert.match(edge, /rehearsalCredentialValid\(req\)/, 'server validates the operator credential');
+assert.match(edge, /Deno\.env\.get\('KWL_REHEARSAL_OPERATOR_KEY'\)/, 'operator key is read from an Edge Function secret');
 assert.match(edge, /rehearsalSafeEqual/, 'credential comparison avoids early character mismatch exit');
 assert.match(edge, /function startIsolatedRehearsal/, 'isolated BO5 simulator exists');
 assert.match(edge, /from\('ai_accounts'\)\.select\('\*'\)/, 'AI profiles are read as simulation inputs');
@@ -31,7 +31,7 @@ assert.match(kwl, /async function kwlSpectatorStart\(requestedGameNo,replayOverr
 
 assert.match(migration, /create table if not exists public\.kwl_rehearsal_runs/, 'isolated run table exists');
 assert.match(migration, /create table if not exists public\.kwl_rehearsal_games/, 'isolated replay table exists');
-assert.match(credentialCleanup, /drop table if exists public\\.kwl_rehearsal_credentials/, 'operator secret is not stored in the database');
+assert.match(credentialCleanup, /drop table if exists public\.kwl_rehearsal_credentials/, 'operator secret is not stored in the database');
 assert.match(migration, /enable row level security/g, 'RLS is enabled on rehearsal tables');
 assert.match(migration, /revoke all on public\.kwl_rehearsal_runs from public, anon, authenticated/, 'public roles cannot mutate or directly read run data');
 assert.doesNotMatch(migration, /references public\.kwl_(tournaments|matches|games|teams)/, 'rehearsal data has no foreign key into official tournament records');
