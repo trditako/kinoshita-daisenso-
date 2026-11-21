@@ -8,7 +8,7 @@ const credentialCleanup = fs.readFileSync('supabase/migrations/20261122130000_kw
 
 assert.match(edge, /action==='rehearsal_start'/, 'server rehearsal start action exists');
 assert.match(edge, /action==='rehearsal_read'/, 'public replay read action exists');
-assert.match(edge, /rehearsalCredentialValid\(req,client\)/, 'server validates the operator credential');
+assert.match(edge, /rehearsalCredentialValid\\(req\\)/, 'server validates the operator credential');
 assert.match(edge, /crypto\.subtle\.digest\('SHA-256'/, 'operator key is hashed before comparison');
 assert.match(edge, /rehearsalSafeEqual/, 'credential comparison avoids early character mismatch exit');
 assert.match(edge, /function startIsolatedRehearsal/, 'isolated BO5 simulator exists');
