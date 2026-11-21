@@ -22,7 +22,7 @@ assert.match(kwl,/チーム紹介は60秒/);
 assert.ok(indexHtml.includes('<script src="./battle-core.js?v=20261120-kwl-combat-core-2"></script>'),'game loads shared battle core before battle engine');
 assert.match(indexHtml,/KinoshitaBattleCore\.random\(\)/,'game combat uses shared deterministic random source');
 assert.match(indexHtml,/KinoshitaBattleCore\.now\(\)/,'game combat uses shared battle clock');
-assert.match(serverBattle,/import '\.\.\/\.\.\/\.\.\/battle-core\.js'/,'server replay imports the same battle core');
+assert.match(serverBattle,/import '\.\/battle-core\.js'/,'server replay imports the same battle core');
 assert.match(serverBattle,/BattleCore\.createRng\(seedText\)/,'server replay uses shared seeded RNG');
 assert.match(serverBattle,/BattleCore\.createClock\(0\)/,'server replay uses shared battle clock');
 assert.match(serverBattle,/BattleCore\.matchesTrait\(target,rule\)/,'server and browser share trait matching');
