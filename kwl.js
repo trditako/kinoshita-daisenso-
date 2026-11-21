@@ -431,7 +431,7 @@ async function register(){
  if(new Set(lineup.map(x=>x.player_type+':'+x.player_id)).size!==5)return alert('同じ選手を複数の試合に登録できません。5人の異なる選手を選択してください。');
  if(!confirm('第1〜第5試合の出場選手と順番を確定してエントリーします。選ばなかった登録メンバーは補欠になります。確定後の変更は運営承認が必要です。よろしいですか？'))return;
  b.disabled=true;b.textContent='エントリー中…';
- try{await request('/rpc/kwl_register_team',{method:'POST',headers:headers(),body:JSON.stringify({p_player_id:String(playerRankingId),p_alliance_id:Number(myAlliance.id),p_lineup:lineup})});await refresh();alert('出場選手5名と順番を確定してエントリーしました。');}
+ try{await request('/rpc/kwl_register_team',{method:'POST',headers:headers(),body:JSON.stringify({p_tournament_key:TOURNAMENT,p_player_id:String(playerRankingId),p_alliance_id:Number(myAlliance.id),p_lineup:lineup})});await refresh();alert('出場選手5名と順番を確定してエントリーしました。');}
  catch(e){alert('エントリーできませんでした：'+e.message);b.disabled=false;b.textContent='出場順を確定してエントリー';}
 }
 function boot(){ensureButton();patchBattleHooks();const start=document.getElementById('start');if(start&&!start.__kwlObserver){start.__kwlObserver=new MutationObserver(()=>{ensureButton();patchBattleHooks();});start.__kwlObserver.observe(start,{childList:true,subtree:true});}}
