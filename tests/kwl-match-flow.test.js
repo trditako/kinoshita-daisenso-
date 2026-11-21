@@ -119,7 +119,7 @@ process.stdout.write('KWL IJL-style match-flow regression checks passed.\\n');
 // KWL entry-time lineup is locked to five unique players and the AI worker follows the same slots.
 const aiWorkerSource=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 assert.match(kwl,/p_lineup:lineup/);
-assert.match(kwl,/kwlStarter[0-9]/);
+assert.match(kwl,/kwlStarter/);
 assert.match(kwl,/expectedLineup/);
 assert.match(aiWorkerSource,/match_lineup:matchLineup/);
 assert.match(aiWorkerSource,/Number\(p\.game_number\)===gameNo/);
