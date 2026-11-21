@@ -126,3 +126,7 @@ assert.match(aiWorkerSource,/Number\(p\.game_number\)===gameNo/);
 
 assert.match(kwl,/p_tournament_key:TOURNAMENT/);
 assert.match(aiWorkerSource,/String\(p\.player_type\|\|'player'\)!=='ai'/);
+
+assert.match(kwl,/第1〜第5試合の出場予定選手を5名決め/);
+assert.match(migration,/p_tournament_key text/);
+assert.match(migration,/gs\.game_number/);
