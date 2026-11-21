@@ -553,9 +553,6 @@ async function runBattle(matchId:number,gameNo:number) {
 }
 
 
-function rehearsalHex(bytes: ArrayBuffer) {
-  return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('')
-}
 function rehearsalSafeEqual(a:string,b:string) {
   if(a.length!==b.length)return false
   let diff=0
