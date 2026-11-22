@@ -5,9 +5,9 @@ const kwl = fs.readFileSync('kwl.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 
-assert.ok(html.includes("const GAME_VERSION='v1.9.79'"), 'game version updated');
+assert.ok(html.includes("const GAME_VERSION='v1.9.80'"), 'game version updated');
 assert.ok(!html.includes('<script src="./kwl.js'), 'KWL is not injected twice by index');
-assert.ok(sw.includes('kinoshita-daisen-v119'), 'service worker cache is refreshed');
+assert.ok(sw.includes('kinoshita-daisen-v120'), 'service worker cache is refreshed');
 assert.ok(sw.includes('kwl.js?v=20261122-existing-operator-key'), 'service worker loads the new KWL script');
 const injection = sw.slice(sw.indexOf('const inject='));
 assert.ok(injection.indexOf('equipment.js') < injection.indexOf('kwl.js'), 'KWL loads after equipment');
