@@ -26,7 +26,7 @@ function renderSavedRehearsal(){
  let html='<div style="padding:11px;border:1px solid #38bdf8;border-radius:10px;background:#0c4a6e">';
  html+='<b>サーバー共通リハーサル</b><div style="font-size:12px;margin-top:6px">'+esc(run.team1_name||'チームA')+' <b>'+score+'</b> '+esc(run.team2_name||'チームB')+'</div>';
  html+='<div style="font-size:12px;color:#bae6fd;margin-top:5px">進行：'+esc(labels[phase]||phase)+' ／ 第'+gameNo+'試合目 ／ Run ID：'+esc(saved.run_id)+'</div>';
- if(phase==='team_intro')html+='<div style="font-size:12px;margin-top:7px">両チームの紹介を行います。A：'+r1.length+'名、B：'+r2.length+'名の登録選手。</div>';
+ if(phase==='team_intro')html+='<div style="font-size:12px;line-height:1.7;margin-top:7px"><b>Aチーム選手紹介：</b>'+r1.map((p,i)=>(i+1)+'. '+esc(p.player_name)).join(' ／ ')+'<br><b>Bチーム選手紹介：</b>'+r2.map((p,i)=>(i+1)+'. '+esc(p.player_name)).join(' ／ ')+'</div>';
  if(p1&&p2&&(phase==='player_selection'||phase==='simulating'||phase==='live'||phase==='result'))html+='<div style="font-size:12px;margin-top:7px">出場選手：<b>'+esc(p1.player_name)+'</b>（A） VS <b>'+esc(p2.player_name)+'</b>（B）</div>';
  if(phase==='result'&&game)html+='<div style="font-size:13px;margin-top:7px;color:#fde68a">第'+gameNo+'試合結果：'+esc(Number(game.winner_team_id)===Number(run.team1_id)?run.team1_name:run.team2_name)+' の勝利</div>';
  if(phase==='completed')html+='<div style="font-size:14px;font-weight:900;color:#fde68a;margin-top:8px">最終結果：'+esc(Number(run.winner_team_id)===Number(run.team1_id)?run.team1_name:run.team2_name)+' の優勝（'+score+'）</div>';
