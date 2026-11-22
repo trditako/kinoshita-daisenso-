@@ -9,8 +9,8 @@ const credentialCleanup = fs.readFileSync('supabase/migrations/20261122130000_kw
 assert.match(edge, /action==='rehearsal_start'/, 'server rehearsal start action exists');
 assert.match(edge, /action==='rehearsal_read'/, 'public replay read action exists');
 assert.match(edge, /rehearsalCredentialValid\(req\)/, 'server validates the operator credential');
-assert.match(edge, /Server rehearsal operator key is not configured/, 'missing secret fails closed with a clear setup message');
-assert.match(edge, /Deno\.env\.get\('KWL_REHEARSAL_OPERATOR_KEY'\)/, 'operator key is read from an Edge Function secret');
+assert.match(edge, /Existing operator token is not configured in Edge Function Secrets/, 'missing existing operator secret fails closed with a clear setup message');
+assert.match(edge, /Deno\.env\.get\('WORLD_ANNOUNCEMENT_TOKEN'\)/, 'rehearsal reuses the existing operator panel Edge Function secret');
 assert.match(edge, /rehearsalSafeEqual/, 'credential comparison avoids early character mismatch exit');
 assert.match(edge, /function startIsolatedRehearsal/, 'isolated BO5 simulator exists');
 assert.match(edge, /from\('ai_accounts'\)\.select\('\*'\)/, 'AI profiles are read as simulation inputs');
@@ -19,11 +19,11 @@ assert.match(edge, /from\('kwl_rehearsal_games'\)\.insert/, 'replay frames are w
 assert.doesNotMatch(edge, /from\('(kwl_matches|kwl_games|kwl_live_events|kwl_teams|kwl_game_players|player_rankings)'\)\.(insert|update|upsert|delete)/, 'rehearsal path does not write official KWL or player records');
 assert.match(edge, /kwl-server-rehearsal:/, 'each server rehearsal game receives a deterministic seed');
 assert.match(edge, /team1Wins>=3\|\|team2Wins>=3/, 'series ends at three wins');
-assert.match(edge, /x-kwl-operator-key/, 'CORS allows the separate operator credential header');
+assert.match(edge, /x-operator-broadcast-token/, 'CORS reuses the existing operator panel credential header');
 
 assert.match(kwl, /function kwlIsOperator\(\)/, 'operator UI gate exists');
 assert.match(kwl, /kwlServerRehearsalStart/, 'server rehearsal UI action is wired');
-assert.match(kwl, /prompt\('運営用サーバーリハーサルキー/, 'server rehearsal requires an operator key at start');
+assert.match(kwl, /prompt\('運営パネルで使用している既存の運営キー/, 'server rehearsal reuses the existing operator panel key');
 assert.match(kwl, /action:'rehearsal_start'/, 'UI calls the server rehearsal action');
 assert.match(kwl, /action:'rehearsal_read'/, 'UI reads the stored replay');
 assert.match(kwl, /id="kwlRehearsalOpenReplay"/, 'shared replay viewer is available to all players');
