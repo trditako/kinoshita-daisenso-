@@ -5569,7 +5569,8 @@ async function startIsolatedRehearsal(client:any) {
     team1_roster:team1Roster,team2_roster:team2Roster,started_at:now
   }).select('id').single()
   if(runError||!run?.id)throw runError||new Error('Failed to create rehearsal run')
-  return await rehearsalRunSnapshot(client,String(run.id),false)
+  const snapshot=await rehearsalRunSnapshot(client,String(run.id),false)
+  return {...snapshot,run_id:String(run.id)}
 }
 async function advanceIsolatedRehearsal(client:any,runId:string) {
   const valid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
