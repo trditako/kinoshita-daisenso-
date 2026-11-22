@@ -6,7 +6,7 @@ const core = globalThis.KinoshitaBattleCore;
 const html = fs.readFileSync('index.html', 'utf8');
 
 assert.ok(html.includes('const enemyBaseStop=118;'), 'allied castle stop threshold is defined');
-assert.ok(html.includes('stopped:isThousandStep||stopNow,minX:enemyBaseStop}),'), 'allied movement can reach the castle attack threshold');
+assert.ok(html.includes('stopped:isThousandStep||stopNow,minX:enemyBaseStop});'), 'allied movement can reach the castle attack threshold');
 assert.ok(html.includes("else if(u.x<=enemyBaseStop){u.state='base';"), 'allied units enter the base attack state at the same threshold');
 assert.ok(html.includes('enemyHp-=u.atk;'), 'allied base attacks reduce enemy castle HP');
 
