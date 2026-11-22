@@ -31,7 +31,7 @@ assert.match(edge, /from\('kwl_rehearsal_games'\)\.insert/, 'replay frames are w
 assert.doesNotMatch(edge, /from\('(kwl_matches|kwl_games|kwl_live_events|kwl_teams|kwl_game_players|player_rankings)'\)\.(insert|update|upsert|delete)/, 'rehearsal path does not write official KWL or player records');
 assert.match(edge, /kwl-server-rehearsal:/, 'each server rehearsal game receives a deterministic seed');
 assert.match(edge, /Number\(initial\.team1_wins\)>=3\|\|Number\(initial\.team2_wins\)>=3\|\|gameNo>=5/, 'series ends at three wins or after game five');
-assert.match(edge, /unique \(run_id, game_number\)/, 'database uniqueness prevents duplicate replay rows per game');
+assert.match(migration, /unique \(run_id, game_number\)/, 'database uniqueness prevents duplicate replay rows per game');
 assert.match(edge, /x-operator-broadcast-token/, 'CORS reuses the existing operator panel credential header');
 
 assert.match(kwl, /function kwlIsOperator\(\)/, 'operator UI gate exists');
