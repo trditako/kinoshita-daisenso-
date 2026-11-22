@@ -29,7 +29,7 @@ type Unit = {
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const AI_TOKEN = Deno.env.get('AI_WORKER_TOKEN') || ''
-const REHEARSAL_OPERATOR_KEY = Deno.env.get('KWL_REHEARSAL_OPERATOR_KEY') || ''
+const REHEARSAL_OPERATOR_KEY = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
 const ENGINE_VERSION = 'kwl-server-replay-v3-shared-combat'
 const CARDS = JSON.parse(await Deno.readTextFile(new URL('./character-data.json', import.meta.url))) as Card[]
 const WORLD_WIDTH = 1900
@@ -40,7 +40,7 @@ const MAX_UNITS_PER_SIDE = 48
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-ai-worker-token, x-kwl-operator-key',
+    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-ai-worker-token, x-operator-broadcast-token',
     'Access-Control-Allow-Methods': 'POST, OPTIONS' }
 })
 const num = (v: unknown, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback
@@ -560,9 +560,9 @@ function rehearsalSafeEqual(a:string,b:string) {
   return diff===0
 }
 function rehearsalCredentialValid(req:Request) {
-  const supplied=(req.headers.get('x-kwl-operator-key')||'').toLowerCase()
-  const expected=REHEARSAL_OPERATOR_KEY.toLowerCase()
-  if(!/^[a-f0-9]{64}$/.test(supplied)||!/^[a-f0-9]{64}$/.test(expected))return false
+  const supplied=req.headers.get('x-operator-broadcast-token')||''
+  const expected=REHEARSAL_OPERATOR_KEY
+  if(supplied.length<12||expected.length<12||supplied.length!==expected.length)return false
   return rehearsalSafeEqual(supplied,expected)
 }
 async function startIsolatedRehearsal(client:any) {
@@ -657,7 +657,7 @@ Deno.serve(async (req:Request)=>{
       return json(result)
     }
     if(action==='rehearsal_start') {
-      if(!REHEARSAL_OPERATOR_KEY)return json({ok:false,error:'Server rehearsal operator key is not configured'},503)
+      if(!REHEARSAL_OPERATOR_KEY)return json({ok:false,error:'Existing operator token is not configured in Edge Function Secrets'},503)
       if(!rehearsalCredentialValid(req))return json({ok:false,error:'Operator authentication failed'},401)
       const result=await startIsolatedRehearsal(client)
       return json({ok:true,...result})

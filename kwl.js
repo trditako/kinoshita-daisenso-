@@ -417,7 +417,7 @@ function kwlRehearsalExit(){
 
 async function kwlServerRehearsalRequest(payload,operatorKey=''){
  const response=await fetch('https://jhohdvuoyvbzwjumnibc.supabase.co/functions/v1/kwl-spectator-battle',{
-  method:'POST',headers:Object.assign({apikey:KEY,'Content-Type':'application/json'},operatorKey?{'x-kwl-operator-key':operatorKey}:{}),
+  method:'POST',headers:Object.assign({apikey:KEY,'Content-Type':'application/json'},operatorKey?{'x-operator-broadcast-token':operatorKey}:{}),
   body:JSON.stringify(payload),cache:'no-store'
  });
  const body=await response.json().catch(()=>null);
@@ -426,7 +426,7 @@ async function kwlServerRehearsalRequest(payload,operatorKey=''){
 }
 async function kwlServerRehearsalStart(){
  if(!kwlIsOperator()){alert('サーバーリハーサルを開始できるのは運営アカウントのみです。');return;}
- const key=prompt('運営用サーバーリハーサルキーを入力してください。\nキーは保存されず、この開始リクエストにだけ使用します。');
+ const key=prompt('運営パネルで使用している既存の運営キーを入力してください。\nキーは保存されず、この開始リクエストにだけ使用します。');
  if(!key)return;
  if(!confirm('本番大会とは完全に分離したAI対AIサーバーリハーサルを開始します。\n本番の大会データ・報酬・コイン・XP・ランキング・戦績は変更しません。開始しますか？'))return;
  const button=root?.querySelector('#kwlServerRehearsalStart');
