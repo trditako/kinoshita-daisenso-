@@ -5527,7 +5527,7 @@ function rehearsalSafeEqual(a:string,b:string) {
 function rehearsalCredentialValid(req:Request) {
   const supplied=req.headers.get('x-operator-broadcast-token')||''
   const expected=REHEARSAL_OPERATOR_KEY
-  if(supplied.length<12||expected.length<12||supplied.length!==expected.length)return false
+  if(!supplied||!expected||supplied.length!==expected.length)return false
   return rehearsalSafeEqual(supplied,expected)
 }
 async function startIsolatedRehearsal(client:any) {
