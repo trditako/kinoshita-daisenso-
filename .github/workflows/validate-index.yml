@@ -5,6 +5,7 @@ on:
       - 'index.html'
       - 'battle-core.js'
       - 'tests/battle-core.test.js'
+      - 'tests/castle-attack.test.js'
       - 'kwl.js'
       - 'service-worker.js'
       - 'supabase/functions/kwl-spectator-battle/**'
@@ -88,6 +89,7 @@ jobs:
         run: |
           node --check battle-core.js
           node tests/battle-core.test.js
+          node tests/castle-attack.test.js
           node --check kwl.js
           node tests/kwl-rehearsal.test.js
           node tests/kwl-server-rehearsal.test.js
