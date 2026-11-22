@@ -5,9 +5,9 @@ if (window.__HITMAN_KINOSHITA_V1__) return;
 window.__HITMAN_KINOSHITA_V1__ = true;
 
 const definition = {
-  name: NAME, cost: 2200, hp: 95800, atk: 8900, secondAtk: 5100,
-  multiAttack: [8900, 5100], range: 220, spd: 0.8, interval: 1,
-  recharge: 75, icon: '🎯', motion: 'super', attackType: 'single',
+  name: NAME, cost: 2000, hp: 124540, atk: 11125, secondAtk: 6885,
+  multiAttack: [11125, 6885], range: 220, spd: 0.8, interval: 0.7,
+  recharge: 59, icon: '🎯', motion: 'super', attackType: 'single',
   kb: 2, trait: '黒', rarity: '伝説レア',
   series: '神話編全48ステージクリア報酬',
   specialReward: true, chapterReward: 7,
@@ -18,7 +18,7 @@ const definition = {
   ],
   ability: {
     name: '神話狩り・追跡戦術',
-    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,900、0.2秒後に2段目5,100。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
+    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目11,125、0.2秒後に2段目6,885。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
     strong: { 神話: 5 }, resist: { 神話: 0.15 },
     curseImmune: true, stopImmune: true, waveImmune: true,
     reflectImmune: true
@@ -40,8 +40,8 @@ function hitmanSkill(id) {
   return Array.isArray(card.skills) ? card.skills.find(skill => skill && skill.id === id) : null;
 }
 function hitmanAttackDamage(unit, hitIndex = 0) {
-  const currentAttack = Math.max(1, Number(unit && unit.atk) || 8900);
-  const multiplier = Number(hitIndex) === 1 ? 5100 / 8900 : 1;
+  const currentAttack = Math.max(1, Number(unit && unit.atk) || 11125);
+  const multiplier = Number(hitIndex) === 1 ? 6885 / 11125 : 1;
   return Math.max(1, Math.round(currentAttack * multiplier));
 }
 function syncHitmanMultiAttack(unit) {
@@ -338,7 +338,7 @@ function addHitmanKillStack(unit) {
     unit.hitmanCoreStats = {
       maxhp: Number(unit.maxhp || unit.hp || 1), atk: Number(unit.atk || 1),
       range: Number(unit.range || 1), spd: Number(unit.spd || 0.01),
-      interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 75)
+      interval: Number(unit.interval || 0.7), recharge: Number(unit.recharge || 59)
     };
   }
   unit.hitmanKillStacks = Math.min(20, Number(unit.hitmanKillStacks || 0) + 1);
@@ -364,7 +364,7 @@ function tryHitmanCounter(unit, attacker) {
   if (unit.el) unit.el.style.left = unit.x + 'px';
   if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/' + Number(skill.maxUses || 2), Number(skill.cooldown || 15), 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
-  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8900) * Number(skill.damageMultiplier || 15)));
+  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 11125) * Number(skill.damageMultiplier || 15)));
   const damage = damageAgainst(unit, attacker, baseAttack);
   const dealt = hit(attacker, damage, unit, { hitmanCounter: true });
   if (attacker.hp <= 0 && Array.isArray(enemies) && enemies.includes(attacker)) removeEnemy(attacker);
@@ -404,7 +404,7 @@ function spawnTrackingMarker(unit) {
       .sort((a, b) => b.x - a.x)[0];
     if (target) {
       const skill = hitmanSkill('hitman_tracking');
-      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 8900) * Number(skill?.damageMultiplier || 5))));
+      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 11125) * Number(skill?.damageMultiplier || 5))));
       hit(target, damage, unit, { hitmanMarker: true });
       if (target.hp <= 0 && enemies.includes(target)) removeEnemy(target);
       marker.remove();
@@ -431,9 +431,9 @@ deploy = function(i) {
     const unit = (Array.isArray(units) ? units : []).find(u => !before.has(u) && u && u.cardIndex === i && u.hp > 0);
     if (unit) {
       unit.hitmanCoreStats = {
-        maxhp: Number(unit.maxhp || 95800), atk: Number(unit.atk || 8900),
+        maxhp: Number(unit.maxhp || 124540), atk: Number(unit.atk || 11125),
         range: Number(unit.range || 220), spd: Number(unit.spd || 0.8),
-        interval: Number(unit.interval || 1), recharge: Number(unit.recharge || 75)
+        interval: Number(unit.interval || 0.7), recharge: Number(unit.recharge || 59)
       };
       unit.hitmanKillStacks = 0;
       unit.hitmanSkill2Uses = 0;

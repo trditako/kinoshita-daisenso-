@@ -46,7 +46,7 @@ for(const trait of GENESIS_TRAITS)genesisStrong[trait]=2.5;
 let genesisIndex=cards.findIndex(c=>c&&c.name===GENESIS_NAME);
 if(genesisIndex<0){
  const genesisCard={
-  name:GENESIS_NAME,cost:6000,hp:5000000,atk:250000,range:650,spd:1.5,interval:2.0,recharge:180,
+  name:GENESIS_NAME,cost:6000,hp:1500000,atk:50000,range:650,spd:1.5,interval:2.0,recharge:180,
   icon:'🌌',motion:'super',attackType:'area',kb:1,trait:'神話',rarity:'UR',series:'創世神話',
   specialReward:true,eventReward:'創世木下',genesisAbilities:GENESIS_ABILITY_DEFS,
   ability:{
@@ -67,6 +67,7 @@ if(genesisIndex<0){
  if(Array.isArray(rechargeLeft)&&rechargeLeft[genesisIndex]===undefined)rechargeLeft[genesisIndex]=0;
 }
 const genesisCard=cards[genesisIndex];
+genesisCard.hp=1500000;genesisCard.atk=50000;
 genesisCard.id=genesisIndex;
 genesisCard.genesisAbilities=GENESIS_ABILITY_DEFS;
 genesisCard.ability={...(genesisCard.ability||{}),genesis:true,strong:genesisStrong,damageReduce:{chance:1,factor:.1},
@@ -564,7 +565,7 @@ const GENESIS_COUNTER_NAME='創世討伐兵器・零式';
 let genesisCounterIndex=cards.findIndex(c=>c&&c.name===GENESIS_COUNTER_NAME);
 if(genesisCounterIndex<0){
  const genesisCounterCard={
-  name:GENESIS_COUNTER_NAME,cost:5200,hp:4500000,atk:700000,range:950,spd:.35,interval:3.2,recharge:240,
+  name:GENESIS_COUNTER_NAME,cost:5200,hp:900000,atk:210000,range:950,spd:.35,interval:3.2,recharge:240,
   icon:'🛡️',motion:'super',attackType:'area',kb:2,trait:'無',rarity:'UR',series:'創世神話',
   specialReward:true,eventReward:GENESIS_COUNTER_NAME,
   ability:{
@@ -580,6 +581,7 @@ if(genesisCounterIndex<0){
  genesisCounterIndex=cards.length-1;
 }
 const genesisCounterCard=cards[genesisCounterIndex];
+genesisCounterCard.hp=900000;genesisCounterCard.atk=210000;
 genesisCounterCard.id=genesisCounterIndex;
 genesisCounterCard.ability={
  ...(genesisCounterCard.ability||{}),
