@@ -74,7 +74,40 @@ begin
     select x.value->>'id',coalesce(x.value->>'name',x.value->>'id') into ai_id,ai_name
     from jsonb_array_elements(t.roster) with ordinality x(value,ordinality)
     where coalesce(x.value->>'type','player')='ai'
-      and coalesce(x.value->>'id','') ~ '^AI-[0-9]{1,4}
+      and coalesce(x.value->>'id','') ~ '^AI-[0-9]{1,4}$'
+      and not exists(
+        select 1
+        from public.kwl_game_players prior
+        where prior.match_id=p_match_id
+          and prior.team_id=t.id
+          and prior.player_type='ai'
+          and prior.player_id=x.value->>'id'
+      )
+    order by x.ordinality
+    limit 1;
+    if ai_id is null then
+      raise exception 'AIチーム % に次の出場可能選手がいません',t.alliance_name;
+    end if;
+    insert into public.kwl_game_players(match_id,game_number,team_id,player_id,player_type,player_name)
+    values(p_match_id,p_game_number,t.id,ai_id,'ai',coalesce(ai_name,ai_id))
+    on conflict(match_id,game_number,team_id) do nothing;
+    if found then
+      inserted_count:=inserted_count+1;
+      insert into public.kwl_live_events(tournament_key,match_id,game_number,event_type,team_id,player_name,message,payload)
+      values(m.tournament_key,p_match_id,p_game_number,'system',t.id,coalesce(ai_name,ai_id),
+        coalesce(ai_name,ai_id)||'（AI）が出場登録しました',jsonb_build_object('player_id',ai_id,'player_type','ai'));
+    end if;
+    ai_id:=null;
+    ai_name:=null;
+  end loop;
+  if (select count(*) from public.kwl_game_players where match_id=p_match_id and game_number=p_game_number)=2 then
+    update public.kwl_matches set status='live',updated_at=now() where id=p_match_id;
+  end if;
+  return inserted_count;
+end
+$function$;
+revoke all on function public.kwl_register_ai_players_for_game(bigint,integer) from public,anon,authenticated;
+
 create or replace function public.kwl_set_match_phase(
   p_match_id bigint,
   p_actor_id text,
