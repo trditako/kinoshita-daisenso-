@@ -5612,8 +5612,8 @@ async function advanceIsolatedRehearsal(client:any,runId:string) {
       const team2={id:Number(initial.team2_id),alliance_name:String(initial.team2_name)}
       const seed='kwl-server-rehearsal:'+runId+':'+gameNo+':'+player1.account_id+':'+player2.account_id
       const result=simulate(ai1,ai2,team1,team2,form1,form2,seed)
-      result.replay.team1.player={id:player1.player_id,name:player1.player_name}
-      result.replay.team2.player={id:player2.player_id,name:player2.player_name}
+      ;(result.replay as any).team1.player={id:player1.player_id,name:player1.player_name}
+      ;(result.replay as any).team2.player={id:player2.player_id,name:player2.player_name}
       const {error:insertError}=await client.from('kwl_rehearsal_games').insert({
         run_id:runId,game_number:gameNo,status:'completed',
         winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,
