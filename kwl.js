@@ -13,7 +13,35 @@ const ACTIVE_KEY='kwl-active-series-v1';
 const REHEARSAL_KEY='kwl-server-rehearsal-v1';
 function savedRehearsal(){try{return JSON.parse(localStorage.getItem(REHEARSAL_KEY)||'null')}catch(_){return null}}
 function saveRehearsal(value){try{if(value)localStorage.setItem(REHEARSAL_KEY,JSON.stringify(value));else localStorage.removeItem(REHEARSAL_KEY)}catch(_){}}
-function renderSavedRehearsal(){const box=root?.querySelector('#kwlServerRehearsalResult'),saved=savedRehearsal();if(!box||!saved?.run_id)return;box.innerHTML='<div style="padding:10px;border:1px solid #38bdf8;border-radius:9px;background:#0c4a6e"><b>サーバーリハーサル（保存済み）</b><div style="font-size:12px;margin-top:5px">'+esc(saved.team1?.name||'チーム1')+' '+Number(saved.team1_wins||0)+' - '+Number(saved.team2_wins||0)+' '+esc(saved.team2?.name||'チーム2')+'</div><div style="font-size:11px;color:#bae6fd;margin-top:4px">試合数：'+Number(saved.games_completed||0)+' / 5・Run ID：'+esc(saved.run_id)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">'+Array.from({length:Number(saved.games_completed||0)},(_,i)=>'<button type="button" class="formationBtn" data-kwl-rehearsal-watch="'+esc(saved.run_id)+'" data-game="'+(i+1)+'" style="background:#075985;color:#fff">第'+(i+1)+'試合を観戦</button>').join('')+'</div></div>';box.querySelectorAll('[data-kwl-rehearsal-watch]').forEach(b=>b.onclick=()=>kwlServerRehearsalWatch(String(b.dataset.kwlRehearsalWatch),Number(b.dataset.game)));}
+function renderSavedRehearsal(){
+ const box=root?.querySelector('#kwlServerRehearsalResult'),saved=savedRehearsal();
+ if(!box||!saved?.run_id)return;
+ const run=saved.run||saved,phase=String(run.phase||'team_intro'),gameNo=Number(run.current_game_number||1);
+ const labels={team_intro:'チーム紹介',player_selection:'選手選択・編成',simulating:'試合準備中',live:'対戦・観戦',result:'試合結果',break:'次の試合までの休憩',completed:'シリーズ終了',failed:'エラー'};
+ const r1=Array.isArray(run.team1_roster)?run.team1_roster:[],r2=Array.isArray(run.team2_roster)?run.team2_roster:[];
+ const p1=r1[gameNo-1],p2=r2[gameNo-1],games=Array.isArray(saved.games)?saved.games:[];
+ const game=games.find(g=>Number(g.game_number)===gameNo);
+ const operator=kwlIsOperator();
+ const score=Number(run.team1_wins||0)+' - '+Number(run.team2_wins||0);
+ let html='<div style="padding:11px;border:1px solid #38bdf8;border-radius:10px;background:#0c4a6e">';
+ html+='<b>サーバー共通リハーサル</b><div style="font-size:12px;margin-top:6px">'+esc(run.team1_name||'チームA')+' <b>'+score+'</b> '+esc(run.team2_name||'チームB')+'</div>';
+ html+='<div style="font-size:12px;color:#bae6fd;margin-top:5px">進行：'+esc(labels[phase]||phase)+' ／ 第'+gameNo+'試合目 ／ Run ID：'+esc(saved.run_id)+'</div>';
+ if(phase==='team_intro')html+='<div style="font-size:12px;line-height:1.7;margin-top:7px"><b>Aチーム選手紹介：</b>'+r1.map((p,i)=>(i+1)+'. '+esc(p.player_name)).join(' ／ ')+'<br><b>Bチーム選手紹介：</b>'+r2.map((p,i)=>(i+1)+'. '+esc(p.player_name)).join(' ／ ')+'</div>';
+ if(p1&&p2&&(phase==='player_selection'||phase==='simulating'||phase==='live'||phase==='result'))html+='<div style="font-size:12px;margin-top:7px">出場選手：<b>'+esc(p1.player_name)+'</b>（A） VS <b>'+esc(p2.player_name)+'</b>（B）</div>';
+ if(phase==='result'&&game)html+='<div style="font-size:13px;margin-top:7px;color:#fde68a">第'+gameNo+'試合結果：'+esc(Number(game.winner_team_id)===Number(run.team1_id)?run.team1_name:run.team2_name)+' の勝利</div>';
+ if(phase==='completed')html+='<div style="font-size:14px;font-weight:900;color:#fde68a;margin-top:8px">最終結果：'+esc(Number(run.winner_team_id)===Number(run.team1_id)?run.team1_name:run.team2_name)+' の優勝（'+score+'）</div>';
+ if(phase==='failed')html+='<div style="font-size:12px;color:#fecaca;margin-top:7px">'+esc(run.error||'リハーサルに失敗しました')+'</div>';
+ html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">';
+ if(operator&&phase!=='completed'&&phase!=='failed')html+='<button id="kwlRehearsalAdvance" class="formationBtn" style="background:#0369a1;color:#fff">次の進行へ</button>';
+ if(game&&game.status==='completed')html+='<button id="kwlRehearsalCurrentWatch" class="formationBtn" style="background:#075985;color:#fff">第'+gameNo+'試合を観戦</button>';
+ html+='</div>';
+ if(games.length)html+='<div style="font-size:11px;color:#dbeafe;margin-top:8px">保存済み試合：'+games.map(g=>'第'+g.game_number+'試合').join('・')+'</div>';
+ html+='</div>';
+ box.innerHTML=html;
+ const advance=box.querySelector('#kwlRehearsalAdvance');if(advance)advance.onclick=kwlServerRehearsalAdvance;
+ const watch=box.querySelector('#kwlRehearsalCurrentWatch');if(watch)watch.onclick=()=>kwlServerRehearsalWatch(saved.run_id,gameNo);
+}
+
 let kwlAiBattleActive=false,kwlAiBattleContext=null;
 function activeSeries(){try{return JSON.parse(sessionStorage.getItem(ACTIVE_KEY)||'null')}catch(_){return null}}
 function setActiveSeries(v){try{if(v)sessionStorage.setItem(ACTIVE_KEY,JSON.stringify(v));else sessionStorage.removeItem(ACTIVE_KEY)}catch(_){}try{window.KinoshitaEquipment?.useTournamentLoadout?.(v?.equipmentSnapshot??null)}catch(_){}}
@@ -43,7 +71,7 @@ async function refresh(){
    request('/kwl_teams?select=*&tournament_key=eq.'+TOURNAMENT+'&order=created_at.asc'),
    request('/kwl_matches?select=*&tournament_key=eq.'+TOURNAMENT+'&order=round_number.asc,match_number.asc')
   ]);
-  render();renderSavedRehearsal();await refreshBroadcast();
+  render();renderSavedRehearsal();const saved=savedRehearsal();if(saved?.run_id)await kwlServerRehearsalRefresh(saved.run_id);await refreshBroadcast();
  }catch(e){c.innerHTML='<div style="background:#7f1d1d;padding:14px;border-radius:10px">大会情報を取得できませんでした。<br>'+esc(e.message)+'<br><button id="kwlRetry" class="formationBtn">再読み込み</button></div>';c.querySelector('#kwlRetry').onclick=refresh;}
 }
 function countdownLabel(target,now){const ms=Math.max(0,target-now),d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);return d+'日 '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
@@ -430,22 +458,44 @@ async function kwlServerRehearsalRequest(payload,operatorKey=''){
 }
 async function kwlServerRehearsalStart(){
  if(!kwlIsOperator()){alert('サーバーリハーサルを開始できるのは運営アカウントのみです。');return;}
- const key=prompt('運営パネルで使用している既存の運営キーを入力してください。\nキーは保存されず、この開始リクエストにだけ使用します。');
+ const key=prompt('運営パネルで使用している既存の運営キーを入力してください。\\nキーは保存されず、この開始リクエストにだけ使用します。');
  if(!key)return;
- if(!confirm('本番大会とは完全に分離したAI対AIサーバーリハーサルを開始します。\n本番の大会データ・報酬・コイン・XP・ランキング・戦績は変更しません。開始しますか？'))return;
+ if(!confirm('本番大会とは完全に分離したAI対AIの段階式BO5リハーサルを開始します。\\nチーム紹介・選手選択・試合観戦・結果・休憩を順番に進行します。公式大会データや報酬は変更しません。開始しますか？'))return;
  const button=root?.querySelector('#kwlServerRehearsalStart');
- if(button){button.disabled=true;button.textContent='サーバーでBO5を計算中…';}
+ if(button){button.disabled=true;button.textContent='チームと選手を準備中…';}
  try{
   const result=await kwlServerRehearsalRequest({action:'rehearsal_start'},key);
   saveRehearsal(result);renderSavedRehearsal();
  }catch(e){alert('サーバーリハーサルを開始できませんでした：'+(e?.message||e));}
  finally{if(button){button.disabled=false;button.textContent='🖥️ サーバーリハーサルを開始';}}
 }
+async function kwlServerRehearsalRefresh(runId){
+ try{
+  const result=await kwlServerRehearsalRequest({action:'rehearsal_read',run_id:runId});
+  saveRehearsal({...result,run_id:runId});renderSavedRehearsal();
+ }catch(e){console.warn('KWL rehearsal state refresh failed',e);}
+}
+async function kwlServerRehearsalAdvance(){
+ if(!kwlIsOperator()){alert('リハーサルの進行操作は運営アカウントのみ可能です。');return;}
+ const saved=savedRehearsal();if(!saved?.run_id)return;
+ const key=prompt('運営パネルで使用している既存の運営キーを入力してください。\\nキーは保存されません。');
+ if(!key)return;
+ const run=saved.run||saved,phase=String(run.phase||'team_intro');
+ const confirmText=phase==='player_selection'?'選出されたAI選手で第'+Number(run.current_game_number||1)+'試合をサーバー計算します。続行しますか？':
+  phase==='live'?'第'+Number(run.current_game_number||1)+'試合の観戦フェーズを終了し、結果画面へ進みますか？':
+  'リハーサルを次の進行段階へ進めます。よろしいですか？';
+ if(!confirm(confirmText))return;
+ const button=root?.querySelector('#kwlRehearsalAdvance');if(button){button.disabled=true;button.textContent='進行中…';}
+ try{
+  const result=await kwlServerRehearsalRequest({action:'rehearsal_advance',run_id:saved.run_id},key);
+  saveRehearsal({...result,run_id:saved.run_id});renderSavedRehearsal();
+ }catch(e){alert('リハーサルを進行できませんでした：'+(e?.message||e));}
+}
 async function kwlServerRehearsalWatch(runId,gameNo){
  try{
-  saveRehearsal({...(savedRehearsal()||{}),run_id:runId});
   const result=await kwlServerRehearsalRequest({action:'rehearsal_read',run_id:runId,game_number:gameNo});
-  if(!result.game?.replay)throw new Error('保存済みリプレイが見つかりません。');
+  if(!result.game?.replay)throw new Error('この試合のリプレイはまだ保存されていません。');
+  saveRehearsal({...result,run_id:runId});renderSavedRehearsal();
   await kwlSpectatorStart(gameNo,result.game.replay,'🧪 サーバーリハーサル 第'+gameNo+'試合');
  }catch(e){alert('リプレイを開けませんでした：'+(e?.message||e));}
 }

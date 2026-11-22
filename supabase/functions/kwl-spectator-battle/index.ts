@@ -5530,85 +5530,151 @@ function rehearsalCredentialValid(req:Request) {
   if(!supplied||!expected||supplied.length!==expected.length)return false
   return rehearsalSafeEqual(supplied,expected)
 }
+async function rehearsalRunSnapshot(client:any,runId:string,includeReplays=false) {
+  const {data:run,error:runError}=await client.from('kwl_rehearsal_runs').select(
+    'id,status,phase,current_game_number,engine_version,team1_id,team2_id,team1_name,team2_name,team1_roster,team2_roster,team1_wins,team2_wins,games_completed,winner_team_id,started_at,phase_updated_at,completed_at,error'
+  ).eq('id',runId).maybeSingle()
+  if(runError||!run)throw runError||new Error('Rehearsal run not found')
+  const columns=includeReplays
+    ? 'game_number,status,winner_team_id,duration_seconds,engine_version,team1_player_id,team1_player_name,team2_player_id,team2_player_name,replay,completed_at'
+    : 'game_number,status,winner_team_id,duration_seconds,engine_version,team1_player_id,team1_player_name,team2_player_id,team2_player_name,completed_at'
+  const {data:games,error:gamesError}=await client.from('kwl_rehearsal_games').select(columns)
+    .eq('run_id',runId).order('game_number',{ascending:true})
+  if(gamesError)throw gamesError
+  return {ok:true,run,games:arr<any>(games)}
+}
 async function startIsolatedRehearsal(client:any) {
   const {data:accounts,error:accountError}=await client.from('ai_accounts').select('*')
     .order('rp',{ascending:false}).limit(100)
   if(accountError)throw accountError
   const candidates=arr<AIAccount>(accounts).filter(a=>arr<number>(a.owned_characters).length>0)
-  if(candidates.length<2)throw new Error('Two eligible AI accounts are required for rehearsal')
-  const ai1=candidates[0]
-  const ai2=candidates.find(a=>String(a.strategy||'')!==String(ai1.strategy||''))||candidates[1]
+  if(candidates.length<10)throw new Error('10 eligible AI accounts are required to form two five-player rosters')
+  const rosterPlayer=(a:AIAccount)=>({
+    player_id:'AI-'+String(a.account_id),
+    player_name:String(a.name||('AI-'+String(a.account_id))),
+    account_id:Number(a.account_id),
+    strategy:String(a.strategy||'balanced'),
+    skill:num(a.skill,.25)
+  })
+  const team1Roster=[0,2,4,6,8].map(i=>rosterPlayer(candidates[i]))
+  const team2Roster=[1,3,5,7,9].map(i=>rosterPlayer(candidates[i]))
   const team1={id:-1001,alliance_name:'KWLサーバーリハーサル A'}
   const team2={id:-1002,alliance_name:'KWLサーバーリハーサル B'}
-  const form1=aiFormation(ai1,new Set<number>())
-  const form2=aiFormation(ai2,new Set<number>())
-  if(!form1.length||!form2.length)throw new Error('AI formations are empty')
   const now=new Date().toISOString()
   const {data:run,error:runError}=await client.from('kwl_rehearsal_runs').insert({
-    status:'running',engine_version:ENGINE_VERSION,team1_id:team1.id,team2_id:team2.id,
+    status:'running',phase:'team_intro',current_game_number:1,phase_updated_at:now,
+    engine_version:ENGINE_VERSION,team1_id:team1.id,team2_id:team2.id,
     team1_name:team1.alliance_name,team2_name:team2.alliance_name,
-    team1_ai_account_id:Number(ai1.account_id),team2_ai_account_id:Number(ai2.account_id),
-    started_at:now
+    team1_ai_account_id:team1Roster[0].account_id,team2_ai_account_id:team2Roster[0].account_id,
+    team1_roster:team1Roster,team2_roster:team2Roster,started_at:now
   }).select('id').single()
   if(runError||!run?.id)throw runError||new Error('Failed to create rehearsal run')
-  let team1Wins=0,team2Wins=0,gamesCompleted=0,winnerTeamId:number|null=null
-  try {
-    for(let gameNo=1;gameNo<=5;gameNo++) {
-      const seed='kwl-server-rehearsal:'+String(run.id)+':'+gameNo
-      const result=simulate(ai1,ai2,team1,team2,form1,form2,seed)
-      const {error:gameError}=await client.from('kwl_rehearsal_games').insert({
-        run_id:run.id,game_number:gameNo,status:'completed',
-        winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,
-        engine_version:ENGINE_VERSION,replay:result.replay
-      })
-      if(gameError)throw gameError
-      gamesCompleted++
-      if(Number(result.winner_team_id)===team1.id)team1Wins++
-      else if(Number(result.winner_team_id)===team2.id)team2Wins++
-      if(team1Wins>=3||team2Wins>=3)break
-    }
-    winnerTeamId=team1Wins>=3?team1.id:team2Wins>=3?team2.id:null
-    if(!winnerTeamId)throw new Error('BO5 rehearsal did not produce a series winner')
-    const completedAt=new Date().toISOString()
-    const {error:updateError}=await client.from('kwl_rehearsal_runs').update({
-      status:'completed',team1_wins:team1Wins,team2_wins:team2Wins,
-      games_completed:gamesCompleted,winner_team_id:winnerTeamId,completed_at:completedAt
-    }).eq('id',run.id)
-    if(updateError)throw updateError
-    return {run_id:run.id,status:'completed',engine_version:ENGINE_VERSION,
-      team1:{id:team1.id,name:team1.alliance_name,ai_account_id:Number(ai1.account_id)},
-      team2:{id:team2.id,name:team2.alliance_name,ai_account_id:Number(ai2.account_id)},
-      team1_wins:team1Wins,team2_wins:team2Wins,games_completed:gamesCompleted,winner_team_id:winnerTeamId}
-  } catch(error) {
-    await client.from('kwl_rehearsal_runs').update({
-      status:'failed',team1_wins:team1Wins,team2_wins:team2Wins,
-      games_completed:gamesCompleted,error:String(error instanceof Error?error.message:error).slice(0,500),
-      completed_at:new Date().toISOString()
-    }).eq('id',run.id)
-    throw error
+  const snapshot=await rehearsalRunSnapshot(client,String(run.id),false)
+  return {...snapshot,run_id:String(run.id)}
+}
+async function advanceIsolatedRehearsal(client:any,runId:string) {
+  const valid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if(!valid.test(runId))throw new Error('Invalid rehearsal run ID')
+  const {data:initial,error:readError}=await client.from('kwl_rehearsal_runs').select('*').eq('id',runId).maybeSingle()
+  if(readError||!initial)throw readError||new Error('Rehearsal run not found')
+  const phase=String(initial.phase||'team_intro')
+  const gameNo=Math.floor(num(initial.current_game_number,1))
+  const now=new Date().toISOString()
+  if(phase==='completed'||phase==='failed')return await rehearsalRunSnapshot(client,runId,false)
+  if(phase==='team_intro') {
+    await client.from('kwl_rehearsal_runs').update({phase:'player_selection',phase_updated_at:now})
+      .eq('id',runId).eq('phase','team_intro').eq('current_game_number',gameNo)
+    return await rehearsalRunSnapshot(client,runId,false)
   }
+  if(phase==='player_selection'||phase==='simulating') {
+    if(phase==='player_selection') {
+      const {data:claimed,error:claimError}=await client.from('kwl_rehearsal_runs').update({phase:'simulating',phase_updated_at:now})
+        .eq('id',runId).eq('phase','player_selection').eq('current_game_number',gameNo).select('id').maybeSingle()
+      if(claimError)throw claimError
+      if(!claimed)return await rehearsalRunSnapshot(client,runId,false)
+    }
+    const {data:existing,error:existingError}=await client.from('kwl_rehearsal_games').select('*')
+      .eq('run_id',runId).eq('game_number',gameNo).maybeSingle()
+    if(existingError)throw existingError
+    if(!existing) {
+      const roster1=arr<any>(initial.team1_roster),roster2=arr<any>(initial.team2_roster)
+      const player1=roster1[gameNo-1],player2=roster2[gameNo-1]
+      if(!player1||!player2)throw new Error('The selected game player is missing from the five-player roster')
+      const {data:accounts,error:accountsError}=await client.from('ai_accounts').select('*')
+        .in('account_id',[Number(player1.account_id),Number(player2.account_id)])
+      if(accountsError)throw accountsError
+      const ai1=arr<AIAccount>(accounts).find(a=>Number(a.account_id)===Number(player1.account_id))
+      const ai2=arr<AIAccount>(accounts).find(a=>Number(a.account_id)===Number(player2.account_id))
+      if(!ai1||!ai2)throw new Error('Selected AI player data is missing')
+      const form1=aiFormation(ai1,new Set<number>()),form2=aiFormation(ai2,new Set<number>())
+      if(!form1.length||!form2.length)throw new Error('Selected AI player formation is empty')
+      const team1={id:Number(initial.team1_id),alliance_name:String(initial.team1_name)}
+      const team2={id:Number(initial.team2_id),alliance_name:String(initial.team2_name)}
+      const seed='kwl-server-rehearsal:'+runId+':'+gameNo+':'+player1.account_id+':'+player2.account_id
+      const result=simulate(ai1,ai2,team1,team2,form1,form2,seed)
+      ;(result.replay as any).team1.player={id:player1.player_id,name:player1.player_name}
+      ;(result.replay as any).team2.player={id:player2.player_id,name:player2.player_name}
+      const {error:insertError}=await client.from('kwl_rehearsal_games').insert({
+        run_id:runId,game_number:gameNo,status:'completed',
+        winner_team_id:result.winner_team_id,duration_seconds:result.duration_seconds,
+        engine_version:ENGINE_VERSION,replay:result.replay,
+        team1_player_id:player1.player_id,team1_player_name:player1.player_name,
+        team2_player_id:player2.player_id,team2_player_name:player2.player_name
+      })
+      if(insertError) {
+        const {data:raceWinner}=await client.from('kwl_rehearsal_games').select('id')
+          .eq('run_id',runId).eq('game_number',gameNo).maybeSingle()
+        if(!raceWinner)throw insertError
+      }
+    }
+    const {data:allGames,error:allGamesError}=await client.from('kwl_rehearsal_games').select('winner_team_id')
+      .eq('run_id',runId)
+    if(allGamesError)throw allGamesError
+    const team1Wins=arr<any>(allGames).filter(g=>Number(g.winner_team_id)===Number(initial.team1_id)).length
+    const team2Wins=arr<any>(allGames).filter(g=>Number(g.winner_team_id)===Number(initial.team2_id)).length
+    const {error:updateError}=await client.from('kwl_rehearsal_runs').update({
+      phase:'live',team1_wins:team1Wins,team2_wins:team2Wins,
+      games_completed:arr<any>(allGames).length,phase_updated_at:new Date().toISOString()
+    }).eq('id',runId).eq('phase','simulating')
+    if(updateError)throw updateError
+    return await rehearsalRunSnapshot(client,runId,false)
+  }
+  if(phase==='live') {
+    await client.from('kwl_rehearsal_runs').update({phase:'result',phase_updated_at:now})
+      .eq('id',runId).eq('phase','live').eq('current_game_number',gameNo)
+    return await rehearsalRunSnapshot(client,runId,false)
+  }
+  if(phase==='result') {
+    const won=Number(initial.team1_wins)>=3||Number(initial.team2_wins)>=3||gameNo>=5
+    const winner=Number(initial.team1_wins)>Number(initial.team2_wins)?Number(initial.team1_id):Number(initial.team2_id)
+    const {error:updateError}=await client.from('kwl_rehearsal_runs').update(won
+      ? {phase:'completed',status:'completed',winner_team_id:winner,completed_at:now,phase_updated_at:now}
+      : {phase:'break',phase_updated_at:now}
+    ).eq('id',runId).eq('phase','result').eq('current_game_number',gameNo)
+    if(updateError)throw updateError
+    return await rehearsalRunSnapshot(client,runId,false)
+  }
+  if(phase==='break') {
+    await client.from('kwl_rehearsal_runs').update({phase:'team_intro',current_game_number:gameNo+1,phase_updated_at:now})
+      .eq('id',runId).eq('phase','break').eq('current_game_number',gameNo)
+    return await rehearsalRunSnapshot(client,runId,false)
+  }
+  throw new Error('Unsupported rehearsal phase: '+phase)
 }
 async function readIsolatedRehearsal(client:any,body:Record<string,unknown>) {
   const runId=String(body.run_id||'')
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(runId))
     throw new Error('Invalid rehearsal run ID')
-  const {data:run,error:runError}=await client.from('kwl_rehearsal_runs').select(
-    'id,status,engine_version,team1_id,team2_id,team1_name,team2_name,team1_wins,team2_wins,games_completed,winner_team_id,started_at,completed_at'
-  ).eq('id',runId).maybeSingle()
-  if(runError||!run)throw runError||new Error('Rehearsal run not found')
   const gameNo=Math.floor(num(body.game_number))
   if(gameNo>=1&&gameNo<=5) {
     const {data:game,error:gameError}=await client.from('kwl_rehearsal_games').select(
-      'game_number,status,winner_team_id,duration_seconds,engine_version,replay,completed_at'
+      'game_number,status,winner_team_id,duration_seconds,engine_version,team1_player_id,team1_player_name,team2_player_id,team2_player_name,replay,completed_at'
     ).eq('run_id',runId).eq('game_number',gameNo).maybeSingle()
     if(gameError||!game)throw gameError||new Error('Rehearsal game not found')
-    return {ok:true,run,game}
+    const snapshot=await rehearsalRunSnapshot(client,runId,false)
+    return {...snapshot,game}
   }
-  const {data:games,error:gamesError}=await client.from('kwl_rehearsal_games').select(
-    'game_number,status,winner_team_id,duration_seconds,engine_version,completed_at'
-  ).eq('run_id',runId).order('game_number',{ascending:true})
-  if(gamesError)throw gamesError
-  return {ok:true,run,games:arr<any>(games)}
+  return await rehearsalRunSnapshot(client,runId,false)
 }
 Deno.serve(async (req:Request)=>{
   if(req.method==='OPTIONS')return json({ok:true})
@@ -5621,11 +5687,16 @@ Deno.serve(async (req:Request)=>{
       const result=await readIsolatedRehearsal(client,body)
       return json(result)
     }
-    if(action==='rehearsal_start') {
+    if(action==='rehearsal_start'||action==='rehearsal_advance') {
       if(!REHEARSAL_OPERATOR_KEY)return json({ok:false,error:'Existing operator token is not configured in Edge Function Secrets'},503)
       if(!rehearsalCredentialValid(req))return json({ok:false,error:'Operator authentication failed'},401)
-      const result=await startIsolatedRehearsal(client)
-      return json({ok:true,...result})
+      if(action==='rehearsal_start') {
+        const result=await startIsolatedRehearsal(client)
+        return json(result)
+      }
+      const runId=String(body.run_id||'')
+      const result=await advanceIsolatedRehearsal(client,runId)
+      return json(result)
     }
     const suppliedToken=req.headers.get('x-ai-worker-token')
     if(!AI_TOKEN||suppliedToken!==AI_TOKEN)return json({ok:false,error:'Unauthorized'},401)
