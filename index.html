@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.79';
+const GAME_VERSION='v1.9.80';
 const UPDATE_LOG=[
+  {date:'2026-11-23',version:'v1.9.80',title:'🏰 味方キャラクターの敵城攻撃を修正',items:['味方の移動停止位置と敵城攻撃開始位置の不一致を修正','敵城の直前まで進んだ味方が確実に城を攻撃できるよう改善']},
   {date:'2026-11-18',version:'v1.9.79',title:'🧪 KWL無料リハーサルモードを追加',items:['本番大会データを使わず、ブラウザ内だけでBO5のリハーサルを実行','リハーサル中は通常報酬・セーブ・ランキング更新を無効化']},
   {date:'2026-11-14',version:'v1.9.78',title:'🛡️ 6枠キャラクター装備システムを追加',items:['キャラクターごとに最大6枠の装備を着脱できる装備画面を追加','HP・攻撃力・防御力・回復率・波動／烈波ダメージと軽減の装備効果、6シリーズとセット効果を追加','装備ガチャ・コイン交換ショップ・ステージクリア報酬の装備ドロップを追加']},
   {date:'2026-11-14',version:'v1.9.77',title:'🟡 編成バフ表示を統一しHP表示を改善',items:['ハスターの編成効果を覇風と同じ共通サマリー・補正後ステータス表示へ統合','最高神キャラには全味方向け・最高神向けの両方の編成倍率を反映','戦闘中のバフ表示をHPバーから離し、HPバーを常に前面へ表示']},
@@ -4912,7 +4913,7 @@ if(waveLevel>0&&!isAbilitySealed(u)){
 }
 u.cd=u.interval}}
    else if(u.x<=enemyBaseStop&&selectedMode==='bossrush'){u.state='idle';}else if(u.x<=enemyBaseStop){u.state='base';if(u.cd<=0){attackAnim(u.el);const base=document.querySelector('.enemybase');base.classList.remove('attacking');void base.offsetWidth;base.classList.add('attacking');enemyHp-=u.atk;if(pvpMode)pvpSend({type:'baseHit',damage:u.atk});u.cd=u.interval;if(enemyHp<=0){enemyHp=0;showResult(true);return;}popup('-'+u.atk,Math.max(20,u.x),Math.max(35,field.clientHeight-180));setTimeout(()=>base.classList.remove('attacking'),240)}}
-   else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const slowNow=nowMove<(u.slowUntil||0);const rawSlowSf=Number(u.slowFactor??1);const slowSf=slowNow?Math.max(.05,Math.min(1,Number.isFinite(rawSlowSf)?rawSlowSf:1)):1;const cursedNow=nowMove<(u.cursedUntil||0);const rawCurseSf=Number(u.cursedSpeedFactor??1);const curseSf=cursedNow?Math.max(.05,Math.min(1,Number.isFinite(rawCurseSf)?rawCurseSf:1)):1;const voidSf=(u.festivalVoidUntil&&nowMove<u.festivalVoidUntil)?Number(u.festivalVoidSpeedFactor||.65):1;u.x=KinoshitaBattleCore.advancePosition({x:u.x,speed:u.spd,dt,direction:-1,slowFactor:slowSf,curseFactor:curseSf,voidFactor:voidSf,weatherFactor:kbrWeatherFactor(u,stage,stageTime),stopped:isThousandStep||stopNow,minX:120});if(!slowNow)u.slowFactor=1;}
+   else{u.state='move';const nowMove=simNow;const stopNow=nowMove<(u.stopUntil||0);const slowNow=nowMove<(u.slowUntil||0);const rawSlowSf=Number(u.slowFactor??1);const slowSf=slowNow?Math.max(.05,Math.min(1,Number.isFinite(rawSlowSf)?rawSlowSf:1)):1;const cursedNow=nowMove<(u.cursedUntil||0);const rawCurseSf=Number(u.cursedSpeedFactor??1);const curseSf=cursedNow?Math.max(.05,Math.min(1,Number.isFinite(rawCurseSf)?rawCurseSf:1)):1;const voidSf=(u.festivalVoidUntil&&nowMove<u.festivalVoidUntil)?Number(u.festivalVoidSpeedFactor||.65):1;u.x=KinoshitaBattleCore.advancePosition({x:u.x,speed:u.spd,dt,direction:-1,slowFactor:slowSf,curseFactor:curseSf,voidFactor:voidSf,weatherFactor:kbrWeatherFactor(u,stage,stageTime),stopped:isThousandStep||stopNow,minX:enemyBaseStop});if(!slowNow)u.slowFactor=1;}
    if(refreshStatuses)updateStatusMark(u);u.el.style.left=u.x+'px';u.el.style.bottom=(40+((u.id*7)%5))+'px';const hpBar=u.el.querySelector('.hp i');if(hpBar)hpBar.style.width=Math.max(0,u.hp/u.maxhp*100)+'%';updateBarrierDisplay(u);updatePowerShieldDisplay(u);
  }
 function applyAreaAttackDown(source){const a=source?.ability||{};if(!source||source.isEnemy||isAbilitySealed(source)||!a.areaAttackDownChance||KinoshitaBattleCore.random()>=Number(a.areaAttackDownChance))return;const duration=Number(a.areaAttackDownDuration||20),factor=Number(a.areaAttackDownFactor||.01),now=KinoshitaBattleCore.now()/1000;for(const e of enemies){if(!e||e.hp<=0||hasAbilityFlag(e,'attackDownImmune')||!entityTraitMatch(e,['宇宙','赤']))continue;e.attackDownUntil=now+duration;e.attackDownFactor=factor;setStatusMark(e,'⬇️','攻撃力低下',duration,'attackDown');}}
