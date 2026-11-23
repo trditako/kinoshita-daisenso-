@@ -23,6 +23,8 @@ on:
       - 'tests/pre-kwl-rebalance.test.js'
       - 'zeus.js'
       - 'hastur.js'
+      - 'prism.js'
+      - 'tests/prism-adaptation.test.js'
       - 'wamuu.js'
       - 'tests/wamuu-trial.test.js'
       - 'tests/zeus-stage.test.js'
@@ -99,6 +101,8 @@ jobs:
           node --check hitman.js
           node --check zeus.js
           node --check hastur.js
+          node --check prism.js
+          node tests/prism-adaptation.test.js
           node --check wamuu.js
           node tests/wamuu-trial.test.js
           node tests/genesis-kinoshita.test.js
