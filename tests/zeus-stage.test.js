@@ -16,9 +16,9 @@ assert.match(source, /最高神:ゼウス降臨/);
 assert.match(source, /最高神に使える者/);
 assert.match(source, /hp: 26000000/);
 assert.match(source, /hp: 2500000, atk: 37000/);
-assert.match(source, /damage: 250000/);
-assert.match(source, /damage: 125000/);
-assert.match(source, /damage: 78000/);
+
+
+
 assert.match(source, /damage: 150000/);
 assert.match(source, /damage: 55555/);
 assert.match(source, /damage: 35000/);
@@ -26,7 +26,7 @@ assert.match(source, /start: 8, interval: 25/);
 assert.match(source, /start: 15, interval: 17/);
 assert.match(source, /threshold: 0\.99/);
 assert.match(source, /barrier: 5000000/);
-assert.match(source, /shield: 100000/);
+assert.match(source, /shield: 50000/);
 assert.match(source, /shield: 5000000/);
 assert.match(source, /rewardCharacter: ZEUS_ALLY/);
 assert.match(source, /zeusWaveContext === 'ally'/);
@@ -42,13 +42,13 @@ assert.match(source, /function allyZeusStrikeBandIndex\(distance\)/, 'ally Zeus 
 assert.match(source, /range: 400, senseRange: 600, detectRange: 600/, 'enemy Zeus keeps a 400 strike radius separate from its 600 sensing range');
 assert.match(source, /range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility\.zeusAlly\.bands/, 'ally Zeus uses 600 only to acquire a target while its own bands determine lightning impacts');
 assert.match(source, /bands: \[\{ min: 0, max: 100, damage: 150000 \}, \{ min: 150, max: 250, damage: 55555 \}, \{ min: 300, max: 400, damage: 35000 \}\]/, 'enemy Zeus keeps its own three ranges and damage values');
-assert.match(source, /bands: \[\{ min: -100, max: 75, damage: 250000 \}, \{ min: 125, max: 200, damage: 125000 \}, \{ min: 200, max: 400, damage: 78000 \}\]/, 'ally Zeus uses the requested signed three ranges and stronger damage values');
-assert.match(source, /hp: 210000, atk: 250000/, 'ally Zeus receives the requested HP and first-band attack stat');
-assert.match(source, /secondAtk: 125000, thirdAtk: 78000, multiAttack: \[250000, 125000, 78000\]/, 'ally Zeus card stats match all three lightning damage values');
+assert.match(source, /bands: \[\{ min: -100, max: 75, damage: 150000 \}, \{ min: 125, max: 200, damage: 75000 \}, \{ min: 200, max: 400, damage: 46800 \}\]/, 'ally Zeus uses the requested signed three ranges and stronger damage values');
+assert.match(source, /hp: 160000, atk: 150000/, 'ally Zeus receives the requested HP and first-band attack stat');
+assert.match(source, /secondAtk: 75000, thirdAtk: 46800, multiAttack: \[150000, 75000, 46800\]/, 'ally Zeus card stats match all three lightning damage values');
 assert.match(source, /const distance = \(Number\(candidate\.x \|\| 0\) - Number\(source\.x \|\| 0\)\) \* direction/, 'ally lightning bands mirror their signed ranges toward the triggering enemy');
 assert.match(source, /zeusLightning\(\{ x: Number\(source\.x \|\| 0\) \+ direction \* \(\(band\.min \+ band\.max\) \/ 2\) \}/, 'empty ally lightning bands render in the same forward direction as damage');
 assert.match(source, /launchAllyZeusLightning\(source, target\)/, 'the selected target determines ally Zeus facing direction');
-assert.match(source, /const traitBonus = traitIs\(victim, \['天使', '神話', '赤', '宇宙'\]\) \? 5 : 1/, 'ally Zeus applies its fivefold trait damage multiplier');
+assert.match(source, /const traitBonus = traitIs\(victim, \['天使', '神話', '赤', '宇宙'\]\) \? 3 : 1/, 'ally Zeus applies its threefold trait damage multiplier');
 assert.match(source, /const traitBonus = traitIs\(unit, \['天使', '神話', '赤', '宇宙'\]\) \? 10 : 1/, 'enemy Zeus applies its tenfold trait damage multiplier');
 assert.match(source, /const zeusAttacker = source\?\.name === ZEUS_ALLY/, 'both ally and enemy Zeus lightning can apply their attack debuffs');
 assert.match(source, /window.__zeusEnemySenseLoop/, 'enemy Zeus has a separate 600-range sensing loop');
@@ -319,7 +319,7 @@ runtimeEnemies.push(traitNormal, traitAngel);
 runtimeWindow.getAttackSequence(traitDamageZeus, traitNormal);
 const normalLoss = 5000000 - traitNormal.hp;
 const angelLoss = 5000000 - traitAngel.hp;
-assert.equal(angelLoss, normalLoss * 5, 'ally Zeus deals fivefold lightning damage to its four specified traits');
+assert.equal(angelLoss, normalLoss * 3, 'ally Zeus deals threefold lightning damage to its four specified traits');
 
 runtimeEnemies.push(beyond600);
 const beforeBeyondEffects = effectNodes.length;
