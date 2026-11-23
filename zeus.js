@@ -43,13 +43,13 @@ const enemyZeusAbility = {
 
 const allyZeusAbility = {
   name: '最高神の雷霆・神授の加護',
-  desc: '天使・神話・赤・宇宙から受けるダメージ55%軽減、同属性へ5倍ダメージ。受けた実HPダメージの30%を回復し20%反射。全デバフ無効。一度に受けるダメージは最大HPの11%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。攻撃時33%で停止2秒または攻撃力80%低下2秒。敵数×2%攻撃力上昇（最大+20%）。登場時パワーシールド100,000。敵撃破ごとにシールド2%回復。シールド被弾時、吸収ダメージ10%反射・停止1秒・射程80%低下3秒。被弾ごとに防御力+5%（最大+75%）。',
-  strong: { 天使: 5, 神話: 5, 赤: 5, 宇宙: 5 },
-  resist: { 天使: 0.45, 神話: 0.45, 赤: 0.45, 宇宙: 0.45 },
+  desc: '天使・神話・赤・宇宙から受けるダメージ40%軽減、同属性へ3倍ダメージ。受けた実HPダメージの15%を回復し10%反射。全デバフ無効。一度に受けるダメージは最大HPの20%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。攻撃時20%で停止1.2秒または攻撃力60%低下2秒。敵数×1%攻撃力上昇（最大+10%）。登場時パワーシールド50,000。敵撃破ごとにシールド1%回復。シールド被弾時、吸収ダメージ5%反射・停止1秒・射程80%低下3秒。被弾ごとに防御力+2.5%（最大+35%）。',
+  strong: { 天使: 3, 神話: 3, 赤: 3, 宇宙: 3 },
+  resist: { 天使: 0.60, 神話: 0.60, 赤: 0.60, 宇宙: 0.60 },
   curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5,
-  damageCap: 0.11,
-  zeusAlly: { bands: [{ min: -100, max: 75, damage: 250000 }, { min: 125, max: 200, damage: 125000 }, { min: 200, max: 400, damage: 78000 }], defensePerHit: 0.05, defenseMax: 0.75, enemyCountAttack: 0.02, enemyCountMax: 0.20, shield: 100000, shieldKillRestore: 0.02, shieldReflect: 0.10, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.33, stopDuration: 2, attackDownChance: 0.33, attackDownFactor: 0.2, attackDownDuration: 2 }
+  damageCap: 0.20,
+  zeusAlly: { bands: [{ min: -100, max: 75, damage: 150000 }, { min: 125, max: 200, damage: 75000 }, { min: 200, max: 400, damage: 46800 }], defensePerHit: 0.025, defenseMax: 0.35, enemyCountAttack: 0.01, enemyCountMax: 0.10, shield: 50000, shieldKillRestore: 0.01, shieldReflect: 0.05, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.20, stopDuration: 1.2, attackDownChance: 0.20, attackDownFactor: 0.4, attackDownDuration: 2 }
 };
 
 const enemyZeus = {
@@ -76,8 +76,8 @@ const servantEnemy = {
 if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof eventStages !== 'undefined') {
   if (!cards.some(c => c && c.name === ZEUS_ALLY)) {
     cards.push({
-      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 210000, atk: 250000,
-      secondAtk: 125000, thirdAtk: 78000, multiAttack: [250000, 125000, 78000],
+      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 160000, atk: 150000,
+      secondAtk: 75000, thirdAtk: 46800, multiAttack: [150000, 75000, 46800],
       range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility.zeusAlly.bands, spd: 0.4, interval: 3, recharge: 180,
       icon: '⚡👑', motion: 'super', attackType: 'area', kb: 3,
       trait: '最高神', rarity: 'UR', series: '最高神',
@@ -223,19 +223,19 @@ if (typeof originalHit === 'function') {
     if ((source?.name === ZEUS_ENEMY || source?.name === ZEUS_ALLY) &&
         !abilitySource?.zeusLightningResolved && !abilitySource?.zeusReflection) return 0;
     const incomingTraits = isEnemyZeus || isAllyZeus ? ['天使', '神話', '赤', '宇宙'] : isServant ? ['天使', '神話'] : [];
-    const reduction = isEnemyZeus ? 0.15 : isAllyZeus ? 0.45 : isServant ? 0.05 : 1;
+    const reduction = isEnemyZeus ? 0.15 : isAllyZeus ? 0.60 : isServant ? 0.05 : 1;
     let incoming = Math.max(0, Number(damage) || 0);
     if ((isEnemyZeus && zeusWaveContext === 'ally') || (isAllyZeus && zeusWaveContext === 'enemy')) incoming *= 0.5;
     if (source && traitIs(source, incomingTraits)) incoming *= reduction;
     if (isEnemyZeus || isAllyZeus || isServant) {
-      const capRatio = isEnemyZeus ? 0.07 : isAllyZeus ? 0.11 : 0.15;
+      const capRatio = isEnemyZeus ? 0.07 : isAllyZeus ? 0.20 : 0.15;
       incoming = Math.min(incoming, Math.max(1, Number(target.maxhp || 1) * capRatio));
     }
     if (isEnemyZeus) {
       const stacks = Number(target.zeusDefenseStacks || 0);
       incoming *= 1 - Math.min(0.75, stacks * 0.05);
     }
-    if (isAllyZeus) incoming *= 1 - Math.min(0.75, Number(target.zeusDefenseStacks || 0) * 0.05);
+    if (isAllyZeus) incoming *= 1 - Math.min(0.35, Number(target.zeusDefenseStacks || 0) * 0.025);
     if (isServant) incoming *= 1 - Math.min(0.70, Number(target.zeusDefenseStacks || 0) * 0.07);
     const beforeHp = Number(target.hp || 0);
     const beforeShield = Number(target.barrier || 0);
@@ -257,13 +257,13 @@ if (typeof originalHit === 'function') {
     const shieldDamage = Math.max(0, beforeShield - Number(target.barrier || 0));
     if ((isEnemyZeus || isAllyZeus) && (actual > 0 || shieldDamage > 0)) {
       if (actual > 0) {
-        target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * (isEnemyZeus ? 0.5 : 0.3)));
+        target.hp = Math.min(target.maxhp, target.hp + Math.round(actual * (isEnemyZeus ? 0.5 : 0.15)));
         if (source && live(source) && !abilitySource?.zeusReflection) {
-          originalHit.call(this, source, Math.round(actual * (isEnemyZeus ? 0.5 : 0.2)), target, { zeusReflection: true });
+          originalHit.call(this, source, Math.round(actual * (isEnemyZeus ? 0.5 : 0.10)), target, { zeusReflection: true });
         }
         updateHp(target);
       }
-      target.zeusDefenseStacks = Math.min(15, Number(target.zeusDefenseStacks || 0) + 1);
+      target.zeusDefenseStacks = Math.min(isEnemyZeus ? 15 : 14, Number(target.zeusDefenseStacks || 0) + 1);
       const defenseGain = isEnemyZeus ? 0.07 : 0;
       if (defenseGain && Array.isArray(enemies)) {
         for (const servant of enemies) if (servant?.name === SERVANT && live(servant)) {
@@ -272,7 +272,7 @@ if (typeof originalHit === 'function') {
       }
     }
     if ((isEnemyZeus || isAllyZeus) && shieldDamage > 0 && source && live(source) && !abilitySource?.zeusReflection) {
-      originalHit.call(this, source, Math.max(1, Math.round(shieldDamage * (isEnemyZeus ? 0.25 : 0.10))), target, { zeusReflection: true });
+      originalHit.call(this, source, Math.max(1, Math.round(shieldDamage * (isEnemyZeus ? 0.25 : 0.05))), target, { zeusReflection: true });
       const now = performance.now() / 1000;
       if (!source.stopImmune && !source.ability?.stopImmune) {
         source.stopUntil = Math.max(Number(source.stopUntil || 0), now + 1);
@@ -477,7 +477,7 @@ function launchAllyZeusLightning(source, triggerTarget = null) {
       const bonus = 1 + Math.min(allyZeusAbility.zeusAlly.enemyCountMax, enemyCount * allyZeusAbility.zeusAlly.enemyCountAttack);
       for (const victim of targets) {
         zeusLightning(victim, '#facc15', source);
-        const traitBonus = traitIs(victim, ['天使', '神話', '赤', '宇宙']) ? 5 : 1;
+        const traitBonus = traitIs(victim, ['天使', '神話', '赤', '宇宙']) ? 3 : 1;
         const rawDamage = Math.max(1, Math.round(Number(band.damage || 1) * bonus * traitBonus));
         const dealt = typeof damageAgainst === 'function' ? damageAgainst(source, victim, rawDamage) : rawDamage;
         window.hit(victim, dealt, source, { zeusLightningResolved: true, zeusBandIndex: bandIndex });
@@ -565,7 +565,7 @@ if (typeof originalRenderUnitElement === 'function') {
   window.renderUnitElement = function(unit) {
     const result = originalRenderUnitElement.apply(this, arguments);
     if (unit?.name === ZEUS_ALLY) {
-      if (unit.powerShieldMax == null) unit.powerShieldMax = 100000;
+      if (unit.powerShieldMax == null) unit.powerShieldMax = 50000;
       if (unit.powerShield == null) unit.powerShield = unit.powerShieldMax;
       if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(unit);
     }
