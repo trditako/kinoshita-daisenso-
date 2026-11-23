@@ -3248,8 +3248,8 @@
   {
     "name": "超越木下・創世神",
     "cost": 6000,
-    "hp": 280000,
-    "atk": 42000,
+    "hp": 180000,
+    "atk": 28000,
     "range": 360,
     "spd": 0.38,
     "interval": 2.1,
@@ -3266,14 +3266,14 @@
     "limitedExchangeSeries": "超木下祭",
     "growth": true,
     "trait": "神話",
-    "growthDesc": "成長1段階：HP・攻撃力×1.8、射程+35、速度×1.12、攻撃間隔×0.86。12秒ごとの味方回復が5%、敵全体ダメージが攻撃力の30%に上昇。\n成長2段階：味方回復7%、敵全体ダメージ40%。\n成長3段階：味方回復9%、敵全体ダメージ50%。設定上の上限は回復15%、敵全体ダメージ60%。",
+    "growthDesc": "創世律動は18秒ごとに発動し、味方回復2%、敵全体追加ダメージ10%から開始。",
     "ability": {
       "name": "創世律動",
-      "desc": "12秒ごとに1回発動する。生存している味方全員のHPを各自の最大HPの3%回復し、生存している敵全員に創世神の攻撃力の20%分の追加ダメージを与える。通常攻撃とは別に発動し、敵を倒した場合は通常の撃破処理を行う。成長で回復率と敵全体への追加ダメージ率が上がる。",
+      "desc": "18秒ごとに味方全員を最大HPの2%回復し、敵全員へ自身の攻撃力10%分の追加ダメージ。",
       "genesisPulse": {
-        "cooldown": 12,
-        "allyHeal": 0.03,
-        "enemyDamage": 0.2
+        "cooldown": 18,
+        "allyHeal": 0.02,
+        "enemyDamage": 0.1
       }
     },
     "id": 89
@@ -3281,8 +3281,8 @@
   {
     "name": "天使神:木下",
     "cost": 2500,
-    "hp": 177385,
-    "atk": 24374,
+    "hp": 150000,
+    "atk": 20000,
     "range": 150,
     "spd": 1.2,
     "interval": 3,
@@ -3300,7 +3300,7 @@
     "growthDesc": "成長1段階：全ステータスを15%上昇。成長2段階：さらに全ステータスを25%上昇。成長3段階：さらに全ステータスを40%上昇。各段階の必要木下マネーは2,500／5,000／8,500。天使属性の編成数による強化、攻撃命中ごとの攻撃力上昇、再生産時間短縮は成長と別に累積する。",
     "ability": {
       "name": "天使神の超越支配",
-      "desc": "自身を含む編成中の天使属性1体につき自身の全ステータス+7%（最大+30%）。自身以外の味方天使属性は編成中にHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間が常時強化され、呪い・波動・烈波を無効化。自身は呪い・烈波・波動・停止・ヤバヤバ化・攻撃力低下・移動速度低下・ふっとばしを無効化。致命傷時に一度だけHP100%で復活し、復活時に最大HPと攻撃力を入れ替える。受ける1回のダメージは最大HPの15%まで。常時、実際に受けたHPダメージの15%を回復。HPが最大値の40%以上なら全属性からのダメージを35%軽減し、受けたダメージの15%を攻撃者へ反射。敵にダメージを与えるたび攻撃力+2%（最大+70%）・再生産残り時間を2%短縮。敵撃破時に最大HPの1.5%を回復し、2秒間移動速度3。古代・赤・黒・浮・神話属性に8倍ダメージ、これらの属性から受けるダメージをさらに20%軽減。",
+      "desc": "天使編成強化と攻撃命中による成長は維持。復活時HP50%。1回の被ダメージ上限20%。実HPダメージの10%を回復・反射。HP40%以上で全属性から25%軽減。対象属性への特効4倍。",
       "angelGod": true,
       "curseImmune": true,
       "waveImmune": true,
@@ -3310,13 +3310,13 @@
       "attackDownImmune": true,
       "knockbackImmune": true,
       "yabayabaImmune": true,
-      "damageCapRatio": 0.15,
-      "damageReflectRatio": 0.15,
-      "damageHealRatio": 0.15,
+      "damageCapRatio": 0.2,
+      "damageReflectRatio": 0.1,
+      "damageHealRatio": 0.1,
       "highHpThreshold": 0.4,
-      "highHpDamageReduction": 0.35,
-      "traitDamageReduction": 0.2,
-      "traitDamageBonus": 8
+      "highHpDamageReduction": 0.25,
+      "traitDamageReduction": 0.35,
+      "traitDamageBonus": 4
     },
     "id": 90
   },
@@ -3813,7 +3813,7 @@
     "series": "エレメンタル木下s",
     "limitedExchange": true,
     "limitedExchangeSeries": "エレメンタル木下s",
-    "waveLevel": 5,
+    "waveLevel": 3,
     "waveChance": 1,
     "waveImmune": true,
     "reflectImmune": true,
@@ -3832,27 +3832,52 @@
       {
         "id": "haifu_five_summon_storm",
         "name": "五召喚の大嵐",
-        "description": "覇風が5回召喚されるごとに、敵全体へ自身の攻撃力250%分のダメージを与え、与えたダメージの50%分を味方全体へ回復する。",
+        "description": "5回召喚ごとに敵全体へ攻撃力150%分のダメージ、与えたダメージの25%分を味方全体へ回復。",
         "trigger": "5回目の召喚時",
         "everySummons": 5,
-        "damageMultiplier": 2.5,
-        "healRatio": 0.5
+        "damageMultiplier": 1.5,
+        "healRatio": 0.25
       },
       {
         "id": "haifu_guts",
         "name": "根性だけで勝ちます",
-        "description": "攻撃時15%で、対象の攻撃力と自身の攻撃力の合計×3の追加ダメージを与える。",
+        "description": "攻撃時10%で、対象と自身の攻撃力合計×1.5の追加ダメージ。",
         "trigger": "攻撃時",
-        "chance": 0.15,
+        "chance": 0.1,
         "cooldown": 13,
-        "damageMultiplier": 3
+        "damageMultiplier": 1.5
       }
     ],
     "ability": {
       "name": "覇風の絶対支配",
-      "desc": "編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。",
+      "desc": "編成自己強化+15%/体（最大+75%）、味方強化+15%/体（最大+50%）。敵攻撃力低下20%（最大40%）。味方シールドは攻撃力40%分。召喚成長+3%（最大+15%）。宇宙・赤・天使に4倍、同属性から40%軽減。被弾防御成長+1%（最大10%）。被ダメージ上限25%。波動Lv3。",
       "waveImmune": true,
-      "reflectImmune": true
+      "reflectImmune": true,
+      "strong": {
+        "宇宙": 4,
+        "赤": 4,
+        "天使": 4
+      },
+      "resist": {
+        "宇宙": 0.6,
+        "赤": 0.6,
+        "天使": 0.6
+      },
+      "haifuBalance": {
+        "selfFormationStep": 0.15,
+        "selfFormationMax": 0.75,
+        "teamFormationStep": 0.15,
+        "teamFormationMax": 0.5,
+        "enemyAttackDown": 0.2,
+        "enemyAttackDownMax": 0.4,
+        "shieldRatio": 0.4,
+        "summonGrowthStep": 0.03,
+        "summonGrowthMax": 0.15,
+        "traitMultiplier": 4,
+        "damageCap": 0.25,
+        "defensePerHit": 0.01,
+        "defenseMax": 0.1
+      }
     },
     "id": 102
   },
@@ -3920,8 +3945,8 @@
   {
     "name": "狂乱のマッチョ木下",
     "cost": 4200,
-    "hp": 50000,
-    "atk": 23000,
+    "hp": 40000,
+    "atk": 15000,
     "range": 110,
     "spd": 0.5,
     "interval": 0.9,
@@ -3945,16 +3970,16 @@
       {
         "id": "muscle_right_grab",
         "name": "右手拘束",
-        "description": "最高攻撃力の敵を右手で拘束する。拘束中は対象の攻撃力を加算し、自身が最大HPの20%分のダメージを受けると対象を敵城前へ飛ばして最大HPの50%分の割合ダメージと3秒間の鈍足を与える。拘束するたび自身の攻撃力+50%（最大+200%）。",
+        "description": "最高攻撃力の敵を拘束。自身が最大HPの30%分のダメージを受けると対象を敵城前へ飛ばし、最大HPの30%分の割合ダメージと2.5秒の鈍足を与える。拘束ごとに攻撃力+25%（最大+75%）。再使用60秒。",
         "trigger": "右手の発動条件を満たした時",
-        "cooldown": 45
+        "cooldown": 60
       },
       {
         "id": "muscle_left_grab",
         "name": "左手拘束",
-        "description": "最高HPの敵を左手で拘束し、対象に自身の最大HPの最大50%分のダメージを肩代わりさせる。拘束解除時、対象を敵城前へ飛ばし、残りHPに応じたパワーシールドを獲得する。",
+        "description": "最高HPの敵を拘束し、対象に自身の最大HPの最大30%分のダメージを肩代わりさせる。解除時に敵城前へ飛ばす。再使用90秒。",
         "trigger": "左手の発動条件を満たした時",
-        "cooldown": 75
+        "cooldown": 90
       }
     ],
     "ability": {
@@ -3965,32 +3990,32 @@
       "knockbackImmune": true,
       "curseImmune": true,
       "name": "双腕拘束・狂乱の筋肉",
-      "desc": "場にいる間、神話・天使・赤属性から受けるダメージを15%軽減し、同属性への与ダメージ+20%。1回の被ダメージは最大HPの25%まで。被弾ごとに防御力+5%（最大+50%）。敵撃破ごとに最大HPの2%回復・攻撃力+5%（最大+50%）。呪い・停止・烈波・吹っ飛ばす無効、波動反射。攻撃時50%で烈波Lv2、50%で3秒停止。右手：最高攻撃力の敵を拘束し、攻撃力を加算。自身が最大HPの20%分のダメージを受けると敵城前へ飛ばして最大HP50%の割合ダメージと3秒鈍足。掴むたび攻撃力+50%（最大+200%）、CT45秒。左手：最高HPの敵を拘束し、被ダメージを最大HPの50%分肩代わりさせる。解除時に敵城前へ飛ばし、残りHP分のパワーシールドを獲得。CT75秒。",
+      "desc": "被ダメージ上限は最大HPの35%。被弾防御成長+2%（最大25%）。撃破時のHP回復1%、攻撃力+2%（最大+20%）。右手拘束の割合ダメージ30%、攻撃力成長+25%（最大+75%）。左手の肩代わり上限30%。",
       "muscleHands": {
-        "rightCooldown": 45,
-        "leftCooldown": 75,
-        "rightDamageThreshold": 0.2,
-        "rightDamagePercent": 0.5,
-        "rightAtkPerGrab": 0.5,
-        "rightAtkMaxBonus": 2,
-        "leftAbsorbMax": 0.5,
-        "leftSlowDuration": 3,
-        "leftSlowFactor": 0.5
+        "rightCooldown": 60,
+        "leftCooldown": 90,
+        "rightDamageThreshold": 0.3,
+        "rightDamagePercent": 0.3,
+        "rightAtkPerGrab": 0.25,
+        "rightAtkMaxBonus": 0.75,
+        "leftAbsorbMax": 0.3,
+        "leftSlowDuration": 2.5,
+        "leftSlowFactor": 0.6
       },
       "muscleKillGrowth": {
-        "perKill": 0.05,
-        "maxBonus": 0.5,
-        "heal": 0.02
+        "perKill": 0.02,
+        "maxBonus": 0.2,
+        "heal": 0.01
       },
       "muscleDefenseGrowth": {
-        "perHit": 0.05,
-        "maxBonus": 0.5
+        "perHit": 0.02,
+        "maxBonus": 0.25
       },
-      "damageCap": 0.25,
-      "phoenixSurgeLevel": 2,
-      "phoenixSurgeChance": 0.5,
-      "stopChance": 0.5,
-      "stopDuration": 3
+      "damageCap": 0.35,
+      "phoenixSurgeLevel": 1,
+      "phoenixSurgeChance": 0.25,
+      "stopChance": 0.25,
+      "stopDuration": 2
     },
     "id": 104
   },
@@ -4246,8 +4271,8 @@
     "id": 115,
     "name": "ノヴァ木下",
     "cost": 4500,
-    "hp": 68750,
-    "atk": 166666,
+    "hp": 80000,
+    "atk": 120000,
     "range": 350,
     "spd": 1,
     "interval": 10,
@@ -4288,30 +4313,45 @@
     ],
     "ability": {
       "name": "切り替え・破壊砲・ミニガン",
-      "desc": "編成上段から出撃中、木下マネー3,000で破壊モード／連射モードを切り替える。味方の攻撃力・攻撃間隔バフ無効。編成中は初期所持金+750。呪い・波動無効。一度に受けるダメージは最大HPの25%。破壊モード：呪いの木下達1体につき攻撃力+150%・攻撃間隔+2秒。神話1体につき攻撃力-95%（最大-500%）。与ダメージの5%回復。敵撃破で破壊欲を獲得（最大5）：1個につき攻撃力+25%・攻撃間隔-1秒。5個で破壊砲を発射し、敵に攻撃力120%のダメージ。連射モード：対空可能。攻撃ごとに攻撃間隔-0.01秒（最大0.4秒）、攻撃力+3%（最大180%）。黒・天使・神話・無属性に5倍ダメージ、被ダメージ75%軽減。攻撃時15%でミニガン発動（8秒間、破壊モード攻撃力の50%を上乗せ・攻撃時35%吹っ飛ばし、再使用20秒）。",
+      "desc": "連射モード：黒・天使・神話・無属性に3倍、被ダメージ50%軽減。攻撃ごとに攻撃間隔-0.01秒（最大0.6秒）、攻撃力+1%（最大+60%）。撃破成長+10%（最大+50%）。ミニガン発動率10%、追加攻撃力25%、吹っ飛ばし20%。破壊モードの呪いの木下達1体あたり+75%（最大+200%）。",
       "modeSwitch": true,
       "curseImmune": true,
       "waveImmune": true,
       "waveImmunity": true,
       "resist": {
-        "黒": 0.25,
-        "天使": 0.25,
-        "神話": 0.25,
-        "無": 0.25
+        "黒": 0.5,
+        "天使": 0.5,
+        "神話": 0.5,
+        "無": 0.5
       },
       "strong": {
-        "黒": 5,
-        "天使": 5,
-        "神話": 5,
-        "無": 5
+        "黒": 3,
+        "天使": 3,
+        "神話": 3,
+        "無": 3
+      },
+      "novaBalance": {
+        "destructionPerCursedAlly": 75,
+        "destructionMax": 200,
+        "mythPenaltyPerAlly": 50,
+        "mythPenaltyMax": 250,
+        "killStackPerKill": 10,
+        "killStackMax": 50,
+        "rapidAttackPerHit": 0.01,
+        "rapidAttackMax": 0.6,
+        "traitMultiplier": 3,
+        "damageReduction": 0.5,
+        "miniGunChance": 0.1,
+        "miniGunBonus": 0.25,
+        "knockbackChance": 0.2
       }
     }
   },
   {
     "name": "創世木下",
     "cost": 6000,
-    "hp": 1500000,
-    "atk": 50000,
+    "hp": 450000,
+    "atk": 30000,
     "range": 650,
     "spd": 1.5,
     "interval": 2,
@@ -4329,17 +4369,17 @@
       {
         "id": 1,
         "name": "次元崩壊",
-        "desc": "攻撃時50%で通常攻撃の200%の追加攻撃"
+        "desc": "攻撃時25%で通常攻撃の150%の追加攻撃"
       },
       {
         "id": 2,
         "name": "神殺し",
-        "desc": "全属性に2.5倍ダメージ"
+        "desc": "全属性に1.8倍ダメージ"
       },
       {
         "id": 3,
         "name": "創世の一撃",
-        "desc": "10%で通常攻撃の500%の追加攻撃"
+        "desc": "5%で通常攻撃の300%の追加攻撃"
       },
       {
         "id": 4,
@@ -4349,27 +4389,27 @@
       {
         "id": 5,
         "name": "絶対防壁",
-        "desc": "被ダメージ90%軽減。主要な妨害・能力封印に耐性"
+        "desc": "被ダメージ65%軽減。主要な妨害・能力封印に耐性"
       },
       {
         "id": 6,
         "name": "永遠の再生",
-        "desc": "自身の最大HPの1%を毎秒回復"
+        "desc": "自身の最大HPの0.3%を毎秒回復"
       },
       {
         "id": 7,
         "name": "不滅の創世",
-        "desc": "撃破時に一度だけ最大HPの50%で復活"
+        "desc": "撃破時に一度だけ最大HPの25%で復活"
       },
       {
         "id": 8,
         "name": "ダメージ変換",
-        "desc": "実際に受けたHPダメージの10%を回復"
+        "desc": "実際に受けたHPダメージの5%を回復"
       },
       {
         "id": 9,
         "name": "時間支配",
-        "desc": "攻撃時30%で敵全体を3秒停止"
+        "desc": "攻撃時12%で敵全体を1.5秒停止"
       },
       {
         "id": 10,
@@ -4389,32 +4429,32 @@
       {
         "id": 13,
         "name": "歴史の頂点",
-        "desc": "編成中、味方全員のHP・攻撃力を50%上昇"
+        "desc": "編成中、味方全員のHP・攻撃力を20%上昇"
       },
       {
         "id": 14,
         "name": "全軍再生",
-        "desc": "出撃中、味方全員の最大HPの0.5%を毎秒回復"
+        "desc": "出撃中、味方全員の最大HPの0.2%を毎秒回復"
       },
       {
         "id": 15,
         "name": "神速の祝福",
-        "desc": "編成中、味方全員の移動速度を20%上昇"
+        "desc": "編成中、味方全員の移動速度を10%上昇"
       },
       {
         "id": 16,
         "name": "世界創造",
-        "desc": "出撃20秒ごとに攻撃力+20%。最大3段階"
+        "desc": "出撃20秒ごとに攻撃力+10%。最大2段階"
       },
       {
         "id": 17,
         "name": "終焉と始まり",
-        "desc": "HP25%以下で一度覚醒。攻撃力2倍、攻撃間隔0.5秒、被ダメージ95%軽減。20秒"
+        "desc": "HP20%以下で一度覚醒。攻撃力1.5倍、攻撃間隔1.2秒、被ダメージ80%軽減。20秒"
       },
       {
         "id": 18,
         "name": "天罰の雷",
-        "desc": "5回の攻撃動作ごとに敵全体へ攻撃力300%の雷撃"
+        "desc": "8回の攻撃動作ごとに敵全体へ攻撃力150%の雷撃"
       },
       {
         "id": 19,
@@ -4424,32 +4464,32 @@
       {
         "id": 20,
         "name": "崩壊連鎖",
-        "desc": "敵撃破時、周囲へ攻撃力200%の爆発"
+        "desc": "敵撃破時、周囲へ攻撃力120%の爆発"
       },
       {
         "id": 21,
         "name": "神域の追撃",
-        "desc": "攻撃時25%で通常攻撃の50%の追撃を3回"
+        "desc": "攻撃時15%で通常攻撃の35%の追撃を2回"
       },
       {
         "id": 22,
         "name": "存在消去",
-        "desc": "攻撃時5%で通常攻撃の500%の追加ダメージ"
+        "desc": "攻撃時2%で通常攻撃の300%の追加ダメージ"
       },
       {
         "id": 23,
         "name": "七彩神壁",
-        "desc": "10秒ごとに最大HPの10%分のシールドを獲得"
+        "desc": "20秒ごとに最大HPの5%分のシールドを獲得"
       },
       {
         "id": 24,
         "name": "絶対領域",
-        "desc": "自身の周囲の味方の被ダメージを30%軽減"
+        "desc": "自身の周囲の味方の被ダメージを15%軽減"
       },
       {
         "id": 25,
         "name": "災厄吸収",
-        "desc": "自身への状態異常を50%の確率で無効化し、HP5%回復"
+        "desc": "自身への状態異常を30%の確率で無効化し、HP2%回復"
       },
       {
         "id": 26,
@@ -4459,12 +4499,12 @@
       {
         "id": 27,
         "name": "終末装甲",
-        "desc": "HP50%以下で被ダメージをさらに20%軽減"
+        "desc": "HP50%以下で被ダメージをさらに10%軽減"
       },
       {
         "id": 28,
         "name": "永劫拘束",
-        "desc": "攻撃時15%で敵を5秒停止"
+        "desc": "攻撃時8%で敵を2秒停止"
       },
       {
         "id": 29,
@@ -4479,37 +4519,37 @@
       {
         "id": 31,
         "name": "永久刻印",
-        "desc": "攻撃した敵が受けるダメージを30%増加。10秒"
+        "desc": "攻撃した敵が受けるダメージを15%増加。6秒"
       },
       {
         "id": 32,
         "name": "次元追放",
-        "desc": "攻撃時5%で敵を3秒間戦場から退場させる"
+        "desc": "攻撃時2%で敵を2秒間戦場から退場させる"
       },
       {
         "id": 33,
         "name": "全軍蘇生",
-        "desc": "味方1体をステージ中一度だけHP30%で復活"
+        "desc": "味方1体をステージ中一度だけHP20%で復活"
       },
       {
         "id": 34,
         "name": "創世の加護",
-        "desc": "編成中、味方全員の状態異常を50%の確率で無効化"
+        "desc": "編成中、味方全員の状態異常を30%の確率で無効化"
       },
       {
         "id": 35,
         "name": "無限供給",
-        "desc": "編成中、味方の再生産時間を15%短縮"
+        "desc": "編成中、味方の再生産時間を8%短縮"
       },
       {
         "id": 36,
         "name": "世界改変",
-        "desc": "開始30秒後から20秒ごとに敵全体へランダムな弱体効果"
+        "desc": "開始45秒後から30秒ごとに敵全体へランダムな弱体効果"
       },
       {
         "id": 37,
         "name": "万物の創造主",
-        "desc": "60秒ごとに攻撃力・最大HPが10%上昇。最大5段階"
+        "desc": "60秒ごとに攻撃力・最大HPが5%上昇。最大3段階"
       }
     ],
     "ability": {
@@ -4517,24 +4557,24 @@
       "desc": "37種類の固有能力を持つ歴代最強キャラクター。詳細はキャラクター詳細画面を確認。",
       "genesis": true,
       "strong": {
-        "無": 2.5,
-        "赤": 2.5,
-        "青": 2.5,
-        "黒": 2.5,
-        "浮": 2.5,
-        "鋼": 2.5,
-        "天使": 2.5,
-        "宇宙": 2.5,
-        "古代": 2.5,
-        "神話": 2.5,
-        "ゾンビ": 2.5,
-        "光": 2.5,
-        "闇": 2.5,
-        "白": 2.5
+        "無": 1.8,
+        "赤": 1.8,
+        "青": 1.8,
+        "黒": 1.8,
+        "浮": 1.8,
+        "鋼": 1.8,
+        "天使": 1.8,
+        "宇宙": 1.8,
+        "古代": 1.8,
+        "神話": 1.8,
+        "ゾンビ": 1.8,
+        "光": 1.8,
+        "闇": 1.8,
+        "白": 1.8
       },
       "damageReduce": {
         "chance": 1,
-        "factor": 0.1
+        "factor": 0.35
       },
       "curseImmune": true,
       "stopImmune": true,
@@ -4555,11 +4595,11 @@
   {
     "name": "創世討伐兵器・零式",
     "cost": 5200,
-    "hp": 900000,
-    "atk": 210000,
-    "range": 950,
+    "hp": 400000,
+    "atk": 100000,
+    "range": 900,
     "spd": 0.35,
-    "interval": 3.2,
+    "interval": 3.8,
     "recharge": 240,
     "icon": "🛡️",
     "motion": "super",
@@ -4572,7 +4612,7 @@
     "eventReward": "創世討伐兵器・零式",
     "ability": {
       "name": "終焉特化・創世核破壊",
-      "desc": "創世木下・終焉形態に20倍、その他の神話属性に4倍のダメージ。終焉形態から受けるダメージを75%軽減。波動・停止・鈍足・呪い・攻撃力低下・能力封印・吹っ飛ばし・ワープを無効化。攻撃時20%で攻撃力300%の追加砲撃。",
+      "desc": "創世木下・終焉形態に8倍、その他の神話属性に2倍のダメージ。終焉形態から受けるダメージを50%軽減。波動・停止・鈍足・呪い・攻撃力低下・能力封印・吹っ飛ばし・ワープを無効化。攻撃時10%で攻撃力200%の追加砲撃。",
       "genesisCounter": true,
       "stopImmune": true,
       "slowImmune": true,
@@ -4584,24 +4624,29 @@
       "surgeImmune": true,
       "surgeImmunity": true,
       "knockbackImmune": true,
-      "warpImmune": true
+      "warpImmune": true,
+      "genesisCounterEndgameMultiplier": 8,
+      "genesisCounterMythMultiplier": 2,
+      "genesisCounterDamageReduction": 0.5,
+      "genesisCounterBonusChance": 0.1,
+      "genesisCounterBonusMultiplier": 2
     },
     "id": 117
   },
   {
     "name": "ヒットマン木下",
-    "cost": 2000,
-    "hp": 124540,
-    "atk": 11125,
-    "secondAtk": 6885,
+    "cost": 2200,
+    "hp": 100000,
+    "atk": 8500,
+    "secondAtk": 5100,
     "multiAttack": [
-      11125,
-      6885
+      8500,
+      5100
     ],
     "range": 220,
     "spd": 0.8,
-    "interval": 0.7,
-    "recharge": 59,
+    "interval": 0.8,
+    "recharge": 70,
     "icon": "🎯",
     "motion": "super",
     "attackType": "single",
@@ -4615,11 +4660,11 @@
       {
         "id": "hitman_tracking",
         "name": "追跡マーカー",
-        "description": "出撃時に追跡マーカーを3発発射する。各マーカーは命中した敵に攻撃力の500%分のダメージを与える。",
+        "description": "出撃時に追跡マーカーを2発発射する。各マーカーは命中した敵に攻撃力の300%分のダメージを与える。",
         "trigger": "出撃時",
-        "count": 3,
-        "interval": 0.2,
-        "damageMultiplier": 5
+        "count": 2,
+        "interval": 0.25,
+        "damageMultiplier": 3
       },
       {
         "id": "hitman_ride",
@@ -4633,24 +4678,24 @@
       {
         "id": "hitman_counter",
         "name": "転移反撃",
-        "description": "敵からダメージを受けた時、25%の確率で発動（最大2回）。敵の近くへ転移し、攻撃力の1500%分のダメージを与え、実ダメージの50%を回復する。再使用まで15秒。",
+        "description": "敵からダメージを受けた時、15%の確率で発動（最大1回）。敵の近くへ転移し、攻撃力の700%分のダメージを与え、実ダメージの25%を回復する。再使用まで20秒。",
         "trigger": "敵からダメージを受けた時",
-        "chance": 0.25,
-        "cooldown": 15,
-        "maxUses": 2,
-        "damageMultiplier": 15,
-        "healRatio": 0.5,
+        "chance": 0.15,
+        "cooldown": 20,
+        "maxUses": 1,
+        "damageMultiplier": 7,
+        "healRatio": 0.25,
         "teleportOffset": 70
       }
     ],
     "ability": {
       "name": "神話狩り・追跡戦術",
-      "desc": "神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目11,125、0.2秒後に2段目6,885。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。",
+      "desc": "神話属性に3倍ダメージ。神話属性から受けるダメージを60%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,500、0.2秒後に2段目5,100。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。",
       "strong": {
-        "神話": 5
+        "神話": 3
       },
       "resist": {
-        "神話": 0.15
+        "神話": 0.4
       },
       "curseImmune": true,
       "stopImmune": true,
@@ -4667,8 +4712,8 @@
     "id": 119,
     "name": "アイスワイバーン",
     "cost": 5200,
-    "hp": 120000,
-    "atk": 22000,
+    "hp": 90000,
+    "atk": 16000,
     "range": 250,
     "spd": 0.5,
     "interval": 1.3,
@@ -4684,7 +4729,7 @@
       {
         "id": "ice_wyvern_flight",
         "name": "飛行",
-        "description": "55秒おきに3秒間飛行モードになり、攻撃せず敵を無視して移動速度+1で進む。通過した地面に4秒間アイスエリアを残し、侵入した敵を凍結させ、1秒ごとに最大HPの15%ダメージを与える。",
+        "description": "55秒おきに3秒間飛行。通過した地面に4秒間エリアを残し、敵を2秒凍結、1秒ごとに最大HPの8%ダメージ。",
         "trigger": "55秒ごと",
         "cooldown": 55,
         "duration": 3
@@ -4692,7 +4737,7 @@
       {
         "id": "ice_wyvern_beam",
         "name": "冷凍ビーム",
-        "description": "46秒おきに前方射程600へ冷凍ビームを発射。命中した敵に攻撃力250%のダメージと3秒凍結を与え、与えたダメージの10%を回復（合計2回まで）。",
+        "description": "46秒おきに射程600へ攻撃力150%分のダメージと2秒凍結。",
         "trigger": "46秒ごと",
         "cooldown": 46,
         "range": 600
@@ -4700,37 +4745,37 @@
     ],
     "ability": {
       "name": "氷竜の加護",
-      "desc": "神話属性からの被ダメージ65%軽減・与ダメージ5倍・受けたダメージの30%回復。神話属性の戦闘中の能力強化を解除し、神話属性からのスキルダメージ25%反射、被弾時100%で3秒回復不能、神話属性からのデバフ無効。神話属性へのダメージ上限を通常の2倍まで緩和。自身の被ダメージは最大HPの15%まで。攻撃ごとに攻撃力+5%（最大+100%）・攻撃間隔-2%（最大-30%）。烈波・呪い・停止無効。パワーシールド所持者へ3倍ダメージ。攻撃時55%クリティカル・烈波Lv2・ヤバヤバLv2。被弾ごとに全ステータス+3%（最大+90%）。",
+      "desc": "神話属性から40%軽減・与ダメージ3倍・被ダメージ15%回復。スキル反射10%。1回の被ダメージ上限20%。攻撃成長+2%（最大+50%）、攻撃間隔短縮1%（最大15%）。被弾成長+1%（最大40%）。クリティカル30%、烈波Lv1・ヤバヤバLv1。",
       "iceWyvern": {
-        "mythDamageTaken": 0.35,
-        "mythDamageDealt": 5,
-        "mythHeal": 0.3,
-        "skillReflect": 0.25,
-        "damageCap": 0.15,
-        "attackPerHit": 0.05,
-        "attackMax": 1,
-        "intervalPerHit": 0.02,
-        "intervalMax": 0.3,
-        "damageGrowthPerHit": 0.03,
-        "damageGrowthMax": 0.9,
-        "shieldMultiplier": 3,
+        "mythDamageTaken": 0.6,
+        "mythDamageDealt": 3,
+        "mythHeal": 0.15,
+        "skillReflect": 0.1,
+        "damageCap": 0.2,
+        "attackPerHit": 0.02,
+        "attackMax": 0.5,
+        "intervalPerHit": 0.01,
+        "intervalMax": 0.15,
+        "damageGrowthPerHit": 0.01,
+        "damageGrowthMax": 0.4,
+        "shieldMultiplier": 2,
         "flightInterval": 55,
         "flightDuration": 3,
         "flightSpeed": 1.5,
         "beamInterval": 46,
         "beamRange": 600,
-        "beamFreeze": 3,
-        "beamHeal": 0.1,
-        "beamHits": 2,
-        "areaFreeze": 3,
-        "areaDamage": 0.15
+        "beamFreeze": 2,
+        "beamHeal": 0.05,
+        "beamHits": 1,
+        "areaFreeze": 2,
+        "areaDamage": 0.08
       },
-      "criticalChance": 0.55,
-      "criticalMultiplier": 2,
-      "phoenixSurgeLevel": 2,
-      "phoenixSurgeChance": 1,
-      "yabayaba": 2,
-      "yabayabaChance": 1,
+      "criticalChance": 0.3,
+      "criticalMultiplier": 1.5,
+      "phoenixSurgeLevel": 1,
+      "phoenixSurgeChance": 0.5,
+      "yabayaba": 1,
+      "yabayabaChance": 0.5,
       "curseImmune": true,
       "stopImmune": true,
       "surgeImmune": true
@@ -4740,14 +4785,14 @@
     "id": 120,
     "name": "最高神:ゼウス",
     "cost": 6000,
-    "hp": 210000,
-    "atk": 250000,
-    "secondAtk": 125000,
-    "thirdAtk": 78000,
+    "hp": 160000,
+    "atk": 150000,
+    "secondAtk": 75000,
+    "thirdAtk": 46800,
     "multiAttack": [
-      250000,
-      125000,
-      78000
+      150000,
+      75000,
+      46800
     ],
     "range": 600,
     "senseRange": 600,
@@ -4756,17 +4801,17 @@
       {
         "min": -100,
         "max": 75,
-        "damage": 250000
+        "damage": 150000
       },
       {
         "min": 125,
         "max": 200,
-        "damage": 125000
+        "damage": 75000
       },
       {
         "min": 200,
         "max": 400,
-        "damage": 78000
+        "damage": 46800
       }
     ],
     "spd": 0.4,
@@ -4781,18 +4826,18 @@
     "series": "最高神",
     "ability": {
       "name": "最高神の雷霆・神授の加護",
-      "desc": "天使・神話・赤・宇宙から受けるダメージ55%軽減、同属性へ5倍ダメージ。受けた実HPダメージの30%を回復し20%反射。全デバフ無効。一度に受けるダメージは最大HPの11%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。攻撃時33%で停止2秒または攻撃力80%低下2秒。敵数×2%攻撃力上昇（最大+20%）。登場時パワーシールド100,000。敵撃破ごとにシールド2%回復。シールド被弾時、吸収ダメージ10%反射・停止1秒・射程80%低下3秒。被弾ごとに防御力+5%（最大+75%）。",
+      "desc": "天使・神話・赤・宇宙から受けるダメージ40%軽減、同属性へ3倍ダメージ。受けた実HPダメージの15%を回復し10%反射。全デバフ無効。一度に受けるダメージは最大HPの20%まで。ふっとばす・呪い・停止・烈波を無効化し、波動ダメージを50%軽減。攻撃時20%で停止1.2秒または攻撃力60%低下2秒。敵数×1%攻撃力上昇（最大+10%）。登場時パワーシールド50,000。敵撃破ごとにシールド1%回復。シールド被弾時、吸収ダメージ5%反射・停止1秒・射程80%低下3秒。被弾ごとに防御力+2.5%（最大+35%）。",
       "strong": {
-        "天使": 5,
-        "神話": 5,
-        "赤": 5,
-        "宇宙": 5
+        "天使": 3,
+        "神話": 3,
+        "赤": 3,
+        "宇宙": 3
       },
       "resist": {
-        "天使": 0.45,
-        "神話": 0.45,
-        "赤": 0.45,
-        "宇宙": 0.45
+        "天使": 0.6,
+        "神話": 0.6,
+        "赤": 0.6,
+        "宇宙": 0.6
       },
       "curseImmune": true,
       "stopImmune": true,
@@ -4804,53 +4849,53 @@
       "sealImmune": true,
       "knockbackImmune": true,
       "waveDamageFactor": 0.5,
-      "damageCap": 0.11,
+      "damageCap": 0.2,
       "zeusAlly": {
         "bands": [
           {
             "min": -100,
             "max": 75,
-            "damage": 250000
+            "damage": 150000
           },
           {
             "min": 125,
             "max": 200,
-            "damage": 125000
+            "damage": 75000
           },
           {
             "min": 200,
             "max": 400,
-            "damage": 78000
+            "damage": 46800
           }
         ],
-        "defensePerHit": 0.05,
-        "defenseMax": 0.75,
-        "enemyCountAttack": 0.02,
-        "enemyCountMax": 0.2,
-        "shield": 100000,
-        "shieldKillRestore": 0.02,
-        "shieldReflect": 0.1,
+        "defensePerHit": 0.025,
+        "defenseMax": 0.35,
+        "enemyCountAttack": 0.01,
+        "enemyCountMax": 0.1,
+        "shield": 50000,
+        "shieldKillRestore": 0.01,
+        "shieldReflect": 0.05,
         "shieldStop": 1,
         "shieldRangeFactor": 0.2,
         "shieldRangeDuration": 3,
-        "stopChance": 0.33,
-        "stopDuration": 2,
-        "attackDownChance": 0.33,
-        "attackDownFactor": 0.2,
+        "stopChance": 0.2,
+        "stopDuration": 1.2,
+        "attackDownChance": 0.2,
+        "attackDownFactor": 0.4,
         "attackDownDuration": 2
       }
     },
     "strong": {
-      "天使": 5,
-      "神話": 5,
-      "赤": 5,
-      "宇宙": 5
+      "天使": 3,
+      "神話": 3,
+      "赤": 3,
+      "宇宙": 3
     },
     "resist": {
-      "天使": 0.45,
-      "神話": 0.45,
-      "赤": 0.45,
-      "宇宙": 0.45
+      "天使": 0.6,
+      "神話": 0.6,
+      "赤": 0.6,
+      "宇宙": 0.6
     },
     "curseImmune": true,
     "stopImmune": true,
@@ -4862,8 +4907,8 @@
     "id": 121,
     "name": "最高神:ハスター",
     "cost": 3500,
-    "hp": 200000,
-    "atk": 61000,
+    "hp": 150000,
+    "atk": 45750,
     "range": 150,
     "spd": 0.8,
     "interval": 5.5,
@@ -4879,12 +4924,12 @@
       {
         "id": "hastur_tentacle",
         "name": "触手",
-        "description": "自身が9回攻撃するたび、または波動で25回ダメージを受けると発動。2秒後に倒れる触手を前方に生やし、触手から射程-20〜350の範囲に自身の残りHP分のダメージを与える。撃破数×7%だけ射程・攻撃間隔以外のステータスが上昇（最大25%）。CTなし。",
-        "trigger": "9回攻撃／波動被弾25回",
-        "attackCount": 9,
-        "waveCount": 25,
-        "buffPerKill": 0.07,
-        "buffMax": 0.25,
+        "description": "自身が12回攻撃するたび、または波動で30回ダメージを受けると発動。2秒後に倒れる触手を前方に生やし、射程-20〜350の敵に自身の残りHP35%分のダメージを与える。撃破数×3%だけ射程・攻撃間隔以外のステータスが上昇（最大12%）。",
+        "trigger": "12回攻撃／波動被弾30回",
+        "attackCount": 12,
+        "waveCount": 30,
+        "buffPerKill": 0.03,
+        "buffMax": 0.12,
         "delay": 2,
         "rangeMin": -20,
         "rangeMax": 350
@@ -4892,28 +4937,28 @@
       {
         "id": "hastur_king_in_yellow",
         "name": "黄衣の王",
-        "description": "26秒間隔で発動し、次の2回の通常攻撃が命中した対象に100%で5秒間「狂気」を付与する。CT26秒。",
-        "trigger": "26秒ごと",
-        "interval": 26,
-        "attacks": 2,
+        "description": "36秒間隔で発動し、次の1回の通常攻撃が命中した対象に100%で5秒間「狂気」を付与する。CT36秒。",
+        "trigger": "36秒ごと",
+        "interval": 36,
+        "attacks": 1,
         "duration": 5,
         "chance": 1
       }
     ],
     "ability": {
       "name": "黄衣の王",
-      "desc": "神話・天使・黒・赤から受けるダメージ55%軽減、同属性へ3倍。被ダメージ25%回復・15%反射。スキル被ダメージ50%軽減。最大HP15%を超える一撃を受けない。パワーシールドへ3倍。攻撃時25%で3秒間ハスターの呪い。編成中の最高神1体につき味方全体+75%（最大+200%）、最高神以外1体につき最高神+55%（最大+350%）。呪い・停止・攻撃力低下・ふっとばす無効。最大HP15%分の被ダメージごと攻撃力+7%・攻撃間隔5%短縮（上限なし）。被弾ごと防御力+5%（最大45%）。味方の被ダメージ50%肩代わり、味方全体+5%（最大+50%）。通常攻撃は防御無視。パワーシールド持ちの敵から攻撃されると相手攻撃力50%低下3秒。",
+      "desc": "神話・天使・黒・赤から受けるダメージ40%軽減、同属性へ2倍。被ダメージ15%回復・10%反射。スキル被ダメージ25%軽減。最大HP20%を超える一撃を受けない。パワーシールドへ2倍。攻撃時15%で3秒間ハスターの呪い。編成中の最高神1体につき味方全体+20%（最大+60%）、最高神以外1体につき最高神+15%（最大+60%）。最大HP20%分の被ダメージごと攻撃力+3%・攻撃間隔2%短縮（最大10段階）。被弾ごと防御力+2.5%（最大25%）。味方の被ダメージ25%肩代わり、味方全体+2%（最大+20%）。通常攻撃は防御無視。",
       "strong": {
-        "神話": 3,
-        "天使": 3,
-        "黒": 3,
-        "赤": 3
+        "神話": 2,
+        "天使": 2,
+        "黒": 2,
+        "赤": 2
       },
       "resist": {
-        "神話": 0.45,
-        "天使": 0.45,
-        "黒": 0.45,
-        "赤": 0.45
+        "神話": 0.6,
+        "天使": 0.6,
+        "黒": 0.6,
+        "赤": 0.6
       },
       "curseImmune": true,
       "stopImmune": true,
@@ -4923,40 +4968,40 @@
       "pierceDefense": true,
       "hastur": {
         "enemy": false,
-        "damageCap": 0.15,
-        "heal": 0.25,
-        "reflect": 0.15,
-        "defensePerHit": 0.05,
-        "defenseMax": 0.45,
-        "attackThreshold": 0.15,
-        "attackStep": 0.07,
-        "intervalStep": 0.05,
-        "skillReduction": 0.5,
-        "shieldDamage": 3,
-        "curseChance": 0.25,
-        "curseBuff": 0.15,
-        "madnessBuff": 0.25,
-        "teamBuffStep": 0.05,
-        "teamBuffMax": 0.5,
-        "tentacleAttacks": 9,
-        "tentacleWaves": 25,
-        "tentacleBuffStep": 0.07,
-        "tentacleBuffMax": 0.25,
-        "madnessInterval": 26,
-        "madnessAttacks": 2
+        "damageCap": 0.2,
+        "heal": 0.15,
+        "reflect": 0.1,
+        "defensePerHit": 0.025,
+        "defenseMax": 0.25,
+        "attackThreshold": 0.2,
+        "attackStep": 0.03,
+        "intervalStep": 0.02,
+        "skillReduction": 0.75,
+        "shieldDamage": 2,
+        "curseChance": 0.15,
+        "curseBuff": 0.08,
+        "madnessBuff": 0.1,
+        "teamBuffStep": 0.02,
+        "teamBuffMax": 0.2,
+        "tentacleAttacks": 12,
+        "tentacleWaves": 30,
+        "tentacleBuffStep": 0.03,
+        "tentacleBuffMax": 0.12,
+        "madnessInterval": 36,
+        "madnessAttacks": 1
       }
     },
     "strong": {
-      "神話": 3,
-      "天使": 3,
-      "黒": 3,
-      "赤": 3
+      "神話": 2,
+      "天使": 2,
+      "黒": 2,
+      "赤": 2
     },
     "resist": {
-      "神話": 0.45,
-      "天使": 0.45,
-      "黒": 0.45,
-      "赤": 0.45
+      "神話": 0.6,
+      "天使": 0.6,
+      "黒": 0.6,
+      "赤": 0.6
     },
     "curseImmune": true,
     "stopImmune": true,

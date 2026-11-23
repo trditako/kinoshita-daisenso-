@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
-assert.match(sw, /kinoshita-daisen-v121/);
-assert.match(sw, /hastur\.js\?v=20261116-final-roster-audit/);
+assert.match(sw, /kinoshita-daisen-v122/);
+assert.match(sw, /hastur\.js\?v=20261123-kwl-post-rebalance/);
 assert.ok(sw.includes('./hastur.js'));
 assert.match(source,/function publishCharacterRosterAudit\(\)/,'final runtime roster audit is exported after late character registration');
 assert.match(source,/window\.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT=publishCharacterRosterAudit/,'other late registrations can refresh the shared roster audit');
@@ -84,8 +84,8 @@ assert.equal(sandbox.enemyTypes['最高神:ハスター'].hp, 28500000);
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].atk, 174500);
 assert.equal(sandbox.enemyTypes['最高神に使える者'].hp, 2500000, 'preserve Zeus shared servant stats');
 assert.equal(sandbox.enemyTypes['最高神に使える者'].atk, 37000);
-assert.equal(sandbox.cards[0].hp, 200000);
-assert.equal(sandbox.cards[0].atk, 61000);
+assert.equal(sandbox.cards[0].hp, 150000);
+assert.equal(sandbox.cards[0].atk, 45750);
 assert.equal(sandbox.cards[0].range, 150);
 assert.equal(sandbox.cards[0].cost, 3500);
 assert.equal(sandbox.cards[0].trait, '最高神');
@@ -93,26 +93,27 @@ assert.equal(sandbox.cards[0].skills.length, 2);
 assert.equal(sandbox.cards[0].skills[0].name, '触手', 'the skill name is corrected to 触手');
 assert.doesNotMatch(source, /名触手/, 'the typo 名触手 is removed from the character data and display');
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].skills.length, 2);
-assert.equal(sandbox.cards[0].ability.hastur.damageCap, .15);
-assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 26);
+assert.equal(sandbox.cards[0].ability.hastur.damageCap, .20);
+assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 36);
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].ability.hastur.madnessInterval, 22);
 assert.equal(calls.stage, 1);
-assert.equal(calls.cards, 1);
+assert.equal(calls.cards, 2);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.phase, 'final-runtime-roster');
-assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, 1);
-assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, 0);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, sandbox.cards.length);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, sandbox.cards.length - 1);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.idsAligned, true);
 assert.deepEqual(JSON.parse(JSON.stringify(window.KINOSHITA_CHARACTER_ROSTER[0])), {
   id: 0, name: '最高神:ハスター', rarity: 'UR', specialReward: false,
   chapterReward: null, eventReward: null, rewardStage: '最高神:ハスター降臨', series: '最高神'
 });
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.id121, null, 'unregistered ID 121 is not invented');
-const auditProbe = { id: 1, name: '一時追加キャラ', rarity: '伝説レア' };
+const auditProbe = { id: sandbox.cards.length, name: '一時追加キャラ', rarity: '伝説レア' };
+const previousTotal = sandbox.cards.length;
 sandbox.cards.push(auditProbe);
 const refreshedAudit = window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
-assert.equal(refreshedAudit.total, 2, 'runtime audit refreshes after another card is registered');
-assert.equal(refreshedAudit.roster[1].name, '一時追加キャラ');
-assert.equal(refreshedAudit.roster[1].rarity, '伝説レア');
+assert.equal(refreshedAudit.total, previousTotal + 1, 'runtime audit refreshes after another card is registered');
+assert.equal(refreshedAudit.roster[previousTotal].name, '一時追加キャラ');
+assert.equal(refreshedAudit.roster[previousTotal].rarity, '伝説レア');
 sandbox.cards.pop();
 window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
 
@@ -120,8 +121,8 @@ const api = sandbox.window.HASTUR_RAID_TEST_API;
 assert.deepEqual(JSON.parse(JSON.stringify(api.growthStatusEntries({}, api.allyCfg))), [], 'inactive and passive abilities do not create battle labels');
 const growthDisplay = api.growthStatusEntries({ hasturAttackSteps: 1, hasturDefense: .05, hasturCurseCount: 1, hasturMadnessCount: 1, hasturTentacleBuff: .07, hasturTeamBuff: .05, hasturFormationAllFactor: 1.75, hasturFormationHighestFactor: 2.1 }, api.allyCfg);
 assert.deepEqual(JSON.parse(JSON.stringify(growthDisplay)), [
-  { type: 'hasturGrowthAttack', icon: '⬆️', label: '攻撃力 +7%' },
-  { type: 'hasturGrowthInterval', icon: '⚡', label: '攻撃間隔 -5%' },
+  { type: 'hasturGrowthAttack', icon: '⬆️', label: '攻撃力 +3%' },
+  { type: 'hasturGrowthInterval', icon: '⚡', label: '攻撃間隔 -2%' },
   { type: 'hasturGrowthDefense', icon: '🛡️', label: '防御力 +5%' },
   { type: 'hasturGrowthTentacle', icon: '🦑', label: '触手強化 +7%' },
   { type: 'hasturGrowthTeam', icon: '🟡', label: '味方強化 +5%' }
@@ -132,19 +133,19 @@ sandbox.units.push(allyGod);
 api.applyStatus(cursedTarget, 'curse', 3, allyGod, api.allyCfg);
 assert.equal(cursedTarget.barrier, 0, 'curse breaks power shields');
 assert.equal(allyGod.hasturCurseCount, 1, 'each currently cursed target adds one 15% stack');
-assert.equal(allyGod.maxhp, 575000, 'curse count raises all Hastur stats by 15%');
+assert.equal(allyGod.maxhp, 540000, 'curse count raises all Hastur stats by 15%');
 
 const madnessTarget = { name: 'madness target', isEnemy: true, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '黒', barrier: 50 };
 api.applyStatus(madnessTarget, 'madness', 5, allyGod, api.allyCfg);
-assert.equal(madnessTarget.hp, 750, 'madness deals 25% max HP exactly once on application');
+assert.equal(madnessTarget.hp, 900, 'madness deals 25% max HP exactly once on application');
 assert.equal(madnessTarget.barrier, 0, 'madness breaks power shields');
 assert.ok(madnessTarget.trait.includes('赤'), 'madness temporarily adds red trait');
 assert.equal(allyGod.hasturMadnessCount, 1);
-assert.equal(allyGod.maxhp, 700000, 'curse and madness stacks combine additively');
+assert.equal(allyGod.maxhp, 590000, 'curse and madness stacks combine additively');
 
 const beforeMadnessHit = madnessTarget.hp;
 window.hit(madnessTarget, 100, { name: 'normal attacker', isEnemy: false, atk: 100 });
-assert.equal(madnessTarget.hp, beforeMadnessHit - 400, 'madness multiplies incoming damage by four');
+assert.equal(madnessTarget.hp, beforeMadnessHit - 200, 'madness multiplies incoming damage by four');
 
 for (const fn of intervals.values()) fn();
 const recoveredBefore = madnessTarget.hp;
@@ -183,8 +184,8 @@ const teammateHp = teammate.hp, teamGodHp = teamGod.hp;
 assert.equal(teammateHp, 1000);
 assert.equal(teamGodHp, 28500000);
 window.hit(teammate, 100, player);
-assert.equal(teammate.hp, 1050, 'teammate receives +10% team stats and then takes the remaining half damage');
-assert.ok(teamGod.hasturDamageTaken >= 50, 'Hastur shoulders half of the original damage; cross-Hastur reflections may add return damage');
+assert.equal(teammate.hp, 1025, 'teammate receives +10% team stats and then takes the remaining 75% damage');
+assert.ok(teamGod.hasturDamageTaken >= 25, 'Hastur shoulders 25% of the original damage; cross-Hastur reflections may add return damage');
 assert.equal(teamGod.hasturTeamBuff, .1, 'enemy Hastur grants +10% team stats per damage event');
 assert.equal(teammate.hasturTeamBuff, .1);
 assert.ok(statusMarks.some(mark => mark[4] === 'hasturTeamBuff' && mark[2] === 'ハスターの加護 +10%'), 'allies show Hastur team buffs through the shared status mark display');
@@ -193,18 +194,18 @@ sandbox.cards.push({ name: 'non-highest one', trait: '無' }, { name: 'non-highe
 sandbox.formation = [0, 1, 2];
 const formationGod = { name: '最高神:ハスター', isEnemy: false, hp: 500000, maxhp: 500000, atk: 122000, range: 180, spd: .8, interval: 5.5, trait: '最高神' };
 api.applyFormationSynergy(formationGod);
-assert.equal(formationGod.hasturFormationAllFactor, 1.75, 'one highest-god formation member grants +75% to all allies');
-assert.equal(formationGod.hasturFormationHighestFactor, 2.1, 'two non-highest members grant +110% to highest-god stats');
-assert.equal(formationGod.maxhp, 1837500);
-assert.equal(api.formationSummaryData().allPct, 75);
-assert.equal(api.formationSummaryData().highestPct, 110);
-assert.equal(api.formationSummaryData().allPct, 75, 'Hastur formation bonus data is exposed for the shared formation summary');
-assert.equal(api.formationSummaryData().highestPct, 110, 'Hastur highest-god bonus data is exposed for the shared formation summary');
+assert.equal(formationGod.hasturFormationAllFactor, 1.2, 'one highest-god formation member grants +75% to all allies');
+assert.equal(formationGod.hasturFormationHighestFactor, 1.3, 'two non-highest members grant +110% to highest-god stats');
+assert.equal(formationGod.maxhp, 780000);
+assert.equal(api.formationSummaryData().allPct, 20);
+assert.equal(api.formationSummaryData().highestPct, 30);
+assert.equal(api.formationSummaryData().allPct, 20, 'Hastur formation bonus data is exposed for the shared formation summary');
+assert.equal(api.formationSummaryData().highestPct, 30, 'Hastur highest-god bonus data is exposed for the shared formation summary');
 const formationAlly = { name: 'formation ally', isEnemy: false, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '無' };
 sandbox.units.push(formationAlly);
 api.applyFormationSynergyToAll();
-assert.equal(formationAlly.maxhp, 1750, 'deployment applies the highest-god formation bonus to allies');
-assert.equal(formationAlly.atk, 175, 'deployment applies the highest-god formation attack bonus');
+assert.equal(formationAlly.maxhp, 1200, 'deployment applies the highest-god formation bonus to allies');
+assert.equal(formationAlly.atk, 120, 'deployment applies the highest-god formation attack bonus');
 assert.equal(api.facingDirection({ x: 500, isEnemy: false }), 1, 'ally tentacles face the nearest enemy');
 const facingAlly = { name: 'tentacle ally', isEnemy: false, x: 500, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1 };
 api.tentacle(facingAlly, api.allyCfg);
@@ -214,7 +215,7 @@ assert.match(effectNodes[0].style.cssText, /left:535px/);
 assert.match(effectNodes[0].style.cssText, /bottom:40px/);
 const markTarget = { name: 'marked Hastur', hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, hasturAttackSteps: 1, hasturDefense: .05, hasturTentacleBuff: .07, hasturTeamBuff: .05 };
 api.renderGrowthStatuses(markTarget, api.allyCfg);
-assert.ok(statusMarks.some(mark => mark[4] === 'hasturGrowthAttack' && mark[2] === '攻撃力 +7%'), 'combat growth uses the shared status mark display');
+assert.ok(statusMarks.some(mark => mark[4] === 'hasturGrowthAttack' && mark[2] === '攻撃力 +3%'), 'combat growth uses the shared status mark display');
 assert.ok(statusMarks.some(mark => mark[4] === 'hasturGrowthTentacle' && mark[2] === '触手強化 +7%'), 'tentacle growth uses the shared status mark display');
 
 process.stdout.write('Hastur stage, status effects, healing conversion, damage caps, reflection, team sharing, skills and formation synergy checks passed.\\n');
