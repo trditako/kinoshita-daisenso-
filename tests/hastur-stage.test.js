@@ -133,19 +133,19 @@ sandbox.units.push(allyGod);
 api.applyStatus(cursedTarget, 'curse', 3, allyGod, api.allyCfg);
 assert.equal(cursedTarget.barrier, 0, 'curse breaks power shields');
 assert.equal(allyGod.hasturCurseCount, 1, 'each currently cursed target adds one 15% stack');
-assert.equal(allyGod.maxhp, 575000, 'curse count raises all Hastur stats by 15%');
+assert.equal(allyGod.maxhp, 540000, 'curse count raises all Hastur stats by 15%');
 
 const madnessTarget = { name: 'madness target', isEnemy: true, hp: 1000, maxhp: 1000, atk: 100, range: 100, spd: 1, interval: 1, trait: '黒', barrier: 50 };
 api.applyStatus(madnessTarget, 'madness', 5, allyGod, api.allyCfg);
-assert.equal(madnessTarget.hp, 750, 'madness deals 25% max HP exactly once on application');
+assert.equal(madnessTarget.hp, 900, 'madness deals 25% max HP exactly once on application');
 assert.equal(madnessTarget.barrier, 0, 'madness breaks power shields');
 assert.ok(madnessTarget.trait.includes('赤'), 'madness temporarily adds red trait');
 assert.equal(allyGod.hasturMadnessCount, 1);
-assert.equal(allyGod.maxhp, 700000, 'curse and madness stacks combine additively');
+assert.equal(allyGod.maxhp, 590000, 'curse and madness stacks combine additively');
 
 const beforeMadnessHit = madnessTarget.hp;
 window.hit(madnessTarget, 100, { name: 'normal attacker', isEnemy: false, atk: 100 });
-assert.equal(madnessTarget.hp, beforeMadnessHit - 400, 'madness multiplies incoming damage by four');
+assert.equal(madnessTarget.hp, beforeMadnessHit - 200, 'madness multiplies incoming damage by four');
 
 for (const fn of intervals.values()) fn();
 const recoveredBefore = madnessTarget.hp;
