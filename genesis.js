@@ -695,3 +695,4 @@ try{
 }catch(e){console.warn('Genesis counter initialization UI refresh failed',e);}
 
 })();
+;try{if(typeof window!=='undefined'&&typeof window.KINOSHITA_APPLY_GLOBAL_REBALANCE==='function')window.KINOSHITA_APPLY_GLOBAL_REBALANCE();}catch(e){console.warn('Global character rebalance late-registration pass failed:',e);}
