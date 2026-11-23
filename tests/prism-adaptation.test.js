@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const cards=[];
+const context={cards,charLevel:[],charMaxLevel:[],charForm:[],normalEvolved:[],ownedFlags:[],rechargeLeft:[],CURRENT_CHARACTER_COUNT:122,window:{KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT(){this.refreshed=true;}},renderCards(){},renderFormation(){}};
+vm.runInNewContext(fs.readFileSync('prism.js','utf8'),context);
+assert.equal(cards.length,6);
+assert.deepEqual(Array.from(cards,c=>c.rarity),['SSR','SSR','SSR','SSR','SSR','LR']);
+assert.ok(cards.every(c=>c.series==='PRISM木下s'&&c.limitedExchange===true&&c.limitedExchangeSeries==='PRISM木下s'));
+assert.ok(cards.every(c=>c.skills.length===6&&c.ability.adaptation));
+assert.deepEqual(Array.from(cards,c=>c.id),[122,123,124,125,126,127]);
+assert.equal(context.charLevel.length,6);
+assert.equal(context.ownedFlags.length,6);
+assert.equal(context.CURRENT_CHARACTER_COUNT,128);
+assert.equal(context.window.refreshed,true);
+console.log('PRISM series and roster tests passed.');
