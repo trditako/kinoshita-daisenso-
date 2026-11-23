@@ -80,13 +80,13 @@ self.addEventListener('fetch',e=>{
     return;
   }
 
-  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|kwl|wamuu|battle-core)\\.js/.test(url)?{cache:"reload"}:undefined)
+  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|kwl|wamuu|battle-core)\.js/.test(url)?{cache:"reload"}:undefined)
     .then(async response=>{
       const type=response.headers.get('content-type')||'';
       if(type.includes('text/html')){
         const html=await response.clone().text();
         const position=html.lastIndexOf('</body>');
-        const inject='\\n<script src="./hastur.js?v=20261123-kwl-post-rebalance"></script>\\n<script src="./equipment.js?v=20261116-home-button-set-effects"></script>\\n<script src="./kwl.js?v=20261122-existing-operator-key"></script>\\n<script src="./wamuu.js?v=20261120-row-death-balance"></script>\\n';
+        const inject='\n<script src="./hastur.js?v=20261123-kwl-post-rebalance"></script>\n<script src="./equipment.js?v=20261116-home-button-set-effects"></script>\n<script src="./kwl.js?v=20261122-existing-operator-key"></script>\n<script src="./wamuu.js?v=20261120-row-death-balance"></script>\n';
         const output=new Response(position<0?html:html.slice(0,position)+inject+html.slice(position),{
           status:response.status,statusText:response.statusText,headers:response.headers
         });
