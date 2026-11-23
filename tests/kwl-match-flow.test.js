@@ -12,6 +12,7 @@ const replayMigration=fs.readFileSync('supabase/migrations/20261120150000_kwl_se
 const spectatorWorker=fs.readFileSync('supabase/functions/kwl-spectator-battle/index.ts','utf8');
 const characterData=JSON.parse(fs.readFileSync('supabase/functions/kwl-spectator-battle/character-data.json','utf8'));
 const runtimeRoster=JSON.parse(fs.readFileSync('character-roster.json','utf8'));
+assert.equal(characterData.length,128,'server battle data contains the complete PRISM runtime roster');
 assert.ok(characterData.length>=runtimeRoster.count,'server battle data contains the currently published runtime roster');
 assert.deepEqual(characterData.slice(0,runtimeRoster.count).map((card,id)=>({id:card.id,name:card.name})),runtimeRoster.characters.map(card=>({id:card.id,name:card.name})),'published server battle character IDs match the current runtime manifest');
 for(const name of ['紅蓮プリズム木下','深淵プリズム木下','聖環プリズム木下','天翔プリズム木下','星界プリズム木下','万象プリズム木下'])assert.ok(characterData.some(card=>card.name===name),'server roster includes PRISM character '+name);
@@ -30,6 +31,11 @@ assert.ok(indexHtml.includes('<script src="./battle-core.js?v=20261120-kwl-comba
 assert.match(indexHtml,/KinoshitaBattleCore\.random\(\)/,'game combat uses shared deterministic random source');
 assert.match(indexHtml,/KinoshitaBattleCore\.now\(\)/,'game combat uses shared battle clock');
 assert.match(serverBattle,/import '\.\/battle-core\.js'/,'server replay imports the same battle core');
+assert.match(serverBattle,/import prismCharacterData from '\.\/character-data\.json' with \{ type: 'json' \}/,'server replay imports the generated runtime card data');
+assert.match(serverBattle,/CARDS\.push\(\.\.\.PRISM_CARDS\)/,'server replay appends the six PRISM characters after preserving tournament-specific legacy stats');
+assert.match(serverBattle,/BattleCore\.calculateDamageTaken\(\{\s*target:normalizedTarget,attacker,damage:incoming,time,\s*ability:\{adaptation:target\.ability\?\.adaptation\}/,'server replay applies adaptation when a unit is hit');
+assert.match(serverBattle,/adaptation:Object\.entries\(obj\(u\.adaptationState\)\)/,'server replay snapshots expose active adaptation state');
+assert.match(serverBattle,/kwl-server-replay-v4-prism-adaptation/,'server replay engine version identifies the adaptation update');
 assert.match(serverBattle,/BattleCore\.createRng\(seedText\)/,'server replay uses shared seeded RNG');
 assert.match(serverBattle,/BattleCore\.createClock\(0\)/,'server replay uses shared battle clock');
 assert.match(serverBattle,/BattleCore\.matchesTrait\(target,rule\)/,'server and browser share trait matching');
