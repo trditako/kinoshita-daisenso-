@@ -51,7 +51,7 @@ jobs:
         env:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          git add supabase/functions/kwl-spectator-battle/character-data.json
+          git add character-roster.json supabase/functions/kwl-spectator-battle/character-data.json
           if git diff --cached --quiet; then
             echo "Runtime character data is unchanged."
             exit 0
