@@ -14,6 +14,7 @@ const characterData=JSON.parse(fs.readFileSync('supabase/functions/kwl-spectator
 const runtimeRoster=JSON.parse(fs.readFileSync('character-roster.json','utf8'));
 assert.equal(characterData.length,runtimeRoster.count,'server battle data uses the full runtime roster');
 assert.deepEqual(characterData.map((card,id)=>({id:card.id,name:card.name})),runtimeRoster.characters.map(card=>({id:card.id,name:card.name})),'server battle character IDs match the game runtime IDs');
+for(const name of ['紅蓮プリズム木下','深淵プリズム木下','聖環プリズム木下','天翔プリズム木下','星界プリズム木下','万象プリズム木下'])assert.ok(characterData.some(card=>card.name===name),'server roster includes PRISM character '+name);
 for(const name of ['創世木下','創世討伐兵器・零式','ヒットマン木下','アイスワイバーン','最高神:ゼウス','最高神:ハスター'])assert.ok(characterData.some(card=>card.name===name),'server roster includes '+name);
 const supabaseConfig=fs.readFileSync('supabase/config.toml','utf8');
 const sw=fs.readFileSync('service-worker.js','utf8');
