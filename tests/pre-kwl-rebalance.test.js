@@ -32,4 +32,4 @@ assert.deepEqual([byName['最高神:ゼウス'].hp, byName['最高神:ゼウス'
 assert.deepEqual([byName['ヒットマン木下'].hp, byName['ヒットマン木下'].atk], [100000,8500]);
 for (const name of targets) assert.ok(byName[name], 'KWL観戦データに対象キャラがある: ' + name);
 
-console.log('Pre-KWL v1.9.82 rebalance regression checks passed');
+console.log('Pre-KWL v1.9.83 rebalance regression checks passed');
