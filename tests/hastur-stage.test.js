@@ -94,7 +94,7 @@ assert.equal(sandbox.cards[0].skills[0].name, '触手', 'the skill name is corre
 assert.doesNotMatch(source, /名触手/, 'the typo 名触手 is removed from the character data and display');
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].skills.length, 2);
 assert.equal(sandbox.cards[0].ability.hastur.damageCap, .20);
-assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 26);
+assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 36);
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].ability.hastur.madnessInterval, 22);
 assert.equal(calls.stage, 1);
 assert.equal(calls.cards, 1);
