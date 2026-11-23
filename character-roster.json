@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "4a8c710f4891ff0cda8b18a25bdbc07d73c721d6",
-  "generatedAt": "2026-11-23T10:11:25.229Z",
-  "count": 122,
+  "sourceCommit": "69536943016ed2b697248057c568889b6bacf901",
+  "generatedAt": "2026-11-23T10:31:58.225Z",
+  "count": 128,
   "characters": [
     {
       "id": 0,
@@ -1223,6 +1223,66 @@
       "eventReward": null,
       "rewardStage": "最高神:ハスター降臨",
       "series": "最高神"
+    },
+    {
+      "id": 122,
+      "name": "紅蓮プリズム木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
+    },
+    {
+      "id": 123,
+      "name": "深淵プリズム木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
+    },
+    {
+      "id": 124,
+      "name": "聖環プリズム木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
+    },
+    {
+      "id": 125,
+      "name": "天翔プリズム木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
+    },
+    {
+      "id": 126,
+      "name": "星界プリズム木下",
+      "rarity": "SSR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
+    },
+    {
+      "id": 127,
+      "name": "万象プリズム木下",
+      "rarity": "LR",
+      "specialReward": false,
+      "chapterReward": null,
+      "eventReward": null,
+      "rewardStage": null,
+      "series": "PRISM木下s"
     }
   ],
   "eventRewards": [
