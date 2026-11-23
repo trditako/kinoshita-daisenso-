@@ -43,4 +43,4 @@ assert.match(sw, /kinoshita-daisen-v124/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
-process.stdout.write('ヒットマン木下 v1.9.82 regression checks passed.\n');
+process.stdout.write('ヒットマン木下 v1.9.83 regression checks passed.\n');
