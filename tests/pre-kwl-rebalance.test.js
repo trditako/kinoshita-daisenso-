@@ -9,8 +9,8 @@ const hitman = fs.readFileSync('hitman.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 const kwl = JSON.parse(fs.readFileSync('supabase/functions/kwl-spectator-battle/character-data.json', 'utf8'));
 
-assert.match(html, /const GAME_VERSION='v1\.9\.82'/);
-assert.match(html, /version:'v1\.9\.82',title:"⚖️ KWL前・第2回キャラクターリバランス"/);
+assert.match(html, /const GAME_VERSION='v1\.9\.83'/);
+assert.match(html, /version:'v1\.9\.83',title:"⚖️ KWL前・第2回キャラクターリバランス"/);
 assert.match(html, /x\.details\.map\(i=>'<li>'\+i\+'<\/li>'\)/);
 const targets = ['最高神:ハスター','創世木下','創世討伐兵器・零式','最高神:ゼウス','ヒットマン木下','狂乱のマッチョ木下','超越木下・創世神','覇風','アイスワイバーン','ノヴァ木下','天使神:木下'];
 for (const name of targets) assert.ok(html.includes(name), '更新ログに対象キャラがある: ' + name);
