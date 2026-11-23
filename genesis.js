@@ -659,17 +659,17 @@ const _genesisCounterOriginalDamageAgainst=damageAgainst;
 damageAgainst=function(source,target,baseAtk){
  let dealt=_genesisCounterOriginalDamageAgainst(source,target,baseAtk);
  if(source?.name===GENESIS_COUNTER_NAME&&target?.isEnemy){
-  if(target.name==='創世木下・終焉形態')dealt=Math.round(dealt*20);
-  else if(target.trait==='神話')dealt=Math.round(dealt*4);
+  if(target.name==='創世木下・終焉形態')dealt=Math.round(dealt*8);
+  else if(target.trait==='神話')dealt=Math.round(dealt*2);
  }
  return Math.max(1,dealt);
 };
-// 終焉形態からの被ダメージを75%軽減。
+// 終焉形態からの被ダメージを50%軽減。
 const _genesisCounterOriginalDamageTakenBy=damageTakenBy;
 damageTakenBy=function(target,attacker){
  let dealt=_genesisCounterOriginalDamageTakenBy(target,attacker);
  if(target?.name===GENESIS_COUNTER_NAME&&attacker?.isEnemy&&attacker.name==='創世木下・終焉形態'){
-  dealt=Math.round(dealt*.25);
+  dealt=Math.round(dealt*.5);
  }
  return Math.max(1,dealt);
 };
