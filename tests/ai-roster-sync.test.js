@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const worker=fs.readFileSync('supabase/functions/ai-worker/index.ts','utf8');
 const exporter=fs.readFileSync('scripts/export-character-roster.mjs','utf8');
 const workflow=fs.readFileSync('.github/workflows/sync-character-roster.yml','utf8');
-assert.match(worker,/let MAX_CHARS=122/,'AI roster capacity remains backward-compatible until a verified manifest is loaded');
+assert.match(worker,/let MAX_CHARS=128/,'AI roster capacity remains backward-compatible until a verified manifest is loaded');
 assert.match(worker,/ICE_WYVERN=119,ZEUS=120,HASTUR=121/,'late character IDs match the live game registration order');
 assert.match(worker,/AI_CHAPTER_REWARD_CHARACTERS=/,'chapter reward characters are synchronized from game metadata');
 assert.match(worker,/chapter>=1&&chapter<=c\.length&&c\[chapter-1\]>=48/,'chapter reward characters are restored from their registered chapter condition');
@@ -29,3 +29,5 @@ assert.match(worker,/entry_opens_at/,'AI entries are restricted to the configure
 assert.match(worker,/const kwlAiEntries=await processKWLAIAutoEntries\(\)/,'AI alliance registration runs during every worker batch');
 assert.match(worker,/kwlAiEntries/,'AI entry count is returned and included in server status');
 console.log('KWL AI alliance auto-entry tests passed.');
+
+assert.match(worker,/PRISM_SSR=\[122,123,124,125,126\],PRISM_LR=127/,'AI recognizes the six new PRISM limited-exchange IDs');
