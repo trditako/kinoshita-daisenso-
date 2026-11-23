@@ -351,10 +351,10 @@ function addHitmanKillStack(unit) {
 function tryHitmanCounter(unit, attacker) {
   if (!unit || unit.hp <= 0 || !attacker || !attacker.isEnemy || attacker.hp <= 0) return;
   const skill = hitmanSkill('hitman_counter');
-  if (!skill || Number(unit.hitmanSkill2Uses || 0) >= Number(skill.maxUses || 2)) return;
+  if (!skill || Number(unit.hitmanSkill2Uses || 0) >= Number(skill.maxUses || 1)) return;
   const now = Number(stageTime || 0);
   if (now < Number(unit.hitmanSkill2ReadyAt || 0)) return;
-  if (Math.random() >= Number(skill.chance ?? 0.25)) return;
+  if (Math.random() >= Number(skill.chance ?? 0.15)) return;
   unit.hitmanSkill2Uses = Number(unit.hitmanSkill2Uses || 0) + 1;
   unit.hitmanSkill2ReadyAt = now + Number(skill.cooldown || 15);
   const maxX = Math.max(130, Number(worldWidth || 1100) - 145);
@@ -364,11 +364,11 @@ function tryHitmanCounter(unit, attacker) {
   if (unit.el) unit.el.style.left = unit.x + 'px';
   if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/' + Number(skill.maxUses || 2), Number(skill.cooldown || 15), 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
-  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8500) * Number(skill.damageMultiplier || 15)));
+  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8500) * Number(skill.damageMultiplier || 7)));
   const damage = damageAgainst(unit, attacker, baseAttack);
   const dealt = hit(attacker, damage, unit, { hitmanCounter: true });
   if (attacker.hp <= 0 && Array.isArray(enemies) && enemies.includes(attacker)) removeEnemy(attacker);
-  const heal = Math.max(0, Math.round(Number(dealt || 0) * Number(skill.healRatio ?? 0.5)));
+  const heal = Math.max(0, Math.round(Number(dealt || 0) * Number(skill.healRatio ?? 0.25)));
   if (heal > 0) {
     unit.hp = Math.min(unit.maxhp, unit.hp + heal);
     refreshHp(unit);
@@ -418,7 +418,7 @@ function spawnTrackingMarker(unit) {
 }
 function launchTrackingMarkers(unit) {
   const skill = hitmanSkill('hitman_tracking');
-  const count = Math.max(1, Math.floor(Number(skill?.count || 3)));
+  const count = Math.max(1, Math.floor(Number(skill?.count || 2)));
   const interval = Math.max(0, Number(skill?.interval ?? 0.2) * 1000);
   for (let i = 0; i < count; i++) setTimeout(() => spawnTrackingMarker(unit), i * interval);
 }
