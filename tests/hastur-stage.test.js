@@ -99,20 +99,21 @@ assert.equal(sandbox.enemyTypes['最高神:ハスター'].ability.hastur.madness
 assert.equal(calls.stage, 1);
 assert.equal(calls.cards, 1);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.phase, 'final-runtime-roster');
-assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, 1);
-assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, 0);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, sandbox.cards.length);
+assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, sandbox.cards.length - 1);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.idsAligned, true);
 assert.deepEqual(JSON.parse(JSON.stringify(window.KINOSHITA_CHARACTER_ROSTER[0])), {
   id: 0, name: '最高神:ハスター', rarity: 'UR', specialReward: false,
   chapterReward: null, eventReward: null, rewardStage: '最高神:ハスター降臨', series: '最高神'
 });
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.id121, null, 'unregistered ID 121 is not invented');
-const auditProbe = { id: 1, name: '一時追加キャラ', rarity: '伝説レア' };
+const auditProbe = { id: sandbox.cards.length, name: '一時追加キャラ', rarity: '伝説レア' };
+const previousTotal = sandbox.cards.length;
 sandbox.cards.push(auditProbe);
 const refreshedAudit = window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
-assert.equal(refreshedAudit.total, 2, 'runtime audit refreshes after another card is registered');
-assert.equal(refreshedAudit.roster[1].name, '一時追加キャラ');
-assert.equal(refreshedAudit.roster[1].rarity, '伝説レア');
+assert.equal(refreshedAudit.total, previousTotal + 1, 'runtime audit refreshes after another card is registered');
+assert.equal(refreshedAudit.roster[previousTotal].name, '一時追加キャラ');
+assert.equal(refreshedAudit.roster[previousTotal].rarity, '伝説レア');
 sandbox.cards.pop();
 window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
 
