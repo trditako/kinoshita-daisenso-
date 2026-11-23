@@ -2,6 +2,9 @@
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
+const html=fs.readFileSync('index.html','utf8');
+const worker=fs.readFileSync('service-worker.js','utf8');
+const exporter=fs.readFileSync('scripts/export-character-roster.mjs','utf8');
 const cards=[];
 const context={cards,charLevel:[],charMaxLevel:[],charForm:[],normalEvolved:[],ownedFlags:[],rechargeLeft:[],CURRENT_CHARACTER_COUNT:122,window:{KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT(){this.refreshed=true;}},renderCards(){},renderFormation(){}};
 vm.runInNewContext(fs.readFileSync('prism.js','utf8'),context);
@@ -14,4 +17,8 @@ assert.equal(context.charLevel.length,6);
 assert.equal(context.ownedFlags.length,6);
 assert.equal(context.CURRENT_CHARACTER_COUNT,128);
 assert.equal(context.window.refreshed,true);
+assert.match(html,/const series='PRISM木下s'/,'limited exchange shop is switched to PRISM only');
+assert.match(html,/超激レア：10,000コイン／伝説レア：50,000コイン/,'shop displays the requested SSR and LR exchange prices only');
+assert.match(worker,/\.\/prism\.js\?v=20261123-adaptation-series/,'service worker loads PRISM after Hastur');
+assert.match(exporter,/page\.addScriptTag\(\{path:path\.join\(root,'prism\.js'\)\}\)/,'runtime roster exporter registers PRISM before export');
 console.log('PRISM series and roster tests passed.');
