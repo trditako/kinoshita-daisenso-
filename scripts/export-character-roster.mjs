@@ -23,7 +23,8 @@ try{
   await page.goto('http://127.0.0.1:4173/index.html',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>typeof cards!=='undefined'&&Array.isArray(cards)&&cards.some(c=>c&&c.name==='最高神:ゼウス'),null,{timeout:45000});
   await page.addScriptTag({path:path.join(root,'hastur.js')});
-  await page.waitForFunction(()=>Array.isArray(window.KINOSHITA_CHARACTER_ROSTER)&&window.KINOSHITA_CHARACTER_ID_AUDIT?.phase==='final-runtime-roster',null,{timeout:15000});
+  await page.addScriptTag({path:path.join(root,'prism.js')});
+  await page.waitForFunction(()=>Array.isArray(window.KINOSHITA_CHARACTER_ROSTER)&&window.KINOSHITA_CHARACTER_ID_AUDIT?.phase==='final-runtime-roster'&&window.KINOSHITA_CHARACTER_ID_AUDIT.total===128,null,{timeout:15000});
   const audit=await page.evaluate(()=>window.KINOSHITA_CHARACTER_ID_AUDIT);
   const runtimeCards=await page.evaluate(()=>cards.map((card,id)=>card?{...card,id}:null));
   if(!audit||!Array.isArray(audit.roster)||audit.total!==audit.roster.length||!audit.idsAligned)throw new Error('Runtime character roster audit is inconsistent');
