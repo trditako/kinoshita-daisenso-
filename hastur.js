@@ -128,7 +128,7 @@ if(!window.__POST_KWL_UPDATE_LOG_WRAPPED__&&typeof window.openUpdateLog==='funct
  window.__POST_KWL_UPDATE_LOG_WRAPPED__=true;const original=window.openUpdateLog;
  window.openUpdateLog=function(){const result=original.apply(this,arguments);document.querySelectorAll('span').forEach(el=>{if(el.textContent.trim()==='v1.9.81')el.textContent=POST_KWL_REBALANCE_VERSION;});return result;};
 }
-window.KINOSHITA_GAME_VERSION=POST_KWL_REBALANCE_VERSION;
+window.KINOSHITA_GAME_VERSION='v1.9.83';
 if(typeof renderCards==='function')renderCards();
 if(typeof renderFormation==='function')renderFormation();
 

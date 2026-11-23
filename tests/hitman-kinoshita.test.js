@@ -35,12 +35,12 @@ assert.match(source, /worldElement\.appendChild\(marker\)/);
 assert.match(source, /bottom:67px/);
 assert.doesNotMatch(source, /fieldElement\.appendChild\(marker\)/);
 
-assert.match(html, /GAME_VERSION='v1\.9\.82'/);
+assert.match(html, /GAME_VERSION='v1\.9\.83'/);
 assert.match(html, /多段攻撃の詳細（レベル補正後）/);
 assert.ok(html.includes("5100*(detailStat('atk')/8500)"), '2段目の表示に新しい基礎攻撃力と補正率を使用');
 assert.ok(html.includes("Math.round(5100*(detailStat('atk')/8500))"), '2段目の戦闘整数値を新しい基礎攻撃力に同期');
-assert.match(sw, /kinoshita-daisen-v123/);
+assert.match(sw, /kinoshita-daisen-v124/);
 assert.match(sw, /\.\/hitman\.js/);
 assert.match(workflow, /node --check hitman\.js/);
 assert.match(workflow, /node tests\/hitman-kinoshita\.test\.js/);
-process.stdout.write('ヒットマン木下 v1.9.82 regression checks passed.\n');
+process.stdout.write('ヒットマン木下 v1.9.83 regression checks passed.\n');

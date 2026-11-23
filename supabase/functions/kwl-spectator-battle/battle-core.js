@@ -95,6 +95,11 @@
     if(ability.iceWyvern&&matchesTrait(target,'神話'))mult*=Number(ability.iceWyvern.mythDamageDealt||1);
     if(ability.iceWyvern&&Number(target.powerShieldMax??target.power_shield??target.powerShield??0)>0)mult*=Number(ability.iceWyvern.shieldMultiplier||1);
     else mult*=multiplier(ability.strong,target,'max');
+    const adaptedStates=attacker.adaptationState&&typeof attacker.adaptationState==='object'?attacker.adaptationState:{};
+    for(const trait of traits(target.trait)){
+      const adapted=adaptedStates[trait];
+      if(adapted&&Number(adapted.until)>now){mult*=Math.max(.05,Math.min(1,Number(adapted.outgoingFactor??1)));break;}
+    }
     if(ability.ancientHunter&&hasTrait(target,'古代'))mult*=Number(ability.ancientHunter)||1;
     if(ability.attributeOverload&&!hasTrait(target,'古代')&&attacker.series!=='機械防衛隊！木下s')mult*=Number(ability.attributeOverload.outgoing)||1;
     if(target.cursedUntil&&now<Number(target.cursedUntil)&&ability.cursedAttackMultiplier)mult*=Number(ability.cursedAttackMultiplier)||1;
@@ -107,13 +112,37 @@
     const multiplier=typeof o.traitMultiplier==='function'?o.traitMultiplier:traitMultiplier;
     const time=Number(o.time)||0, incoming=Math.max(0,Number(o.damage)||0);
     let factor=multiplier(ability.resist,attacker,'min');
+    let adaptationTriggered=false,adaptedTrait=null,adaptationUntil=0;
+    const adaptation=ability.adaptation||target.adaptation;
+    if(incoming>0&&adaptation){
+      const chance=Math.max(0,Math.min(1,Number(adaptation.chance??0)));
+      const duration=Math.max(0,Number(adaptation.duration)||0);
+      const cooldown=Math.max(0,Number(adaptation.cooldown)||0);
+      const incomingFactor=Math.max(.05,Math.min(1,Number(adaptation.incomingFactor??.65)));
+      if(!target.adaptationState||typeof target.adaptationState!=='object')target.adaptationState={};
+      if(!target.adaptationCooldowns||typeof target.adaptationCooldowns!=='object')target.adaptationCooldowns={};
+      for(const trait of traits(attacker.trait)){
+        const active=target.adaptationState[trait];
+        if(active&&Number(active.until)>time){
+          factor*=Math.max(.05,Math.min(1,Number(active.incomingFactor??incomingFactor)));
+          adaptedTrait=trait;adaptationUntil=Number(active.until);break;
+        }
+        const readyAt=Number(target.adaptationCooldowns[trait]||0);
+        if(time>=readyAt&&duration>0&&chance>0&&random()<chance){
+          adaptationUntil=time+duration;
+          target.adaptationState[trait]={until:adaptationUntil,incomingFactor,outgoingFactor:Math.max(.05,Math.min(1,Number(adaptation.outgoingFactor??.7)))};
+          target.adaptationCooldowns[trait]=time+cooldown;
+          factor*=incomingFactor;adaptationTriggered=true;adaptedTrait=trait;break;
+        }
+      }
+    }
     const reduction=ability.damageReduce;
     if(reduction&&random()<Number(reduction.chance??.5))factor*=Number(reduction.factor??reduction)||1;
     if(Number(target.cursedUntil)>time)factor*=Number(o.curseFactor??ability.cursedAttackMultiplier??.7);
     let damage=incoming>0?Math.max(1,Math.round(incoming*factor)):0;
     const cap=o.applyCap?Number(ability.damageCapRatio||ability.iceWyvern?.damageCap||0):0;
     if(cap>0)damage=Math.min(damage,Math.max(1,Math.round(Number(target.maxhp??target.max_hp??1)*cap)));
-    return {damage,factor,capped:cap>0&&damage>=Math.round(Number(target.maxhp??target.max_hp??1)*cap)};
+    return {damage,factor,capped:cap>0&&damage>=Math.round(Number(target.maxhp??target.max_hp??1)*cap),adaptationTriggered,adaptedTrait,adaptationUntil};
   }
   function resolveDamage(options){
     const o=options||{},target=o.target||{};
