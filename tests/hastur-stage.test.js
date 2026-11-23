@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 assert.match(sw, /kinoshita-daisen-v122/);
-assert.match(sw, /hastur\.js\?v=20261116-final-roster-audit/);
+assert.match(sw, /hastur\.js\?v=20261123-kwl-post-rebalance/);
 assert.ok(sw.includes('./hastur.js'));
 assert.match(source,/function publishCharacterRosterAudit\(\)/,'final runtime roster audit is exported after late character registration');
 assert.match(source,/window\.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT=publishCharacterRosterAudit/,'other late registrations can refresh the shared roster audit');
