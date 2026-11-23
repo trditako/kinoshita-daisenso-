@@ -25,6 +25,8 @@ type Unit = {
   slow_until: number; slow_factor: number; stop_until: number; attack_down_until: number;
   attack_down_factor: number; cursed_until: number; barrier: number; power_shield: number;
   kill_stacks: number; target_id: number|null;
+  adaptationState?: Record<string,{until:number;incomingFactor:number;outgoingFactor:number}>;
+  adaptationCooldowns?: Record<string,number>;
   [key: string]: any;
 }
 const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
