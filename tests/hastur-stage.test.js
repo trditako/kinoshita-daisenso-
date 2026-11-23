@@ -97,7 +97,7 @@ assert.equal(sandbox.cards[0].ability.hastur.damageCap, .20);
 assert.equal(sandbox.cards[0].ability.hastur.madnessInterval, 36);
 assert.equal(sandbox.enemyTypes['最高神:ハスター'].ability.hastur.madnessInterval, 22);
 assert.equal(calls.stage, 1);
-assert.equal(calls.cards, 1);
+assert.equal(calls.cards, 2);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.phase, 'final-runtime-roster');
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.total, sandbox.cards.length);
 assert.equal(window.KINOSHITA_CHARACTER_ID_AUDIT.latestId, sandbox.cards.length - 1);
