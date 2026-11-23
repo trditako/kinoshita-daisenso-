@@ -2420,6 +2420,10 @@ function damageTakenBy(u,attacker){
  const attackerTrait=attacker.trait||"無";
  if(ua.wyvernResistTraits&&entityTraitMatch(attacker,ua.wyvernResistTraits)&&!traitTableMatches(ua.resist,attacker))mult*=Number(ua.wyvernResistMultiplier||.25);
  mult*=traitMultiplier(aa.strong,u,'max');
+ for(const trait of KinoshitaBattleCore.traits(u.trait)){
+  const adapted=attacker.adaptationState?.[trait];
+  if(adapted&&Number(adapted.until)>now){mult*=Math.max(.05,Math.min(1,Number(adapted.outgoingFactor??1)));break;}
+ }
  if(aa.ancientHunter&&entityHasTrait(u,'古代'))mult*=Number(aa.ancientHunter)||1;
  if(aa.attributeOverload&&!entityHasTrait(u,'古代'))mult*=Number(aa.attributeOverload.outgoing)||1;
 
@@ -2439,6 +2443,7 @@ function damageTakenBy(u,attacker){
   random:KinoshitaBattleCore.random,traitMultiplier,
   curseFactor:aa.cursedAttackMultiplier?Number(aa.cursedAttackMultiplier):1
  });
+ if(mitigation.adaptationTriggered)setStatusMark(u,'🧬','適応：'+mitigation.adaptedTrait,Number(ua.adaptation?.duration||0),'adaptation');
  return miraiKLimitDamage(u,attacker,mitigation.damage);
 }
 function setStatusMark(target,icon,text,duration,type='debuff'){if(!target)return;try{const d=Number.isFinite(Number(duration))?Math.max(0,Number(duration)):0;if(!target.statuses||typeof target.statuses!=='object')target.statuses={};target.statuses[type]={icon:String(icon||''),text:String(text||''),until:KinoshitaBattleCore.now()/1000+d};updateStatusMark(target);}catch(err){console.warn('status mark skipped',err);}}
@@ -5493,12 +5498,12 @@ for(let i=0;i<cards.length;i++){
 /* 超木下祭など後から追加されたキャラクターは、初期所持フラグ読込後に登録されるため、全カード登録後に名前ベースで所持状態を復元する。 */ try{const savedOwnedNames=ownedCharacterNamesAtBoot;if(Array.isArray(savedOwnedNames)){const savedOwnedNameSet=new Set(savedOwnedNames);if(savedOwnedNameSet.has('MiraiK'))savedOwnedNameSet.add('富豪木下');ownedFlags=cards.map((card,i)=>i===0||savedOwnedNameSet.has(card.name));}else{while(ownedFlags.length<cards.length)ownedFlags.push(false);ownedFlags=ownedFlags.slice(0,cards.length);ownedFlags[0]=true;}owned=ownedFlags.filter(Boolean).length;}catch(e){console.warn('character ownership final restore failed',e);while(ownedFlags.length<cards.length)ownedFlags.push(false);owned=ownedFlags.filter(Boolean).length;} try{const savedFormationNames=Array.isArray(formationStableNamesAtBoot)?formationStableNamesAtBoot:formationCharacterNamesAtBoot;const fromNames=Array.isArray(savedFormationNames)?savedFormationNames.map(name=>cards.findIndex(card=>card.name===name)).filter(i=>i>=0&&hasCharacter(i)):[];const legacyFormation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));/* 保存済み名前キーは起動直後に退避済み。初期化途中のsave()で空にされても、退避した編成を優先して復元する。 */if(fromNames.length>0)formation=fromNames;else if(legacyFormation.length>0)formation=legacyFormation;else formation=[];normalizeFormation();/* 復元した編成を通常キーと保護キーの両方へ保存する。 */save();saveFormationStableNames();}catch(e){console.warn('late character formation restore failed',e);formation=formationBeforeLateCards.filter(i=>Number.isInteger(i)&&i>=0&&i<cards.length&&hasCharacter(i));normalizeFormation();} function limitedExchangeCost(c){if(c?.limitedExchangeSeries==='呪いの木下達')return c.rarity==='UR'?500000:c.rarity==='LR'?50000:10000;if(c?.limitedExchangeSeries==='エレメンタル木下s')return c.rarity==='UR'?500000:c.rarity==='LR'?50000:10000;return c&&c.limitedExchangeSeries==='機械防衛隊！木下s'?(c.rarity==='LR'?150000:30000):(c&&c.rarity==='LR'?50000:10000);}
 function renderLimitedExchangeShop(){
  const banner=document.getElementById('gachaBanner'),result=document.getElementById('gachaResult');
- const series='呪いの木下達';
- if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🪬 呪いの木下達</h2><p>期間限定交換所の現行シリーズです。呪い・弱体化・妨害を操るキャラクターと、2つの戦闘モードを切り替えるウルトラレア「ノヴァ木下」が登場。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン／ウルトラレア：500,000コイン</p></div>';
+ const series='PRISM木下s';
+ if(banner)banner.innerHTML='<div class="gachaBanner"><h2>🔷 PRISM木下s</h2><p>期間限定交換所の現行シリーズです。被弾時に攻撃元の属性へ適応し、その属性への与ダメージ・被ダメージを一定時間軽減する6体が登場。</p><p style="margin:6px 0 0;font-size:12px;color:#dbeafe">超激レア：10,000コイン／伝説レア：50,000コイン／ウルトラレア：500,000コイン</p></div>';
  if(!result)return;
  const available=cards.map((c,i)=>({c,i})).filter(x=>x.c.limitedExchange===true&&(x.c.limitedExchangeSeries||x.c.series)===series);
  if(!available.length){result.innerHTML='<div class="gachaResult">現在交換できるキャラクターはいません。</div>';return;}
- result.innerHTML='<section style="margin:12px 0;padding:10px;border:2px solid #8b5cf6;border-radius:12px;background:#f5f3ff;color:#1e1b4b"><h3 style="margin:0 0 5px;font-size:17px">🪬 '+series+'（'+available.length+'体）</h3><p style="margin:0 0 8px;font-size:12px;font-weight:800">超激レア10,000コイン／伝説レア50,000コイン／ウルトラレア500,000コイン</p><div class="gachaChars">'+available.map(({c,i})=>{const cost=limitedExchangeCost(c),can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+(ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div></section>';
+ result.innerHTML='<section style="margin:12px 0;padding:10px;border:2px solid #8b5cf6;border-radius:12px;background:#f5f3ff;color:#1e1b4b"><h3 style="margin:0 0 5px;font-size:17px">🔷 '+series+'（'+available.length+'体）</h3><p style="margin:0 0 8px;font-size:12px;font-weight:800">超激レア10,000コイン／伝説レア50,000コイン／ウルトラレア500,000コイン</p><div class="gachaChars">'+available.map(({c,i})=>{const cost=limitedExchangeCost(c),can=gachaCoins>=cost&&!ownedFlags[i];return '<div class="gachaChar"><div class="face">'+c.icon+'</div><b>'+c.name+'</b><div class="rarity-'+(c.rarity||'R')+'">'+rarityLabel(c.rarity)+'</div><div style="font-weight:900;margin:4px 0">🪙 '+cost.toLocaleString()+'枚</div><button type="button" class="gachaGetBtn" data-limited-i="'+i+'" '+(can?'':'disabled')+'>'+(ownedFlags[i]?'交換済み':can?'確定交換':'コイン不足')+'</button></div>';}).join('')+'</div></section>';
  result.querySelectorAll('[data-limited-i]').forEach(btn=>btn.onclick=()=>buyLimitedExchangeCharacter(Number(btn.dataset.limitedI)));
 }
 function buyLimitedExchangeCharacter(i){
