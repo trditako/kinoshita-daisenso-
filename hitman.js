@@ -5,21 +5,21 @@ if (window.__HITMAN_KINOSHITA_V1__) return;
 window.__HITMAN_KINOSHITA_V1__ = true;
 
 const definition = {
-  name: NAME, cost: 2000, hp: 124540, atk: 11125, secondAtk: 6885,
-  multiAttack: [11125, 6885], range: 220, spd: 0.8, interval: 0.7,
-  recharge: 59, icon: '🎯', motion: 'super', attackType: 'single',
+  name: NAME, cost: 2200, hp: 100000, atk: 8500, secondAtk: 5100,
+  multiAttack: [8500, 5100], range: 220, spd: 0.8, interval: 0.8,
+  recharge: 70, icon: '🎯', motion: 'super', attackType: 'single',
   kb: 2, trait: '黒', rarity: '伝説レア',
   series: '神話編全48ステージクリア報酬',
   specialReward: true, chapterReward: 7,
   skills: [
-    { id: 'hitman_tracking', name: '追跡マーカー', description: '出撃時に追跡マーカーを3発発射する。各マーカーは命中した敵に攻撃力の500%分のダメージを与える。', trigger: '出撃時', count: 3, interval: 0.2, damageMultiplier: 5 },
+    { id: 'hitman_tracking', name: '追跡マーカー', description: '出撃時に追跡マーカーを2発発射する。各マーカーは命中した敵に攻撃力の300%分のダメージを与える。', trigger: '出撃時', count: 2, interval: 0.25, damageMultiplier: 3 },
     { id: 'hitman_ride', name: '騎乗', description: '出撃直後に発動し、以後15秒ごとに3秒間騎乗する。騎乗中は移動速度+2、烈波無効。', trigger: '出撃時・以後15秒ごと', interval: 15, duration: 3, speedBonus: 2 },
-    { id: 'hitman_counter', name: '転移反撃', description: '敵からダメージを受けた時、25%の確率で発動（最大2回）。敵の近くへ転移し、攻撃力の1500%分のダメージを与え、実ダメージの50%を回復する。再使用まで15秒。', trigger: '敵からダメージを受けた時', chance: 0.25, cooldown: 15, maxUses: 2, damageMultiplier: 15, healRatio: 0.5, teleportOffset: 70 }
+    { id: 'hitman_counter', name: '転移反撃', description: '敵からダメージを受けた時、15%の確率で発動（最大1回）。敵の近くへ転移し、攻撃力の700%分のダメージを与え、実ダメージの25%を回復する。再使用まで20秒。', trigger: '敵からダメージを受けた時', chance: 0.15, cooldown: 20, maxUses: 1, damageMultiplier: 7, healRatio: 0.25, teleportOffset: 70 }
   ],
   ability: {
     name: '神話狩り・追跡戦術',
-    desc: '神話属性に5倍ダメージ。神話属性から受けるダメージを85%軽減し、受けたHPダメージの80%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目11,125、0.2秒後に2段目6,885。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+10%（最大+200%）。',
-    strong: { 神話: 5 }, resist: { 神話: 0.15 },
+    desc: '神話属性に3倍ダメージ。神話属性から受けるダメージを60%軽減し、受けたHPダメージの35%を反射。呪い・停止・波動・反射を無効化。通常攻撃は1段目8,500、0.2秒後に2段目5,100。攻撃ごとに再出撃時間を3%短縮し、75円を獲得。攻撃した敵の回復を2秒封じる。敵撃破ごとに全ステータス+5%（最大+100%）。',
+    strong: { 神話: 3 }, resist: { 神話: 0.40 },
     curseImmune: true, stopImmune: true, waveImmune: true,
     reflectImmune: true
   },
@@ -40,8 +40,8 @@ function hitmanSkill(id) {
   return Array.isArray(card.skills) ? card.skills.find(skill => skill && skill.id === id) : null;
 }
 function hitmanAttackDamage(unit, hitIndex = 0) {
-  const currentAttack = Math.max(1, Number(unit && unit.atk) || 11125);
-  const multiplier = Number(hitIndex) === 1 ? 6885 / 11125 : 1;
+  const currentAttack = Math.max(1, Number(unit && unit.atk) || 8500);
+  const multiplier = Number(hitIndex) === 1 ? 5100 / 8500 : 1;
   return Math.max(1, Math.round(currentAttack * multiplier));
 }
 function syncHitmanMultiAttack(unit) {
@@ -267,7 +267,7 @@ function refreshHitmanStats(unit) {
   if (!unit || !unit.hitmanCoreStats) return;
   const core = unit.hitmanCoreStats;
   const ratio = Math.max(0, Math.min(1, Number(unit.hp || 0) / Math.max(1, Number(unit.maxhp || 1))));
-  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.1;
+  const factor = 1 + Math.min(20, Math.max(0, Number(unit.hitmanKillStacks || 0))) * 0.05;
   unit.maxhp = Math.max(1, Math.round(core.maxhp * factor));
   unit.hp = Math.max(1, Math.min(unit.maxhp, Math.round(unit.maxhp * ratio)));
   unit.atk = Math.max(1, Math.round(core.atk * factor));
@@ -338,7 +338,7 @@ function addHitmanKillStack(unit) {
     unit.hitmanCoreStats = {
       maxhp: Number(unit.maxhp || unit.hp || 1), atk: Number(unit.atk || 1),
       range: Number(unit.range || 1), spd: Number(unit.spd || 0.01),
-      interval: Number(unit.interval || 0.7), recharge: Number(unit.recharge || 59)
+      interval: Number(unit.interval || 0.8), recharge: Number(unit.recharge || 70)
     };
   }
   unit.hitmanKillStacks = Math.min(20, Number(unit.hitmanKillStacks || 0) + 1);
@@ -364,7 +364,7 @@ function tryHitmanCounter(unit, attacker) {
   if (unit.el) unit.el.style.left = unit.x + 'px';
   if (typeof setStatusMark === 'function') setStatusMark(unit, '✨', '戦闘術：転移反撃 ' + unit.hitmanSkill2Uses + '/' + Number(skill.maxUses || 2), Number(skill.cooldown || 15), 'hitmanCounter');
   if (typeof popup === 'function') popup('✨ 戦闘術！ 転移反撃', unit.x, 90, 'criticalPop');
-  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 11125) * Number(skill.damageMultiplier || 15)));
+  const baseAttack = Math.max(1, Math.round(Number(unit.atk || 8500) * Number(skill.damageMultiplier || 15)));
   const damage = damageAgainst(unit, attacker, baseAttack);
   const dealt = hit(attacker, damage, unit, { hitmanCounter: true });
   if (attacker.hp <= 0 && Array.isArray(enemies) && enemies.includes(attacker)) removeEnemy(attacker);
@@ -404,7 +404,7 @@ function spawnTrackingMarker(unit) {
       .sort((a, b) => b.x - a.x)[0];
     if (target) {
       const skill = hitmanSkill('hitman_tracking');
-      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 11125) * Number(skill?.damageMultiplier || 5))));
+      const damage = damageAgainst(unit, target, Math.max(1, Math.round(Number(unit.atk || 8500) * Number(skill?.damageMultiplier || 5))));
       hit(target, damage, unit, { hitmanMarker: true });
       if (target.hp <= 0 && enemies.includes(target)) removeEnemy(target);
       marker.remove();
@@ -431,9 +431,9 @@ deploy = function(i) {
     const unit = (Array.isArray(units) ? units : []).find(u => !before.has(u) && u && u.cardIndex === i && u.hp > 0);
     if (unit) {
       unit.hitmanCoreStats = {
-        maxhp: Number(unit.maxhp || 124540), atk: Number(unit.atk || 11125),
+        maxhp: Number(unit.maxhp || 100000), atk: Number(unit.atk || 8500),
         range: Number(unit.range || 220), spd: Number(unit.spd || 0.8),
-        interval: Number(unit.interval || 0.7), recharge: Number(unit.recharge || 59)
+        interval: Number(unit.interval || 0.8), recharge: Number(unit.recharge || 70)
       };
       unit.hitmanKillStacks = 0;
       unit.hitmanSkill2Uses = 0;
@@ -475,7 +475,7 @@ hit = function(target, damage, source, abilitySource) {
 
   if (target && target.name === NAME && source && source.isEnemy && actual > 0 &&
       entityHasTrait(source, '神話') && !(abilitySource && abilitySource.hitmanReflection)) {
-    const reflected = Math.max(1, Math.round(actual * 0.8));
+    const reflected = Math.max(1, Math.round(actual * 0.35));
     hit(source, reflected, target, { hitmanReflection: true });
     if (source.hp <= 0 && Array.isArray(enemies) && enemies.includes(source)) removeEnemy(source);
   }
