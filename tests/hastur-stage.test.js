@@ -121,8 +121,8 @@ const api = sandbox.window.HASTUR_RAID_TEST_API;
 assert.deepEqual(JSON.parse(JSON.stringify(api.growthStatusEntries({}, api.allyCfg))), [], 'inactive and passive abilities do not create battle labels');
 const growthDisplay = api.growthStatusEntries({ hasturAttackSteps: 1, hasturDefense: .05, hasturCurseCount: 1, hasturMadnessCount: 1, hasturTentacleBuff: .07, hasturTeamBuff: .05, hasturFormationAllFactor: 1.75, hasturFormationHighestFactor: 2.1 }, api.allyCfg);
 assert.deepEqual(JSON.parse(JSON.stringify(growthDisplay)), [
-  { type: 'hasturGrowthAttack', icon: '⬆️', label: '攻撃力 +7%' },
-  { type: 'hasturGrowthInterval', icon: '⚡', label: '攻撃間隔 -5%' },
+  { type: 'hasturGrowthAttack', icon: '⬆️', label: '攻撃力 +3%' },
+  { type: 'hasturGrowthInterval', icon: '⚡', label: '攻撃間隔 -2%' },
   { type: 'hasturGrowthDefense', icon: '🛡️', label: '防御力 +5%' },
   { type: 'hasturGrowthTentacle', icon: '🦑', label: '触手強化 +7%' },
   { type: 'hasturGrowthTeam', icon: '🟡', label: '味方強化 +5%' }
