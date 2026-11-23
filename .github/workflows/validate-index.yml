@@ -31,6 +31,8 @@ on:
       - 'tests/hastur-stage.test.js'
       - 'tests/ai-roster-sync.test.js'
       - 'scripts/export-character-roster.mjs'
+      - 'character-roster.json'
+      - 'supabase/functions/kwl-spectator-battle/character-data.json'
       - 'supabase/functions/ai-worker/index.ts'
       - '.github/workflows/sync-character-roster.yml'
       - '.github/workflows/validate-index.yml'
