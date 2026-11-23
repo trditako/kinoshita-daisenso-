@@ -20,7 +20,7 @@ assert.match(genesis, /genesisCounterCard\.hp=400000;genesisCounterCard\.atk=100
 assert.match(hastur, /const card=\{id:-1,name:NAME,cost:3500,hp:150000,atk:45750,range:150/);
 assert.match(hitman, /name: NAME, cost: 2200, hp: 100000, atk: 8500, secondAtk: 5100/);
 assert.match(hitman, /multiAttack: \[8500, 5100\]/);
-assert.match(sw, /kinoshita-daisen-v123/);
+assert.match(sw, /kinoshita-daisen-v124/);
 
 assert.equal(kwl.length, 122, 'KWLキャラクター総数とID順を維持');
 const byName = Object.fromEntries(kwl.map(c => [c.name, c]));
