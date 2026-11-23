@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import prismCharacterData from './character-data.json' with { type: 'json' }
 import './battle-core.js'
 
 const BattleCore = (globalThis as any).KinoshitaBattleCore
@@ -30,7 +31,7 @@ const PROJECT_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const AI_TOKEN = Deno.env.get('AI_WORKER_TOKEN') || ''
 const REHEARSAL_OPERATOR_KEY = Deno.env.get('WORLD_ANNOUNCEMENT_TOKEN') || ''
-const ENGINE_VERSION = 'kwl-server-replay-v3-shared-combat'
+const ENGINE_VERSION = 'kwl-server-replay-v4-prism-adaptation'
 const CARDS = [
   {
     "name": "木下",
@@ -4997,6 +4998,9 @@ const CARDS = [
     "knockbackImmune": true
   }
 ] as Card[]
+const PRISM_CARDS = (prismCharacterData as unknown as Card[]).filter((card:any)=>Number(card.id)>=122&&Number(card.id)<=127)
+if(PRISM_CARDS.length!==6||PRISM_CARDS.some((card:any,index:number)=>Number(card.id)!==122+index))throw new Error('PRISM character runtime data is incomplete or out of order')
+CARDS.push(...PRISM_CARDS)
 const WORLD_WIDTH = 1900
 const MAX_TIME = 180
 const STEP = 0.1
@@ -5133,6 +5137,14 @@ function applyResolvedDamage(attacker:Unit,target:Unit,rawDamage:number,time:num
     if(attacker.iceWyvernBaseSpd)attacker.spd=Number(attacker.iceWyvernBaseSpd)
     if(attacker.iceWyvernBaseInterval)attacker.interval=Number(attacker.iceWyvernBaseInterval)
   }
+  const adaptationResolution=BattleCore.calculateDamageTaken({
+    target:normalizedTarget,attacker,damage:incoming,time,
+    ability:{adaptation:target.ability?.adaptation},random:rng,traitMultiplier,curseFactor:1
+  })
+  incoming=adaptationResolution.damage
+  target.adaptationState=normalizedTarget.adaptationState
+  target.adaptationCooldowns=normalizedTarget.adaptationCooldowns
+  if(adaptationResolution.adaptationTriggered)emit('skill',target.side,target,attacker,0,'適応：'+String(adaptationResolution.adaptedTrait||'属性'))
   const resolution=BattleCore.resolveDamage({
     target:normalizedTarget,
     attacker,damage:incoming,time,ability:{},random:rng,traitMultiplier,curseFactor:1
@@ -5183,7 +5195,8 @@ function snapshot(time:number,sides:any[],events:any[],iceZones:any[] = []) {
     team2_money:Math.floor(sides[1].money),units:sides.flatMap((s:any)=>s.units.filter((u:Unit)=>u.hp>0).map((u:Unit)=>({
       id:u.id,card_id:u.card_id,side:u.side,x:Number(u.x.toFixed(1)),hp:Math.max(0,Math.round(u.hp)),
       max_hp:Math.max(1,Math.round(u.max_hp)),state:u.state,trait:u.trait,barrier:Math.round(u.barrier),
-      power_shield:Math.round(u.power_shield),slow:u.slow_until>time,stopped:u.stop_until>time,frozen:num(u.ice_frozen_until)>time,is_flying:!!u.isFlying
+      power_shield:Math.round(u.power_shield),slow:u.slow_until>time,stopped:u.stop_until>time,frozen:num(u.ice_frozen_until)>time,is_flying:!!u.isFlying,
+      adaptation:Object.entries(obj(u.adaptationState)).filter(([,state]:any)=>num(state?.until)>time).map(([trait,state]:any)=>({trait,until:num(state.until),incomingFactor:num(state.incomingFactor,1),outgoingFactor:num(state.outgoingFactor,1)}))
     }))),ice_zones:iceZones.filter((z:any)=>z.until>time).map((z:any)=>({id:z.id,x:Number(z.x.toFixed(1)),remaining:Number((z.until-time).toFixed(2)),side:z.source.side}))}
 }
 function simulate(ai1:AIAccount,ai2:AIAccount,team1:any,team2:any,form1:number[],form2:number[],seed:string) {
