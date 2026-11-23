@@ -18,6 +18,17 @@ for(const definition of definitions){
  cards.push({...stats,id,series:SERIES,limitedExchange:true,limitedExchangeSeries:SERIES,ability,skills});
  for(const [array,fill] of [[charLevel,1],[charMaxLevel,20],[charForm,1],[normalEvolved,false],[ownedFlags,false],[rechargeLeft,0]])if(Array.isArray(array))while(array.length<cards.length)array.push(fill);
 }
+// PRISM購入状態はカード追加前に退避した名前ベースのセーブから復元する。
+const savedOwnedNames=Array.isArray(ownedCharacterNamesAtBoot)?new Set(ownedCharacterNamesAtBoot):null;
+if(savedOwnedNames){for(let i=0;i<cards.length;i++)if(cards[i]&&savedOwnedNames.has(cards[i].name))ownedFlags[i]=true;}
+if(typeof syncOwnedCount==='function')syncOwnedCount();
+// 後付けキャラ登録後に編成も名前で復元する。
+const savedFormationNames=Array.isArray(formationStableNamesAtBoot)&&formationStableNamesAtBoot.length?formationStableNamesAtBoot:formationCharacterNamesAtBoot;
+if(Array.isArray(savedFormationNames)&&savedFormationNames.length&&Array.isArray(formation)){
+ const restored=savedFormationNames.map(name=>cards.findIndex(card=>card&&card.name===name)).filter(i=>i>=0&&!!ownedFlags[i]);
+ if(restored.length){formation=restored.slice(0,10);if(typeof normalizeFormation==='function')normalizeFormation();if(typeof saveFormationStableNames==='function')saveFormationStableNames();}
+}
+if(typeof save==='function')save();
 if(typeof CURRENT_CHARACTER_COUNT!=='undefined')CURRENT_CHARACTER_COUNT=cards.length;
 if(typeof window!=='undefined'&&typeof window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT==='function')window.KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT();
 if(typeof renderCards==='function')renderCards();
