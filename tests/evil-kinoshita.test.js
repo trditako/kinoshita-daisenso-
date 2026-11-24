@@ -270,6 +270,17 @@ context.hit(retreatingBoss, 1000, attacker);
 assert.equal(retreatingBoss.evilRetreated, true);
 assert.equal(retreatingBoss.removedNoReward, true, 'final retreat removes the boss without money');
 
+const phaseMonitor = intervals.find(timer => timer.delay === 80);
+assert.ok(phaseMonitor, 'phase monitor runs independently of direct hit callbacks');
+const phaseProbe = context.spawnEnemy('悪の木下', 'boss', 1, true);
+phaseProbe.evilPhase = 'normal';
+phaseProbe.hp = phaseProbe.maxhp * 0.49;
+phaseMonitor.fn();
+assert.equal(phaseProbe.evilPhase, 'domination', 'enemy phase changes when HP crosses 50% outside hit callback');
+phaseProbe.hp = phaseProbe.maxhp * 0.09;
+phaseMonitor.fn();
+assert.equal(phaseProbe.evilPhase, 'final', 'enemy final phase changes when HP crosses 10% outside hit callback');
+
 context.enemies.length = 0;
 const ally = {
   ...cards[128],
@@ -350,5 +361,13 @@ assert.ok(allyBeamTimer, 'ally final beam schedules repeated hits');
 const beamHpBefore = enemyForBeam.hp;
 allyBeamTimer.fn();
 assert.ok(enemyForBeam.hp < beamHpBefore, 'ally final beam damages enemies in front of the ally');
+
+ally.evilPhase = 'normal';
+ally.hp = ally.maxhp * 0.49;
+phaseMonitor.fn();
+assert.equal(ally.evilPhase, 'domination', 'ally phase changes when HP crosses 50% outside hit callback');
+ally.hp = ally.maxhp * 0.09;
+phaseMonitor.fn();
+assert.equal(ally.evilPhase, 'final', 'ally final phase changes when HP crosses 10% outside hit callback');
 
 console.log('Evil Kinoshita raid, phases, portals, shield, summons, beams, reward registration and ally balance tests passed.');
