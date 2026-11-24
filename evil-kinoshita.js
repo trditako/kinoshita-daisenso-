@@ -559,7 +559,7 @@ if (typeof originalHit === 'function') {
     if (!isEnemyBoss && !isAllyBoss) return originalHit.apply(this, arguments);
 
     const beforeHp = Number(target.hp || 0);
-    const beforeBarrier = Number(target.barrier || 0);
+    const beforeShield = Number(target.powerShield || 0);
     let result;
     if (isEnemyBoss && ['domination', 'final'].includes(target.evilPhase)) {
       const servant = (Array.isArray(enemies) ? enemies : []).find(unit => unit?.name === SERVANT_NAME && unit.isEnemy && alive(unit));
