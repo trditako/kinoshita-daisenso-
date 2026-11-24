@@ -157,10 +157,12 @@ const context = {
   damageAgainst(attacker, target, baseAttack) { return Math.max(1, Number(baseAttack || attacker.atk || 1)); },
   enemyAttackTarget(attacker, target) {
     let damage = context.damageTakenBy(target, attacker);
-    const absorbed = Math.min(Number(target.barrier || 0), damage);
-    target.barrier = Math.max(0, Number(target.barrier || 0) - absorbed);
-    damage -= absorbed;
-    target.hp = Math.max(0, Number(target.hp || 0) - damage);
+    if (Number(target.barrier || 0) > 0) {
+      const absorbed = Math.min(Number(target.barrier || 0), damage);
+      target.barrier = Math.max(0, Number(target.barrier || 0) - absorbed);
+      damage -= absorbed;
+    }
+    if (damage > 0) target.hp = Math.max(0, Number(target.hp || 0) - damage);
     return damage;
   },
   getAttackSequence(actor) { return [{ damage: actor.atk }]; },
