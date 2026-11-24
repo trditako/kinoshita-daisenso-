@@ -95,18 +95,12 @@ function fallingVisual(x, icon) {
   window.setTimeout(() => node.remove?.(), 650);
 }
 function removeShieldDisplay(actor) {
-  actor?.el?.querySelector?.('.barrierBar')?.remove?.();
-  actor?.el?.querySelector?.('.barrierLabel')?.remove?.();
+  actor?.el?.querySelector?.('.powerShieldBar')?.remove?.();
+  actor?.el?.querySelector?.('.powerShieldLabel')?.remove?.();
 }
 function updateShieldLabel(actor) {
   if (!actor?.el) return;
-  const label = actor.el.querySelector?.('.barrierLabel');
-  const bar = actor.el.querySelector?.('.barrierBar i');
-  if (!label) return;
-  const maximum = Math.max(0, Number(actor.barrierMax || 0));
-  const current = Math.max(0, Number(actor.barrier || 0));
-  label.textContent = '⚡ パワーシールド ' + Math.ceil(current).toLocaleString() + ' / ' + Math.ceil(maximum).toLocaleString();
-  if (bar) bar.style.width = maximum > 0 ? Math.max(0, Math.min(100, current / maximum * 100)) + '%' : '0%';
+  if (typeof window.updatePowerShieldDisplay === 'function') window.updatePowerShieldDisplay(actor);
 }
 
 function setForm(actor, form, side) {
@@ -241,8 +235,10 @@ function initializeEnemy(actor) {
   actor.evilInitialized = true;
   actor.evilAtkGrowth = 1;
   actor.evilIntroDone = true;
-  actor.barrier = EVIL_ROBOT_SHIELD;
-  actor.barrierMax = EVIL_ROBOT_SHIELD;
+  actor.barrier = 0;
+  actor.barrierMax = 0;
+  actor.powerShield = EVIL_ROBOT_SHIELD;
+  actor.powerShieldMax = EVIL_ROBOT_SHIELD;
   actor.x = enemyFrontlineX();
   if (actor.el) actor.el.style.left = actor.x + 'px';
   portalVisual(actor.x, 1.2);
@@ -253,8 +249,10 @@ function initializeAlly(actor) {
   actor.evilInitialized = true;
   actor.evilAtkGrowth = 1;
   actor.evilIntroDone = true;
-  actor.barrier = ALLY_ROBOT_SHIELD;
-  actor.barrierMax = ALLY_ROBOT_SHIELD;
+  actor.barrier = 0;
+  actor.barrierMax = 0;
+  actor.powerShield = ALLY_ROBOT_SHIELD;
+  actor.powerShieldMax = ALLY_ROBOT_SHIELD;
   actor.x = allyFrontlineX();
   if (actor.el) actor.el.style.left = actor.x + 'px';
   portalVisual(actor.x, 1.2);
@@ -265,6 +263,8 @@ function escapeRobot(actor, side) {
   actor.evilEscapedRobot = true;
   actor.barrier = 0;
   actor.barrierMax = 0;
+  actor.powerShield = 0;
+  actor.powerShieldMax = 0;
   removeShieldDisplay(actor);
   actor.x = side === 'enemy' ? 120 : Math.max(120, Number(worldWidth || 3000) - 190);
   if (actor.el) actor.el.style.left = actor.x + 'px';
@@ -379,7 +379,9 @@ if (typeof enemyTypes !== 'undefined') {
     kb: 3,
     boss: true,
     money: 0,
-    barrier: EVIL_ROBOT_SHIELD,
+    barrier: 0,
+    powerShield: EVIL_ROBOT_SHIELD,
+    powerShieldMax: EVIL_ROBOT_SHIELD,
     ability: enemyAbility,
     curseImmune: true,
     stopImmune: true,
@@ -430,7 +432,9 @@ if (typeof cards !== 'undefined' && !cards.some(card => card?.name === ALLY_NAME
     series: '悪の木下降臨クリア報酬',
     specialReward: true,
     eventReward: STAGE_NAME,
-    barrier: ALLY_ROBOT_SHIELD,
+    barrier: 0,
+    powerShield: ALLY_ROBOT_SHIELD,
+    powerShieldMax: ALLY_ROBOT_SHIELD,
     ability: allyAbility,
     skills: [
       { name: '降臨', desc: '登場時に前線へポータル移動し、ロボット形態とシールド500,000を獲得。' },
@@ -523,7 +527,7 @@ if (typeof originalEnemyAttackTarget === 'function') {
     if (actor?.name !== BOSS_NAME || !actor.isEnemy) return originalEnemyAttackTarget.apply(this, arguments);
     if (!alive(actor) || !alive(target)) return;
     const before = Number(target.hp || 0);
-    const beforeBarrier = Number(target.barrier || 0);
+    const beforeShield = Number(target.powerShield || 0);
     const result = originalEnemyAttackTarget.apply(this, arguments);
     actor.evilAtkGrowth = Math.max(1, Number(actor.evilAtkGrowth || 1) * 1.07);
     actor.atk = Math.round(Number(actor.evilBaseAtk || ENEMY_FORMS[actor.evilPhase || 'robot'].atk) * actor.evilAtkGrowth);
@@ -586,7 +590,7 @@ if (typeof originalHit === 'function') {
     }
 
     const hpDamage = Math.max(0, beforeHp - Number(target.hp || 0));
-    const shieldDamage = Math.max(0, beforeBarrier - Number(target.barrier || 0));
+    const shieldDamage = Math.max(0, beforeShield - Number(target.powerShield || 0));
     const tookDamage = Number(damage || 0) > 0 && !!source;
     if (tookDamage) {
       if (isEnemyBoss && isPowerShielded(source)) {
@@ -619,11 +623,11 @@ if (typeof originalHit === 'function') {
         if (typeof window.removeEnemy === 'function') window.removeEnemy(target, true);
         return result;
       }
-      if (target.evilPhase === 'robot' && Number(target.barrier || 0) <= 0) escapeRobot(target, 'enemy');
+      if (target.evilPhase === 'robot' && Number(target.powerShield || 0) <= 0) escapeRobot(target, 'enemy');
       else if (target.evilPhase === 'normal' && target.hp <= target.maxhp * 0.50) setForm(target, 'domination', 'enemy');
       else if (target.evilPhase === 'domination' && target.hp <= target.maxhp * 0.10) setForm(target, 'final', 'enemy');
     } else {
-      if (target.evilPhase === 'robot' && Number(target.barrier || 0) <= 0) escapeRobot(target, 'ally');
+      if (target.evilPhase === 'robot' && Number(target.powerShield || 0) <= 0) escapeRobot(target, 'ally');
       else if (target.evilPhase === 'normal' && target.hp <= target.maxhp * 0.50) setForm(target, 'domination', 'ally');
       else if (target.evilPhase === 'domination' && target.hp <= target.maxhp * 0.10) setForm(target, 'final', 'ally');
     }

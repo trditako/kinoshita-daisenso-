@@ -112,6 +112,7 @@ const context = {
   setStatusMark() {},
   popup() {},
   updateBarrierDisplay() {},
+  updatePowerShieldDisplay() {},
   KINOSHITA_REFRESH_CHARACTER_ROSTER_AUDIT() { context.rosterAuditRefreshed = true; },
   renderUnitElement(actor) { actor.el = makeElement(); return actor.el; },
   spawnEnemy(name, role, multOverride, fixedMultiplier, spawnX) {
@@ -137,6 +138,11 @@ const context = {
   },
   hit(target, damage) {
     let remaining = Math.max(0, Number(damage) || 0);
+    if (Number(target.powerShield || 0) > 0) {
+      const absorbed = Math.min(Number(target.powerShield), remaining);
+      target.powerShield -= absorbed;
+      remaining -= absorbed;
+    }
     if (Number(target.barrier || 0) > 0) {
       const absorbed = Math.min(Number(target.barrier), remaining);
       target.barrier -= absorbed;
@@ -199,7 +205,7 @@ assert.equal(enemyAbility.damageCap, 0.05);
 
 const boss = context.spawnEnemy('悪の木下', 'boss', 1, true);
 assert.equal(boss.evilPhase, 'robot');
-assert.equal(boss.barrier, 5000000);
+assert.equal(boss.powerShield, 5000000);
 assert.equal(boss.atk, 5500);
 assert.equal(boss.range, 90);
 assert.equal(boss.attackType, 'area');
@@ -208,11 +214,11 @@ const attacker = { name: 'shield attacker', hp: 10000, maxhp: 10000, isEnemy: fa
 const shieldTarget = { hp: 100000, maxhp: 100000, isEnemy: false, powerShieldMax: 1000, powerShield: 1000 };
 assert.equal(context.damageTakenBy(shieldTarget, boss), boss.atk * 3, 'enemy boss deals triple damage to power-shield targets');
 
-boss.barrier = 1;
+boss.powerShield = 1;
 context.hit(boss, 1000, attacker);
 assert.equal(boss.evilPhase, 'normal', 'robot shield depletion triggers escape into normal form');
 assert.equal(boss.x, 120, 'enemy boss retreats to its own castle front');
-assert.equal(boss.barrierMax, 0);
+assert.equal(boss.powerShieldMax, 0);
 
 boss.hp = boss.maxhp * 0.49;
 context.hit(boss, 1, attacker);
@@ -261,8 +267,10 @@ const ally = {
   hp: cards[128].hp,
   maxhp: cards[128].hp,
   atk: cards[128].atk,
-  barrier: 500000,
-  barrierMax: 500000,
+  barrier: 0,
+  barrierMax: 0,
+  powerShield: 500000,
+  powerShieldMax: 500000,
   x: 2800,
   id: 'ally-evil-kinoshita',
   isEnemy: false,
@@ -271,10 +279,10 @@ const ally = {
 context.units.push(ally);
 context.renderUnitElement(ally);
 assert.equal(ally.evilPhase, 'robot');
-assert.equal(ally.barrier, 500000);
+assert.equal(ally.powerShield, 500000);
 assert.equal(ally.atk, 900);
 
-ally.barrier = 0;
+ally.powerShield = 0;
 context.hit(ally, 1, { name: 'enemy attacker', hp: 10000, maxhp: 10000, isEnemy: true });
 assert.equal(ally.evilPhase, 'normal');
 assert.equal(ally.x, 2810, 'ally robot escapes to the player castle front');
