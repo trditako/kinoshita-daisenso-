@@ -156,8 +156,13 @@ const context = {
   damageTakenBy(target, attacker) { return Math.max(1, Number(attacker.atk || 1)); },
   damageAgainst(attacker, target, baseAttack) { return Math.max(1, Number(baseAttack || attacker.atk || 1)); },
   enemyAttackTarget(attacker, target) {
-    const damage = context.damageTakenBy(target, attacker);
-    target.hp = Math.max(0, Number(target.hp || 0) - damage);
+    let damage = context.damageTakenBy(target, attacker);
+    if (Number(target.barrier || 0) > 0) {
+      const absorbed = Math.min(Number(target.barrier || 0), damage);
+      target.barrier = Math.max(0, Number(target.barrier || 0) - absorbed);
+      damage -= absorbed;
+    }
+    if (damage > 0) target.hp = Math.max(0, Number(target.hp || 0) - damage);
     return damage;
   },
   getAttackSequence(actor) { return [{ damage: actor.atk }]; },
@@ -286,17 +291,64 @@ assert.equal(ally.evilPhase, 'robot');
 assert.equal(ally.powerShield, 500000);
 assert.equal(ally.atk, 900);
 
+// A fully absorbed enemy hit must still compare the barrier without throwing.
+const barrierProbe = { hp: 10000, maxhp: 10000, barrier: 100000, isEnemy: false, x: 2700 };
+context.enemyAttackTarget(boss, barrierProbe);
+assert.equal(barrierProbe.hp, 10000);
+assert.ok(barrierProbe.barrier < 100000, 'enemy attack correctly handles barrier-only damage');
+
+// Verify all normal-form ally attack procs through the real hit wrapper.
 ally.powerShield = 0;
 context.hit(ally, 1, { name: 'enemy attacker', hp: 10000, maxhp: 10000, isEnemy: true });
 assert.equal(ally.evilPhase, 'normal');
 assert.equal(ally.x, 2810, 'ally robot escapes to the player castle front');
 
+// Normal-form attack: +2% attack growth, 25% stop chance, and 10% portal chance.
+fakeMath.random = () => 0;
+const allyAttackTarget = { name: 'ally attack target', hp: 100000, maxhp: 100000, x: 2700, isEnemy: true };
+const allyBaseAtk = ally.atk;
+context.hit(allyAttackTarget, 100, ally);
+assert.ok(ally.atk > allyBaseAtk, 'ally attack grows its attack after a successful hit');
+assert.ok(allyAttackTarget.stopUntil > 0, 'ally attack can stop the target');
+assert.ok(ally.evilPortalNextAt > 0, 'ally normal-form attack can create a portal');
+
+// Being hit in domination form triggers falling-object retaliation and servant summon.
 ally.hp = ally.maxhp * 0.49;
 context.hit(ally, 1, { name: 'enemy attacker', hp: 10000, maxhp: 10000, isEnemy: true });
 assert.equal(ally.evilPhase, 'domination');
+const enemyAttacker = { name: 'enemy attacker', hp: 10000, maxhp: 10000, isEnemy: true };
+ally.evilCounterNextAt = 0;
+ally.evilSummonNextAt = 0;
+const allySummonTimerStart = timers.length;
+context.hit(ally, 100, enemyAttacker);
+assert.ok(ally.evilCounterNextAt > 0, 'ally being hit triggers falling-object retaliation cooldown');
+assert.ok(ally.evilSummonNextAt > 0, 'ally being hit in domination summons a servant');
+const allySummonTimer = timers.slice(allySummonTimerStart).find(timer => timer.delay === 0);
+assert.ok(allySummonTimer, 'ally servant summon is scheduled');
+allySummonTimer.fn();
+assert.ok(units.some(unit => unit.evilKinoshitaServant), 'ally servant is actually created');
+
+// Servant receives 20% of incoming damage while the ally is in domination/final form.
+const servant = units.find(unit => unit.evilKinoshitaServant);
+const allyHpBeforeShared = ally.hp;
+const servantHpBeforeShared = servant.hp;
+context.hit(ally, 1000, enemyAttacker);
+assert.equal(servantHpBeforeShared - servant.hp, 200, 'servant absorbs 20% of incoming damage');
+assert.equal(allyHpBeforeShared - ally.hp, 800, 'ally receives the remaining 80%');
+
 ally.hp = ally.maxhp * 0.09;
-context.hit(ally, 1, { name: 'enemy attacker', hp: 10000, maxhp: 10000, isEnemy: true });
+context.hit(ally, 1, enemyAttacker);
 assert.equal(ally.evilPhase, 'final');
 assert.ok(ally.atk <= 12000, 'ally attack growth is capped and remains weaker than enemy form');
+const finalBeamTimer = timers.filter(timer => timer.delay === 3000).at(-1);
+assert.ok(finalBeamTimer, 'ally final form schedules its beam');
+const enemyForBeam = { name: 'beam target', hp: 100000, maxhp: 100000, x: 2700, isEnemy: true };
+enemies.push(enemyForBeam);
+finalBeamTimer.fn();
+const allyBeamTimer = intervals.filter(timer => timer.delay === 300).at(-1);
+assert.ok(allyBeamTimer, 'ally final beam schedules repeated hits');
+const beamHpBefore = enemyForBeam.hp;
+allyBeamTimer.fn();
+assert.ok(enemyForBeam.hp < beamHpBefore, 'ally final beam damages enemies in front of the ally');
 
 console.log('Evil Kinoshita raid, phases, portals, shield, summons, beams, reward registration and ally balance tests passed.');
