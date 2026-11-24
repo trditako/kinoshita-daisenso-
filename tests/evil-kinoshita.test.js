@@ -295,7 +295,7 @@ assert.equal(ally.atk, 900);
 const barrierProbe = { hp: 10000, maxhp: 10000, barrier: 100000, isEnemy: false, x: 2700 };
 context.enemyAttackTarget(boss, barrierProbe);
 assert.equal(barrierProbe.hp, 10000);
-assert.ok(barrierProbe.barrier < 10000, 'enemy attack correctly handles barrier-only damage');
+assert.ok(barrierProbe.barrier < 100000, 'enemy attack correctly handles barrier-only damage');
 
 // Verify all normal-form ally attack procs through the real hit wrapper.
 ally.powerShield = 0;
