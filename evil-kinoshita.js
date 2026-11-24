@@ -528,6 +528,7 @@ if (typeof originalEnemyAttackTarget === 'function') {
     if (!alive(actor) || !alive(target)) return;
     const before = Number(target.hp || 0);
     const beforeShield = Number(target.powerShield || 0);
+    const beforeBarrier = Number(target.barrier || 0);
     const result = originalEnemyAttackTarget.apply(this, arguments);
     actor.evilAtkGrowth = Math.max(1, Number(actor.evilAtkGrowth || 1) * 1.07);
     actor.atk = Math.round(Number(actor.evilBaseAtk || ENEMY_FORMS[actor.evilPhase || 'robot'].atk) * actor.evilAtkGrowth);
