@@ -292,7 +292,7 @@ assert.equal(ally.powerShield, 500000);
 assert.equal(ally.atk, 900);
 
 // A fully absorbed enemy hit must still compare the barrier without throwing.
-const barrierProbe = { hp: 10000, maxhp: 10000, barrier: 10000, isEnemy: false, x: 2700 };
+const barrierProbe = { hp: 10000, maxhp: 10000, barrier: 100000, isEnemy: false, x: 2700 };
 context.enemyAttackTarget(boss, barrierProbe);
 assert.equal(barrierProbe.hp, 10000);
 assert.ok(barrierProbe.barrier < 10000, 'enemy attack correctly handles barrier-only damage');
