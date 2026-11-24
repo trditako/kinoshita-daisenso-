@@ -22,7 +22,8 @@ assert.match(hitman, /name: NAME, cost: 2200, hp: 100000, atk: 8500, secondAtk: 
 assert.match(hitman, /multiAttack: \[8500, 5100\]/);
 assert.match(sw, /kinoshita-daisen-v126/);
 
-assert.equal(kwl.length, 128, 'PRISM追加後もKWLキャラクターID順を維持');
+assert.equal(kwl.length, 129, 'PRISMと悪の木下追加後もKWLキャラクターID順を維持');
+assert.equal(kwl[128].name, '悪の木下');
 const byName = Object.fromEntries(kwl.map(c => [c.name, c]));
 assert.deepEqual([byName['創世木下'].id, byName['創世討伐兵器・零式'].id, byName['ヒットマン木下'].id, byName['アイスワイバーン'].id, byName['最高神:ゼウス'].id, byName['最高神:ハスター'].id], [116,117,118,119,120,121]);
 assert.deepEqual([byName['最高神:ハスター'].hp, byName['最高神:ハスター'].atk], [150000,45750]);
