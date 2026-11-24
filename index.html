@@ -3373,18 +3373,18 @@ function initAudio(){
   return Promise.resolve(resume).then(()=>{audioStarted=audioCtx.state==='running';if(audioStarted)startBGM(currentBgmKey);return audioStarted;}).catch(()=>false);
  }catch(e){return Promise.resolve(false);}
 }
-function tone(freq,duration=.08,type='sine',volume=.08,slide=0,destination=audioMaster){
+function tone(freq,duration=.08,type='sine',volume=.08,slide=0,destination=audioMaster,when=null){
  if(!audioEnabled||!audioCtx||!destination||audioCtx.state!=='running')return;
  try{
-  const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(Math.max(25,freq),now);
+  const now=Number.isFinite(when)?Math.max(audioCtx.currentTime,when):audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(Math.max(25,freq),now);
   if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(25,freq+slide),now+duration);
   const out=Math.min(.95,Math.max(.0001,volume*AUDIO_VOLUME_BOOST));g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(out,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+duration);
   o.connect(g);g.connect(destination);o.start(now);o.stop(now+duration+.02);
  }catch(e){}
 }
-function noise(duration=.07,volume=.06){
+function noise(duration=.07,volume=.06,when=null){
  if(!audioEnabled||!audioCtx||!audioMaster||audioCtx.state!=='running')return;
- try{const len=Math.max(1,Math.floor(audioCtx.sampleRate*duration)),buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(KinoshitaBattleCore.random()*2-1)*(1-i/len);const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();f.type='highpass';f.frequency.value=700;g.gain.value=Math.min(.9,volume*AUDIO_VOLUME_BOOST);src.buffer=buf;src.connect(f);f.connect(g);src.start();}catch(e){}
+ try{const len=Math.max(1,Math.floor(audioCtx.sampleRate*duration)),buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(KinoshitaBattleCore.random()*2-1)*(1-i/len);const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();f.type='highpass';f.frequency.value=700;g.gain.value=Math.min(.9,volume*AUDIO_VOLUME_BOOST);src.buffer=buf;src.connect(f);f.connect(g);src.start(Number.isFinite(when)?Math.max(audioCtx.currentTime,when):audioCtx.currentTime);}catch(e){}
 }
 function playSE(name){
  if(!audioEnabled)return;if(!audioStarted){initAudio();return;}
@@ -3413,16 +3413,22 @@ function stageBgmProfile(){
 function startBGM(key='menu'){
  if(!audioEnabled||!audioStarted||!audioCtx)return;
  currentBgmKey=key||'menu';stopBGM();const p=BGM_PROFILES[currentBgmKey]||BGM_PROFILES.menu;bgmStep=0;
- const beat=Math.max(130,60000/p.tempo);
- bgmTimer=setInterval(()=>{
+ const beat=Math.max(130,60000/p.tempo),beatSeconds=beat/1000;
+ let nextTime=audioCtx.currentTime+.04;
+ const scheduleAhead=()=>{
   if(!audioEnabled||!audioCtx||audioCtx.state!=='running')return;
-  const i=bgmStep%p.notes.length,f=p.notes[i],bass=p.bassNotes[i%p.bassNotes.length];
-  tone(f,Math.min(.32,beat/1000*.72),p.wave,BGM_MASTER_GAIN);
-  if(bgmStep%2===0)tone(bass,Math.min(.42,beat/1000*.95),p.bass,BGM_MASTER_GAIN*.72);
-  if(i%4===0)tone(f*1.5,Math.min(.18,beat/1000*.35),'triangle',BGM_MASTER_GAIN*.32);
-  if(p.drums&&i%2===1)noise(Math.min(.07,beat/1000*.18),BGM_MASTER_GAIN*.16);
-  bgmStep++;
- },beat);
+  const horizon=audioCtx.currentTime+.22;
+  let guard=0;
+  while(nextTime<horizon&&guard++<12){
+   const step=bgmStep,i=step%p.notes.length,f=p.notes[i],bass=p.bassNotes[i%p.bassNotes.length],at=nextTime;
+   tone(f,Math.min(.32,beatSeconds*.72),p.wave,BGM_MASTER_GAIN,0,audioMaster,at);
+   if(step%2===0)tone(bass,Math.min(.42,beatSeconds*.95),p.bass,BGM_MASTER_GAIN*.72,0,audioMaster,at);
+   if(i%4===0)tone(f*1.5,Math.min(.18,beatSeconds*.35),'triangle',BGM_MASTER_GAIN*.32,0,audioMaster,at);
+   if(p.drums&&i%2===1)noise(Math.min(.07,beatSeconds*.18),BGM_MASTER_GAIN*.16,at);
+   bgmStep++;nextTime+=beatSeconds;
+  }
+ };
+ scheduleAhead();bgmTimer=setInterval(scheduleAhead,25);
 }
 function stopBGM(){if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;}}
 function toggleAudio(){
