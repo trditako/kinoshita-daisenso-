@@ -1,4 +1,4 @@
-const CACHE_NAME="kinoshita-daisen-v125";
+const CACHE_NAME="kinoshita-daisen-v126";
 const API_CACHE_NAME="kinoshita-public-api-v1";
 const API_CACHE_TTL = [
   ["/rest/v1/world_announcements", 5 * 60 * 1000],
@@ -53,7 +53,7 @@ self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll([
     "./","./index.html","./manifest.json","./icon-192.png","./icon-512.png",
     "./genesis.js","./hitman.js","./zeus.js","./hastur.js","./prism.js","./kwl.js",
-    "./equipment.js","./wamuu.js","./battle-core.js",
+    "./equipment.js","./wamuu.js","./evil-kinoshita.js","./battle-core.js",
     "./battle-core.js?v=20261120-kwl-combat-core-2"
   ])));
 });
@@ -80,13 +80,13 @@ self.addEventListener('fetch',e=>{
     return;
   }
 
-  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|prism|kwl|wamuu|battle-core)\.js/.test(url)?{cache:"reload"}:undefined)
+  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|prism|kwl|wamuu|evil-kinoshita|battle-core)\.js/.test(url)?{cache:"reload"}:undefined)
     .then(async response=>{
       const type=response.headers.get('content-type')||'';
       if(type.includes('text/html')){
         const html=await response.clone().text();
         const position=html.lastIndexOf('</body>');
-        const inject='\n<script src="./hastur.js?v=20261123-kwl-post-rebalance"></script>\n<script src="./equipment.js?v=20261116-home-button-set-effects"></script>\n<script src="./kwl.js?v=20261122-existing-operator-key"></script>\n<script src="./wamuu.js?v=20261120-row-death-balance"></script>\n<script src="./prism.js?v=20261124-ownership-wamuu-order"></script>\n';
+        const inject='\n<script src="./hastur.js?v=20261123-kwl-post-rebalance"></script>\n<script src="./equipment.js?v=20261116-home-button-set-effects"></script>\n<script src="./kwl.js?v=20261122-existing-operator-key"></script>\n<script src="./wamuu.js?v=20261120-row-death-balance"></script>\n<script src="./prism.js?v=20261124-ownership-wamuu-order"></script>\n<script src="./evil-kinoshita.js?v=20261124-evil-kinoshita-raid"></script>\n';
         const output=new Response(position<0?html:html.slice(0,position)+inject+html.slice(position),{
           status:response.status,statusText:response.statusText,headers:response.headers
         });
