@@ -638,7 +638,24 @@ if (typeof originalHit === 'function') {
   };
 }
 
+function syncActorPhase(actor, side) {
+  const expectedName = side === 'enemy' ? BOSS_NAME : ALLY_NAME;
+  if (!actor || actor.name !== expectedName || !actor.evilInitialized || !alive(actor)) return;
+  if (actor.evilPhase === 'robot' && Number(actor.powerShield || 0) <= 0) {
+    escapeRobot(actor, side);
+    return;
+  }
+  const maxHp = Math.max(1, Number(actor.maxhp || 1));
+  if (actor.evilPhase === 'normal' && Number(actor.hp || 0) <= maxHp * 0.50) {
+    setForm(actor, 'domination', side);
+  } else if (actor.evilPhase === 'domination' && Number(actor.hp || 0) <= maxHp * 0.10) {
+    setForm(actor, 'final', side);
+  }
+}
+
 function tickEffects() {
+  for (const actor of [...(Array.isArray(units) ? units : [])]) syncActorPhase(actor, 'ally');
+  for (const actor of [...(Array.isArray(enemies) ? enemies : [])]) syncActorPhase(actor, 'enemy');
   const time = now();
   for (let index = portals.length - 1; index >= 0; index--) {
     const portal = portals[index];
