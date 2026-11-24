@@ -255,7 +255,7 @@ assert.ok(timers.filter(timer => timer.delay === 0 || timer.delay === 1000 || ti
 
 const retreatingBoss = context.spawnEnemy('悪の木下', 'boss', 1, true);
 retreatingBoss.evilPhase = 'normal';
-retreatingBoss.barrier = 0;
+retreatingBoss.powerShield = 0;
 retreatingBoss.hp = 1;
 context.hit(retreatingBoss, 1000, attacker);
 assert.equal(retreatingBoss.evilRetreated, true);
