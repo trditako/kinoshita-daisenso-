@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "e46bfda826472a980befbe55dd99c2f7206dcffe",
-  "generatedAt": "2026-11-23T15:59:15.875Z",
-  "count": 128,
+  "sourceCommit": "ecdba57ff2e2a52e3f67a137c75a471d573f18d6",
+  "generatedAt": "2026-11-24T11:06:17.896Z",
+  "count": 129,
   "characters": [
     {
       "id": 0,
@@ -1283,6 +1283,16 @@
       "eventReward": null,
       "rewardStage": null,
       "series": "PRISM木下s"
+    },
+    {
+      "id": 128,
+      "name": "悪の木下",
+      "rarity": "UR",
+      "specialReward": true,
+      "chapterReward": null,
+      "eventReward": "悪の木下降臨",
+      "rewardStage": "悪の木下降臨",
+      "series": "悪の木下降臨クリア報酬"
     }
   ],
   "eventRewards": [
@@ -1360,6 +1370,11 @@
       "id": 121,
       "name": "最高神:ハスター",
       "stageName": "最高神:ハスター降臨"
+    },
+    {
+      "id": 128,
+      "name": "悪の木下",
+      "stageName": "悪の木下降臨"
     }
   ]
 }
