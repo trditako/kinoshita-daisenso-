@@ -77,6 +77,8 @@ const context = {
   charMaxLevel: Array(128).fill(20),
   charForm: Array(128).fill(1),
   normalEvolved: Array(128).fill(false),
+  rechargeLeft: Array(128).fill(0),
+  CURRENT_CHARACTER_COUNT: 128,
   ownedCharacterNamesAtBoot: ['existing-0', '悪の木下'],
   formationStableNamesAtBoot: ['悪の木下'],
   formationCharacterNamesAtBoot: null,
@@ -177,6 +179,8 @@ vm.runInContext(source, context, { filename: 'evil-kinoshita.js' });
 assert.equal(cards.length, 129, 'reward character is appended after PRISM IDs');
 assert.equal(cards[128].name, '悪の木下');
 assert.equal(cards[128].id, 128);
+assert.equal(context.CURRENT_CHARACTER_COUNT, 129);
+assert.equal(context.rechargeLeft.length, 129);
 assert.equal(cards[128].rarity, 'UR');
 assert.equal(cards[128].skills.length, 10);
 assert.equal(context.ownedFlags[128], true, 'ownership restores from saved character names');

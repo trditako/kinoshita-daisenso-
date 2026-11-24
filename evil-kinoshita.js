@@ -454,20 +454,20 @@ if (typeof cards !== 'undefined' && !cards.some(card => card?.name === ALLY_NAME
 const allyIndex = typeof cards !== 'undefined' ? cards.findIndex(card => card?.name === ALLY_NAME) : -1;
 if (allyIndex >= 0) {
   cards[allyIndex].id = allyIndex;
-  if (Array.isArray(ownedFlags) && ownedFlags.length < cards.length) ownedFlags.length = cards.length;
-  if (Array.isArray(charLevel) && charLevel.length < cards.length) while (charLevel.length < cards.length) charLevel.push(1);
-  if (Array.isArray(charMaxLevel) && charMaxLevel.length < cards.length) while (charMaxLevel.length < cards.length) charMaxLevel.push(20);
-  if (Array.isArray(charForm) && charForm.length < cards.length) while (charForm.length < cards.length) charForm.push(1);
-  if (Array.isArray(normalEvolved) && normalEvolved.length < cards.length) while (normalEvolved.length < cards.length) normalEvolved.push(false);
+  for (const [array, fill] of [[charLevel, 1], [charMaxLevel, 20], [charForm, 1], [normalEvolved, false], [ownedFlags, false], [rechargeLeft, 0]]) {
+    if (Array.isArray(array)) while (array.length < cards.length) array.push(fill);
+  }
   const savedNames = Array.isArray(ownedCharacterNamesAtBoot) ? ownedCharacterNamesAtBoot : null;
   const cleared = typeof eventClears !== 'undefined' && eventClears[STAGE_NAME] === true;
   if (savedNames) {
     const names = new Set(savedNames);
-    ownedFlags = cards.map((card, index) => index === 0 || names.has(card.name) || (index === allyIndex && cleared));
-  } else if (cleared) {
-    ownedFlags[allyIndex] = true;
+    for (let index = 0; index < cards.length; index++) {
+      if (cards[index] && names.has(cards[index].name)) ownedFlags[index] = true;
+    }
   }
+  if (cleared) ownedFlags[allyIndex] = true;
   if (typeof syncOwnedCount === 'function') syncOwnedCount();
+  if (typeof CURRENT_CHARACTER_COUNT !== 'undefined') CURRENT_CHARACTER_COUNT = cards.length;
   const savedFormationNames = Array.isArray(formationStableNamesAtBoot) && formationStableNamesAtBoot.length
     ? formationStableNamesAtBoot
     : Array.isArray(formationCharacterNamesAtBoot) ? formationCharacterNamesAtBoot : null;
