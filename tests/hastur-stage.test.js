@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const source = fs.readFileSync('hastur.js', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
-assert.match(sw, /kinoshita-daisen-v126/);
+assert.match(sw, /kinoshita-daisen-v127/);
 assert.match(sw, /hastur\.js\?v=20261123-kwl-post-rebalance/);
 assert.ok(sw.includes('./hastur.js'));
 assert.match(source,/function publishCharacterRosterAudit\(\)/,'final runtime roster audit is exported after late character registration');
