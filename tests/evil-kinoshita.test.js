@@ -10,7 +10,7 @@ const exporter = fs.readFileSync('scripts/export-character-roster.mjs', 'utf8');
 const worker = fs.readFileSync('supabase/functions/ai-worker/index.ts', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.85'/);
-assert.match(sw, /kinoshita-daisen-v126/);
+assert.match(sw, /kinoshita-daisen-v127/);
 assert.match(sw, /prism\.js\?v=20261124-ownership-wamuu-order[\s\S]*evil-kinoshita\.js\?v=20261124-evil-kinoshita-raid/);
 assert.match(exporter, /page\.addScriptTag\(\{path:path\.join\(root,'evil-kinoshita\.js'\)\}\)/);
 assert.match(exporter, /KINOSHITA_CHARACTER_ID_AUDIT\.total===129/);
