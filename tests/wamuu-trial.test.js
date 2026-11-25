@@ -135,5 +135,5 @@ assert.equal(enemy.removed, true, 'dead enemy is passed to the normal removeEnem
 assert.equal(runtime.enemies.includes(enemy), false, 'dead enemy is removed from the active enemy list');
 
 assert.match(fs.readFileSync('service-worker.js', 'utf8'), /wamuu\.js\?v=20261120-row-death-balance/);
-assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v126/);
+assert.match(fs.readFileSync('service-worker.js', 'utf8'), /kinoshita-daisen-v127/);
 process.stdout.write('Wamuu operator-only trial, access gating, skills, formulas, cooldowns and ranked-mode exclusion passed.\n');

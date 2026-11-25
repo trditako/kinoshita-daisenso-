@@ -10,14 +10,14 @@ const exporter = fs.readFileSync('scripts/export-character-roster.mjs', 'utf8');
 const worker = fs.readFileSync('supabase/functions/ai-worker/index.ts', 'utf8');
 
 assert.match(html, /GAME_VERSION='v1\.9\.85'/);
-assert.match(sw, /kinoshita-daisen-v126/);
+assert.match(sw, /kinoshita-daisen-v127/);
 assert.match(sw, /prism\.js\?v=20261124-ownership-wamuu-order[\s\S]*evil-kinoshita\.js\?v=20261124-evil-kinoshita-raid/);
 assert.match(exporter, /page\.addScriptTag\(\{path:path\.join\(root,'evil-kinoshita\.js'\)\}\)/);
 assert.match(exporter, /KINOSHITA_CHARACTER_ID_AUDIT\.total===129/);
 assert.match(worker, /let MAX_CHARS=129/);
 assert.match(source, /hp: 18000000/);
 assert.match(source, /EVIL_ROBOT_SHIELD = 5000000/);
-assert.match(source, /ALLY_ROBOT_SHIELD = 500000/);
+assert.match(source, /ALLY_ROBOT_SHIELD = 1500000/);
 assert.match(source, /strong: \{ '\*': 3 \}/);
 assert.match(source, /resist: \{ '\*': 0\.55 \}/);
 assert.match(source, /damageCap: 0\.05/);
@@ -299,7 +299,9 @@ const ally = {
 context.units.push(ally);
 context.renderUnitElement(ally);
 assert.equal(ally.evilPhase, 'robot');
-assert.equal(ally.powerShield, 500000);
+assert.equal(ally.powerShield, 1500000);
+assert.equal(ally.maxhp, 2200000);
+assert.equal(ally.hp, 2200000);
 assert.equal(ally.atk, 900);
 
 // A fully absorbed enemy hit must still compare the barrier without throwing.

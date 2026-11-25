@@ -8,7 +8,7 @@ const BOSS_NAME = '悪の木下';
 const ALLY_NAME = '悪の木下';
 const SERVANT_NAME = '最高神に使える者';
 const EVIL_ROBOT_SHIELD = 5000000;
-const ALLY_ROBOT_SHIELD = 500000;
+const ALLY_ROBOT_SHIELD = 1500000;
 const portals = [];
 const fallingRains = [];
 
@@ -37,12 +37,12 @@ const enemyAbility = {
 };
 const allyAbility = {
   name: '次元支配・縮退版',
-  desc: '全属性から受けるダメージ20%軽減、全属性に1.5倍ダメージ。1回の被ダメージは最大HPの20%まで。呪い・停止無効。攻撃するたび攻撃力+2%（最大+50%）、攻撃時25%で1.5秒停止。ポータル移動・ポータル攻撃・部下召喚・ビームを使用する。',
+  desc: '全属性から受けるダメージ35%軽減、全属性に1.5倍ダメージ。1回の被ダメージは最大HPの8%まで。呪い・停止無効。攻撃するたび攻撃力+2%（最大+50%）、攻撃時25%で1.5秒停止。ポータル移動・ポータル攻撃・部下召喚・ビームを使用する。',
   strong: { '*': 1.5 },
-  resist: { '*': 0.8 },
+  resist: { '*': 0.65 },
   curseImmune: true,
   stopImmune: true,
-  damageCap: 0.20,
+  damageCap: 0.08,
   evilKinoshitaAlly: true
 };
 
@@ -417,7 +417,7 @@ if (typeof cards !== 'undefined' && !cards.some(card => card?.name === ALLY_NAME
     id: cards.length,
     name: ALLY_NAME,
     cost: 1800,
-    hp: 450000,
+    hp: 2200000,
     atk: ALLY_FORMS.robot.atk,
     range: ALLY_FORMS.robot.range,
     spd: ALLY_FORMS.robot.spd,
@@ -437,7 +437,7 @@ if (typeof cards !== 'undefined' && !cards.some(card => card?.name === ALLY_NAME
     powerShieldMax: ALLY_ROBOT_SHIELD,
     ability: allyAbility,
     skills: [
-      { name: '降臨', desc: '登場時に前線へポータル移動し、ロボット形態とシールド500,000を獲得。' },
+      { name: '降臨', desc: '登場時に前線へポータル移動し、ロボット形態とシールド1,500,000を獲得。' },
       { name: '脱出', desc: 'ロボットのシールドが0になると通常形態へ戻り、自陣の城前へ移動。' },
       { name: 'ポータル', desc: '通常形態以降、攻撃時10%で敵の足元にポータルを1.5秒生成。敵を敵城前へ移動させる。クールタイム12秒。' },
       { name: 'ポータル反撃', desc: '被弾時25%で2秒間、0.4秒ごとに物体を落とし、対象の最大HP2%ダメージと移動速度30%低下。クールタイム20秒。' },
@@ -647,8 +647,12 @@ function syncActorPhase(actor, side) {
   }
   const maxHp = Math.max(1, Number(actor.maxhp || 1));
   if (actor.evilPhase === 'normal' && Number(actor.hp || 0) <= maxHp * 0.50) {
+    actor.hp = Math.min(maxHp, Number(actor.hp || 0) + Math.round(maxHp * 0.10));
+    updateHpBar(actor);
     setForm(actor, 'domination', side);
   } else if (actor.evilPhase === 'domination' && Number(actor.hp || 0) <= maxHp * 0.10) {
+    actor.hp = Math.min(maxHp, Number(actor.hp || 0) + Math.round(maxHp * 0.10));
+    updateHpBar(actor);
     setForm(actor, 'final', side);
   }
 }
