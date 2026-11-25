@@ -21,8 +21,7 @@ window.MYTHOLOGY_CH2_ABILITY_INFO=[{"name":"絶対耐性","description":"属性�
  const renderBase=renderStageSelect;
  renderStageSelect=function(){renderBase();if(selectedChapter===8){const info=document.getElementById('chapterInfo');if(info)info.textContent='🌌 神話編 第2章｜全48ステージ・敵55体・複合属性・32新能力｜第1章全48ステージクリアで解放';}};
  function selectSecond(){selectedMode='japan';selectedChapter=8;selectedStage=1;renderStageSelect();const b=document.getElementById('startBtn');if(b)b.textContent=(stages[0]?.name||'神話編第2章')+(chapterUnlocked(8)?'を開始':'（未解放）');}
- const tabs=document.querySelector('.chapterTabs');
- if(tabs&&!document.getElementById('mythologyChapter2Btn')){const b=document.createElement('button');b.type='button';b.id='mythologyChapter2Btn';b.className='chapterTab mythologyChapterTab';b.dataset.chapter='8';b.textContent='🌌 神話編 第2章';b.style.cssText='background:#312e81!important;color:#e0e7ff!important;border-color:#818cf8!important';b.onclick=e=>{e.preventDefault();e.stopPropagation();selectSecond();};tabs.insertBefore(b,document.getElementById('mythologyChapterBtn')?.nextSibling||null);}
+ window.mythologyChapter2Select=selectSecond;
  const oldDetail=showEnemyDetail;
  showEnemyDetail=function(key){oldDetail(key);const e=enemyTypes[key]||specs.find(x=>x.name===key);if(!e)return;const list=e.ability?.ch2Abilities||[],body=document.getElementById('detailBody');if(body&&list.length){const extra=list.map(k=>{const d=window.MYTHOLOGY_CH2_ABILITY_INFO.find(x=>x.name===k);return '<div class="enemyAbility"><b>🧬 第2章固有能力：'+k+'</b><br>'+((d&&d.description)||'固有能力')+'</div>';}).join('');body.insertAdjacentHTML('beforeend',extra);}};
 })();
