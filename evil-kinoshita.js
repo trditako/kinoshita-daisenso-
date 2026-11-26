@@ -417,7 +417,7 @@ if (typeof cards !== 'undefined' && !cards.some(card => card?.name === ALLY_NAME
     id: cards.length,
     name: ALLY_NAME,
     cost: 1800,
-    hp: 2200000,
+    hp: 500000,
     atk: ALLY_FORMS.robot.atk,
     range: ALLY_FORMS.robot.range,
     spd: ALLY_FORMS.robot.spd,

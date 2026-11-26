@@ -67,7 +67,7 @@ if(genesisIndex<0){
  if(Array.isArray(rechargeLeft)&&rechargeLeft[genesisIndex]===undefined)rechargeLeft[genesisIndex]=0;
 }
 const genesisCard=cards[genesisIndex];
-genesisCard.hp=450000;genesisCard.atk=30000;
+genesisCard.hp=90000;genesisCard.atk=20000;
 genesisCard.id=genesisIndex;
 genesisCard.genesisAbilities=GENESIS_ABILITY_DEFS;
 genesisCard.ability={...(genesisCard.ability||{}),genesis:true,strong:genesisStrong,damageReduce:{chance:1,factor:.35},
@@ -594,7 +594,7 @@ if(genesisCounterIndex<0){
  genesisCounterIndex=cards.length-1;
 }
 const genesisCounterCard=cards[genesisCounterIndex];
-genesisCounterCard.hp=400000;genesisCounterCard.atk=100000;genesisCounterCard.range=900;genesisCounterCard.interval=3.8;
+genesisCounterCard.hp=65000;genesisCounterCard.atk=12000;genesisCounterCard.range=900;genesisCounterCard.interval=3.8;
 genesisCounterCard.id=genesisCounterIndex;
 genesisCounterCard.ability={
  ...(genesisCounterCard.ability||{}),

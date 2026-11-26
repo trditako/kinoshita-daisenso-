@@ -49,7 +49,7 @@ const allyZeusAbility = {
   curseImmune: true, stopImmune: true, surgeImmune: true, slowImmune: true, attackDownImmune: true, warpImmune: true, yabayabaImmune: true, sealImmune: true,
   knockbackImmune: true, waveDamageFactor: 0.5,
   damageCap: 0.20,
-  zeusAlly: { bands: [{ min: -100, max: 75, damage: 150000 }, { min: 125, max: 200, damage: 75000 }, { min: 200, max: 400, damage: 46800 }], defensePerHit: 0.025, defenseMax: 0.35, enemyCountAttack: 0.01, enemyCountMax: 0.10, shield: 50000, shieldKillRestore: 0.01, shieldReflect: 0.05, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.20, stopDuration: 1.2, attackDownChance: 0.20, attackDownFactor: 0.4, attackDownDuration: 2 }
+  zeusAlly: { bands: [{ min: -100, max: 75, damage: 35000 }, { min: 125, max: 200, damage: 17500 }, { min: 200, max: 400, damage: 10920 }], defensePerHit: 0.025, defenseMax: 0.35, enemyCountAttack: 0.01, enemyCountMax: 0.10, shield: 50000, shieldKillRestore: 0.01, shieldReflect: 0.05, shieldStop: 1, shieldRangeFactor: 0.2, shieldRangeDuration: 3, stopChance: 0.20, stopDuration: 1.2, attackDownChance: 0.20, attackDownFactor: 0.4, attackDownDuration: 2 }
 };
 
 const enemyZeus = {
@@ -76,8 +76,8 @@ const servantEnemy = {
 if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof eventStages !== 'undefined') {
   if (!cards.some(c => c && c.name === ZEUS_ALLY)) {
     cards.push({
-      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 160000, atk: 150000,
-      secondAtk: 75000, thirdAtk: 46800, multiAttack: [150000, 75000, 46800],
+      id: cards.length, name: ZEUS_ALLY, cost: 6000, hp: 90000, atk: 35000,
+      secondAtk: 17500, thirdAtk: 10920, multiAttack: [35000, 17500, 10920],
       range: 600, senseRange: 600, detectRange: 600, attackRangeBands: allyZeusAbility.zeusAlly.bands, spd: 0.4, interval: 3, recharge: 180,
       icon: '⚡👑', motion: 'super', attackType: 'area', kb: 3,
       trait: '最高神', rarity: 'UR', series: '最高神',
@@ -96,6 +96,12 @@ if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof 
   // Zeus is registered after hitman.js performs the normal late-character restore.
   // Rehydrate it here from the persisted name list or the event-clear record.
   const zeusCardIndex = cards.findIndex(c => c && c.name === ZEUS_ALLY);
+  if (zeusCardIndex >= 0) {
+    const zeusCard = cards[zeusCardIndex];
+    Object.assign(zeusCard, {hp:90000, atk:35000, secondAtk:17500, thirdAtk:10920, multiAttack:[35000,17500,10920]});
+    allyZeusAbility.zeusAlly.bands = [{min:-100,max:75,damage:35000},{min:125,max:200,damage:17500},{min:200,max:400,damage:10920}];
+    zeusCard.attackRangeBands = allyZeusAbility.zeusAlly.bands;
+  }
   if (zeusCardIndex >= 0 && Array.isArray(ownedFlags)) {
     const savedNames = typeof ownedCharacterNamesAtBoot !== 'undefined' && Array.isArray(ownedCharacterNamesAtBoot)
       ? ownedCharacterNamesAtBoot : [];
