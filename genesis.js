@@ -67,7 +67,7 @@ if(genesisIndex<0){
  if(Array.isArray(rechargeLeft)&&rechargeLeft[genesisIndex]===undefined)rechargeLeft[genesisIndex]=0;
 }
 const genesisCard=cards[genesisIndex];
-genesisCard.hp=100000;genesisCard.atk=18000;
+genesisCard.hp=90000;genesisCard.atk=20000;
 genesisCard.id=genesisIndex;
 genesisCard.genesisAbilities=GENESIS_ABILITY_DEFS;
 genesisCard.ability={...(genesisCard.ability||{}),genesis:true,strong:genesisStrong,damageReduce:{chance:1,factor:.35},
