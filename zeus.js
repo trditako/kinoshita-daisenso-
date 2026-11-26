@@ -96,6 +96,12 @@ if (typeof cards !== 'undefined' && typeof enemyTypes !== 'undefined' && typeof 
   // Zeus is registered after hitman.js performs the normal late-character restore.
   // Rehydrate it here from the persisted name list or the event-clear record.
   const zeusCardIndex = cards.findIndex(c => c && c.name === ZEUS_ALLY);
+  if (zeusCardIndex >= 0) {
+    const zeusCard = cards[zeusCardIndex];
+    Object.assign(zeusCard, {hp:100000, atk:40000, secondAtk:20000, thirdAtk:12000, multiAttack:[40000,20000,12000]});
+    allyZeusAbility.zeusAlly.bands = [{min:-100,max:75,damage:40000},{min:125,max:200,damage:20000},{min:200,max:400,damage:12000}];
+    zeusCard.attackRangeBands = allyZeusAbility.zeusAlly.bands;
+  }
   if (zeusCardIndex >= 0 && Array.isArray(ownedFlags)) {
     const savedNames = typeof ownedCharacterNamesAtBoot !== 'undefined' && Array.isArray(ownedCharacterNamesAtBoot)
       ? ownedCharacterNamesAtBoot : [];
