@@ -15,6 +15,7 @@ assert.ok(html.includes('name:"アイスワイバーン",cost:5200,hp:80000,atk:
 assert.ok(genesis.includes('genesisCard.hp=90000;genesisCard.atk=20000'));
 assert.ok(zeus.includes('hp: 90000, atk: 35000')&&zeus.includes('multiAttack: [35000, 17500, 10920]'));
 assert.ok(hastur.includes('name:NAME,cost:3500,hp:75000,atk:15000'));
+assert.ok(hastur.includes("'覇風':{hp:49725,atk:6000"));
 const byName=Object.fromEntries(kwl.map(c=>[c.name,c]));
 for(const [name,hp,atk] of [['天使神:木下',80000,8000],['覇風',49725,6000],['MiraiK',75000,3825],['ノヴァ木下',70000,35000],['アイスワイバーン',80000,10000],['創世木下',90000,20000],['創世討伐兵器・零式',65000,12000],['最高神:ゼウス',90000,35000],['最高神:ハスター',75000,15000],['悪の木下',500000,900]])assert.deepEqual([byName[name].hp,byName[name].atk],[hp,atk],name);
 assert.deepEqual(byName['最高神:ゼウス'].multiAttack,[35000,17500,10920]);
