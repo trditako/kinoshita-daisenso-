@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.90';
+const GAME_VERSION='v1.9.91';
 const UPDATE_LOG=[
+  {date:'2026-11-28',version:'v1.9.91',title:'🔄 天使神の固有能力表示を強制更新',items:['固有能力の最新設定値を表示するHTMLへ更新','Service Workerのキャッシュ世代を更新し、旧HTMLキャッシュを削除'],details:['天使神の能力表示が古い内容のまま残る問題に対し、HTMLとService Workerの双方を再更新。']},
   {date:'2026-11-28',version:'v1.9.90',title:'👼 天使神:木下の固有能力説明を詳細化',items:['発動条件・効果量・上限・復活・成長・属性特効を項目ごとに分けて明記','能力説明を実際の戦闘処理に照合し、属性特効倍率を8倍に訂正','説明文の改行を詳細欄で反映']},
   {date:'2026-11-28',version:'v1.9.89',title:'✨ 全キャラクター固有能力欄を再統一・詳細表示',items:['能力名・説明・追加特性を共通形式で表示し、能力データの構造差を吸収','神話V2能力の個別説明もキャラクター詳細に表示','能力データ・戦闘性能・ステージ処理は変更なし']},
   {date:'2026-11-28',version:'v1.9.88',title:'👼 天使神の固有能力表示キャッシュを再更新',items:['本編のキャラクター詳細「固有能力」欄が最新の詳細説明を表示するようHTML・Service Workerのキャッシュ世代を更新','古いHTMLを返すキャッシュを新しい世代へ切り替え']},
@@ -6248,7 +6249,7 @@ setInterval(()=>{try{missionEnsurePeriods();missionCheckAchievements();if(docume
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js?v=20261128-angel-god-detail-v137',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js?v=20261128-angel-god-detail-v138',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
   });
 }
 </script>
