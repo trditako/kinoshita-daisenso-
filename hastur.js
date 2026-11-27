@@ -104,7 +104,7 @@ const postKwlBalance={
  'アイスワイバーン':{hp:80000,atk:10000,ability:{iceWyvern:{mythDamageTaken:.60,mythDamageDealt:3,mythHeal:.15,skillReflect:.10,damageCap:.20,attackPerHit:.02,attackMax:.50,intervalPerHit:.01,intervalMax:.15,damageGrowthPerHit:.01,damageGrowthMax:.40,shieldMultiplier:2,flightInterval:55,flightDuration:3,flightSpeed:1.5,beamInterval:46,beamRange:600,beamFreeze:2,beamHeal:.05,beamHits:1,areaFreeze:2,areaDamage:.08},criticalChance:.30,criticalMultiplier:1.5,phoenixSurgeLevel:1,phoenixSurgeChance:.5,yabayaba:1,yabayabaChance:.5,desc:'神話属性から40%軽減・与ダメージ3倍・被ダメージ15%回復。スキル反射10%。1回の被ダメージ上限20%。攻撃成長+2%（最大+50%）、攻撃間隔短縮1%（最大15%）。被弾成長+1%（最大40%）。クリティカル30%、烈波Lv1・ヤバヤバLv1。'},skills:[{id:'ice_wyvern_flight',name:'飛行',description:'55秒おきに3秒間飛行。通過した地面に4秒間エリアを残し、敵を2秒凍結、1秒ごとに最大HPの8%ダメージ。',trigger:'55秒ごと',cooldown:55,duration:3},{id:'ice_wyvern_beam',name:'冷凍ビーム',description:'46秒おきに射程600へ攻撃力150%分のダメージと2秒凍結。',trigger:'46秒ごと',cooldown:46,range:600}]},
  'ノヴァ木下':{hp:70000,atk:35000,ability:{strong:{黒:3,天使:3,神話:3,無:3},resist:{黒:.50,天使:.50,神話:.50,無:.50},novaBalance:{destructionPerCursedAlly:75,destructionMax:200,mythPenaltyPerAlly:50,mythPenaltyMax:250,killStackPerKill:10,killStackMax:50,rapidAttackPerHit:.01,rapidAttackMax:.60,traitMultiplier:3,damageReduction:.50,miniGunChance:.10,miniGunBonus:.25,knockbackChance:.20},desc:'連射モード：黒・天使・神話・無属性に3倍、被ダメージ50%軽減。攻撃ごとに攻撃間隔-0.01秒（最大0.6秒）、攻撃力+1%（最大+60%）。撃破成長+10%（最大+50%）。ミニガン発動率10%、追加攻撃力25%、吹っ飛ばし20%。破壊モードの呪いの木下達1体あたり+75%（最大+200%）。'}},
  'MiraiK':{hp:75000,atk:3825},
- '天使神:木下':{hp:80000,atk:8000,ability:{damageCapRatio:.20,damageReflectRatio:.10,damageHealRatio:.10,highHpDamageReduction:.25,traitDamageReduction:.35,traitDamageBonus:4,desc:'天使編成強化と攻撃命中による成長は維持。復活時HP50%。1回の被ダメージ上限20%。実HPダメージの10%を回復・反射。HP40%以上で全属性から25%軽減。対象属性への特効4倍。'}}};
+ '天使神:木下':{hp:80000,atk:8000,ability:{damageCapRatio:.15,damageReflectRatio:.15,damageHealRatio:.15,highHpThreshold:.4,highHpDamageReduction:.35,traitDamageReduction:.2,traitDamageBonus:8,desc:'【自身の編成強化】\n天使属性の味方編成数（自身を含む）1体につき、HP・攻撃力・射程・移動速度・攻撃頻度・再生産時間を+7%。上限は+30%。\n【味方天使強化】天使神が編成にいる間、ほかの天使属性味方の全ステータス+55%。呪い・波動・烈波を無効化。\n【自身の状態異常無効】呪い・波動・烈波・停止・鈍足・攻撃力低下・ふっとばし・ヤバヤバ化を無効。\n【復活】致命傷を受けた時、1度だけ最大HPと攻撃力を入れ替え、入れ替え後の最大HP100%で復活。復活時に攻撃成長はリセット。\n【被ダメージ上限】1回の攻撃によるダメージは最大HPの15%まで。\n【ダメージ軽減】HPが最大HPの40%以上なら被ダメージ35%軽減。古代・赤・黒・浮・神話属性からはさらに20%軽減。\n【ダメージ回復】受けた実HPダメージの15%を回復。\n【ダメージ反射】被弾直前のHPが最大HPの40%以上なら、受けた実HPダメージの15%を攻撃者へ反射。\n【攻撃命中成長】敵にダメージを与えるたび攻撃力+2%。最大+70%。同時に再生産残り時間を2%短縮。\n【撃破時効果】敵撃破時、最大HPの1.5%回復し、2秒間移動速度3。\n【属性特効】古代・赤・黒・浮・神話属性に8倍ダメージ。'}}};
 if(Array.isArray(cards)){
  for(const [name,patch] of Object.entries(postKwlBalance)){
   const card=cards.find(c=>c&&c.name===name);if(!card)continue;
@@ -129,7 +129,7 @@ if(!window.__POST_KWL_UPDATE_LOG_WRAPPED__&&typeof window.openUpdateLog==='funct
  window.__POST_KWL_UPDATE_LOG_WRAPPED__=true;const original=window.openUpdateLog;
  window.openUpdateLog=function(){const result=original.apply(this,arguments);document.querySelectorAll('span').forEach(el=>{if(el.textContent.trim()==='v1.9.81')el.textContent=POST_KWL_REBALANCE_VERSION;});return result;};
 }
-window.KINOSHITA_GAME_VERSION='v1.9.83';
+window.KINOSHITA_GAME_VERSION='v1.9.92';
 if(typeof renderCards==='function')renderCards();
 if(typeof renderFormation==='function')renderFormation();
 
