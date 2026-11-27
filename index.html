@@ -8,8 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>木下大戦争</title>
 <script>
-const GAME_VERSION='v1.9.91';
+const GAME_VERSION='v1.9.92';
 const UPDATE_LOG=[
+  {date:'2026-11-28',version:'v1.9.92',title:'🛠️ UR固有能力の実行時データを統一',items:['天使神の詳細説明が後読み込みのハスター用スクリプトで旧数値に戻る問題を修正','戦闘データ・図鑑説明・KWL用キャラクターデータの天使神設定を統一','覇風の基礎攻撃力の重複設定を現行値6,000に統一','Service Workerのキャッシュ世代を更新']},
   {date:'2026-11-28',version:'v1.9.91',title:'🔄 天使神の固有能力表示を強制更新',items:['固有能力の最新設定値を表示するHTMLへ更新','Service Workerのキャッシュ世代を更新し、旧HTMLキャッシュを削除'],details:['天使神の能力表示が古い内容のまま残る問題に対し、HTMLとService Workerの双方を再更新。']},
   {date:'2026-11-28',version:'v1.9.90',title:'👼 天使神:木下の固有能力説明を詳細化',items:['発動条件・効果量・上限・復活・成長・属性特効を項目ごとに分けて明記','能力説明を実際の戦闘処理に照合し、属性特効倍率を8倍に訂正','説明文の改行を詳細欄で反映']},
   {date:'2026-11-28',version:'v1.9.89',title:'✨ 全キャラクター固有能力欄を再統一・詳細表示',items:['能力名・説明・追加特性を共通形式で表示し、能力データの構造差を吸収','神話V2能力の個別説明もキャラクター詳細に表示','能力データ・戦闘性能・ステージ処理は変更なし']},
@@ -5343,7 +5344,7 @@ if(!cards.some(c=>c?.name==='狂乱の強化木下')){cards.push(RAGE_KINOSHITA_
 // エレメンタル木下sを現行の期間限定交換所対象として統一し、既存キャラクターIDを維持して覇風を末尾追加。
 for(const c of cards){if(c?.series==='エレメンタル木下s'&&c.limitedExchange)c.limitedExchangeSeries='エレメンタル木下s';}
 if(!cards.some(c=>c?.name==='覇風'))cards.push({name:'覇風',cost:880,hp:49725,atk:6000,range:90,spd:1.3,interval:.6,recharge:32,icon:'🌪️',motion:'super',attackType:'single',kb:2,trait:'神話',rarity:'UR',series:'エレメンタル木下s',limitedExchange:true,limitedExchangeSeries:'エレメンタル木下s',waveLevel:5,waveChance:1,waveImmune:true,reflectImmune:true,strong:{'宇宙':8,'赤':8,'天使':8},resist:{'宇宙':.45,'赤':.45,'天使':.45},haifu:true,skills:[{id:'haifu_five_summon_storm',name:'五召喚の大嵐',description:'覇風が5回召喚されるごとに、敵全体へ自身の攻撃力250%分のダメージを与え、与えたダメージの50%分を味方全体へ回復する。',trigger:'5回目の召喚時',everySummons:5,damageMultiplier:2.5,healRatio:.5},{id:'haifu_guts',name:'根性だけで勝ちます',description:'攻撃時15%で、対象の攻撃力と自身の攻撃力の合計×3の追加ダメージを与える。',trigger:'攻撃時',chance:.15,cooldown:13,damageMultiplier:3}],ability:{name:'覇風の絶対支配',desc:'編成中のウルトラレア以外の味方1体につき自身のHP・攻撃力・攻撃間隔・再生産時間+35%（最大+200%、射程・移動速度は対象外）。編成中のウルトラレア1体につき全味方のHP・攻撃力・移動速度・攻撃間隔+35%（最大+95%、射程・再生産時間は対象外）。場にいる間、敵全体の攻撃力を35%低下（最大70%）。編成中は全味方に自身の攻撃力80%分のパワーシールドを付与。召喚後2秒ごとにHP・攻撃力+7%（最大+35%）。宇宙・赤・天使に8倍ダメージ、同属性からの被ダメージ55%軽減。被弾ごとに防御力+2.5%（最大+20%）。1回の被ダメージは最大HPの20%まで。攻撃時100%で波動Lv5。敵の反射攻撃を無効化。',waveImmune:true,reflectImmune:true}});
-const rebalanceHaifuCard=cards.find(c=>c?.name==='覇風');if(rebalanceHaifuCard)Object.assign(rebalanceHaifuCard,{hp:49725,atk:11250,range:90,spd:1.3});
+const rebalanceHaifuCard=cards.find(c=>c?.name==='覇風');if(rebalanceHaifuCard)Object.assign(rebalanceHaifuCard,{hp:49725,atk:6000,range:90,spd:1.3});
  // 新しい特別真髄限定キャラクター。富豪木下の旧IDとは別の末尾IDを割り当てる。
 const MIRAIK_CARD={name:'MiraiK',cost:1400,hp:75000,atk:3825,range:150,spd:.8,interval:1.8,recharge:40,icon:'🌗',motion:'super',attackType:'area',kb:3,trait:'天使',rarity:'UR',series:'特別真髄',specialGachaOnly:true,skills:[{id:'miraiK_reverse',name:'反転',description:'天使属性で攻撃した時、75%の確率で自身の現在HPの150%分の追加ダメージを与え、攻撃力が7%上昇する（最大+15%）。',trigger:'天使属性で攻撃時',chance:.75,cooldown:15,damageMultiplier:1.5,attackBonusPerActivation:.07,maxAttackBonus:.15},{id:'miraiK_reversal',name:'再反転',description:'黒属性で攻撃した時、75%の確率で敵攻撃力と自身攻撃力の合計分の追加ダメージを与え、実際に与えたダメージの5%を回復する。',trigger:'黒属性で攻撃時',chance:.75,cooldown:15,healRatio:.05}],ability:{name:'反転・再反転',desc:'距離装甲：攻撃者との距離が150以上なら被ダメージ85%軽減。自身以外の編成中の天使属性1体につき与ダメージ+10%（最大+55%）。自身が編成にいるだけで味方の天使属性全員のHP・攻撃力・射程・移動速度・攻撃間隔・再生産時間+10%。黒・浮・神話属性に5倍ダメージ、同属性からの被ダメージ75%軽減。対象が黒・浮・神話属性なら攻撃時に射程を3秒間80%低下。攻撃時50%で2秒呪い、50%で2秒停止。敵に攻撃するたび攻撃間隔を0.1秒短縮（最大0.3秒）。単体攻撃の敵に対して被ダメージ25%軽減・与ダメージ3倍。1回の被ダメージは最大HPの25%まで。上限を超える攻撃を受けた場合、攻撃者の攻撃力を7秒間90%低下させ、2秒間呪いを付与。',curseChance:.5,curseDuration:2,stopChance:.5,stopDuration:2,wyvernStrongTraits:['黒','浮','神話'],wyvernStrongMultiplier:5,wyvernResistTraits:['黒','浮','神話'],wyvernResistMultiplier:.25}};
 cards.push(MIRAIK_CARD);MIRAIK_CARD.id=cards.length-1;
@@ -6249,7 +6250,7 @@ setInterval(()=>{try{missionEnsurePeriods();missionCheckAchievements();if(docume
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js?v=20261128-angel-god-detail-v138',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js?v=20261128-angel-god-runtime-sync-v139',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
   });
 }
 </script>
