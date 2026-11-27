@@ -6231,7 +6231,7 @@ setInterval(()=>{try{missionEnsurePeriods();missionCheckAchievements();if(docume
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js?v=20261127-angel-force-fresh-html',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
   });
 }
 </script>

@@ -1,4 +1,4 @@
-const CACHE_NAME="kinoshita-daisen-v132";
+const CACHE_NAME="kinoshita-daisen-v133";
 const API_CACHE_NAME="kinoshita-public-api-v1";
 const API_CACHE_TTL = [
   ["/rest/v1/world_announcements", 5 * 60 * 1000],
@@ -80,7 +80,7 @@ self.addEventListener('fetch',e=>{
     return;
   }
 
-  e.respondWith(fetch(e.request,/(trade|hitman|genesis|zeus|hastur|prism|kwl|wamuu|evil-kinoshita|battle-core)\.js/.test(url)?{cache:"reload"}:undefined)
+  e.respondWith(fetch(e.request,(e.request.mode==="navigate"||e.request.headers.get("accept")?.includes("text/html")||/(trade|hitman|genesis|zeus|hastur|prism|kwl|wamuu|evil-kinoshita|battle-core)\.js/.test(url))?{cache:"reload"}:undefined)
     .then(async response=>{
       const type=response.headers.get('content-type')||'';
       if(type.includes('text/html')){
