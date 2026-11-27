@@ -1,4 +1,4 @@
-const CACHE_NAME="kinoshita-daisen-v135";
+const CACHE_NAME="kinoshita-daisen-v134";
 const API_CACHE_NAME="kinoshita-public-api-v1";
 const API_CACHE_TTL = [
   ["/rest/v1/world_announcements", 5 * 60 * 1000],
