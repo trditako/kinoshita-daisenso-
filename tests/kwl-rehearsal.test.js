@@ -6,9 +6,9 @@ const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('service-worker.js', 'utf8');
 const hastur = fs.readFileSync('hastur.js', 'utf8');
 
-assert.match(html,/const GAME_VERSION='v1\\.9\\.\\d+'/,'game version is declared');
+assert.match(html,/const GAME_VERSION='v1\.9\.\d+'/,'game version is declared');
 assert.ok(!html.includes('<script src="./kwl.js'), 'KWL is not injected twice by index');
-assert.match(sw,/CACHE_NAME=[\"']kinoshita-daisen-v\\d+[\"']/,'service worker cache is versioned');
+assert.match(sw,/CACHE_NAME=[\"']kinoshita-daisen-v\d+[\"']/,'service worker cache is versioned');
 assert.ok(sw.includes('kwl.js?v=20261122-existing-operator-key'), 'service worker loads the new KWL script');
 assert.ok(sw.includes('hastur.js?v=20261128-angel-god-runtime-sync'), 'service worker loads the refreshed Haster runtime');
 const angelStart = hastur.indexOf("'天使神:木下':{");
