@@ -735,7 +735,7 @@ const 攻略特化キャラ=[
 cards.push(...攻略特化キャラ);
 // 波動木下はイベントクリアでのみ入手できる特別報酬。既存キャラのID/並び順を変更しないため末尾に追加。
 cards.push({name:"波動木下",cost:1800,hp:4200,atk:420,range:110,spd:.48,interval:1.3,recharge:24,icon:"〰️",motion:"super",attackType:"area",kb:4,series:"波動木下降臨クリア報酬",rarity:"SSR",specialReward:true,eventReward:"波動木下降臨",waveLevel:3,ability:{name:"波動Lv3",desc:"攻撃後に波動Lv3を放つ。波動のダメージは攻撃力と同じ。",wave:true}});
-cards.push({name:"ファイティング木下",cost:450,hp:28000,atk:1800,secondAtk:3600,thirdAtk:900,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[400,800,200],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
+cards.push({name:"ファイティング木下",cost:450,hp:28000,atk:1800,secondAtk:3600,thirdAtk:900,range:90,spd:1,interval:.85,recharge:24,icon:"🥊",motion:"power",attackType:"single",kb:3,trait:"赤",rarity:"LR",series:"エレメンタル木下s",limitedExchange:true,multiAttack:[1800,3600,900],waveLevel:3,waveChance:.33,waveStopChance:.33,waveStopDuration:.5,ability:{name:"三連攻撃",desc:"0.1秒間隔の三連撃。各攻撃で33%の確率で波動Lv3、33%の確率で0.5秒停止。波動にも停止判定。",wave:true}});
 // エレメンタル木下s：ファイティング木下（伝説レア）に加え、5体の超激レアを期間限定交換所へ追加。
 cards.push(
  {name:"炎撃木下",cost:900,hp:3000,atk:900,range:100,spd:.75,interval:1.4,recharge:20,icon:"🔥",motion:"super",attackType:"area",kb:3,trait:"赤",rarity:"SSR",series:"エレメンタル木下s",limitedExchange:true,ability:{name:"炎撃・灼熱",desc:"赤属性に攻撃1.5倍。攻撃時40%の確率で敵を2秒間鈍足にする。",strong:{"赤":1.5},slowChance:.4,slowDuration:2}},
